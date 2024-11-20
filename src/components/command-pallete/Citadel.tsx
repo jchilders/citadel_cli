@@ -25,19 +25,8 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
     return current ? Object.entries(current).map(([name, details]) => ({
       name,
       ...details
-    })) : [];
-  };
-
-  // Get current command definition
-  const getCurrentCommand = () => {
-    let current: CommandConfig = commands;
-    for (const cmd of commandStack) {
-      if (!current[cmd]) return null;
-      if (current[cmd].args) return current[cmd];
-      if (!current[cmd].subcommands) return null;
-      current = current[cmd].subcommands;
-    }
-    return null;
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name)) : [];
   };
 
   // Initialize or reset state
@@ -45,7 +34,7 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
     const commands = getAvailableCommands([]);
     setAvailable(commands);
     setSelectedIndex(0);
-    setInput(commands[0]?.name || '');
+    setInput('');
   };
 
   // Execute command
@@ -81,7 +70,24 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
     const filtered = available.filter(cmd =>
       cmd.name.toLowerCase().startsWith(value.toLowerCase())
     );
-    if (filtered.length > 0) {
+    if (filtered.length === 1) {
+      // Automatically select and advance if there's an exact match
+      const selectedCommand = filtered[0];
+      const newStack = [...commandStack, selectedCommand.name];
+      setCommandStack(newStack);
+      setInput('');
+
+      // Get the full command and handle next step
+      const command = getCommandFromStack(newStack, commands);
+      if (command?.args?.length) {
+        setCurrentArg(command.args[0]);
+        setAvailable([]); // Clear available commands while entering args
+      } else if (command?.subcommands) {
+        const nextCommands = getAvailableCommands(newStack);
+        setAvailable(nextCommands);
+        setSelectedIndex(0);
+      }
+    } else if (filtered.length > 0) {
       setAvailable(filtered);
       setSelectedIndex(0);
     }
@@ -171,56 +177,53 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
           }
           break;
 
-        case 'Enter':
-          e.preventDefault();
-          if (currentArg) {
-            if (input.trim()) {
-              await executeCommand([input]);
-              setInput('');
-              setCurrentArg(null);
-            }
-          } else {
-            const selectedCommand = available[selectedIndex];
-            if (selectedCommand) {
+          case 'Enter':
+            e.preventDefault();
+            if (currentArg) {
+              if (input.trim()) {
+                await executeCommand([input]);
+              }
+            } else if (available.length === 1) {
+              // If there's only one command available, select it
+              const selectedCommand = available[0];
               const newStack = [...commandStack, selectedCommand.name];
               setCommandStack(newStack);
-
-              // Get the full command based on the complete command stack
               const command = getCommandFromStack(newStack, commands);
-
+              
               if (command?.args?.length) {
-                // If command has arguments, prompt for the first one
                 setCurrentArg(command.args[0]);
                 setInput('');
-                setAvailable([]); // Clear available commands while entering args
+                setAvailable([]);
               } else if (command?.handler) {
                 await executeCommand();
-              } else if (command?.subcommands) {
-                // Only show subcommands if there are no args to handle
-                const nextCommands = getAvailableCommands(newStack);
-                setAvailable(nextCommands);
-                setSelectedIndex(0);
-                setInput('');
               }
             }
-          }
-          break;
-
-        default:
-          if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
-            const newInput = currentArg ? input + e.key : e.key;
-            setInput(newInput);
-            if (!currentArg) {
-              updateFilteredCommands(newInput);
+            break;
+  
+          default:
+            if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+              const newInput = input + e.key;
+              setInput(newInput);
+              if (!currentArg) {
+                updateFilteredCommands(newInput);
+              }
             }
-          }
-          break;
+            break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, isClosing, commandStack, input, available, selectedIndex, currentArg]);
+
+  // Scroll the output pane whenever output changes so the user can see the
+  // result
+  useEffect(() => {
+    const outputDiv = document.querySelector('.max-h-48.overflow-y-auto');
+    if (outputDiv) {
+      outputDiv.scrollTop = outputDiv.scrollHeight;
+    }
+  }, [output]);
 
   const getCommandFromStack = (
     stack: string[], 
@@ -296,18 +299,18 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
           {/* Available Commands */}
           {!currentArg && available.length > 0 && (
             <div className="mt-2 border-t border-gray-700 pt-2">
-              {available.map((cmd, index) => (
-                <div
-                  key={cmd.name}
-                  className={`flex items-center px-4 py-2 ${index === selectedIndex ? 'bg-blue-600' : ''
+              <div className="flex flex-wrap gap-2">
+                {available.map((cmd, index) => (
+                  <div
+                    key={cmd.name}
+                    className={`px-2 py-1 rounded ${
+                      index === selectedIndex ? 'bg-blue-600' : 'bg-gray-800'
                     }`}
-                >
-                  <div className="flex-1">
+                  >
                     <span className="font-mono text-white">{cmd.name}</span>
-                    <span className="ml-4 text-gray-400 text-sm">{cmd.description}</span>
                   </div>
+                ))}
                 </div>
-              ))}
             </div>
           )}
         </div>
