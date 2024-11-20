@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { defaultCommandConfig } from './config';
+import { defaultCommandConfig } from './commands-config';
 import { Command, CommandArg, CommandConfig, CommandItem, OutputItem } from './types';
+
+import { Cursor } from './Cursor';
+import { defaultCursorConfig } from './cursor-config';
 
 export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = defaultCommandConfig }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -286,6 +289,7 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
               {commandStack.join(' ')}
               {commandStack.length > 0 && ' '}
               {input}
+              <Cursor style={defaultCursorConfig} />
             </div>
           </div>
 

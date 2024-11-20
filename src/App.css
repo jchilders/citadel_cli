@@ -40,3 +40,10 @@
 .read-the-docs {
   color: #888;
 }
+
+.command-cursor {
+  display: inline-block;
+  color: var(--cursor-color, currentColor);
+  font-weight: bold;
+  margin-left: 0.2em;
+}

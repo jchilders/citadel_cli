@@ -1,6 +1,14 @@
 import { CommandConfig } from './types';
 
 export const defaultCommandConfig: CommandConfig = {
+  update: {
+    description: "Update the things",
+    args: [{ name: 'thingId', description: 'The ID for the thing'}],
+    handler: async (args) => ({
+      id: args[0],
+      name: `${args[0]} Thing updated`
+    })
+  },
   user: {
     description: 'User management',
     subcommands: {
@@ -68,7 +76,7 @@ export const defaultCommandConfig: CommandConfig = {
   help: {
     description: 'Show help information',
     handler: async () => ({
-      message: "Available commands: help, user, order"
+      message: "Available commands: update, user, order"
     })
   }
 };

@@ -29,6 +29,12 @@ export interface CitadelProps {
   className?: string;
 }
 
+export type CursorStyle = {
+  type: 'blink' | 'spin' | 'solid';
+  character?: string;
+  speed?: number;  // in milliseconds
+}
+
 export interface OutputItem {
   command: string;
   response: Record<string, unknown>;
