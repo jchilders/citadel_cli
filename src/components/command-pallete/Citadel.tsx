@@ -125,6 +125,13 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
     setCitadelHeight(prevHeight);
   };
 
+  // Show the list of available commands when the component first opens
+  useEffect(() => {
+    if (isOpen) {
+      initialize();
+    }
+  }, [isOpen]);
+
   // Handle keyboard events
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
