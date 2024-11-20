@@ -8,14 +8,13 @@ const customCommands: CommandConfig = {
 };
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <h1 className="text-2xl p-4">Your App Content</h1>
-      
-      {/* Use default commands */}
-      {/* <Citadel /> */}
-      
-      {/* Or use custom commands */}
-      <Citadel commands={customCommands} />
+    <div className="min-h-screen bg-gray-800 flex items-center justify-center">
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <p className="text-gray-700">
+          Press <code className="px-2 py-1 bg-gray-100 border border-gray-300 rounded">.</code> (period)
+        </p>
+        <Citadel commands={customCommands} />
+      </div>
     </div>
   );
 }

@@ -3,8 +3,9 @@ import { Loader2 } from 'lucide-react';
 import { defaultCommandConfig } from './config';
 import { Command, CommandArg, CommandConfig, CommandItem, OutputItem } from './types';
 
-export const Citadel = ({ commands = defaultCommandConfig }) => {
+export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = defaultCommandConfig }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [commandStack, setCommandStack] = useState<string[]>([]);
   const [currentArg, setCurrentArg] = useState<CommandArg | null>(null);
   const [input, setInput] = useState('');
@@ -86,6 +87,35 @@ export const Citadel = ({ commands = defaultCommandConfig }) => {
     }
   };
 
+  // Get window height based on content
+  const getCitadelHeight = () => {
+    const baseHeight = 64; // Base padding and margins
+    const commandHeight = 40; // Height per command
+    const outputHeight = output.length * 48; // Height per output line
+    const totalHeight = baseHeight + (available.length * commandHeight) + outputHeight;
+    return Math.min(totalHeight, 480); // Cap at 480px
+  };
+
+  // Set window height based on content
+  const setCitadelHeight = (height: number) => {
+    const citadelElement = document.querySelector('.citadel-window') as HTMLElement;
+    if (citadelElement) {
+      citadelElement.style.height = `${height}px`;
+    }
+  };
+
+  // Reset window state while maintaining height
+  const clearWindow = () => {
+    const prevHeight = getCitadelHeight();
+    setOutput([]);
+    setCommandStack([]);
+    setInput('');
+    setCurrentArg(null);
+    setAvailable([]);
+    setSelectedIndex(0);
+    setCitadelHeight(prevHeight);
+  };
+
   // Handle keyboard events
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
@@ -93,17 +123,22 @@ export const Citadel = ({ commands = defaultCommandConfig }) => {
         if (e.key === '.') {
           e.preventDefault();
           setIsOpen(true);
-          initialize();
+          setIsClosing(false);
         }
         return;
       }
 
       switch (e.key) {
         case 'Escape':
-          setIsOpen(false);
-          setCommandStack([]);
-          setInput('');
-          setCurrentArg(null);
+          e.preventDefault();
+          setIsClosing(true);
+          setTimeout(() => {
+            setIsOpen(false);
+            setIsClosing(false);
+            setCommandStack([]);
+            setInput('');
+            setCurrentArg(null);
+          }, 150);
           break;
 
         case 'Tab':
@@ -111,7 +146,7 @@ export const Citadel = ({ commands = defaultCommandConfig }) => {
         case 'ArrowUp':
           e.preventDefault();
           if (available.length > 0) {
-            const delta = e.key === 'ArrowUp' ? -1 : 1;
+            const delta = (e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey)) ? -1 : 1;
             const nextIndex = (selectedIndex + delta + available.length) % available.length;
             setSelectedIndex(nextIndex);
             setInput(available[nextIndex].name);
@@ -185,7 +220,7 @@ export const Citadel = ({ commands = defaultCommandConfig }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, commandStack, input, available, selectedIndex, currentArg]);
+  }, [isOpen, isClosing, commandStack, input, available, selectedIndex, currentArg]);
 
   const getCommandFromStack = (
     stack: string[], 
@@ -224,9 +259,10 @@ export const Citadel = ({ commands = defaultCommandConfig }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-gray-900 text-white animate-slide-up">
+    <div className={`fixed bottom-0 left-0 right-0 bg-gray-900 text-white ${
+      isClosing ? 'animate-slide-down' : 'animate-slide-up'
+    }`}>
       <div className="max-w-4xl mx-auto">
-        {/* Command History */}
         <div className="max-h-48 overflow-y-auto p-4">
           {output.map((item, index) => (
             <div key={index} className="mb-4 font-mono">
