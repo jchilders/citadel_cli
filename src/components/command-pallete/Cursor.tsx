@@ -1,41 +1,49 @@
 import React, { useEffect, useState } from 'react';
-import { CursorStyle } from './types';
+import { CursorStyle, DEFAULT_CURSOR_CONFIGS } from './types';
 
 const spinChars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+const bbsChars = ['|', '/', '-', '\\'];
 
 interface CursorProps {
-  style?: CursorStyle;
+  style?: Partial<CursorStyle> & Pick<CursorStyle, 'type'>;
 }
 
-export const Cursor: React.FC<CursorProps> = ({ 
-  style = { type: 'blink', character: '▋', speed: 530 } 
-}) => {
+export const Cursor: React.FC<CursorProps> = ({ style = { type: 'blink' } }) => {
+  const config = {
+    ...DEFAULT_CURSOR_CONFIGS[style.type],
+    ...style
+  };
+
   const [visible, setVisible] = useState(true);
   const [spinIndex, setSpinIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (style.type === 'blink') {
+      if (config.type === 'blink') {
         setVisible(v => !v);
-      } else if (style.type === 'spin') {
-        setSpinIndex(i => (i + 1) % spinChars.length);
+      } else if (['spin', 'bbs'].includes(config.type)) {
+        setSpinIndex(i => (i + 1) % (config.type === 'bbs' ? bbsChars.length : spinChars.length));
       }
-    }, style.speed || 530);
+    }, config.speed);
 
     return () => clearInterval(interval);
-  }, [style.type, style.speed]);
+  }, [config.type, config.speed]);
 
-  if (style.type === 'spin') {
+  if (['spin', 'bbs'].includes(config.type)) {
+    const chars = config.type === 'bbs' ? bbsChars : spinChars;
+    return <span className="command-cursor">{chars[spinIndex]}</span>;
+  }
+  if (config.type === 'spin') {
     return <span className="command-cursor">{spinChars[spinIndex]}</span>;
   }
 
-  if (style.type === 'solid') {
-    return <span className="command-cursor">{style.character || '▋'}</span>;
+  if (config.type === 'solid') {
+    return <span className="command-cursor">{config.character}</span>;
   }
 
   return (
     <span className="command-cursor">
-      {visible ? style.character || '▋' : ' '}
+      {visible ? config.character : ' '}
     </span>
   );
 };
