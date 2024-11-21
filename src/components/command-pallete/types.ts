@@ -38,23 +38,28 @@ export type CursorStyle = {
   type: 'blink' | 'spin' | 'solid' | 'bbs';
   character?: string;
   speed?: number;  // in milliseconds
+  color?: string;
 }
 
 export const DEFAULT_CURSOR_CONFIGS = {
   blink: {
     character: '▋',
-    speed: 530
+    speed: 530,
+    color: '#fff'
   },
   spin: {
     character: '⠋', // Not actually used, but included for consistency
-    speed: 120
+    speed: 120,
+    color: '#fff'
   },
   solid: {
     character: '▋',
-    speed: 0 // Not used for solid
+    speed: 0,
+    color: '#fff'
   },
   bbs: {
     character: "|",
-    speed: 120
+    speed: 120,
+    color: '#fff'
   } 
 } as const;

@@ -29,20 +29,21 @@ export const Cursor: React.FC<CursorProps> = ({ style = { type: 'blink' } }) => 
     return () => clearInterval(interval);
   }, [config.type, config.speed]);
 
+  const cursorStyle = {
+    color: config.color
+  };
+
   if (['spin', 'bbs'].includes(config.type)) {
     const chars = config.type === 'bbs' ? bbsChars : spinChars;
-    return <span className="command-cursor">{chars[spinIndex]}</span>;
-  }
-  if (config.type === 'spin') {
-    return <span className="command-cursor">{spinChars[spinIndex]}</span>;
+    return <span className="command-cursor" style={cursorStyle}>{chars[spinIndex]}</span>;
   }
 
   if (config.type === 'solid') {
-    return <span className="command-cursor">{config.character}</span>;
+    return <span className="command-cursor" style={cursorStyle}>{config.character}</span>;
   }
 
   return (
-    <span className="command-cursor">
+    <span className="command-cursor" style={cursorStyle}>
       {visible ? config.character : ' '}
     </span>
   );
