@@ -6,9 +6,15 @@ const bbsChars = ['|', '/', '-', '\\'];
 
 interface CursorProps {
   style?: Partial<CursorStyle> & Pick<CursorStyle, 'type'>;
+  isValid?: boolean;
+  errorMessage?: string;
 }
 
-export const Cursor: React.FC<CursorProps> = ({ style = { type: 'blink' } }) => {
+export const Cursor: React.FC<CursorProps> = ({
+  style = { type: 'blink' },
+  isValid = true,
+  errorMessage
+}) => {
   const config = {
     ...DEFAULT_CURSOR_CONFIGS[style.type],
     ...style
@@ -30,21 +36,31 @@ export const Cursor: React.FC<CursorProps> = ({ style = { type: 'blink' } }) => 
   }, [config.type, config.speed]);
 
   const cursorStyle = {
-    color: config.color
+    color: isValid ? config.color : '#ff4444', // Red color for invalid input
+    transition: 'color 0.15s ease-in-out'
   };
 
-  if (['spin', 'bbs'].includes(config.type)) {
-    const chars = config.type === 'bbs' ? bbsChars : spinChars;
-    return <span className="command-cursor" style={cursorStyle}>{chars[spinIndex]}</span>;
-  }
-
-  if (config.type === 'solid') {
-    return <span className="command-cursor" style={cursorStyle}>{config.character}</span>;
-  }
+  const renderCursor = () => {
+    if (['spin', 'bbs'].includes(config.type)) {
+      const chars = config.type === 'bbs' ? bbsChars : spinChars;
+      return chars[spinIndex];
+    }
+    
+    if (config.type === 'solid') {
+      return config.character;
+    }
+    
+    return visible ? config.character : ' ';
+  };
 
   return (
-    <span className="command-cursor" style={cursorStyle}>
-      {visible ? config.character : ' '}
+    <div className="relative inline-block">
+    <span 
+      className={`command-cursor ${!isValid ? 'animate-shake' : ''}`} 
+      style={cursorStyle}
+    >
+      {renderCursor()}
     </span>
+  </div>
   );
 };

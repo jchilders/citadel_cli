@@ -5,8 +5,15 @@ import { Command, CommandArg, CommandConfig, CommandItem, OutputItem } from './t
 
 import { Cursor } from './Cursor';
 import { defaultCursorConfig } from './cursor-config';
+import { CommandValidationStrategy, DefaultCommandValidationStrategy } from '../validation/command_validation_strategy';
 
-export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = defaultCommandConfig }) => {
+export const Citadel: React.FC<{
+  commands?: CommandConfig,
+  validationStrategy?: CommandValidationStrategy
+}> = ({
+  commands = defaultCommandConfig,
+  validationStrategy = new DefaultCommandValidationStrategy()
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [commandStack, setCommandStack] = useState<string[]>([]);
@@ -16,6 +23,9 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
   const [output, setOutput] = useState<OutputItem[]>([]);
   const outputRef = useRef<HTMLDivElement>(null); // Used in scrolling the output console
   const [isLoading, setIsLoading] = useState(false);
+  const [inputValidation, setInputValidation] = useState<{ isValid: boolean; message?: string }>({ 
+    isValid: true 
+  });
 
   // Get available commands at current level
   const getAvailableCommands = (stack: string[]) => {
@@ -174,15 +184,32 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
           await handleEnter();
           break;
   
-          default:
-            if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
-              const newInput = input + e.key;
-              setInput(newInput);
-              if (!currentArg) {
-                updateFilteredCommands(newInput);
+        default:
+          if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+            const newInput = input + e.key;
+              // Only validate if we're not entering an argument
+            if (!currentArg) {
+              const validationResult = validationStrategy.validate(
+                newInput, 
+                available.map(cmd => cmd.name)
+              );
+
+              if (!validationResult.isValid) {
+                setInputValidation(validationResult);
+                // Reset validation state after a delay
+                setTimeout(() => {
+                  setInputValidation({ isValid: true });
+                }, 1000);
+                return; // Prevent invalid input
               }
             }
-            break;
+
+            setInput(newInput);
+            if (!currentArg) {
+              updateFilteredCommands(newInput);
+            }
+          }
+          break;
       }
 
       async function handleEnter() {
@@ -217,7 +244,7 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isClosing, commandStack, input, available, currentArg]);
+  }, [isOpen, isClosing, commandStack, input, available, currentArg, validationStrategy]);
 
   // Scroll the output pane whenever output changes so the user can see the
   // result
@@ -340,7 +367,11 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
               {commandStack.join(' ')}
               {commandStack.length > 0 && ' '}
               {input}
-              <Cursor style={defaultCursorConfig} />
+              <Cursor
+                style={defaultCursorConfig}
+                isValid={inputValidation.isValid}
+                errorMessage={inputValidation.message}
+              />
             </div>
           </div>
 
