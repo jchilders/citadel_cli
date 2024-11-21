@@ -1,11 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { defaultCommandConfig } from './commands-config';
-import { Command, CommandArg, CommandConfig, CommandItem, OutputItem } from './types';
+import { Command, CommandConfig } from './types';
 
 import { Cursor } from './Cursor';
 import { defaultCursorConfig } from './cursor-config';
 import { CommandValidationStrategy, DefaultCommandValidationStrategy } from '../validation/command_validation_strategy';
+import { useCitadelState } from './hooks/useCitadelState';
 
 export const Citadel: React.FC<{
   commands?: CommandConfig,
@@ -14,18 +15,18 @@ export const Citadel: React.FC<{
   commands = defaultCommandConfig,
   validationStrategy = new DefaultCommandValidationStrategy()
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
-  const [commandStack, setCommandStack] = useState<string[]>([]);
-  const [currentArg, setCurrentArg] = useState<CommandArg | null>(null);
-  const [input, setInput] = useState('');
-  const [available, setAvailable] = useState<CommandItem[]>([]);
-  const [output, setOutput] = useState<OutputItem[]>([]);
-  const outputRef = useRef<HTMLDivElement>(null); // Used in scrolling the output console
-  const [isLoading, setIsLoading] = useState(false);
-  const [inputValidation, setInputValidation] = useState<{ isValid: boolean; message?: string }>({ 
-    isValid: true 
-  });
+  const { state, actions, outputRef } = useCitadelState();
+  const {
+    isOpen, isClosing, commandStack, currentArg, input,
+    available, output, isLoading, inputValidation
+  } = state;
+
+  // Initialize or reset state
+  const initialize = () => {
+    const commands = getAvailableCommands([]);
+    actions.setAvailable(commands);
+    actions.setInput('');
+  };
 
   // Get available commands at current level
   const getAvailableCommands = (stack: string[]) => {
@@ -42,32 +43,22 @@ export const Citadel: React.FC<{
     .sort((a, b) => a.name.localeCompare(b.name)) : [];
   };
 
-  // Initialize or reset state
-  const initialize = () => {
-    const commands = getAvailableCommands([]);
-    setAvailable(commands);
-    setInput('');
-  };
-
   // Execute command
   const executeCommand = async (args?: string[]) => {
     let current = commands;
     for (const cmd of commandStack) {
       if (!current[cmd]) return;
       if (current[cmd].handler) {
-        setIsLoading(true);
+        actions.setLoading(true);
         try {
           const result = await current[cmd].handler(args || []);
-          setOutput([...output, {
+          actions.addOutput({
             command: [...commandStack, ...(args || [])].join(' '),
             response: result
-          }]);
+          });
         } finally {
-          setIsLoading(false);
-          // Clean up after command execution
-          setCommandStack([]);
-          setInput('');
-          setCurrentArg(null);
+          actions.setLoading(false);
+          actions.reset()
           initialize();
         }
         return;
@@ -82,53 +73,26 @@ export const Citadel: React.FC<{
     const filtered = available.filter(cmd =>
       cmd.name.toLowerCase().startsWith(value.toLowerCase())
     );
+    
     if (filtered.length === 1) {
       // Automatically select and advance if there's an exact match
       const selectedCommand = filtered[0];
       const newStack = [...commandStack, selectedCommand.name];
-      setCommandStack(newStack);
-      setInput('');
-
+      actions.setCommandStack(newStack);
+      actions.setInput('');
+  
       // Get the full command and handle next step
       const command = getCommandFromStack(newStack, commands);
       if (command?.args?.length) {
-        setCurrentArg(command.args[0]);
-        setAvailable([]); // Clear available commands while entering args
+        actions.setCurrentArg(command.args[0]);
+        actions.setAvailable([]); // Clear available commands while entering args
       } else if (command?.subcommands) {
         const nextCommands = getAvailableCommands(newStack);
-        setAvailable(nextCommands);
+        actions.setAvailable(nextCommands);
       }
     } else if (filtered.length > 0) {
-      setAvailable(filtered);
+      actions.setAvailable(filtered);
     }
-  };
-
-  // Get window height based on content
-  const getCitadelHeight = () => {
-    const baseHeight = 64; // Base padding and margins
-    const commandHeight = 40; // Height per command
-    const outputHeight = output.length * 48; // Height per output line
-    const totalHeight = baseHeight + (available.length * commandHeight) + outputHeight;
-    return Math.min(totalHeight, 480); // Cap at 480px
-  };
-
-  // Set window height based on content
-  const setCitadelHeight = (height: number) => {
-    const citadelElement = document.querySelector('.citadel-window') as HTMLElement;
-    if (citadelElement) {
-      citadelElement.style.height = `${height}px`;
-    }
-  };
-
-  // Reset window state while maintaining height
-  const clearWindow = () => {
-    const prevHeight = getCitadelHeight();
-    setOutput([]);
-    setCommandStack([]);
-    setInput('');
-    setCurrentArg(null);
-    setAvailable([]);
-    setCitadelHeight(prevHeight);
   };
 
   // Show the list of available commands when the component first opens
@@ -144,8 +108,7 @@ export const Citadel: React.FC<{
       if (!isOpen) {
         if (e.key === '.') {
           e.preventDefault();
-          setIsOpen(true);
-          setIsClosing(false);
+          actions.open();
         }
         return;
       }
@@ -153,27 +116,24 @@ export const Citadel: React.FC<{
       switch (e.key) {
         case 'Escape':
           e.preventDefault();
-          setIsClosing(true);
+          actions.setClosing(true);
           setTimeout(() => {
-            setIsOpen(false);
-            setIsClosing(false);
-            setCommandStack([]);
-            setInput('');
-            setCurrentArg(null);
+            actions.close();
+            actions.reset();
           }, 150);
           break;
 
         case 'Backspace':
           if (input === '') {
             const newStack = commandStack.slice(0, -1);
-            setCommandStack(newStack);
+            actions.setCommandStack(newStack);
             const commands = getAvailableCommands(newStack);
-            setAvailable(commands);
-            setInput('');
-            setCurrentArg(null);
+            actions.setAvailable(commands);
+            actions.setInput('');
+            actions.setCurrentArg(null);
           } else {
             const newInput = input.slice(0, -1);
-            setInput(newInput);
+            actions.setInput(newInput);
             if (!currentArg) {
               updateFilteredCommands(newInput);
             }
@@ -183,28 +143,28 @@ export const Citadel: React.FC<{
         case 'Enter':
           await handleEnter();
           break;
-  
+
         default:
           if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
             const newInput = input + e.key;
-              // Only validate if we're not entering an argument
+            // Only validate if we're not entering an argument
             if (!currentArg) {
               const validationResult = validationStrategy.validate(
-                newInput, 
+                newInput,
                 available.map(cmd => cmd.name)
               );
 
               if (!validationResult.isValid) {
-                setInputValidation(validationResult);
+                actions.setInputValidation(validationResult);
                 // Reset validation state after a delay
                 setTimeout(() => {
-                  setInputValidation({ isValid: true });
+                  actions.setInputValidation({ isValid: true });
                 }, 1000);
                 return; // Prevent invalid input
               }
             }
 
-            setInput(newInput);
+            actions.setInput(newInput);
             if (!currentArg) {
               updateFilteredCommands(newInput);
             }
@@ -222,13 +182,13 @@ export const Citadel: React.FC<{
           // If there's only one command available, select it
           const selectedCommand = available[0];
           const newStack = [...commandStack, selectedCommand.name];
-          setCommandStack(newStack);
+          actions.setCommandStack(newStack);
           const command = getCommandFromStack(newStack, commands);
 
           if (command?.args?.length) {
-            setCurrentArg(command.args[0]);
-            setInput('');
-            setAvailable([]);
+            actions.setCurrentArg(command.args[0]);
+            actions.setInput('');
+            actions.setAvailable([]);
           } else if (command?.handler) {
             await executeCommand();
           }
