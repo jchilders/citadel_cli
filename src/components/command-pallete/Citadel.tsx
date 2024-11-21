@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import { defaultCommandConfig } from './commands-config';
 import { Command, CommandArg, CommandConfig, CommandItem, OutputItem } from './types';
@@ -13,8 +13,8 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
   const [currentArg, setCurrentArg] = useState<CommandArg | null>(null);
   const [input, setInput] = useState('');
   const [available, setAvailable] = useState<CommandItem[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(0);
   const [output, setOutput] = useState<OutputItem[]>([]);
+  const outputRef = useRef<HTMLDivElement>(null); // Used in scrolling the output console
   const [isLoading, setIsLoading] = useState(false);
 
   // Get available commands at current level
@@ -36,7 +36,6 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
   const initialize = () => {
     const commands = getAvailableCommands([]);
     setAvailable(commands);
-    setSelectedIndex(0);
     setInput('');
   };
 
@@ -88,11 +87,9 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
       } else if (command?.subcommands) {
         const nextCommands = getAvailableCommands(newStack);
         setAvailable(nextCommands);
-        setSelectedIndex(0);
       }
     } else if (filtered.length > 0) {
       setAvailable(filtered);
-      setSelectedIndex(0);
     }
   };
 
@@ -121,7 +118,6 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
     setInput('');
     setCurrentArg(null);
     setAvailable([]);
-    setSelectedIndex(0);
     setCitadelHeight(prevHeight);
   };
 
@@ -157,25 +153,12 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
           }, 150);
           break;
 
-        case 'Tab':
-        case 'ArrowDown':
-        case 'ArrowUp':
-          e.preventDefault();
-          if (available.length > 0) {
-            const delta = (e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey)) ? -1 : 1;
-            const nextIndex = (selectedIndex + delta + available.length) % available.length;
-            setSelectedIndex(nextIndex);
-            setInput(available[nextIndex].name);
-          }
-          break;
-
         case 'Backspace':
           if (input === '') {
             const newStack = commandStack.slice(0, -1);
             setCommandStack(newStack);
             const commands = getAvailableCommands(newStack);
             setAvailable(commands);
-            setSelectedIndex(0);
             setInput('');
             setCurrentArg(null);
           } else {
@@ -188,32 +171,7 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
           break;
 
         case 'Enter':
-          e.preventDefault();
-          if (currentArg) {
-            if (input.trim()) {
-              await executeCommand([input]);
-            }
-          } else if (available.length === 1) {
-            // If there's only one command available, select it
-            const selectedCommand = available[0];
-            const newStack = [...commandStack, selectedCommand.name];
-            setCommandStack(newStack);
-            const command = getCommandFromStack(newStack, commands);
-
-            if (command?.args?.length) {
-              setCurrentArg(command.args[0]);
-              setInput('');
-              setAvailable([]);
-            } else if (command?.handler) {
-              await executeCommand();
-            }
-          } else if (commandStack.length > 0) {
-            // Check if we have a complete command that can be executed
-            const command = getCommandFromStack(commandStack, commands);
-            if (command?.handler && !command.args?.length) {
-              await executeCommand();
-            }
-          }
+          await handleEnter();
           break;
   
           default:
@@ -226,18 +184,46 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
             }
             break;
       }
+
+      async function handleEnter() {
+        e.preventDefault();
+        if (currentArg) {
+          if (input.trim()) {
+            await executeCommand([input]);
+          }
+        } else if (available.length === 1) {
+          // If there's only one command available, select it
+          const selectedCommand = available[0];
+          const newStack = [...commandStack, selectedCommand.name];
+          setCommandStack(newStack);
+          const command = getCommandFromStack(newStack, commands);
+
+          if (command?.args?.length) {
+            setCurrentArg(command.args[0]);
+            setInput('');
+            setAvailable([]);
+          } else if (command?.handler) {
+            await executeCommand();
+          }
+        } else if (commandStack.length > 0) {
+          // Check if we have a complete command that can be executed
+          const command = getCommandFromStack(commandStack, commands);
+          if (command?.handler && !command.args?.length) {
+            await executeCommand();
+          }
+        }
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isClosing, commandStack, input, available, selectedIndex, currentArg]);
+  }, [isOpen, isClosing, commandStack, input, available, currentArg]);
 
   // Scroll the output pane whenever output changes so the user can see the
   // result
   useEffect(() => {
-    const outputDiv = document.querySelector('.max-h-48.overflow-y-auto');
-    if (outputDiv) {
-      outputDiv.scrollTop = outputDiv.scrollHeight;
+    if (outputRef.current) {
+      outputRef.current.scrollTop = outputRef.current.scrollHeight;
     }
   }, [output]);
 
@@ -256,23 +242,75 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
     }
   
     return current;
-  };// Format response for display
+  };
+  
+  // Format response for display
   const formatResponse = (response: unknown) => {
     if (typeof response === 'object' && response !== null) {
+      if (Array.isArray(response)) {
+        return (
+          <div className="pl-4 text-sm">
+            {response.map((item, index) => (
+              <div key={index} className="text-gray-400">
+                {typeof item === 'object' && item !== null ? (
+                  <span>
+                    {'{'}
+                    {formatResponse(item)}
+                    {'}'}
+                  </span>
+                ) : (
+                  String(item)
+                )}
+                {index < response.length - 1 && ','}
+              </div>
+            ))}
+          </div>
+        );
+      }
+  
       return (
-        <div className="pl-4 space-y-1">
-          {Object.entries(response).map(([key, value]) => (
+        <div className="pl-4 space-y-0.5 text-sm">
+          {Object.entries(response).map(([key, value], index, arr) => (
             <div key={key}>
-              <strong className="text-gray-300">{key}:</strong>{' '}
+              <strong className="text-gray-300">{key}</strong>
+              <span className="text-gray-400">: </span>
               <span className="text-gray-400">
-                {Array.isArray(value) ? value.join(', ') : value}
+                {Array.isArray(value) ? (
+                  <span>
+                    [
+                    {value.map((item, idx) => (
+                      <div key={idx} className="pl-4">
+                        {typeof item === 'object' && item !== null ? (
+                          <span>
+                            {'{'}
+                            {formatResponse(item)}
+                            {'}'}
+                          </span>
+                        ) : (
+                          String(item)
+                        )}
+                        {idx < value.length - 1 && ','}
+                      </div>
+                    ))}
+                    ]
+                  </span>
+                ) : (
+                  typeof value === 'object' && value !== null ? (
+                    <span>
+                      {'{'}
+                      {formatResponse(value)}
+                      {'}'}
+                    </span>
+                  ) : String(value)
+                )}
               </span>
+              {index < arr.length - 1 && ','}
             </div>
           ))}
         </div>
       );
     }
-    return <div className="pl-4 text-gray-400">{String(response)}</div>;
+    return <div className="pl-4 text-sm text-gray-400">{String(response)}</div>;
   };
 
   if (!isOpen) return null;
@@ -282,10 +320,10 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
       isClosing ? 'animate-slide-down' : 'animate-slide-up'
     }`}>
       <div className="max-w-4xl mx-auto">
-        <div className="max-h-48 overflow-y-auto p-4">
+        <div ref={outputRef} className="max-h-64 overflow-y-auto p-4 font-mono"> {/* Increased height, added font-mono */}
           {output.map((item, index) => (
-            <div key={index} className="mb-4 font-mono">
-              <div className="text-gray-400">{item.command}</div>
+            <div key={index} className="mb-3"> {/* Reduced margin */}
+              <div className="text-gray-500 text-sm">{item.command}</div> {/* Lighter color, smaller text */}
               {formatResponse(item.response)}
             </div>
           ))}
@@ -317,17 +355,34 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
           {!currentArg && available.length > 0 && (
             <div className="mt-2 border-t border-gray-700 pt-2">
               <div className="flex flex-wrap gap-2">
-                {available.map((cmd, index) => (
-                  <div
-                    key={cmd.name}
-                    className={`px-2 py-1 rounded ${
-                      index === selectedIndex ? 'bg-blue-600' : 'bg-gray-800'
-                    }`}
-                  >
-                    <span className="font-mono text-white">{cmd.name}</span>
-                  </div>
-                ))}
-                </div>
+                {available.map((cmd, _) => {
+                  // Find how many characters need to be bold
+                  const boldLength = available.reduce((length, other) => {
+                    if (other.name === cmd.name) return length;
+                    let commonPrefix = 0;
+                    while (
+                      commonPrefix < cmd.name.length &&
+                      commonPrefix < other.name.length &&
+                      cmd.name[commonPrefix].toLowerCase() === other.name[commonPrefix].toLowerCase()
+                    ) {
+                      commonPrefix++;
+                    }
+                    return Math.max(length, commonPrefix + 1);
+                  }, 1);
+
+                  return (
+                    <div
+                      key={cmd.name}
+                      className="px-2 py-1 rounded bg-gray-800"
+                    >
+                      <span className="font-mono text-white">
+                        <strong className="underline">{cmd.name.slice(0, boldLength)}</strong>
+                        {cmd.name.slice(boldLength)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>

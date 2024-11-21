@@ -60,14 +60,18 @@ export const defaultCommandConfig: CommandConfig = {
             description: 'Search by first name',
             args: [{ name: 'firstName', description: 'Enter first name' }],
             handler: async (args) => ({
-              matches: [`${args[0]} Smith`, `${args[0]} Jones`]
+              matches: [
+                { id: 1234, name: `${args[0]} Jones` },
+                { id: 4321, name: `${args[0]} Smith` }]
             })
           },
           lastname: {
             description: 'Search by last name',
             args: [{ name: 'lastName', description: 'Enter last name' }],
             handler: async (args) => ({
-              matches: [`John ${args[0]}`, `Jane ${args[0]}`]
+              matches: [
+                { id: 1234, name: `John ${args[0]}` },
+                { id: 4321, name: `Jane ${args[0]}` }]
             })
           }
         }
