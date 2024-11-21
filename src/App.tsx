@@ -1,6 +1,6 @@
-import { Citadel } from './components/command-pallete/Citadel';
-import type { CommandConfig } from './components/command-pallete/types';
-import { defaultCommandConfig } from './components/command-pallete/commands-config';
+import { Citadel } from './components/Citadel';
+import type { CommandConfig } from './components/Citadel/types';
+import { defaultCommandConfig } from './components/Citadel/commands-config';
 
 const customCommands: CommandConfig = {
   ...defaultCommandConfig,
