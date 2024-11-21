@@ -9,6 +9,29 @@ export const defaultCommandConfig: CommandConfig = {
       name: `${args[0]} Thing updated`
     })
   },
+  unit: {
+    description: 'Unit management',
+    subcommands: {
+      build: {
+        description: "Build it",
+        args: [{ name: 'unitId', description: 'Enter unit ID'}],
+        handler: async (args) => ({
+          unitId: args[0],
+          name: "La Boca Vista",
+          result: "Construction completed"
+        })
+      },
+      demolish: {
+        description: "Raze it to the ground",
+        args: [{ name: 'unitId', description: 'Enter unit ID'}],
+        handler: async (args) => ({
+          unitId: args[0],
+          name: "La Boca Vista",
+          result: "💣 🧨 💥💥💥"
+        })
+      }
+    }
+  },
   user: {
     description: 'User management',
     subcommands: {

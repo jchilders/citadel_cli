@@ -187,28 +187,34 @@ export const Citadel: React.FC<{ commands?: CommandConfig }> = ({ commands = def
           }
           break;
 
-          case 'Enter':
-            e.preventDefault();
-            if (currentArg) {
-              if (input.trim()) {
-                await executeCommand([input]);
-              }
-            } else if (available.length === 1) {
-              // If there's only one command available, select it
-              const selectedCommand = available[0];
-              const newStack = [...commandStack, selectedCommand.name];
-              setCommandStack(newStack);
-              const command = getCommandFromStack(newStack, commands);
-              
-              if (command?.args?.length) {
-                setCurrentArg(command.args[0]);
-                setInput('');
-                setAvailable([]);
-              } else if (command?.handler) {
-                await executeCommand();
-              }
+        case 'Enter':
+          e.preventDefault();
+          if (currentArg) {
+            if (input.trim()) {
+              await executeCommand([input]);
             }
-            break;
+          } else if (available.length === 1) {
+            // If there's only one command available, select it
+            const selectedCommand = available[0];
+            const newStack = [...commandStack, selectedCommand.name];
+            setCommandStack(newStack);
+            const command = getCommandFromStack(newStack, commands);
+
+            if (command?.args?.length) {
+              setCurrentArg(command.args[0]);
+              setInput('');
+              setAvailable([]);
+            } else if (command?.handler) {
+              await executeCommand();
+            }
+          } else if (commandStack.length > 0) {
+            // Check if we have a complete command that can be executed
+            const command = getCommandFromStack(commandStack, commands);
+            if (command?.handler && !command.args?.length) {
+              await executeCommand();
+            }
+          }
+          break;
   
           default:
             if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {

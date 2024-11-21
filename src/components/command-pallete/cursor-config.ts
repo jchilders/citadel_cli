@@ -2,7 +2,7 @@ import { CursorStyle } from './types';
 
 export const defaultCursorConfig: CursorStyle = {
   // Can be one of 'blink', 'spin', 'solid', or 'bbs'
-  type: 'blink',
+  type: 'bbs',
   // character: '▋',
-  // speed: 200
+  speed: 300
 };
