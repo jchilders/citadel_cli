@@ -5,7 +5,7 @@ import { Command, CommandConfig } from './types';
 
 import { Cursor } from './Cursor';
 import { defaultCursorConfig } from './cursor-config';
-import { CommandValidationStrategy, DefaultCommandValidationStrategy } from '../validation/command_validation_strategy';
+import { CommandValidationStrategy, DefaultCommandValidationStrategy } from './validation/command_validation_strategy';
 import { useCitadelState } from './hooks/useCitadelState';
 
 export const Citadel: React.FC<{
