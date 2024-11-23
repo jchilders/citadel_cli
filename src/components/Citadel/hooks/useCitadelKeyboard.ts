@@ -1,14 +1,15 @@
 import { useCallback } from 'react';
-import { CommandConfig, CommandItem } from '../types';
+import { Command } from '../types/command';
+import { CommandRegistry } from '../commandRegistry';
 
 interface UseCitadelKeyboardProps {
   isOpen: boolean;
   commandStack: string[];
   input: string;
-  available: CommandItem[];
+  available: Command[];
   currentArg: any;
   validationStrategy: any;
-  commands: CommandConfig;
+  commandRegistry: CommandRegistry;
   actions: {
     open: () => void;
     setClosing: (closing: boolean) => void;
@@ -17,14 +18,14 @@ interface UseCitadelKeyboardProps {
     setCommandStack: (stack: string[]) => void;
     setInput: (input: string) => void;
     setCurrentArg: (arg: any) => void;
-    setAvailable: (available: CommandItem[]) => void;
+    setAvailable: (available: Command[]) => void;
     setInputValidation: (validation: { isValid: boolean; message?: string }) => void;
   };
   commandProcessor: {
-    getAvailableCommands: (stack: string[]) => CommandItem[];
-    getCommandFromStack: (stack: string[], commands: CommandConfig) => any;
+    getAvailableCommands: (stack: string[]) => Command[];
+    getCommandFromStack: (stack: string[], commands: Command[]) => any;
     executeCommand: (stack: string[], args?: string[]) => Promise<void>;
-    updateFilteredCommands: (input: string, available: CommandItem[], stack: string[]) => void;
+    updateFilteredCommands: (input: string, available: Command[], stack: string[]) => void;
   };
 }
 
@@ -35,43 +36,28 @@ export function useCitadelKeyboard({
   available,
   currentArg,
   validationStrategy,
-  commands,
+  commandRegistry,
   actions,
   commandProcessor
 }: UseCitadelKeyboardProps) {
   const handleEnter = useCallback(async () => {
-    if (currentArg) {
+    const command = commandRegistry.getCommandByPath(commandStack);
+    if (command?.args && currentArg) {
       if (input.trim()) {
         await commandProcessor.executeCommand(commandStack, [input]);
       }
-    } else if (available.length === 1) {
-      const selectedCommand = available[0];
-      const newStack = [...commandStack, selectedCommand.name];
-      actions.setCommandStack(newStack);
-      const command = commandProcessor.getCommandFromStack(newStack, commands);
+    } else if (!command?.args && !currentArg) {
+      await commandProcessor.executeCommand(commandStack, []);
+    } 
+  }, [commandStack, input, available, currentArg, commandRegistry, actions, commandProcessor]);
 
-      if (command?.args?.length) {
-        actions.setCurrentArg(command.args[0]);
-        actions.setInput('');
-        actions.setAvailable([]);
-      } else if (command?.subcommands) {
-        const nextCommands = commandProcessor.getAvailableCommands(newStack);
-        actions.setInput('');
-        actions.setAvailable(nextCommands);
-      } else if (command?.handler) {
-        await commandProcessor.executeCommand(commandStack);
-      }
-    } else if (commandStack.length > 0) {
-      const command = commandProcessor.getCommandFromStack(commandStack, commands);
-      if (command?.handler && !command.args?.length) {
-        await commandProcessor.executeCommand(commandStack);
-      } else if (command?.subcommands) {
-        const nextCommands = commandProcessor.getAvailableCommands(commandStack);
-        actions.setInput('');
-        actions.setAvailable(nextCommands);
-      }
+  // Helper function to handle input updates
+  const handleInputUpdate = useCallback((newInput: string) => {
+    actions.setInput(newInput);
+    if (!currentArg) {
+      commandProcessor.updateFilteredCommands(newInput, available, commandStack);
     }
-  }, [commandStack, input, available, currentArg, commands, actions, commandProcessor]);
+  }, [actions, currentArg, commandProcessor, available, commandStack]);
 
   const handleKeyDown = useCallback(async (e: KeyboardEvent) => {
     if (!isOpen) {
@@ -101,11 +87,7 @@ export function useCitadelKeyboard({
           actions.setInput('');
           actions.setCurrentArg(null);
         } else {
-          const newInput = input.slice(0, -1);
-          actions.setInput(newInput);
-          if (!currentArg) {
-            commandProcessor.updateFilteredCommands(newInput, available, commandStack);
-          }
+          handleInputUpdate(input.slice(0, -1));
         }
         break;
 
@@ -131,10 +113,7 @@ export function useCitadelKeyboard({
             }
           }
 
-          actions.setInput(newInput);
-          if (!currentArg) {
-            commandProcessor.updateFilteredCommands(newInput, available, commandStack);
-          }
+          handleInputUpdate(newInput);
         }
         break;
     }

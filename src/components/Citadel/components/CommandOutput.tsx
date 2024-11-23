@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { OutputItem } from '../types';
+import { OutputItem } from '../types/state';
 
 interface CommandOutputProps {
   output: OutputItem[];

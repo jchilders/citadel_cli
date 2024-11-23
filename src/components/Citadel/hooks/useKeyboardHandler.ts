@@ -1,16 +1,16 @@
 import { useEffect } from 'react';
 import { useCitadelKeyboard } from './useCitadelKeyboard';
-import { CommandConfig, CommandItem } from '../types';
+import { Command } from '../types/command';
 
 interface UseKeyboardHandlerProps {
   isOpen: boolean;
   isClosing: boolean;
   commandStack: string[];
   input: string;
-  available: CommandItem[];
+  available: Command[];
   currentArg: any;
   validationStrategy: any;
-  commands: CommandConfig;
+  commands: Command[];
   actions: {
     open: () => void;
     setClosing: (closing: boolean) => void;
@@ -19,14 +19,14 @@ interface UseKeyboardHandlerProps {
     setCommandStack: (stack: string[]) => void;
     setInput: (input: string) => void;
     setCurrentArg: (arg: any) => void;
-    setAvailable: (available: CommandItem[]) => void;
+    setAvailable: (available: Command[]) => void;
     setInputValidation: (validation: { isValid: boolean; message?: string }) => void;
   };
   commandProcessor: {
-    getAvailableCommands: (stack: string[]) => CommandItem[];
-    getCommandFromStack: (stack: string[], commands: CommandConfig) => any;
+    getAvailableCommands: (stack: string[]) => Command[];
+    getCommandFromStack: (stack: string[], commands: Command[]) => any;
     executeCommand: (stack: string[], args?: string[]) => Promise<void>;
-    updateFilteredCommands: (input: string, available: CommandItem[], stack: string[]) => void;
+    updateFilteredCommands: (input: string, available: Command[], stack: string[]) => void;
   };
 }
 

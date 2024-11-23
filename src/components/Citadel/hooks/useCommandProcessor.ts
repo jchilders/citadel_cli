@@ -1,80 +1,59 @@
 import { useCallback } from 'react';
-import { Command, CommandConfig, CommandItem } from '../types';
+import { Command } from '../types/command';
+import { CommandRegistry } from '../commandRegistry';
 
 interface UseCommandProcessorProps {
-  commands: CommandConfig;
+  commandRegistry: CommandRegistry;
   actions: {
     setCommandStack: (stack: string[]) => void;
     setInput: (input: string) => void;
     setCurrentArg: (arg: any) => void;
-    setAvailable: (available: CommandItem[]) => void;
+    setAvailable: (available: Command[]) => void;
     setLoading: (loading: boolean) => void;
     addOutput: (output: any) => void;
     reset: () => void;
   };
 }
 
-export function useCommandProcessor({ commands, actions }: UseCommandProcessorProps) {
+export function useCommandProcessor({ commandRegistry, actions }: UseCommandProcessorProps) {
   // Get available commands at current level
   const getAvailableCommands = useCallback((stack: string[]) => {
-    let current: CommandConfig = commands;
-    for (const cmd of stack) {
-      const nextCommands = current[cmd]?.subcommands;
-      if (!nextCommands) break;
-      current = nextCommands;
-    }
-    return current ? Object.entries(current).map(([name, details]) => ({
-      name,
-      ...details
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name)) : [];
-  }, [commands]);
+    const commands = stack.length === 0 
+      ? commandRegistry.getRootCommands()
+      : commandRegistry.getSubcommands(stack);
+    
+    return commands
+      .map(({ name, description }) => ({ name, description }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [commandRegistry]);
 
-  // Get full command from stack
-  const getCommandFromStack = useCallback((
-    stack: string[], 
-    commandConfig: CommandConfig
-  ): Command | undefined => {
-    let current: Command | undefined;
-    let config = commandConfig;
-  
-    for (const cmd of stack) {
-      current = config[cmd];
-      if (current?.subcommands) {
-        config = current.subcommands;
-      }
-    }
-  
-    return current;
-  }, []);
+    // Get full command from stack
+  const getCommandFromStack = useCallback((stack: string[]): Command | undefined => {
+    if (stack.length === 0) return undefined;
+    return commandRegistry.getCommandByPath(stack);
+  }, [commandRegistry]);
 
   // Execute command
   const executeCommand = useCallback(async (commandStack: string[], args?: string[]) => {
-    let current = commands;
-    for (const cmd of commandStack) {
-      if (!current[cmd]) return;
-      if (current[cmd].handler) {
-        actions.setLoading(true);
-        try {
-          const result = await current[cmd].handler(args || []);
-          actions.addOutput({
-            command: [...commandStack, ...(args || [])].join(' '),
-            response: result
-          });
-        } finally {
-          actions.setLoading(false);
-          actions.reset();
-          initialize();
-        }
-        return;
+    const result = await commandRegistry.executeCommand(commandStack, args || []);
+    
+    if (result) {
+      actions.setLoading(true);
+      try {
+        actions.addOutput({
+          command: [...commandStack, ...(args || [])].join(' '),
+          response: result
+        });
+      } finally {
+        actions.setLoading(false);
+        actions.reset();
+        initialize();
       }
-      if (!current[cmd].subcommands) return;
-      current = current[cmd].subcommands;
     }
-  }, [commands, actions]);
+  }, [commandRegistry, actions]);
 
   // Update filtered commands
-  const updateFilteredCommands = useCallback((value: string, available: CommandItem[], commandStack: string[]) => {
+  const updateFilteredCommands = useCallback((value: string, available: Command[], commandStack: string[]) => {
     const filtered = available.filter(cmd =>
       cmd.name.toLowerCase().startsWith(value.toLowerCase())
     );
@@ -85,7 +64,7 @@ export function useCommandProcessor({ commands, actions }: UseCommandProcessorPr
       actions.setCommandStack(newStack);
       actions.setInput('');
 
-      const command = getCommandFromStack(newStack, commands);
+      const command = getCommandFromStack(newStack);
       if (command?.args?.length) {
         actions.setCurrentArg(command.args[0]);
         actions.setAvailable([]); 
@@ -96,7 +75,7 @@ export function useCommandProcessor({ commands, actions }: UseCommandProcessorPr
     } else if (filtered.length > 0) {
       actions.setAvailable(filtered);
     }
-  }, [actions, commands, getAvailableCommands, getCommandFromStack]);
+  }, [actions, getAvailableCommands]);
 
   // Initialize commands
   const initialize = useCallback(() => {

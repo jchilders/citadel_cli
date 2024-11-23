@@ -1,27 +1,31 @@
-import { defaultCommandConfig } from './commands-config';
 import { useCitadelKeyboard } from './hooks/useCitadelKeyboard';
 import { useCitadelState } from './hooks/useCitadelState';
 import { useCommandProcessor } from './hooks/useCommandProcessor';
 import { useEffect } from 'react';
 import { useGlobalShortcut } from './hooks/useGlobalShortcut';
 
-import { CommandConfig } from './types';
 import { CommandValidationStrategy, DefaultCommandValidationStrategy } from './validation/command_validation_strategy';
 
 import { ArgumentHelp } from './components/ArgumentHelp';
 import { AvailableCommands } from './components/AvailableCommands';
 import { CommandOutput } from './components/CommandOutput';
 import { CommandInput } from './components/CommandInput';
+import { Command } from './types/command';
+import { CommandRegistry } from './commandRegistry';
 
 export const Citadel: React.FC<{
-  commands?: CommandConfig,
+  commands?: Command[],
   validationStrategy?: CommandValidationStrategy
 }> = ({
-  commands = defaultCommandConfig,
+  commands = [],
   validationStrategy = new DefaultCommandValidationStrategy()
 }) => {
   const { state, actions, outputRef } = useCitadelState();
-  const commandProcessor = useCommandProcessor({ commands, actions });
+
+  const commandRegistry = new CommandRegistry();
+  commandRegistry.registerCommands(commands);
+  const commandProcessor = useCommandProcessor({ commandRegistry, actions });
+
   const {
     isOpen, isClosing, commandStack, currentArg, input,
     available, output, isLoading, inputValidation
@@ -36,7 +40,7 @@ export const Citadel: React.FC<{
     available,
     currentArg,
     validationStrategy,
-    commands,
+    commandRegistry,
     actions,
     commandProcessor,
   });

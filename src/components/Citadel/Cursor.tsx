@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CursorStyle, DEFAULT_CURSOR_CONFIGS } from './types';
+import { CursorStyle, DEFAULT_CURSOR_CONFIGS } from './types/cursor';
 
 const spinChars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 const bbsChars = ['|', '/', '-', '\\'];

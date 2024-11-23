@@ -1,7 +1,7 @@
-import { CommandItem } from '../types';
+import { Command } from "../types/command";
 
 interface AvailableCommandsProps {
-  available: CommandItem[];
+  available: Command[];
   currentArg: any;
 }
 
@@ -14,6 +14,7 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
   return (
     <div className="mt-2 border-t border-gray-700 pt-2">
       <div className="flex flex-wrap gap-2">
+        {/* Calculate the num of starting letters to display in bold */}
         {available.map((cmd) => {
           const boldLength = available.reduce((length, other) => {
             if (other.name === cmd.name) return length;

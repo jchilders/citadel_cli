@@ -1,5 +1,5 @@
 import { useReducer, useRef } from 'react';
-import { CommandArg, CommandItem, OutputItem } from '../types';
+import { CommandArg, Command, OutputItem } from '../types';
 
 interface CitadelState {
   isOpen: boolean;
@@ -7,7 +7,7 @@ interface CitadelState {
   commandStack: string[];
   currentArg: CommandArg | null;
   input: string;
-  available: CommandItem[];
+  available: Command[];
   output: OutputItem[];
   isLoading: boolean;
   inputValidation: {
@@ -23,7 +23,7 @@ type CitadelAction =
   | { type: 'SET_COMMAND_STACK', payload: string[] }
   | { type: 'SET_CURRENT_ARG', payload: CommandArg | null }
   | { type: 'SET_INPUT', payload: string }
-  | { type: 'SET_AVAILABLE', payload: CommandItem[] }
+  | { type: 'SET_AVAILABLE', payload: Command[] }
   | { type: 'ADD_OUTPUT', payload: OutputItem }
   | { type: 'CLEAR_OUTPUT' }
   | { type: 'SET_LOADING', payload: boolean }
@@ -93,7 +93,7 @@ export function useCitadelState() {
       setCommandStack: (stack: string[]) => dispatch({ type: 'SET_COMMAND_STACK', payload: stack }),
       setCurrentArg: (arg: CommandArg | null) => dispatch({ type: 'SET_CURRENT_ARG', payload: arg }),
       setInput: (input: string) => dispatch({ type: 'SET_INPUT', payload: input }),
-      setAvailable: (available: CommandItem[]) => dispatch({ type: 'SET_AVAILABLE', payload: available }),
+      setAvailable: (available: Command[]) => dispatch({ type: 'SET_AVAILABLE', payload: available }),
       addOutput: (output: OutputItem) => dispatch({ type: 'ADD_OUTPUT', payload: output }),
       clearOutput: () => dispatch({ type: 'CLEAR_OUTPUT' }),
       setLoading: (loading: boolean) => dispatch({ type: 'SET_LOADING', payload: loading }),
