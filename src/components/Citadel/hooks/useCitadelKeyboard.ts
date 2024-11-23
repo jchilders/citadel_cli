@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Command } from '../types/command';
 import { CommandRegistry } from '../commandRegistry';
 
@@ -128,6 +128,13 @@ export function useCitadelKeyboard({
     commandProcessor,
     handleEnter
   ]);
+
+  useEffect(() => {
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [handleKeyDown, isOpen]);
 
   return { handleKeyDown };
 }

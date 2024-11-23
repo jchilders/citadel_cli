@@ -33,7 +33,7 @@ export const Citadel: React.FC<{
 
   useGlobalShortcut({ onOpen: actions.open });
 
-  const { handleKeyDown } = useCitadelKeyboard({
+  useCitadelKeyboard({
     isOpen,
     commandStack,
     input,
@@ -44,11 +44,6 @@ export const Citadel: React.FC<{
     actions,
     commandProcessor,
   });
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
 
   // Show the list of available commands when the component first opens
   useEffect(() => {
