@@ -1,0 +1,46 @@
+.container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgb(17, 24, 39); /* bg-gray-900 */
+  color: white;
+}
+
+.innerContainer {
+  max-width: 56rem; /* max-w-4xl */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.inputSection {
+  border-top: 1px solid rgb(55, 65, 81); /* border-gray-700 */
+  padding: 1rem; /* p-4 */
+}
+
+/* Animation classes */
+.slideUp {
+  animation: slideUp 0.2s ease-out forwards;
+}
+
+.slideDown {
+  animation: slideDown 0.2s ease-out forwards;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
