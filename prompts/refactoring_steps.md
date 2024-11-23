@@ -24,7 +24,7 @@ CommandSuggestions (for available commands)
 ArgumentHelp (for argument descriptions)
 Prompt: "Help me break down the Citadel component's UI into smaller, focused components"
 
-5. Response Formatting Logic
+5. Response Formatting Logic - DONE
 Move formatResponse into a separate utility
 Consider creating a dedicated ResponseFormatter class/service
 Prompt: "Help me extract and improve the response formatting logic into a separate utility"
