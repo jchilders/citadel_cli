@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { Command } from '../types/command';
-import { CommandRegistry } from '../commandRegistry';
+import { Command } from '../../../services/commands/types/command';
+import { CommandRegistry } from '../../../services/commands/CommandRegistry';
 
 interface UseCommandProcessorProps {
   commandRegistry: CommandRegistry;

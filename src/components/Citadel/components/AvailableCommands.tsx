@@ -1,4 +1,4 @@
-import { Command } from "../types/command";
+import { Command } from "../../../services/commands/types/command";
 
 interface AvailableCommandsProps {
   available: Command[];

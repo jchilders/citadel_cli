@@ -1,5 +1,5 @@
 import { CommandValidationStrategy } from "../validation/command_validation_strategy";
-import { CommandConfig } from "./command";
+import { CommandConfig } from "../../../services/commands/types/command";
 
 export interface CitadelProps {
   commands?: CommandConfig;

@@ -1,4 +1,4 @@
-import { CommandArg } from '../types/command'
+import { CommandArg } from '../../../services/commands/types/command'
 
 interface ArgumentHelpProps {
   currentArg: CommandArg | null;

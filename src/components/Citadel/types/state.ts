@@ -1,4 +1,4 @@
-import { Command, CommandArg, CommandResponse } from "./command";
+import { Command, CommandArg, CommandResponse } from "../../../services/commands/types/command";
 
 export interface CitadelState {
   isOpen: boolean;

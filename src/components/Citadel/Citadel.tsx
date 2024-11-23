@@ -10,8 +10,8 @@ import { ArgumentHelp } from './components/ArgumentHelp';
 import { AvailableCommands } from './components/AvailableCommands';
 import { CommandOutput } from './components/CommandOutput';
 import { CommandInput } from './components/CommandInput';
-import { Command } from './types/command';
-import { CommandRegistry } from './commandRegistry';
+import { Command } from '../../services/commands/types/command';
+import { CommandRegistry } from '../../services/commands/CommandRegistry';
 
 export const Citadel: React.FC<{
   commands?: Command[],
