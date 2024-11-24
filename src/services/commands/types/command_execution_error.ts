@@ -1,5 +1,8 @@
 export class CommandExecutionError extends Error {
-  constructor(message, commandPath, originalError) {
+  public readonly commandPath: string;
+  public readonly originalError: Error;
+
+  constructor(message: string, commandPath: string, originalError: Error) {
     super(message);
     this.name = 'CommandExecutionError';
     this.commandPath = commandPath;

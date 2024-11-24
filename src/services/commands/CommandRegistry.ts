@@ -1,10 +1,11 @@
-import { DuplicateCommandError } from './types/duplicate_command_error.js';
-import { CommandExecutionError } from './types/command_execution_error.js';
+import { DuplicateCommandError } from './types/duplicate_command_error';
+import { CommandExecutionError } from './types/command_execution_error';
+import { Command } from './types/command';
 
 export class CommandRegistry {
-  #commandTree = new Map();
+  #commandTree = new Map<string, Command>();
 
-  registerCommand(command, parentPath = []) {
+  registerCommand(command: Command, parentPath: string[] = []): void {
     const fullPath = [...parentPath, command.name].join('.');
     
     if (this.#commandTree.has(fullPath)) {
@@ -26,8 +27,8 @@ export class CommandRegistry {
     }
   }
 
-  registerCommands(commands) {
-    const registeredPaths = [];
+  registerCommands(commands: Command[]): void {
+    const registeredPaths: string[] = [];
 
     try {
       for (const command of commands) {
@@ -43,7 +44,7 @@ export class CommandRegistry {
     }
   }
 
-  async executeCommand(commandPath, args) {
+  async executeCommand(commandPath: string[], args: string[]): Promise<unknown> {
     const path = commandPath.join('.');
     const command = this.#commandTree.get(path);
     
@@ -60,26 +61,26 @@ export class CommandRegistry {
     } catch (error) {
       throw new CommandExecutionError(
         `Failed to execute command: ${path}`,
-        commandPath,
-        error
+        path,
+        error as Error
       );
     }
   }
 
-  getSubcommands(commandPath) {
+  getSubcommands(commandPath: string[]): Command[] {
     const path = commandPath.join('.');
     const command = this.#commandTree.get(path);
     
     return command?.subcommands || [];
   }
 
-  getCommandByPath(commandPath) {
+  getCommandByPath(commandPath: string[]): Command | undefined {
     const path = commandPath.join('.');
     return this.#commandTree.get(path);
   }
 
-  getRootCommands() {
-    const rootCommands = [];
+  getRootCommands(): Command[] {
+    const rootCommands: Command[] = [];
     
     for (const [path, command] of this.#commandTree.entries()) {
       if (!path.includes('.')) {
