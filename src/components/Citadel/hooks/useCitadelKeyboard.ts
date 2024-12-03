@@ -98,9 +98,7 @@ export function useKeyboardHandler({
               state.available.map(cmd => cmd.name)
             );
 
-            if (validationResult.isValid) {
-              handleInputUpdate(newInput);
-            } else {
+            if (!validationResult.isValid) {
               actions.setInputValidation(validationResult);
               setTimeout(() => {
                 actions.setInputValidation({ isValid: true });
@@ -108,6 +106,8 @@ export function useKeyboardHandler({
               return;
             }
           }
+
+          handleInputUpdate(newInput);
         }
         break;
     }
