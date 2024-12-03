@@ -1,14 +1,12 @@
 import { useCallback, useEffect } from 'react';
 import { Command } from '../../../services/commands/types/command';
 import { CommandRegistry } from '../../../services/commands/CommandRegistry';
+import { CitadelState } from '../types';
+import { CommandValidationStrategy } from '../validation/command_validation_strategy';
 
-interface UseCitadelKeyboardProps {
-  isOpen: boolean;
-  commandStack: string[];
-  input: string;
-  available: Command[];
-  currentArg: any;
-  validationStrategy: any;
+export interface UseCitadelKeyboardProps {
+  state: CitadelState;
+  validationStrategy: CommandValidationStrategy;
   commandRegistry: CommandRegistry;
   actions: {
     open: () => void;
@@ -30,37 +28,33 @@ interface UseCitadelKeyboardProps {
 }
 
 export function useCitadelKeyboard({
-  isOpen,
-  commandStack,
-  input,
-  available,
-  currentArg,
+  state,
   validationStrategy,
   commandRegistry,
   actions,
   commandProcessor
 }: UseCitadelKeyboardProps) {
   const handleEnter = useCallback(async () => {
-    const command = commandRegistry.getCommandByPath(commandStack);
-    if (command?.args && currentArg) {
-      if (input.trim()) {
-        await commandProcessor.executeCommand(commandStack, [input]);
+    const command = commandRegistry.getCommandByPath(state.commandStack);
+    if (command?.args && state.currentArg) {
+      if (state.input.trim()) {
+        await commandProcessor.executeCommand(state.commandStack, [state.input]);
       }
-    } else if (!command?.args && !currentArg) {
-      await commandProcessor.executeCommand(commandStack, []);
+    } else if (!command?.args && !state.currentArg) {
+      await commandProcessor.executeCommand(state.commandStack, []);
     } 
-  }, [commandStack, input, available, currentArg, commandRegistry, actions, commandProcessor]);
+  }, [state.commandStack, state.input, state.available, state.currentArg, commandRegistry, actions, commandProcessor]);
 
   // Helper function to handle input updates
   const handleInputUpdate = useCallback((newInput: string) => {
     actions.setInput(newInput);
-    if (!currentArg) {
-      commandProcessor.updateFilteredCommands(newInput, available, commandStack);
+    if (!state.currentArg) {
+      commandProcessor.updateFilteredCommands(newInput, state.available, state.commandStack);
     }
-  }, [actions, currentArg, commandProcessor, available, commandStack]);
+  }, [actions, state.currentArg, commandProcessor, state.available, state.commandStack]);
 
   const handleKeyDown = useCallback(async (e: KeyboardEvent) => {
-    if (!isOpen) {
+    if (!state.isOpen) {
       if (e.key === '.') {
         e.preventDefault();
         actions.open();
@@ -79,15 +73,15 @@ export function useCitadelKeyboard({
         break;
 
       case 'Backspace':
-        if (input === '') {
-          const newStack = commandStack.slice(0, -1);
+        if (state.input === '') {
+          const newStack = state.commandStack.slice(0, -1);
           actions.setCommandStack(newStack);
           const commands = commandProcessor.getAvailableCommands(newStack);
           actions.setAvailable(commands);
           actions.setInput('');
           actions.setCurrentArg(null);
         } else {
-          handleInputUpdate(input.slice(0, -1));
+          handleInputUpdate(state.input.slice(0, -1));
         }
         break;
 
@@ -97,14 +91,16 @@ export function useCitadelKeyboard({
 
       default:
         if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
-          const newInput = input + e.key;
-          if (!currentArg) {
+          const newInput = state.input + e.key;
+          if (!state.currentArg) {
             const validationResult = validationStrategy.validate(
               newInput,
-              available.map(cmd => cmd.name)
+              state.available.map(cmd => cmd.name)
             );
 
-            if (!validationResult.isValid) {
+            if (validationResult.isValid) {
+              handleInputUpdate(newInput);
+            } else {
               actions.setInputValidation(validationResult);
               setTimeout(() => {
                 actions.setInputValidation({ isValid: true });
@@ -112,17 +108,15 @@ export function useCitadelKeyboard({
               return;
             }
           }
-
-          handleInputUpdate(newInput);
         }
         break;
     }
   }, [
-    isOpen,
-    commandStack,
-    input,
-    available,
-    currentArg,
+    state.isOpen,
+    state.commandStack,
+    state.input,
+    state.available,
+    state.currentArg,
     validationStrategy,
     actions,
     commandProcessor,
@@ -130,11 +124,11 @@ export function useCitadelKeyboard({
   ]);
 
   useEffect(() => {
-    if (isOpen) {
+    if (state.isOpen) {
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
     }
-  }, [handleKeyDown, isOpen]);
+  }, [handleKeyDown, state.isOpen]);
 
   return { handleKeyDown };
 }

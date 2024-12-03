@@ -36,11 +36,7 @@ export const Citadel: React.FC<{
   useGlobalShortcut({ onOpen: actions.open });
 
   useCitadelKeyboard({
-    isOpen,
-    commandStack,
-    input,
-    available,
-    currentArg,
+    state,
     validationStrategy,
     commandRegistry,
     actions,

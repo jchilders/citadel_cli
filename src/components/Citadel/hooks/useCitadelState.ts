@@ -2,15 +2,15 @@ import { useReducer, useRef } from 'react';
 import { CommandArg, Command, OutputItem } from '../types';
 
 interface CitadelState {
-  isOpen: boolean;
-  isClosing: boolean;
-  commandStack: string[];
-  currentArg: CommandArg | null;
-  input: string;
-  available: Command[];
-  output: OutputItem[];
-  isLoading: boolean;
-  inputValidation: {
+  isOpen: boolean;         // Controls if the interface is visible
+  isClosing: boolean;      // Tracks closing animation state
+  commandStack: string[];  // History of commands
+  currentArg: CommandArg | null;  // Current command argument being processed
+  input: string;           // Current user input
+  available: Command[];    // Available commands
+  output: OutputItem[];    // Command output history
+  isLoading: boolean;      // Loading state indicator
+  inputValidation: {       // Input validation state
     isValid: boolean;
     message?: string;
   };
