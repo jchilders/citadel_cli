@@ -71,6 +71,9 @@ export function useCommandProcessor({ commandRegistry, actions }: UseCommandProc
       } else if (command?.subcommands) {
         const nextCommands = getAvailableCommands(newStack);
         actions.setAvailable(nextCommands);
+      } else {
+        actions.setAvailable([]);
+        actions.setCurrentArg({description: command?.description})
       }
     } else if (filtered.length > 0) {
       actions.setAvailable(filtered);
