@@ -27,14 +27,14 @@ export interface UseCitadelKeyboardProps {
   };
 }
 
-export function useCitadelKeyboard({
+export function useKeyboardHandler({
   state,
   validationStrategy,
   commandRegistry,
   actions,
   commandProcessor
 }: UseCitadelKeyboardProps) {
-  const handleEnter = useCallback(async () => {
+  const handleCommandExecution = useCallback(async () => {
     const command = commandRegistry.getCommandByPath(state.commandStack);
     if (command?.args && state.currentArg) {
       if (state.input.trim()) {
@@ -86,7 +86,7 @@ export function useCitadelKeyboard({
         break;
 
       case 'Enter':
-        await handleEnter();
+        await handleCommandExecution();
         break;
 
       default:
@@ -120,7 +120,7 @@ export function useCitadelKeyboard({
     validationStrategy,
     actions,
     commandProcessor,
-    handleEnter
+    handleCommandExecution
   ]);
 
   useEffect(() => {

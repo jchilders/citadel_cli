@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import type { Mocked } from 'vitest';
 import { CommandRegistry } from '../../../../services/commands/CommandRegistry';
-import { useCitadelKeyboard } from '../useCitadelKeyboard';
+import { UseCitadelKeyboardProps, useKeyboardHandler } from '../useCitadelKeyboard';
 import { CommandValidationStrategy, DefaultCommandValidationStrategy } from '../../validation/command_validation_strategy';
 
 vi.mock('react', () => ({
@@ -19,16 +20,16 @@ describe('useCitadelKeyboard', () => {
     setCurrentArg: vi.fn(),
     setAvailable: vi.fn(),
     setInputValidation: vi.fn(),
-  };
+  } as unknown as Mocked<UseCitadelKeyboardProps['actions']>;
 
   const mockCommandProcessor = {
     getAvailableCommands: vi.fn(),
     getCommandFromStack: vi.fn(),
     executeCommand: vi.fn(),
     updateFilteredCommands: vi.fn(),
-  };
+  } as unknown as Mocked<UseCitadelKeyboardProps['commandProcessor']>;
 
-  const mockCommandRegistry: vi.Mocked<CommandRegistry> = {
+  const mockCommandRegistry = {
     getCommandByPath: vi.fn(),
     commandTree: {},
     registerCommand: vi.fn(),
@@ -36,7 +37,7 @@ describe('useCitadelKeyboard', () => {
     executeCommand: vi.fn(),
     getCommands: vi.fn(),
     getCommandTree: vi.fn(),
-  };
+  } as unknown as Mocked<CommandRegistry>;
 
   const initialState = {
     isOpen: false,
@@ -63,7 +64,7 @@ describe('useCitadelKeyboard', () => {
       ...initialStateOverrides
     };
 
-    const kb = useCitadelKeyboard({
+    const kb = useKeyboardHandler({
       state,
       validationStrategy: validationStrategy,
       commandRegistry: mockCommandRegistry,
@@ -80,7 +81,7 @@ describe('useCitadelKeyboard', () => {
 
   it('should call open() action when "." key is pressed and Citadel is closed', () => {
     const kb =
-      useCitadelKeyboard({
+      useKeyboardHandler({
         state: initialState,
         validationStrategy: new MockCommandValidationStrategy(),
         commandRegistry: mockCommandRegistry,
@@ -104,7 +105,7 @@ describe('useCitadelKeyboard', () => {
 
     vi.useFakeTimers();
 
-    const kb = useCitadelKeyboard({
+    const kb = useKeyboardHandler({
       state,
       validationStrategy: new MockCommandValidationStrategy(),
       commandRegistry: mockCommandRegistry,

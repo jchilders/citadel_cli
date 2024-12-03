@@ -1,4 +1,4 @@
-import { useCitadelKeyboard } from './hooks/useCitadelKeyboard';
+import { useKeyboardHandler } from './hooks/useCitadelKeyboard';
 import { useCitadelState } from './hooks/useCitadelState';
 import { useCommandProcessor } from './hooks/useCommandProcessor';
 import { useEffect } from 'react';
@@ -35,7 +35,7 @@ export const Citadel: React.FC<{
 
   useGlobalShortcut({ onOpen: actions.open });
 
-  useCitadelKeyboard({
+  useKeyboardHandler({
     state,
     validationStrategy,
     commandRegistry,
