@@ -6,7 +6,7 @@ import { CommandInput } from './components/CommandInput';
 import { CommandOutput } from './components/CommandOutput';
 import { AvailableCommands } from './components/AvailableCommands';
 import { defaultCommandConfig } from './commands-config';
-import { Command, InputState } from './types/command-types';
+import { Command, InputState, CommandArg } from './types/command-types';
 import { CitadelConfig } from './config/types';
 import { defaultConfig } from './config/defaults';
 
@@ -22,6 +22,13 @@ const getCurrentCommand = (commandStack: string[], availableCommands: Command[])
   }
 
   return currentCommand;
+};
+
+const getCommandArgForCommand = (command: Command | undefined): CommandArg | undefined => {
+  if (!command || !command.args) {
+    return undefined;
+  }
+  return command.args.at(-1);
 };
 
 export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = defaultConfig }) => {
@@ -138,7 +145,7 @@ export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = default
           />
           <AvailableCommands 
             available={inputState.availableCommands}
-            currentArg={inputState.isEnteringArg}
+            currentArg={getCommandArgForCommand(currentCommand)}
             currentCommand={currentCommand}
           />
         </div>

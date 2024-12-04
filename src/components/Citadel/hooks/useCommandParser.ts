@@ -46,11 +46,14 @@ export function useCommandParser(commands: Command[]) {
           actions.setCommandStack(newStack);
           actions.setCurrentInput('');
           
-          // Update available commands
+          // Update available commands and reset arg entry if command doesn't need args
           if (matchingCommand.subcommands) {
             actions.setAvailableCommands(matchingCommand.subcommands);
-          } else if (matchingCommand.handler) {
+            actions.setIsEnteringArg(false);  // Reset when switching to subcommands
+          } else if (matchingCommand.handler && matchingCommand.args) {
             actions.setIsEnteringArg(true);
+          } else {
+            actions.setIsEnteringArg(false);  // Reset for commands without args
           }
         }
       }

@@ -1,8 +1,8 @@
-import { Command } from "../../../services/commands/types/command";
+import { Command, CommandArg } from "../types/command-types";
 
 interface AvailableCommandsProps {
   available: Command[];
-  currentArg: any;
+  currentArg: CommandArg | undefined;
   currentCommand?: Command;
 }
 
@@ -11,46 +11,53 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
   currentArg,
   currentCommand
 }) => {
-  // Always render the container to maintain consistent height
   return (
     <div className="mt-2 border-t border-gray-700 h-10 mb-4">
-      {(!currentArg && available.length > 0) || (currentArg && currentCommand?.args) ? (
-        <div className="pt-2">
-          <div className="flex flex-wrap gap-2">
-            {!currentArg && available.map((cmd) => {
-              const boldLength = available.reduce((length, other) => {
-                if (other.name === cmd.name) return length;
-                let commonPrefix = 0;
-                while (
-                  commonPrefix < cmd.name.length &&
-                  commonPrefix < other.name.length &&
-                  cmd.name[commonPrefix].toLowerCase() === other.name[commonPrefix].toLowerCase()
-                ) {
-                  commonPrefix++;
-                }
-                return Math.max(length, commonPrefix + 1);
-              }, 1);
+      <div className="text-gray-300">
+        {(() => {
+          let showCommands = (currentCommand === undefined || (currentCommand && currentCommand.subcommands && currentCommand.subcommands.length > 0)); 
+          if (showCommands) {
+            // There are subcommands. Display them.
+            return (
+              <div className="pt-2">
+                <div className="flex flex-wrap gap-2">
+                  {available.map((cmd) => {
+                    const boldLength = available.reduce((length, other) => {
+                      if (other.name === cmd.name) return length;
+                      let commonPrefix = 0;
+                      while (
+                        commonPrefix < cmd.name.length &&
+                        commonPrefix < other.name.length &&
+                        cmd.name[commonPrefix].toLowerCase() === other.name[commonPrefix].toLowerCase()
+                      ) {
+                        commonPrefix++;
+                      }
+                      return Math.max(length, commonPrefix + 1);
+                    }, 1);
 
-              return (
-                <div
-                  key={cmd.name}
-                  className="px-2 py-1 rounded bg-gray-800 mr-2 last:mr-0"
-                >
-                  <span className="font-mono text-white">
-                    <strong className="underline">{cmd.name.slice(0, boldLength)}</strong>
-                    {cmd.name.slice(boldLength)}
-                  </span>
+                    return (
+                      <div
+                        key={cmd.name}
+                        className="px-2 py-1 rounded bg-gray-800 mr-2 last:mr-0"
+                      >
+                        <span className="font-mono text-white">
+                          <strong className="underline">{cmd.name.slice(0, boldLength)}</strong>
+                          {cmd.name.slice(boldLength)}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-            {currentArg && currentCommand?.args && (
-              <div className="text-gray-300">
-                {currentCommand.args[0].description}
               </div>
-            )}
-          </div>
-        </div>
-      ) : null}
+            );
+          } else if (currentArg) {
+            return currentArg?.description;
+          } else if (currentCommand) {
+            return currentCommand?.description;
+          }
+          return null;
+        })()}
+      </div>
     </div>
   );
 };
