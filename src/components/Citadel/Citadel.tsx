@@ -65,6 +65,7 @@ export const Citadel: React.FC<{
             commandStack={commandStack}
             input={input}
             inputValidation={inputValidation}
+            onInputChange={actions.setInput}
           />
           <ArgumentHelp currentArg={currentArg} />
           <AvailableCommands

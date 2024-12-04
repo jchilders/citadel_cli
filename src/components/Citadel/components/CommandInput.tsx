@@ -10,16 +10,30 @@ interface CommandInputProps {
     isValid: boolean;
     message?: string;
   };
+  onInputChange?: (input: string) => void;
 }
 
 export const CommandInput: React.FC<CommandInputProps> = ({
   isLoading,
   commandStack,
   input,
-  inputValidation
+  inputValidation,
+  onInputChange
 }) => {
+  const handlePaste = (event: React.ClipboardEvent) => {
+    console.log('Pasting...');
+    event.preventDefault();
+    const pastedText = event.clipboardData.getData('text');
+    console.log('Pasted text:', pastedText);
+    onInputChange?.(pastedText);
+  };
+
   return (
-    <div className="flex items-center mb-2">
+    <div 
+      className="flex items-center mb-2"
+      onPaste={handlePaste}
+      tabIndex={0}
+    >
       <div className="text-gray-400 mr-2">
         {isLoading ? <Loader2 className="animate-spin w-4 h-4" /> : '⟩'}
       </div>
