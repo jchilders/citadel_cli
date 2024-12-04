@@ -1,78 +1,88 @@
-import { useKeyboardHandler } from './hooks/useCitadelKeyboard';
-import { useCitadelState } from './hooks/useCitadelState';
-import { useCommandProcessor } from './hooks/useCommandProcessor';
-import { useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useGlobalShortcut } from './hooks/useGlobalShortcut';
 import { useSlideAnimation } from './hooks/useSlideAnimation';
-
 import styles from './Citadel.module.css';
-
-import { ArgumentHelp } from './components/ArgumentHelp';
-import { AvailableCommands } from './components/AvailableCommands';
-import { CommandOutput } from './components/CommandOutput';
 import { CommandInput } from './components/CommandInput';
-import { CommandValidationStrategy, DefaultCommandValidationStrategy } from './validation/command_validation_strategy';
-import { Command } from '../../services/commands/types/command';
-import { CommandRegistry } from '../../services/commands/CommandRegistry';
+import { CommandOutput } from './components/CommandOutput';
+import { defaultCommandConfig } from './commands-config';
+import { Command, InputState } from './types/command-types';
 
-export const Citadel: React.FC<{
-  commands?: Command[],
-  validationStrategy?: CommandValidationStrategy
-}> = ({
-  commands = [],
-  validationStrategy = new DefaultCommandValidationStrategy()
-}) => {
-  const { state, actions, outputRef } = useCitadelState();
+export const Citadel: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [output, setOutput] = useState<any[]>([]);
 
-  const commandRegistry = new CommandRegistry();
-  commandRegistry.registerCommands(commands);
-  const commandProcessor = useCommandProcessor({ commandRegistry, actions });
-
-  const {
-    isOpen, isClosing, commandStack, currentArg, input,
-    available, output, isLoading, inputValidation
-  } = state;
-
-  useGlobalShortcut({ onOpen: actions.open });
-
-  useKeyboardHandler({
-    state,
-    validationStrategy,
-    commandRegistry,
-    actions,
-    commandProcessor,
+  const [inputState, setInputState] = useState<InputState>({
+    commandStack: [],
+    currentInput: '',
+    isEnteringArg: false,
+    availableCommands: defaultCommandConfig,
+    validation: { isValid: true }
   });
 
-  // Show the list of available commands when the component first opens
-  useEffect(() => {
-    if (isOpen) {
-      commandProcessor.initialize();
-    }
-  }, [isOpen]);
+  const actions = {
+    setCommandStack: useCallback((stack: string[]) => {
+      setInputState(prev => ({ ...prev, commandStack: stack }));
+    }, []),
 
-  const animationClass = useSlideAnimation(isOpen, isClosing);
+    setCurrentInput: useCallback((input: string) => {
+      setInputState(prev => ({ ...prev, currentInput: input }));
+    }, []),
 
-  if (!isOpen) return null;
+    setIsEnteringArg: useCallback((isEntering: boolean) => {
+      setInputState(prev => ({ ...prev, isEnteringArg: isEntering }));
+    }, []),
+
+    setAvailableCommands: useCallback((commands: Command[]) => {
+      setInputState(prev => ({ ...prev, availableCommands: commands }));
+    }, []),
+
+    setValidation: useCallback((validation: { isValid: boolean; message?: string }) => {
+      setInputState(prev => ({ ...prev, validation }));
+    }, []),
+
+    executeCommand: useCallback(async (stack: string[], args?: string[]) => {
+      setIsLoading(true);
+      try {
+        let currentCommand: Command | undefined = undefined;
+        let available = defaultCommandConfig;
+
+        // Navigate to the final command in the stack
+        for (const item of stack) {
+          currentCommand = available.find(cmd => cmd.name === item);
+          if (!currentCommand) throw new Error('Invalid command');
+          available = currentCommand.subcommands || [];
+        }
+
+        if (!currentCommand?.handler) {
+          throw new Error('No handler found for command');
+        }
+
+        const result = await currentCommand.handler(args || []);
+        setOutput(result);
+      } catch (error) {
+        setOutput({ error: error instanceof Error ? error.message : 'Unknown error occurred' });
+      } finally {
+        setIsLoading(false);
+      }
+    }, [])
+  };
+
+  const animationClass = useSlideAnimation(true, false);
+
+  const outputRef = useRef<HTMLDivElement>(null);
+
+  useGlobalShortcut({ onOpen: () => {} });
 
   return (
     <div className={`${styles.container} ${animationClass}`}>
       <div className={styles.innerContainer}>
+        <CommandInput
+          isLoading={isLoading}
+          state={inputState}
+          actions={actions}
+          commands={defaultCommandConfig}
+        />
         <CommandOutput output={output} outputRef={outputRef} />
-        
-        <div className={styles.inputSection}>
-          <CommandInput
-            isLoading={isLoading}
-            commandStack={commandStack}
-            input={input}
-            inputValidation={inputValidation}
-            onInputChange={actions.setInput}
-          />
-          <ArgumentHelp currentArg={currentArg} />
-          <AvailableCommands
-            available={available}
-            currentArg={currentArg}
-          />
-        </div>
       </div>
     </div>
   );

@@ -17,12 +17,16 @@ export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef 
 
   return (
     <div ref={outputRef} className="max-h-64 overflow-y-auto p-4 font-mono">
-      {output.map((item, index) => (
-        <div key={index} className="mb-3">
-          <div className="text-gray-500 text-sm">{item.command}</div>
-          {formatResponse(item.response)}
-        </div>
-      ))}
+      {output.length === 0 ? (
+        <div className="text-gray-500">No output available</div>
+      ) : (
+        output.map((item, index) => (
+          <div key={index} className="mb-3">
+            <div className="text-gray-500 text-sm">{item.command}</div>
+            {formatResponse(item.response)}
+          </div>
+        ))
+      )}
     </div>
   );
 };
