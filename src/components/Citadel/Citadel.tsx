@@ -7,6 +7,8 @@ import { CommandOutput } from './components/CommandOutput';
 import { AvailableCommands } from './components/AvailableCommands';
 import { defaultCommandConfig } from './commands-config';
 import { Command, InputState } from './types/command-types';
+import { CitadelConfig } from './config/types';
+import { defaultConfig } from './config/defaults';
 
 const getCurrentCommand = (commandStack: string[], availableCommands: Command[]): Command | undefined => {
   let currentCommand: Command | undefined = undefined;
@@ -22,7 +24,7 @@ const getCurrentCommand = (commandStack: string[], availableCommands: Command[])
   return currentCommand;
 };
 
-export const Citadel: React.FC = () => {
+export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = defaultConfig }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [output, setOutput] = useState<any[]>([]);
   const [isVisible, setIsVisible] = useState(false);
@@ -105,9 +107,9 @@ export const Citadel: React.FC = () => {
     isVisible
   });
 
-  // Reset state when closing
+  // Reset state when closing unless configured to not do so
   useEffect(() => {
-    if (!isVisible) {
+    if (!isVisible && config.resetStateOnEscape) {
       setInputState({
         commandStack: [],
         currentInput: '',
@@ -117,7 +119,7 @@ export const Citadel: React.FC = () => {
       });
       setOutput([]);
     }
-  }, [isVisible]);
+  }, [isVisible, config.resetStateOnEscape]);
 
   const animationClass = useSlideAnimation(isVisible, isClosing);
 

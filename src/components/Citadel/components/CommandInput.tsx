@@ -65,7 +65,6 @@ export const CommandInput: React.FC<CommandInputProps> = ({
             onChange={onInputChange}
             onPaste={handlePaste}
             className="flex-1 bg-transparent outline-none"
-            placeholder="Type a command..."
           />
           {isLoading && (
             <Loader2 className="animate-spin h-4 w-4 text-gray-500" />
