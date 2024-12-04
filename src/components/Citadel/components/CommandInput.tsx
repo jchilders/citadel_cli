@@ -4,7 +4,6 @@ import { Cursor } from '../Cursor';
 import { defaultCursorConfig } from '../cursor-config';
 import { Command, InputState, CommandInputActions } from '../types/command-types';
 import { useCommandParser } from '../hooks/useCommandParser';
-import { CommandSuggestions } from './CommandSuggestions';
 
 interface CommandInputProps {
   isLoading: boolean;
@@ -92,32 +91,19 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   return (
     <div className="flex flex-col w-full mb-2">
       <div className="flex items-center">
-        <div className="text-gray-400 mr-2">
-          {isLoading ? <Loader2 className="animate-spin w-4 h-4" /> : '⟩'}
-        </div>
-        <div className="flex-1 font-mono flex items-center">
-          <span className="whitespace-pre">
-            {state.commandStack.join(' ')}
-            {state.commandStack.length > 0 && ' '}
-          </span>
-          <input
-            ref={inputRef}
-            type="text"
-            value={state.currentInput}
-            onChange={handleInputChange}
-            className="flex-1 bg-transparent outline-none"
-            placeholder={argumentDescription || "Enter a command..."}
-          />
-          <Cursor
-            style={defaultCursorConfig}
-            isValid={state.validation.isValid}
-            errorMessage={state.validation.message}
-          />
-        </div>
+        <input
+          ref={inputRef}
+          type="text"
+          value={state.currentInput}
+          onChange={handleInputChange}
+          onPaste={handlePaste}
+          className="flex-1 bg-transparent outline-none"
+          placeholder={argumentDescription || "Type a command..."}
+        />
+        {isLoading && (
+          <Loader2 className="animate-spin h-4 w-4 text-gray-500" />
+        )}
       </div>
-      {!state.isEnteringArg && state.availableCommands.length > 0 && (
-        <CommandSuggestions commands={state.availableCommands} />
-      )}
     </div>
   );
 };

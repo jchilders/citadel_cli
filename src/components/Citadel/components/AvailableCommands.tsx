@@ -32,7 +32,7 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
           return (
             <div
               key={cmd.name}
-              className="px-2 py-1 rounded bg-gray-800"
+              className="px-2 py-1 rounded bg-gray-800 mr-2 last:mr-0"
             >
               <span className="font-mono text-white">
                 <strong className="underline">{cmd.name.slice(0, boldLength)}</strong>

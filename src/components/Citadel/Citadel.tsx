@@ -4,6 +4,7 @@ import { useSlideAnimation } from './hooks/useSlideAnimation';
 import styles from './Citadel.module.css';
 import { CommandInput } from './components/CommandInput';
 import { CommandOutput } from './components/CommandOutput';
+import { AvailableCommands } from './components/AvailableCommands';
 import { defaultCommandConfig } from './commands-config';
 import { Command, InputState } from './types/command-types';
 
@@ -83,6 +84,10 @@ export const Citadel: React.FC = () => {
           commands={defaultCommandConfig}
         />
         <CommandOutput output={output} outputRef={outputRef} />
+        <AvailableCommands 
+          available={inputState.availableCommands}
+          currentArg={inputState.isEnteringArg}
+        />
       </div>
     </div>
   );
