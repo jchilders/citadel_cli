@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useGlobalShortcut } from './hooks/useGlobalShortcut';
 import { useSlideAnimation } from './hooks/useSlideAnimation';
 import styles from './Citadel.module.css';
@@ -8,9 +8,25 @@ import { AvailableCommands } from './components/AvailableCommands';
 import { defaultCommandConfig } from './commands-config';
 import { Command, InputState } from './types/command-types';
 
+const getCurrentCommand = (commandStack: string[], availableCommands: Command[]): Command | undefined => {
+  let currentCommand: Command | undefined = undefined;
+  let available = availableCommands;
+
+  // Navigate to the final command in the stack
+  for (const item of commandStack) {
+    currentCommand = available.find(cmd => cmd.name === item);
+    if (!currentCommand) return undefined;
+    available = currentCommand.subcommands || [];
+  }
+
+  return currentCommand;
+};
+
 export const Citadel: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [output, setOutput] = useState<any[]>([]);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   const [inputState, setInputState] = useState<InputState>({
     commandStack: [],
@@ -68,26 +84,62 @@ export const Citadel: React.FC = () => {
     }, [])
   };
 
-  const animationClass = useSlideAnimation(true, false);
-
   const outputRef = useRef<HTMLDivElement>(null);
+  const currentCommand = getCurrentCommand(inputState.commandStack, defaultCommandConfig);
 
-  useGlobalShortcut({ onOpen: () => {} });
+  const handleClose = () => {
+    setIsClosing(true);
+    // Wait for animation to complete before hiding
+    setTimeout(() => {
+      setIsVisible(false);
+      setIsClosing(false);
+    }, 200); // Match animation duration
+  };
+
+  useGlobalShortcut({ 
+    onOpen: () => {
+      setIsClosing(false);
+      setIsVisible(true);
+    },
+    onClose: handleClose,
+    isVisible
+  });
+
+  // Reset state when closing
+  useEffect(() => {
+    if (!isVisible) {
+      setInputState({
+        commandStack: [],
+        currentInput: '',
+        isEnteringArg: false,
+        availableCommands: defaultCommandConfig,
+        validation: { isValid: true }
+      });
+      setOutput([]);
+    }
+  }, [isVisible]);
+
+  const animationClass = useSlideAnimation(isVisible, isClosing);
+
+  if (!isVisible && !isClosing) return null;
 
   return (
     <div className={`${styles.container} ${animationClass}`}>
       <div className={styles.innerContainer}>
-        <CommandInput
-          isLoading={isLoading}
-          state={inputState}
-          actions={actions}
-          commands={defaultCommandConfig}
-        />
         <CommandOutput output={output} outputRef={outputRef} />
-        <AvailableCommands 
-          available={inputState.availableCommands}
-          currentArg={inputState.isEnteringArg}
-        />
+        <div className="flex flex-col">
+          <CommandInput
+            isLoading={isLoading}
+            state={inputState}
+            actions={actions}
+            commands={defaultCommandConfig}
+          />
+          <AvailableCommands 
+            available={inputState.availableCommands}
+            currentArg={inputState.isEnteringArg}
+            currentCommand={currentCommand}
+          />
+        </div>
       </div>
     </div>
   );

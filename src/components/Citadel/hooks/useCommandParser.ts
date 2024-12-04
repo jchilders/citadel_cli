@@ -28,12 +28,63 @@ export function useCommandParser(commands: Command[]) {
     return current || null;
   }, []);
 
+  const handleInputChange = useCallback((
+    newValue: string,
+    state: InputState,
+    actions: CommandInputActions
+  ) => {
+    actions.setCurrentInput(newValue);
+
+    // Only auto-complete if we're not entering an argument
+    if (!state.isEnteringArg) {
+      const suggestion = getAutocompleteSuggestion(newValue, state.availableCommands);
+      if (suggestion && suggestion !== newValue) {
+        const matchingCommand = state.availableCommands.find(cmd => cmd.name === suggestion);
+        if (matchingCommand) {
+          // Update command stack and clear input
+          const newStack = [...state.commandStack, suggestion];
+          actions.setCommandStack(newStack);
+          actions.setCurrentInput('');
+          
+          // Update available commands
+          if (matchingCommand.subcommands) {
+            actions.setAvailableCommands(matchingCommand.subcommands);
+          } else if (matchingCommand.handler) {
+            actions.setIsEnteringArg(true);
+          }
+        }
+      }
+    }
+  }, [getAutocompleteSuggestion]);
+
   const handleKeyDown = useCallback((
     e: KeyboardEvent,
     state: InputState,
     actions: CommandInputActions
   ) => {
     const { commandStack, currentInput, isEnteringArg, availableCommands } = state;
+
+    if (e.key === 'Backspace' && currentInput === '') {
+      e.preventDefault();
+      if (commandStack.length > 0) {
+        // Remove the last command from the stack
+        const newStack = commandStack.slice(0, -1);
+        actions.setCommandStack(newStack);
+        
+        // Get the new available commands based on the updated stack
+        let newAvailable = commands;
+        if (newStack.length > 0) {
+          // Get the parent command to show its subcommands
+          const parentCommand = getCurrentCommand(newStack, commands);
+          if (parentCommand?.subcommands) {
+            newAvailable = parentCommand.subcommands;
+          }
+        }
+        actions.setAvailableCommands(newAvailable);
+        actions.setIsEnteringArg(false); // Reset arg entry mode when backspacing
+      }
+      return;
+    }
 
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -67,6 +118,7 @@ export function useCommandParser(commands: Command[]) {
 
   return {
     handleKeyDown,
+    handleInputChange,
     findMatchingCommands,
     getAutocompleteSuggestion,
     getCurrentCommand,
