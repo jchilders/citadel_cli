@@ -12,7 +12,7 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
   availableCommands
 }) => {
   const showCommands = !state.isEnteringArg && availableCommands.length > 0;
-  const containerClasses = "h-24 mt-2 border-t border-gray-700";
+  const containerClasses = "h-12 mt-2 border-t border-gray-700";
   const contentClasses = "text-gray-300 pt-2";
 
   return (

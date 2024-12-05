@@ -68,9 +68,6 @@ export const CommandInput: React.FC<CommandInputProps> = ({
             onChange={onInputChange}
             onPaste={handlePaste}
             className="flex-1 bg-transparent outline-none text-gray-200"
-            placeholder={state.isEnteringArg && state.currentNode?.argument 
-              ? state.currentNode.argument.description 
-              : 'Enter a command...'}
           />
         </div>
       </div>
