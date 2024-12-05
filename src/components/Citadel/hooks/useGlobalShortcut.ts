@@ -4,14 +4,15 @@ interface UseGlobalShortcutProps {
   onOpen: () => void;
   onClose: () => void;
   isVisible: boolean;
+  toggleKey: string;
 }
 
-export const useGlobalShortcut = ({ onOpen, onClose, isVisible }: UseGlobalShortcutProps) => {
+export const useGlobalShortcut = ({ onOpen, onClose, isVisible, toggleKey }: UseGlobalShortcutProps) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Check if the pressed key is '.' and no input elements are focused
+      // Check if the pressed key matches toggleKey and no input elements are focused
       if (
-        event.key === '.' &&
+        event.key === toggleKey &&
         !['INPUT', 'TEXTAREA'].includes((event.target as HTMLElement).tagName)
       ) {
         event.preventDefault();
@@ -26,5 +27,5 @@ export const useGlobalShortcut = ({ onOpen, onClose, isVisible }: UseGlobalShort
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onOpen, onClose, isVisible]);
+  }, [onOpen, onClose, isVisible, toggleKey]);
 };

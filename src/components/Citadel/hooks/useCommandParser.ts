@@ -1,129 +1,117 @@
 import { useCallback } from 'react';
-import { Command, InputState, CommandInputActions } from '../types/command-types';
+import { commandTrie } from '../commands-config';
+import { CommandNode } from '../types/command-trie';
+import { CitadelState, CitadelActions } from '../types/state';
 
-export function useCommandParser(commands: Command[]) {
-  const findMatchingCommands = useCallback((input: string, availableCommands: Command[]): Command[] => {
-    if (!input) return availableCommands;
-    return availableCommands.filter(cmd => cmd.name.toLowerCase().startsWith(input.toLowerCase()));
+export function useCommandParser() {
+  const findMatchingCommands = useCallback((input: string, availableNodes: CommandNode[]): CommandNode[] => {
+    if (!input) return availableNodes;
+    return availableNodes.filter(node => node.name.toLowerCase().startsWith(input.toLowerCase()));
   }, []);
 
-  const getAutocompleteSuggestion = useCallback((input: string, availableCommands: Command[]): string | null => {
-    const matches = findMatchingCommands(input, availableCommands);
+  const getAutocompleteSuggestion = useCallback((input: string, availableNodes: CommandNode[]): string | null => {
+    const matches = findMatchingCommands(input, availableNodes);
     if (matches.length === 1) {
       return matches[0].name;
     }
     return null;
   }, [findMatchingCommands]);
 
-  const getCurrentCommand = useCallback((stack: string[], rootCommands: Command[]): Command | null => {
-    let current: Command | undefined;
-    let available = rootCommands;
-
-    for (const item of stack) {
-      current = available.find(cmd => cmd.name === item);
-      if (!current) return null;
-      available = current.subcommands || [];
+  const getAvailableNodes = useCallback((currentNode?: CommandNode): CommandNode[] => {
+    if (currentNode?.children) {
+      return Array.from(currentNode.children.values());
     }
-
-    return current || null;
+    return Array.from(commandTrie.root.values());
   }, []);
 
   const handleInputChange = useCallback((
     newValue: string,
-    state: InputState,
-    actions: CommandInputActions
+    state: CitadelState,
+    actions: CitadelActions
   ) => {
     actions.setCurrentInput(newValue);
 
     // Only auto-complete if we're not entering an argument
     if (!state.isEnteringArg) {
-      const suggestion = getAutocompleteSuggestion(newValue, state.availableCommands);
+      const availableNodes = getAvailableNodes(state.currentNode);
+      const suggestion = getAutocompleteSuggestion(newValue, availableNodes);
+      
       if (suggestion && suggestion !== newValue) {
-        const matchingCommand = state.availableCommands.find(cmd => cmd.name === suggestion);
-        if (matchingCommand) {
-          // Update command stack and clear input
-          const newStack = [...state.commandStack, suggestion];
+        const newStack = [...state.commandStack, suggestion];
+        const nextNode = commandTrie.getCommand(newStack);
+        
+        if (nextNode) {
           actions.setCommandStack(newStack);
           actions.setCurrentInput('');
+          actions.setCurrentNode(nextNode);
           
-          // Update available commands and reset arg entry if command doesn't need args
-          if (matchingCommand.subcommands) {
-            actions.setAvailableCommands(matchingCommand.subcommands);
-            actions.setIsEnteringArg(false);  // Reset when switching to subcommands
-          } else if (matchingCommand.handler && matchingCommand.args) {
+          // If this is a leaf node with an argument, enter argument mode
+          if (!nextNode.children && nextNode.argument) {
             actions.setIsEnteringArg(true);
           } else {
-            actions.setIsEnteringArg(false);  // Reset for commands without args
+            actions.setIsEnteringArg(false);
           }
         }
       }
     }
-  }, [getAutocompleteSuggestion]);
+  }, [getAvailableNodes, getAutocompleteSuggestion]);
 
   const handleKeyDown = useCallback((
     e: KeyboardEvent,
-    state: InputState,
-    actions: CommandInputActions
+    state: CitadelState,
+    actions: CitadelActions
   ) => {
-    const { commandStack, currentInput, isEnteringArg, availableCommands } = state;
+    const { commandStack, currentInput, isEnteringArg, currentNode } = state;
+
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      if (!isEnteringArg && currentInput) {
+        const availableNodes = getAvailableNodes(currentNode);
+        const suggestion = getAutocompleteSuggestion(currentInput, availableNodes);
+        if (suggestion) {
+          actions.setCurrentInput(suggestion);
+        }
+      }
+      return;
+    }
 
     if (e.key === 'Backspace' && currentInput === '') {
       e.preventDefault();
       if (commandStack.length > 0) {
-        // Remove the last command from the stack
         const newStack = commandStack.slice(0, -1);
-        actions.setCommandStack(newStack);
+        const prevNode = newStack.length > 0 ? commandTrie.getCommand(newStack) : undefined;
         
-        // Get the new available commands based on the updated stack
-        let newAvailable = commands;
-        if (newStack.length > 0) {
-          // Get the parent command to show its subcommands
-          const parentCommand = getCurrentCommand(newStack, commands);
-          if (parentCommand?.subcommands) {
-            newAvailable = parentCommand.subcommands;
-          }
-        }
-        actions.setAvailableCommands(newAvailable);
-        actions.setIsEnteringArg(false); // Reset arg entry mode when backspacing
+        actions.setCommandStack(newStack);
+        actions.setCurrentNode(prevNode);
+        actions.setIsEnteringArg(false);
       }
       return;
     }
 
     if (e.key === 'Enter') {
       e.preventDefault();
-      const currentCommand = getCurrentCommand(commandStack, commands);
       
-      if (isEnteringArg) {
-        if (currentCommand?.handler) {
-          const newStack = [...commandStack, currentInput];
-          actions.executeCommand(newStack, [currentInput]);
-          actions.setCurrentInput('');
-          actions.setIsEnteringArg(false);
-        }
-      } else {
-        const matchingCommand = availableCommands.find(cmd => cmd.name === currentInput);
-        if (matchingCommand) {
-          const newStack = [...commandStack, currentInput];
-          if (matchingCommand.handler && !matchingCommand.args) {
-            actions.executeCommand(newStack);
-            actions.setCommandStack([]);
-          } else if (matchingCommand.args) {
-            actions.setCommandStack(newStack);
-            actions.setIsEnteringArg(true);
-          } else if (matchingCommand.subcommands) {
-            actions.setCommandStack(newStack);
-          }
-          actions.setCurrentInput('');
+      if (isEnteringArg && currentNode?.handler) {
+        // Execute command with argument
+        actions.executeCommand(commandStack, [currentInput]);
+      } else if (!isEnteringArg && currentInput) {
+        // Try to execute command without argument
+        const availableNodes = getAvailableNodes(currentNode);
+        const matchingNode = availableNodes.find(
+          node => node.name.toLowerCase() === currentInput.toLowerCase()
+        );
+        
+        if (matchingNode?.handler && !matchingNode.argument) {
+          const newStack = [...commandStack, matchingNode.name];
+          actions.executeCommand(newStack);
         }
       }
     }
-  }, [commands, getCurrentCommand]);
+  }, [getAvailableNodes, getAutocompleteSuggestion]);
 
   return {
-    handleKeyDown,
     handleInputChange,
-    findMatchingCommands,
-    getAutocompleteSuggestion,
-    getCurrentCommand,
+    handleKeyDown,
+    getAvailableNodes
   };
 }
