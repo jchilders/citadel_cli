@@ -94,16 +94,21 @@ export function useCommandParser() {
       if (isEnteringArg && currentNode?.handler) {
         // Execute command with argument
         actions.executeCommand(commandStack, [currentInput]);
-      } else if (!isEnteringArg && currentInput) {
-        // Try to execute command without argument
-        const availableNodes = getAvailableNodes(currentNode);
-        const matchingNode = availableNodes.find(
-          node => node.name.toLowerCase() === currentInput.toLowerCase()
-        );
-        
-        if (matchingNode?.handler && !matchingNode.argument) {
-          const newStack = [...commandStack, matchingNode.name];
-          actions.executeCommand(newStack);
+      } else if (!isEnteringArg) {
+        if (currentInput) {
+          // Try to execute command from current input
+          const availableNodes = getAvailableNodes(currentNode);
+          const matchingNode = availableNodes.find(
+            node => node.name.toLowerCase() === currentInput.toLowerCase()
+          );
+          
+          if (matchingNode?.handler && !matchingNode.argument) {
+            const newStack = [...commandStack, matchingNode.name];
+            actions.executeCommand(newStack);
+          }
+        } else if (currentNode?.handler && !currentNode.argument) {
+          // Execute current node's handler if it exists and doesn't need arguments
+          actions.executeCommand(commandStack);
         }
       }
     }
