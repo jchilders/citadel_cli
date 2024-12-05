@@ -21,4 +21,5 @@ export interface OutputItem {
   command: string;
   response: CommandResponse;
   timestamp?: number;
+  error?: string;
 }

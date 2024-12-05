@@ -9,6 +9,7 @@ import { defaultCommandConfig } from './commands-config';
 import { Command, InputState, CommandArg } from './types/command-types';
 import { CitadelConfig } from './config/types';
 import { defaultConfig } from './config/defaults';
+import { OutputItem } from './types';
 
 const getCurrentCommand = (commandStack: string[], availableCommands: Command[]): Command | undefined => {
   let currentCommand: Command | undefined = undefined;
@@ -33,7 +34,7 @@ const getCommandArgForCommand = (command: Command | undefined): CommandArg | und
 
 export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = defaultConfig }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [output, setOutput] = useState<any[]>([]);
+  const [output, setOutput] = useState<OutputItem[]>([]);
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
@@ -67,23 +68,31 @@ export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = default
     }, []),
 
     executeCommand: useCallback(async (stack: string[], args?: string[]) => {
+      console.log(`Executing command. stack: [${stack.join(', ')}]`);
       setIsLoading(true);
+      console.log("-- here 1");
       try {
         let currentCommand: Command | undefined = undefined;
         let available = defaultCommandConfig;
+        console.log("-- here 1.1");
 
-        // Navigate to the final command in the stack
         for (const item of stack) {
+          console.log("-- here 1.1.1");
           currentCommand = available.find(cmd => cmd.name === item);
+          console.log("-- here 1.1.2 currentCommand: ", currentCommand);
           if (!currentCommand) throw new Error('Invalid command');
           available = currentCommand.subcommands || [];
+          console.log("-- here 1.1.3 available: ", available);
         }
 
         if (!currentCommand?.handler) {
           throw new Error('No handler found for command');
         }
+        console.log("-- here 1.2");
 
+        console.log(`Executing command: ${currentCommand.name}`);
         const result = await currentCommand.handler(args || []);
+        console.log(`Command result: ${JSON.stringify(result)}`);
         setOutput(result);
       } catch (error) {
         setOutput({ error: error instanceof Error ? error.message : 'Unknown error occurred' });
