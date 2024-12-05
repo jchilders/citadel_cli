@@ -1,0 +1,16 @@
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+@keyframes flashBorder {
+  0%, 100% { border-color: transparent; }
+  50% { border-color: rgb(239, 68, 68); /* text-red-500 */ }
+}
+
+.invalidInput {
+  animation: shake 0.2s ease-in-out, flashBorder 0.3s ease-in-out;
+  border-width: 1px;
+  border-style: solid;
+}
