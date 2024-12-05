@@ -74,8 +74,15 @@ export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = default
           timestamp: Date.now()
         });
         actions.setValidation({ isValid: true });
-        actions.setCommandStack([]);
-        actions.setCurrentInput('');
+        // Reset all command-related state
+        setState(prev => ({
+          ...prev,
+          commandStack: [],
+          currentInput: '',
+          isEnteringArg: false,
+          currentNode: undefined,
+          validation: { isValid: true }
+        }));
       } catch (error) {
         actions.addOutput({
           command: path,
@@ -121,8 +128,10 @@ export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = default
 
   return (
     <div className={`${styles.container} ${animationClass}`} style={style}>
-      <CommandOutput output={state.output} outputRef={outputRef} />
-      <div className={styles.content}>
+      <div className="flex-1 min-h-0 p-4">
+        <CommandOutput output={state.output} outputRef={outputRef} />
+      </div>
+      <div className="flex-shrink-0">
         <CommandInput
           state={state}
           actions={actions}

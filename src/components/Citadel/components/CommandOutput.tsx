@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { OutputItem } from '../types/state';
 
 interface CommandOutputProps {
@@ -26,30 +26,31 @@ export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef 
   // Scroll to bottom when output changes
   useEffect(() => {
     if (outputRef.current) {
-      outputRef.current.scrollTop = outputRef.current.scrollHeight;
+      const scrollContainer = outputRef.current;
+      // Use requestAnimationFrame to ensure DOM is updated
+      requestAnimationFrame(() => {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      });
     }
   }, [output]);
 
   return (
     <div 
-      ref={outputRef} 
-      className="max-h-64 overflow-y-auto p-4 font-mono bg-gray-900 rounded-lg"
+      ref={outputRef}
+      className="h-full overflow-y-auto border border-gray-700 rounded-lg p-3"
     >
       {output.length === 0 ? (
         <div className="text-gray-500">No output available</div>
       ) : (
         output.map((item, index) => (
-          <div key={`${item.timestamp}-${index}`} className="mb-4">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-gray-500 text-sm">
-                $ {item.command.join(' ')}
-              </span>
-              <span className="text-xs text-gray-600">
-                {new Date(item.timestamp).toLocaleTimeString()}
-              </span>
+          <div key={index} className="mb-4 last:mb-0">
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <span>&gt; {item.command.join(' ')}</span>
+              <span>·</span>
+              <span>{new Date(item.timestamp).toLocaleTimeString()}</span>
             </div>
             {item.error ? (
-              <div className="text-red-400">{item.error}</div>
+              <div className="mt-1 text-red-400">{item.error}</div>
             ) : (
               formatCommandOutput(item.result)
             )}

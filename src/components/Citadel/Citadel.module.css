@@ -3,6 +3,9 @@
   bottom: 0;
   left: 0;
   right: 0;
+  height: 33vh;
+  display: flex;
+  flex-direction: column;
   background-color: rgb(17, 24, 39); /* bg-gray-900 */
   color: white;
 }
