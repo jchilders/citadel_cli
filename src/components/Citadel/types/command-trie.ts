@@ -117,11 +117,23 @@ export class CommandTrie {
     }
 
     // Get all possible completions from the last node
-    const prefix = path[path.length - 1] || "";
+    const lastSegment = path[path.length - 1] || "";
     const completions: string[] = [];
 
+    if (path.length > 0) {
+      const node = current.get(lastSegment);
+      if (node?.children) {
+        // If we have an exact match and it has children, return its children's names
+        node.children.forEach((_node, key) => {
+          completions.push(key);
+        });
+        return completions;
+      }
+    }
+
+    // Otherwise return filtered completions from current level
     current.forEach((_node, key) => {
-      if (key.startsWith(prefix)) {
+      if (key.startsWith(lastSegment)) {
         completions.push(key);
       }
     });
@@ -193,13 +205,9 @@ export class CommandTrie {
       }
       seen.add(pathStr);
 
-      // Validate leaf nodes
-      if (!node.children || node.children.size === 0) {
-        if (!node.handler) {
-          errors.push(`Leaf command missing handler: ${pathStr}`);
-        }
-      } else {
-        // Validate non-leaf nodes
+      // A node with children is a non-leaf node
+      if (node.children) {
+        // Non-leaf nodes cannot have handlers or arguments
         if (node.handler) {
           errors.push(`Non-leaf command cannot have handler: ${pathStr}`);
         }
@@ -211,6 +219,11 @@ export class CommandTrie {
         node.children.forEach((child) => {
           traverse(child);
         });
+      } else {
+        // Leaf nodes must have handlers
+        if (!node.handler) {
+          errors.push(`Leaf command missing handler: ${pathStr}`);
+        }
       }
     };
 
