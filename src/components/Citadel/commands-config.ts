@@ -98,7 +98,7 @@ commandTrie.addCommand(['order', 'close'], 'Close order',
 commandTrie.addCommand(['help'], 'Show help information',
   async () => {
     const helpText = commandTrie.getLeafCommands()
-      .map(([path, node]) => `${path.join(' ')} - ${node.description}${
+      .map(node => `${node.fullPath.join(' ')} - ${node.description}${
         node.argument ? ` <${node.argument.name}>` : ''
       }`)
       .sort()
