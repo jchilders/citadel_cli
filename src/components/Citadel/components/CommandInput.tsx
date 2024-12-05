@@ -47,6 +47,12 @@ export const CommandInput: React.FC<CommandInputProps> = ({
           return;
         }
 
+        // If we're at a leaf node with no children and no arguments, prevent all input except Enter
+        if (state.currentNode && !state.currentNode.children && !state.currentNode.argument) {
+          e.preventDefault();
+          return;
+        }
+
         // Only validate when not entering arguments
         if (!state.isEnteringArg) {
           // If we're at root level, use availableCommands
@@ -110,6 +116,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
           <input
             ref={inputRef}
             type="text"
+            role="textbox"
             value={state.currentInput}
             onChange={onInputChange}
             onPaste={handlePaste}

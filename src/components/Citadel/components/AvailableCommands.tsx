@@ -15,9 +15,17 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
   const containerClasses = "h-12 mt-2 border-t border-gray-700 px-4";
   const contentClasses = "text-gray-300 pt-2";
 
+  // Show description for leaf nodes without children or arguments
+  const isLeafNode = state.currentNode && !state.currentNode.children && !state.currentNode.argument;
+
   return (
     <div className={containerClasses}>
-      {showCommands ? (
+      {isLeafNode ? (
+        <div className={contentClasses}>
+          <span className="text-blue-400">{state.currentNode.name}</span>
+          <span className="text-gray-400 ml-2">- {state.currentNode.description}</span>
+        </div>
+      ) : showCommands ? (
         <div className={contentClasses}>
           <div className="flex flex-wrap gap-2">
             {availableCommands.map((cmd) => {
