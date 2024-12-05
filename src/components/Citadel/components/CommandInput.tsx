@@ -52,17 +52,10 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     }
   }, [state.commandStack]);
 
-  const getPromptText = () => {
-    if (state.isEnteringArg && state.currentNode?.argument) {
-      return state.currentNode.argument.name;
-    }
-    return '>';
-  };
-
   return (
     <div className="flex flex-col w-full bg-gray-900 rounded-lg p-4">
       <div className="flex items-center gap-2">
-        <div className="text-gray-400 font-mono">{getPromptText()}</div>
+        <div className="text-gray-400 font-mono">&gt;</div>
         <div className="flex-1 font-mono flex items-center">
           <span className="text-blue-400 whitespace-pre">
             {state.commandStack.join(' ')}
@@ -81,16 +74,6 @@ export const CommandInput: React.FC<CommandInputProps> = ({
           />
         </div>
       </div>
-      {!state.isEnteringArg && availableCommands.length > 0 && (
-        <div className="mt-2 text-sm text-gray-500">
-          {availableCommands.map(cmd => (
-            <div key={cmd.name} className="flex items-start gap-2">
-              <span className="text-blue-400">{cmd.name}</span>
-              <span className="text-gray-600">{cmd.description}</span>
-            </div>
-          ))}
-        </div>
-      )}
       {state.validation.message && (
         <div className={`mt-2 text-sm ${state.validation.isValid ? 'text-green-500' : 'text-red-500'}`}>
           {state.validation.message}

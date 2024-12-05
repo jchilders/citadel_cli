@@ -121,13 +121,17 @@ export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = default
 
   return (
     <div className={`${styles.container} ${animationClass}`} style={style}>
+      <CommandOutput output={state.output} outputRef={outputRef} />
       <div className={styles.content}>
         <CommandInput
           state={state}
           actions={actions}
           availableCommands={getAvailableCommands()}
         />
-        <CommandOutput output={state.output} outputRef={outputRef} />
+        <AvailableCommands
+          state={state}
+          availableCommands={getAvailableCommands()}
+        />
       </div>
     </div>
   );
