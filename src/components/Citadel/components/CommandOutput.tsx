@@ -39,24 +39,20 @@ export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef 
       ref={outputRef}
       className="h-full overflow-y-auto border border-gray-700 rounded-lg p-3"
     >
-      {output.length === 0 ? (
-        <div className="text-gray-500">No output available</div>
-      ) : (
-        output.map((item, index) => (
-          <div key={index} className="mb-4 last:mb-0">
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <span>&gt; {item.command.join(' ')}</span>
-              <span>·</span>
-              <span>{new Date(item.timestamp).toLocaleTimeString()}</span>
-            </div>
-            {item.error ? (
-              <div className="mt-1 text-red-400">{item.error}</div>
-            ) : (
-              formatCommandOutput(item.result)
-            )}
+      {output.map((item, index) => (
+        <div key={index} className="mb-4 last:mb-0">
+          <div className="flex items-center gap-2 text-sm text-gray-400">
+            <span>&gt; {item.command.join(' ')}</span>
+            <span>·</span>
+            <span>{new Date(item.timestamp).toLocaleTimeString()}</span>
           </div>
-        ))
-      )}
+          {item.error ? (
+            <div className="mt-1 text-red-400">{item.error}</div>
+          ) : (
+              formatCommandOutput(item.result)
+          )}
+        </div>
+      ))}
     </div>
   );
 };

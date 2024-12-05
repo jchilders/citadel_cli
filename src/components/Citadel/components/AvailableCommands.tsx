@@ -12,7 +12,7 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
   availableCommands
 }) => {
   const showCommands = !state.isEnteringArg && availableCommands.length > 0;
-  const containerClasses = "h-12 mt-2 border-t border-gray-700";
+  const containerClasses = "h-12 mt-2 border-t border-gray-700 px-4";
   const contentClasses = "text-gray-300 pt-2";
 
   return (
@@ -43,9 +43,6 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
                     <strong className="underline">{cmd.name.slice(0, boldLength)}</strong>
                     {cmd.name.slice(boldLength)}
                   </span>
-                  {cmd.description && (
-                    <span className="ml-2 text-gray-400 text-sm">{cmd.description}</span>
-                  )}
                 </div>
               );
             })}

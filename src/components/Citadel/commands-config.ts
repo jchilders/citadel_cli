@@ -1,4 +1,4 @@
-import { CommandTrie } from './types/command-trie';
+import { CommandNode, CommandTrie } from './types/command-trie';
 
 // Initialize and configure the command trie
 const commandTrie = new CommandTrie();
@@ -96,12 +96,16 @@ commandTrie.addCommand(['order', 'close'], 'Close order',
 
 // Help Command
 commandTrie.addCommand(['help'], 'Show help information',
-  async () => ({
-    text: 'Available commands:\n' +
-          commandTrie.getAllCommands()
-            .map(path => `  ${path.join(' ')}`)
-            .join('\n')
-  })
+  async () => {
+    const helpText = commandTrie.getLeafCommands()
+      .map(([path, node]) => `${path.join(' ')} - ${node.description}${
+        node.argument ? ` <${node.argument.name}>` : ''
+      }`)
+      .sort()
+      .join('\n');
+
+    return { text: helpText };
+  }
 );
 
 // Validate the command trie

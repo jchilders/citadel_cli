@@ -203,4 +203,30 @@ export class CommandTrie {
 
     return paths;
   }
+
+  /**
+   * Returns all leaf command nodes in the trie along with their full paths
+   * @returns Array of tuples containing [full path array, command node]
+   */
+  getLeafCommands(): Array<[string[], CommandNode]> {
+    const leaves: Array<[string[], CommandNode]> = [];
+
+    const traverse = (node: CommandNode, path: string[]) => {
+      const currentPath = [...path, node.name];
+      
+      if (!node.children || node.children.size === 0) {
+        leaves.push([currentPath, node]);
+      } else {
+        node.children.forEach((child) => {
+          traverse(child, currentPath);
+        });
+      }
+    };
+
+    this.root.forEach((node) => {
+      traverse(node, []);
+    });
+
+    return leaves;
+  }
 }
