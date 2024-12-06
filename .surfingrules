@@ -1,0 +1,13 @@
+All tests use vitest. See package.json for details.
+
+To run a single test file, use:
+
+```
+npx vitest --run <test_file>
+```
+
+To run all tests, use:
+
+```
+npx vitest --run
+```

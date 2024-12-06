@@ -21,7 +21,7 @@ export function useCommandParser() {
     if (currentNode?.children) {
       return Array.from(currentNode.children.values());
     }
-    return Array.from(commandTrie.root.values());
+    return commandTrie.getRootCommands();
   }, []);
 
   const handleInputChange = useCallback((
@@ -106,7 +106,7 @@ export function useCommandParser() {
             const newStack = [...commandStack, matchingNode.name];
             actions.executeCommand(newStack);
           }
-        } else if (currentNode?.handler && !currentNode.argument) {
+        } else if (currentNode?.hasHandler && !currentNode.requiresArgument) {
           // Execute current node's handler if it exists and doesn't need arguments
           actions.executeCommand(commandStack);
         }

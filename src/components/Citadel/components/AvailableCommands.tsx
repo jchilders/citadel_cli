@@ -22,8 +22,12 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
     <div className={containerClasses}>
       {isLeafNode ? (
         <div className={contentClasses}>
-          <span className="text-blue-400">{state.currentNode.name}</span>
-          <span className="text-gray-400 ml-2">- {state.currentNode.description}</span>
+          {state.currentNode ? (
+            <>
+              <span className="text-blue-400">{state.currentNode.name}</span>
+              <span className="text-gray-400 ml-2">- {state.currentNode.description}</span>
+            </>
+          ) : null}
         </div>
       ) : showCommands ? (
         <div className={contentClasses}>
@@ -44,7 +48,7 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
 
               return (
                 <div
-                  key={cmd.name}
+                  key={cmd.fullPath.join('.')}
                   className="px-2 py-1 rounded bg-gray-800 mr-2 last:mr-0"
                 >
                   <span className="font-mono text-white">

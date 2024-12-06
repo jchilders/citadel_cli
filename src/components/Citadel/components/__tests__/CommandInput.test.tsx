@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { GlobalRegistrator } from '@happy-dom/global-registrator';
 import React from 'react';
-import { render, fireEvent, screen } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import { CommandInput } from '../CommandInput';
 import { CommandNode } from '../../types/command-trie';
 import { CitadelState } from '../../types/state';
@@ -39,31 +39,27 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 // Mock commands for testing
 const mockCommands: CommandNode[] = [
-  {
-    name: 'help',
+  new CommandNode({
     description: 'Show help information',
     fullPath: ['help'],
     handler: async () => ({ text: 'Help info' })
-  },
-  {
-    name: 'user',
+  }),
+  new CommandNode({
     description: 'User management',
     fullPath: ['user'],
     children: new Map([
-      ['show', {
-        name: 'show',
+      ['show', new CommandNode({
         description: 'Show user details',
         fullPath: ['user', 'show'],
         argument: { name: 'userId', description: 'Enter user ID' }
-      }]
+      })]
     ])
-  },
-  {
-    name: '検索',
+  }),
+  new CommandNode({
     description: '検索機能',
     fullPath: ['検索'],
     handler: async () => ({ text: '検索結果' })
-  }
+  })
 ];
 
 // Mock actions

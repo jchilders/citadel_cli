@@ -11,13 +11,46 @@ export interface CommandArgument {
   description: string;
 }
 
-export interface CommandNode {
-  name: string;
-  description: string;
-  fullPath: string[];
-  children?: Map<string, CommandNode>;
-  argument?: CommandArgument;
-  handler?: CommandHandler;
+export class CommandNode {
+  public readonly fullPath: string[];
+  public readonly description: string;
+  public readonly children?: Map<string, CommandNode>;
+  public readonly argument?: CommandArgument;
+  public readonly handler?: CommandHandler;
+
+  constructor(params: {
+    fullPath: string[];
+    description: string;
+    children?: Map<string, CommandNode>;
+    argument?: CommandArgument;
+    handler?: CommandHandler;
+  }) {
+    if (!params.fullPath || params.fullPath.length === 0) {
+      throw new Error('Command path cannot be empty');
+    }
+
+    this.fullPath = params.fullPath;
+    this.description = params.description;
+    this.children = params.children;
+    this.argument = params.argument;
+    this.handler = params.handler;
+  }
+
+  get name(): string {
+    return this.fullPath[this.fullPath.length - 1];
+  }
+
+  get isLeaf(): boolean {
+    return !this.children || this.children.size === 0;
+  }
+
+  get hasHandler(): boolean {
+    return !!this.handler;
+  }
+
+  get requiresArgument(): boolean {
+    return !!this.argument;
+  }
 }
 
 export class CommandTrie {
@@ -29,18 +62,12 @@ export class CommandTrie {
 
   /**
    * Adds a command to the trie
-   * @param path Array of command names forming the path to this command
-   * @param description Description of the command
-   * @param handler Optional handler function for leaf commands
-   * @param argument Optional argument for leaf commands
+   * @param params Command node parameters
    * @throws Error if attempting to add a duplicate command
    */
-  addCommand(
-    path: string[],
-    description: string,
-    handler?: CommandHandler,
-    argument?: CommandArgument
-  ): void {
+  addCommand(params: Omit<ConstructorParameters<typeof CommandNode>[0], 'fullPath'> & { path: string[] }): void {
+    const { path, description, handler, argument } = params;
+    
     if (path.length === 0) {
       throw new Error("Command path cannot be empty");
     }
@@ -54,20 +81,19 @@ export class CommandTrie {
       const fullPath = path.slice(0, i + 1);
 
       if (!current.has(segment)) {
-        current.set(segment, {
-          name: segment,
+        current.set(segment, new CommandNode({
           description: isLeaf ? description : `${segment} commands`,
           fullPath,
           children: isLeaf ? undefined : new Map<string, CommandNode>(),
           handler: isLeaf ? handler : undefined,
           argument: isLeaf ? argument : undefined,
-        });
+        }));
       } else {
         const existingNode = current.get(segment)!;
-        if (isLeaf && (!existingNode.children || existingNode.children.size === 0)) {
+        if (isLeaf && existingNode.isLeaf) {
           throw new Error(`Duplicate leaf command: ${path.join(" ")}`);
         }
-        if (!isLeaf && !existingNode.children) {
+        if (!isLeaf && existingNode.isLeaf) {
           throw new Error(`Cannot add subcommand to leaf command: ${path.slice(0, i + 1).join(" ")}`);
         }
       }
@@ -162,6 +188,14 @@ export class CommandTrie {
     });
 
     return paths;
+  }
+
+  /**
+   * Returns all root level command nodes in the trie
+   * @returns Array of root level command nodes
+   */
+  getRootCommands(): CommandNode[] {
+    return Array.from(this.root.values());
   }
 
   /**

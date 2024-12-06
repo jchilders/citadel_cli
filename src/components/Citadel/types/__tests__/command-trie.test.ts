@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { CommandTrie } from '../command-trie';
+import { CommandTrie, CommandNode } from '../command-trie';
 
 describe('CommandTrie', () => {
   let trie: CommandTrie;
@@ -11,7 +11,11 @@ describe('CommandTrie', () => {
   describe('addCommand', () => {
     it('should add a leaf command successfully', () => {
       const handler = async () => ({ text: 'success' });
-      trie.addCommand(['test'], 'Test command', handler);
+      trie.addCommand({
+        path: ['test'],
+        description: 'Test command',
+        handler
+      });
       
       const node = trie.getCommand(['test']);
       expect(node).toBeDefined();
@@ -23,7 +27,11 @@ describe('CommandTrie', () => {
 
     it('should add nested commands successfully', () => {
       const handler = async () => ({ text: 'success' });
-      trie.addCommand(['parent', 'child'], 'Child command', handler);
+      trie.addCommand({
+        path: ['parent', 'child'],
+        description: 'Child command',
+        handler
+      });
       
       const parentNode = trie.getCommand(['parent']);
       expect(parentNode?.name).toBe('parent');
@@ -40,17 +48,32 @@ describe('CommandTrie', () => {
     });
 
     it('should throw on empty path', () => {
-      expect(() => trie.addCommand([], 'Empty command')).toThrow('Command path cannot be empty');
+      expect(() => trie.addCommand({
+        path: [],
+        description: 'Empty command'
+      })).toThrow('Command path cannot be empty');
     });
 
     it('should throw on duplicate leaf command', () => {
-      trie.addCommand(['test'], 'Test command');
-      expect(() => trie.addCommand(['test'], 'Duplicate test')).toThrow('Duplicate leaf command: test');
+      trie.addCommand({
+        path: ['test'],
+        description: 'Test command'
+      });
+      expect(() => trie.addCommand({
+        path: ['test'],
+        description: 'Duplicate test'
+      })).toThrow('Duplicate leaf command: test');
     });
 
     it('should throw when adding subcommand to leaf', () => {
-      trie.addCommand(['leaf'], 'Leaf command');
-      expect(() => trie.addCommand(['leaf', 'sub'], 'Sub command')).toThrow('Cannot add subcommand to leaf command: leaf');
+      trie.addCommand({
+        path: ['leaf'],
+        description: 'Leaf command'
+      });
+      expect(() => trie.addCommand({
+        path: ['leaf', 'sub'],
+        description: 'Sub command'
+      })).toThrow('Cannot add subcommand to leaf command: leaf');
     });
   });
 
@@ -59,8 +82,17 @@ describe('CommandTrie', () => {
       const handler1 = async () => ({ text: 'success1' });
       const handler2 = async () => ({ text: 'success2' });
       
-      trie.addCommand(['cmd1'], 'Command 1', handler1);
-      trie.addCommand(['parent', 'cmd2'], 'Command 2', handler2, { name: 'arg', description: 'test arg' });
+      trie.addCommand({
+        path: ['cmd1'],
+        description: 'Command 1',
+        handler: handler1
+      });
+      trie.addCommand({
+        path: ['parent', 'cmd2'],
+        description: 'Command 2',
+        handler: handler2,
+        argument: { name: 'arg', description: 'test arg' }
+      });
 
       const leaves = trie.getLeafCommands();
       expect(leaves).toHaveLength(2);
@@ -82,8 +114,16 @@ describe('CommandTrie', () => {
   describe('validate', () => {
     it('should validate a valid trie', () => {
       const handler = async () => ({ text: 'success' });
-      trie.addCommand(['cmd1'], 'Command 1', handler);
-      trie.addCommand(['parent', 'cmd2'], 'Command 2', handler);
+      trie.addCommand({
+        path: ['cmd1'],
+        description: 'Command 1',
+        handler
+      });
+      trie.addCommand({
+        path: ['parent', 'cmd2'],
+        description: 'Command 2',
+        handler
+      });
 
       const { isValid, errors } = trie.validate();
       expect(isValid).toBe(true);
@@ -91,7 +131,10 @@ describe('CommandTrie', () => {
     });
 
     it('should detect missing handlers', () => {
-      trie.addCommand(['cmd'], 'Command without handler', undefined);
+      trie.addCommand({
+        path: ['cmd'],
+        description: 'Command without handler'
+      });
 
       const { isValid, errors } = trie.validate();
       expect(isValid).toBe(false);
@@ -100,15 +143,26 @@ describe('CommandTrie', () => {
 
     it('should detect invalid handler on non-leaf', () => {
       const handler = async () => ({ text: 'success' });
-      // Manually create an invalid node with both handler and children
-      trie.root.set('parent', {
-        name: 'parent',
-        description: 'Parent command',
-        fullPath: ['parent'],
-        children: new Map(),
-        handler,
-        argument: undefined
+      
+      // First add a valid parent command
+      trie.addCommand({
+        path: ['parent'],
+        description: 'Parent command'
       });
+
+      // Then manually modify it to create an invalid state with both handler and children
+      const parentNode = trie.getCommand(['parent']);
+      if (parentNode) {
+        Object.assign(parentNode, {
+          handler,
+          children: new Map([
+            ['child', new CommandNode({
+              description: 'Child command',
+              fullPath: ['parent', 'child']
+            })]
+          ])
+        });
+      }
 
       const { isValid, errors } = trie.validate();
       expect(isValid).toBe(false);
@@ -119,9 +173,21 @@ describe('CommandTrie', () => {
   describe('getCompletions', () => {
     beforeEach(() => {
       const handler = async () => ({ text: 'success' });
-      trie.addCommand(['help'], 'Help command', handler);
-      trie.addCommand(['user', 'create'], 'Create user', handler);
-      trie.addCommand(['user', 'delete'], 'Delete user', handler);
+      trie.addCommand({
+        path: ['help'],
+        description: 'Help command',
+        handler
+      });
+      trie.addCommand({
+        path: ['user', 'create'],
+        description: 'Create user',
+        handler
+      });
+      trie.addCommand({
+        path: ['user', 'delete'],
+        description: 'Delete user',
+        handler
+      });
     });
 
     it('should return root completions for empty path', () => {
@@ -148,8 +214,16 @@ describe('CommandTrie', () => {
   describe('getAllCommands', () => {
     it('should return all command paths', () => {
       const handler = async () => ({ text: 'success' });
-      trie.addCommand(['cmd1'], 'Command 1', handler);
-      trie.addCommand(['parent', 'cmd2'], 'Command 2', handler);
+      trie.addCommand({
+        path: ['cmd1'],
+        description: 'Command 1',
+        handler
+      });
+      trie.addCommand({
+        path: ['parent', 'cmd2'],
+        description: 'Command 2',
+        handler
+      });
 
       const paths = trie.getAllCommands();
       expect(paths).toHaveLength(3); // cmd1, parent, parent cmd2
