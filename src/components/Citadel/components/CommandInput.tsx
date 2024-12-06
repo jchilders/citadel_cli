@@ -120,6 +120,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
             value={state.currentInput}
             onChange={onInputChange}
             onPaste={handlePaste}
+            data-testid="citadel-command-input"
             className={`flex-1 bg-transparent outline-none text-gray-200 ${showInvalidAnimation ? styles.invalidInput : ''}`}
           />
         </div>

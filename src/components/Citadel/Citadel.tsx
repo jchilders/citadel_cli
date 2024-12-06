@@ -123,11 +123,11 @@ export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = default
     if (state.currentNode?.children) {
       return Array.from(state.currentNode.children.values());
     }
-    return Array.from(commandTrie.root.values());
+    return commandTrie.getRootCommands();
   };
 
   return (
-    <div className={`${styles.container} ${animationClass}`} style={style}>
+    <div className={`${styles.container} ${animationClass}`} style={style} data-testid="citadel-root">
       <div className="flex-1 min-h-0 pt-3 px-2">
         <CommandOutput output={state.output} outputRef={outputRef} />
       </div>

@@ -19,7 +19,7 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
   const isLeafNode = state.currentNode && !state.currentNode.children && !state.currentNode.argument;
 
   return (
-    <div className={containerClasses}>
+    <div className={containerClasses} data-testid="available-commands">
       {isLeafNode ? (
         <div className={contentClasses}>
           {state.currentNode ? (
