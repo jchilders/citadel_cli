@@ -47,10 +47,12 @@ export function useCommandProcessor({ commandRegistry, actions }: UseCommandProc
       } finally {
         actions.setLoading(false);
         actions.reset();
-        initialize();
+        // Re-initialize after command execution
+        const availableCommands = getAvailableCommands([]);
+        actions.setAvailable(availableCommands);
       }
     }
-  }, [commandRegistry, actions]);
+  }, [commandRegistry, actions, getAvailableCommands]);
 
   // Update filtered commands
   const updateFilteredCommands = useCallback((value: string, available: Command[], commandStack: string[]) => {
@@ -72,8 +74,9 @@ export function useCommandProcessor({ commandRegistry, actions }: UseCommandProc
         const nextCommands = getAvailableCommands(newStack);
         actions.setAvailable(nextCommands);
       } else {
+        // For commands with no args and no subcommands, show description
         actions.setAvailable([]);
-        actions.setCurrentArg({description: command?.description})
+        actions.setCurrentArg({ description: command?.description || 'No description available' });
       }
     } else if (filtered.length > 0) {
       actions.setAvailable(filtered);

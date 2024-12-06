@@ -1,5 +1,4 @@
 import { Citadel } from './components/Citadel';
-import { defaultCommandConfig } from './components/Citadel/commands-config';
 
 function App() {
   return (
@@ -8,7 +7,7 @@ function App() {
         <p className="text-gray-700">
           Press <code className="px-2 py-1 bg-gray-100 border border-gray-300 rounded">.</code>
         </p>
-        <Citadel commands={defaultCommandConfig} />
+        <Citadel />
       </div>
     </div>
   );

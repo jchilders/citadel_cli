@@ -1,80 +1,147 @@
-import { useKeyboardHandler } from './hooks/useCitadelKeyboard';
-import { useCitadelState } from './hooks/useCitadelState';
-import { useCommandProcessor } from './hooks/useCommandProcessor';
-import { useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useGlobalShortcut } from './hooks/useGlobalShortcut';
 import { useSlideAnimation } from './hooks/useSlideAnimation';
-
 import styles from './Citadel.module.css';
-
-import { ArgumentHelp } from './components/ArgumentHelp';
-import { AvailableCommands } from './components/AvailableCommands';
-import { CommandOutput } from './components/CommandOutput';
 import { CommandInput } from './components/CommandInput';
-import { CommandValidationStrategy, DefaultCommandValidationStrategy } from './validation/command_validation_strategy';
-import { Command } from '../../services/commands/types/command';
-import { CommandRegistry } from '../../services/commands/CommandRegistry';
+import { CommandOutput } from './components/CommandOutput';
+import { AvailableCommands } from './components/AvailableCommands';
+import { commandTrie } from './commands-config';
+import { CitadelState, CitadelActions, OutputItem } from './types/state';
+import { CitadelConfig } from './config/types';
+import { defaultConfig } from './config/defaults';
 
-export const Citadel: React.FC<{
-  commands?: Command[],
-  validationStrategy?: CommandValidationStrategy
-}> = ({
-  commands = [],
-  validationStrategy = new DefaultCommandValidationStrategy()
-}) => {
-  const { state, actions, outputRef } = useCitadelState();
+export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = defaultConfig }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const outputRef = useRef<HTMLDivElement>(null);
 
-  const commandRegistry = new CommandRegistry();
-  commandRegistry.registerCommands(commands);
-  const commandProcessor = useCommandProcessor({ commandRegistry, actions });
-
-  const {
-    isOpen, isClosing, commandStack, currentArg, input,
-    available, output, isLoading, inputValidation
-  } = state;
-
-  useGlobalShortcut({ onOpen: actions.open });
-
-  useKeyboardHandler({
-    state,
-    validationStrategy,
-    commandRegistry,
-    actions,
-    commandProcessor,
+  const [state, setState] = useState<CitadelState>({
+    commandStack: [],
+    currentInput: '',
+    isEnteringArg: false,
+    currentNode: undefined,
+    output: [],
+    validation: { isValid: true }
   });
 
-  // Show the list of available commands when the component first opens
-  useEffect(() => {
-    if (isOpen) {
-      commandProcessor.initialize();
+  const actions: CitadelActions = {
+    setCommandStack: useCallback((stack: string[]) => {
+      setState(prev => ({ 
+        ...prev, 
+        commandStack: stack,
+        currentNode: commandTrie.getCommand(stack)
+      }));
+    }, []),
+
+    setCurrentInput: useCallback((input: string) => {
+      setState(prev => ({ ...prev, currentInput: input }));
+    }, []),
+
+    setIsEnteringArg: useCallback((isEntering: boolean) => {
+      setState(prev => ({ ...prev, isEnteringArg: isEntering }));
+    }, []),
+
+    setCurrentNode: useCallback((node) => {
+      setState(prev => ({ ...prev, currentNode: node }));
+    }, []),
+
+    addOutput: useCallback((output: OutputItem) => {
+      setState(prev => ({
+        ...prev,
+        output: [...prev.output, output]
+      }));
+    }, []),
+
+    setValidation: useCallback((validation: { isValid: boolean; message?: string }) => {
+      setState(prev => ({ ...prev, validation }));
+    }, []),
+
+    executeCommand: useCallback(async (path: string[], args?: string[]) => {
+      const node = commandTrie.getCommand(path);
+      if (!node?.handler) {
+        actions.setValidation({
+          isValid: false,
+          message: 'Invalid command or missing handler'
+        });
+        return;
+      }
+
+      try {
+        const result = await node.handler(args || []);
+        actions.addOutput({
+          command: path,
+          result,
+          timestamp: Date.now()
+        });
+        actions.setValidation({ isValid: true });
+        // Reset all command-related state
+        setState(prev => ({
+          ...prev,
+          commandStack: [],
+          currentInput: '',
+          isEnteringArg: false,
+          currentNode: undefined,
+          validation: { isValid: true }
+        }));
+      } catch (error) {
+        actions.addOutput({
+          command: path,
+          result: { text: 'Command failed' },
+          timestamp: Date.now(),
+          error: error instanceof Error ? error.message : 'Unknown error occurred'
+        });
+      }
+    }, [])
+  };
+
+  // Toggle visibility with keyboard shortcut
+  useGlobalShortcut({
+    onOpen: () => setIsVisible(true),
+    onClose: () => setIsClosing(true),
+    isVisible,
+    toggleKey: config.toggleKey || '.'
+  });
+
+  // Handle animation completion
+  const handleAnimationComplete = useCallback(() => {
+    if (isClosing) {
+      setIsVisible(false);
+      setIsClosing(false);
     }
-  }, [isOpen]);
+  }, [isClosing]);
 
-  const animationClass = useSlideAnimation(isOpen, isClosing);
+  // Animation styles
+  const { style, animationClass } = useSlideAnimation({
+    isVisible,
+    isClosing,
+    onAnimationComplete: handleAnimationComplete
+  });
 
-  if (!isOpen) return null;
+  if (!isVisible) return null;
+
+  const getAvailableCommands = () => {
+    if (state.currentNode?.children) {
+      return Array.from(state.currentNode.children.values());
+    }
+    return Array.from(commandTrie.root.values());
+  };
 
   return (
-    <div className={`${styles.container} ${animationClass}`}>
-      <div className={styles.innerContainer}>
-        <CommandOutput output={output} outputRef={outputRef} />
-        
-        <div className={styles.inputSection}>
-          <CommandInput
-            isLoading={isLoading}
-            commandStack={commandStack}
-            input={input}
-            inputValidation={inputValidation}
-          />
-          <ArgumentHelp currentArg={currentArg} />
-          <AvailableCommands
-            available={available}
-            currentArg={currentArg}
-          />
-        </div>
+    <div className={`${styles.container} ${animationClass}`} style={style}>
+      <div className="flex-1 min-h-0 pt-3 px-2">
+        <CommandOutput output={state.output} outputRef={outputRef} />
+      </div>
+      <div className="flex-shrink-0">
+        <CommandInput
+          state={state}
+          actions={actions}
+          availableCommands={getAvailableCommands()}
+        />
+        <AvailableCommands
+          state={state}
+          availableCommands={getAvailableCommands()}
+        />
       </div>
     </div>
   );
 };
-
-export default Citadel;

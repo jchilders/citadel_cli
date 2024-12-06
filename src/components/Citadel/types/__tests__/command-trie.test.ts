@@ -1,0 +1,165 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { CommandTrie } from '../command-trie';
+
+describe('CommandTrie', () => {
+  let trie: CommandTrie;
+
+  beforeEach(() => {
+    trie = new CommandTrie();
+  });
+
+  describe('addCommand', () => {
+    it('should add a leaf command successfully', () => {
+      const handler = async () => ({ text: 'success' });
+      trie.addCommand(['test'], 'Test command', handler);
+      
+      const node = trie.getCommand(['test']);
+      expect(node).toBeDefined();
+      expect(node?.name).toBe('test');
+      expect(node?.description).toBe('Test command');
+      expect(node?.handler).toBe(handler);
+      expect(node?.fullPath).toEqual(['test']);
+    });
+
+    it('should add nested commands successfully', () => {
+      const handler = async () => ({ text: 'success' });
+      trie.addCommand(['parent', 'child'], 'Child command', handler);
+      
+      const parentNode = trie.getCommand(['parent']);
+      expect(parentNode?.name).toBe('parent');
+      expect(parentNode?.description).toBe('parent commands');
+      expect(parentNode?.handler).toBeUndefined();
+      expect(parentNode?.children?.size).toBe(1);
+      expect(parentNode?.fullPath).toEqual(['parent']);
+
+      const childNode = trie.getCommand(['parent', 'child']);
+      expect(childNode?.name).toBe('child');
+      expect(childNode?.description).toBe('Child command');
+      expect(childNode?.handler).toBe(handler);
+      expect(childNode?.fullPath).toEqual(['parent', 'child']);
+    });
+
+    it('should throw on empty path', () => {
+      expect(() => trie.addCommand([], 'Empty command')).toThrow('Command path cannot be empty');
+    });
+
+    it('should throw on duplicate leaf command', () => {
+      trie.addCommand(['test'], 'Test command');
+      expect(() => trie.addCommand(['test'], 'Duplicate test')).toThrow('Duplicate leaf command: test');
+    });
+
+    it('should throw when adding subcommand to leaf', () => {
+      trie.addCommand(['leaf'], 'Leaf command');
+      expect(() => trie.addCommand(['leaf', 'sub'], 'Sub command')).toThrow('Cannot add subcommand to leaf command: leaf');
+    });
+  });
+
+  describe('getLeafCommands', () => {
+    it('should return all leaf commands', async () => {
+      const handler1 = async () => ({ text: 'success1' });
+      const handler2 = async () => ({ text: 'success2' });
+      
+      trie.addCommand(['cmd1'], 'Command 1', handler1);
+      trie.addCommand(['parent', 'cmd2'], 'Command 2', handler2, { name: 'arg', description: 'test arg' });
+
+      const leaves = trie.getLeafCommands();
+      expect(leaves).toHaveLength(2);
+      
+      const cmd1 = leaves.find(node => node.fullPath.join(' ') === 'cmd1');
+      expect(cmd1?.description).toBe('Command 1');
+      expect(cmd1?.argument).toBeUndefined();
+
+      const cmd2 = leaves.find(node => node.fullPath.join(' ') === 'parent cmd2');
+      expect(cmd2?.description).toBe('Command 2');
+      expect(cmd2?.argument?.name).toBe('arg');
+    });
+
+    it('should return empty array for empty trie', () => {
+      expect(trie.getLeafCommands()).toHaveLength(0);
+    });
+  });
+
+  describe('validate', () => {
+    it('should validate a valid trie', () => {
+      const handler = async () => ({ text: 'success' });
+      trie.addCommand(['cmd1'], 'Command 1', handler);
+      trie.addCommand(['parent', 'cmd2'], 'Command 2', handler);
+
+      const { isValid, errors } = trie.validate();
+      expect(isValid).toBe(true);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should detect missing handlers', () => {
+      trie.addCommand(['cmd'], 'Command without handler', undefined);
+
+      const { isValid, errors } = trie.validate();
+      expect(isValid).toBe(false);
+      expect(errors).toContain('Leaf command missing handler: cmd');
+    });
+
+    it('should detect invalid handler on non-leaf', () => {
+      const handler = async () => ({ text: 'success' });
+      // Manually create an invalid node with both handler and children
+      trie.root.set('parent', {
+        name: 'parent',
+        description: 'Parent command',
+        fullPath: ['parent'],
+        children: new Map(),
+        handler,
+        argument: undefined
+      });
+
+      const { isValid, errors } = trie.validate();
+      expect(isValid).toBe(false);
+      expect(errors).toContain('Non-leaf command cannot have handler: parent');
+    });
+  });
+
+  describe('getCompletions', () => {
+    beforeEach(() => {
+      const handler = async () => ({ text: 'success' });
+      trie.addCommand(['help'], 'Help command', handler);
+      trie.addCommand(['user', 'create'], 'Create user', handler);
+      trie.addCommand(['user', 'delete'], 'Delete user', handler);
+    });
+
+    it('should return root completions for empty path', () => {
+      const completions = trie.getCompletions([]);
+      expect(completions).toEqual(['help', 'user']);
+    });
+
+    it('should return matching completions for partial path', () => {
+      const completions = trie.getCompletions(['user']);
+      expect(completions).toEqual(['create', 'delete']);
+    });
+
+    it('should return filtered completions for partial segment', () => {
+      const completions = trie.getCompletions(['us']);
+      expect(completions).toEqual(['user']);
+    });
+
+    it('should return empty array for non-existent path', () => {
+      const completions = trie.getCompletions(['nonexistent']);
+      expect(completions).toHaveLength(0);
+    });
+  });
+
+  describe('getAllCommands', () => {
+    it('should return all command paths', () => {
+      const handler = async () => ({ text: 'success' });
+      trie.addCommand(['cmd1'], 'Command 1', handler);
+      trie.addCommand(['parent', 'cmd2'], 'Command 2', handler);
+
+      const paths = trie.getAllCommands();
+      expect(paths).toHaveLength(3); // cmd1, parent, parent cmd2
+      expect(paths).toContainEqual(['cmd1']);
+      expect(paths).toContainEqual(['parent']);
+      expect(paths).toContainEqual(['parent', 'cmd2']);
+    });
+
+    it('should return empty array for empty trie', () => {
+      expect(trie.getAllCommands()).toHaveLength(0);
+    });
+  });
+});
