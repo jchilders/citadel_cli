@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { GlobalRegistrator } from '@happy-dom/global-registrator';
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
 import { CommandInput } from '../CommandInput';
@@ -24,9 +23,6 @@ vi.mock('../../hooks/useCommandParser', () => ({
     },
   }),
 }));
-
-// Initialize happy-dom
-GlobalRegistrator.register();
 
 // Create test wrapper
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {

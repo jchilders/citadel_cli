@@ -1,4 +1,5 @@
 export interface CitadelConfig {
-  resetStateOnEscape?: boolean;
-  toggleKey?: string; // Add toggleKey property
+  resetStateOnHide?: boolean;
+  showCitadelKey?: string;
+  includeHelpCommand?: boolean;
 }

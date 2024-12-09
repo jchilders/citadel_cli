@@ -4,28 +4,30 @@ interface UseGlobalShortcutProps {
   onOpen: () => void;
   onClose: () => void;
   isVisible: boolean;
-  toggleKey: string;
+  showCitadelKey: string;
 }
 
-export const useGlobalShortcut = ({ onOpen, onClose, isVisible, toggleKey }: UseGlobalShortcutProps) => {
+export const useGlobalShortcut = ({ onOpen, onClose, isVisible, showCitadelKey }: UseGlobalShortcutProps) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Check if the pressed key matches toggleKey and no input elements are focused
+      // Check if the pressed key matches showCitadelKey and no input elements are focused
       if (
-        event.key === toggleKey &&
-        !['INPUT', 'TEXTAREA'].includes((event.target as HTMLElement).tagName)
+        !isVisible &&
+        event.key === showCitadelKey &&
+        !['input', 'textarea'].includes((event.target as HTMLElement)?.tagName?.toLowerCase() || '')
       ) {
         event.preventDefault();
         onOpen();
       }
-      // Handle Escape key only when Citadel is visible
-      if (event.key === 'Escape' && isVisible) {
+
+      // Handle escape key
+      if (isVisible && event.key === 'Escape') {
         event.preventDefault();
         onClose();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onOpen, onClose, isVisible, toggleKey]);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onOpen, onClose, isVisible, showCitadelKey]);
 };

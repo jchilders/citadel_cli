@@ -5,7 +5,8 @@ describe('CommandTrie', () => {
   let trie: CommandTrie;
 
   beforeEach(() => {
-    trie = new CommandTrie();
+    // Initialize with includeHelpCommand: false to avoid interference with tests
+    trie = new CommandTrie({ includeHelpCommand: false });
   });
 
   describe('addCommand', () => {

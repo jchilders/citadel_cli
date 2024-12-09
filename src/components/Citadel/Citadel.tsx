@@ -1,19 +1,33 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useGlobalShortcut } from './hooks/useGlobalShortcut';
 import { useSlideAnimation } from './hooks/useSlideAnimation';
 import styles from './Citadel.module.css';
 import { CommandInput } from './components/CommandInput';
 import { CommandOutput } from './components/CommandOutput';
 import { AvailableCommands } from './components/AvailableCommands';
-import { commandTrie } from './commands-config';
+import { CommandTrie } from './types/command-trie';
 import { CitadelState, CitadelActions, OutputItem } from './types/state';
 import { CitadelConfig } from './config/types';
 import { defaultConfig } from './config/defaults';
+import { initializeCommands } from './commands-config';
 
 export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = defaultConfig }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const outputRef = useRef<HTMLDivElement>(null);
+
+  const mergedConfig = {
+    ...defaultConfig,
+    ...config,
+    showCitadelKey: config.showCitadelKey || '.'
+  };
+
+  // Initialize command trie with the merged config
+  const commandTrie = useMemo(() => {
+    const trie = new CommandTrie(mergedConfig);
+    initializeCommands(trie);
+    return trie;
+  }, [mergedConfig.includeHelpCommand]);
 
   const [state, setState] = useState<CitadelState>({
     commandStack: [],
@@ -31,7 +45,7 @@ export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = default
         commandStack: stack,
         currentNode: commandTrie.getCommand(stack)
       }));
-    }, []),
+    }, [commandTrie]),
 
     setCurrentInput: useCallback((input: string) => {
       setState(prev => ({ ...prev, currentInput: input }));
@@ -91,7 +105,7 @@ export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = default
           error: error instanceof Error ? error.message : 'Unknown error occurred'
         });
       }
-    }, [])
+    }, [commandTrie])
   };
 
   // Toggle visibility with keyboard shortcut
@@ -99,7 +113,7 @@ export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = default
     onOpen: () => setIsVisible(true),
     onClose: () => setIsClosing(true),
     isVisible,
-    toggleKey: config.toggleKey || '.'
+    showCitadelKey: mergedConfig.showCitadelKey
   });
 
   // Handle animation completion
@@ -136,10 +150,12 @@ export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = default
           state={state}
           actions={actions}
           availableCommands={getAvailableCommands()}
+          commandTrie={commandTrie}
         />
         <AvailableCommands
           state={state}
           availableCommands={getAvailableCommands()}
+          config={mergedConfig}
         />
       </div>
     </div>

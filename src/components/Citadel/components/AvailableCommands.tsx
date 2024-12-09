@@ -1,15 +1,18 @@
 import React from 'react';
 import { CommandNode } from '../types/command-trie';
 import { CitadelState } from '../types/state';
+import { CitadelConfig } from '../config/types';
 
 interface AvailableCommandsProps {
   state: CitadelState;
   availableCommands: CommandNode[];
+  config: CitadelConfig;
 }
 
 export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
   state,
-  availableCommands
+  availableCommands,
+  config
 }) => {
   const showCommands = !state.isEnteringArg && availableCommands.length > 0;
   const containerClasses = "h-12 mt-2 border-t border-gray-700 px-4";
@@ -17,6 +20,17 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
 
   // Show description for leaf nodes without children or arguments
   const isLeafNode = state.currentNode && !state.currentNode.children && !state.currentNode.argument;
+
+  // Sort commands and handle help command placement
+  const sortedCommands = React.useMemo(() => {
+    if (!state.commandStack.length && config.includeHelpCommand) {
+      // At root level, ensure help command is last
+      const nonHelpCommands = availableCommands.filter(cmd => cmd.name !== 'help');
+      const helpCommand = availableCommands.find(cmd => cmd.name === 'help');
+      return [...nonHelpCommands, ...(helpCommand ? [helpCommand] : [])];
+    }
+    return availableCommands;
+  }, [availableCommands, state.commandStack, config.includeHelpCommand]);
 
   return (
     <div className={containerClasses} data-testid="available-commands">
@@ -32,8 +46,8 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
       ) : showCommands ? (
         <div className={contentClasses}>
           <div className="flex flex-wrap gap-2">
-            {availableCommands.map((cmd) => {
-              const boldLength = availableCommands.reduce((length, other) => {
+            {sortedCommands.map((cmd) => {
+              const boldLength = sortedCommands.reduce((length, other) => {
                 if (other.name === cmd.name) return length;
                 let commonPrefix = 0;
                 while (

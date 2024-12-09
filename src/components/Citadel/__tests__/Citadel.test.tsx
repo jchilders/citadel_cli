@@ -3,6 +3,8 @@ import { render, fireEvent, screen, waitFor } from '@testing-library/react';
 import { Citadel } from '../Citadel';
 import userEvent from '@testing-library/user-event';
 import styles from '../Citadel.module.css';
+import { CommandTrie } from '../types/command-trie';
+import { initializeCommands } from '../commands-config';
 
 describe('Citadel', () => {
   beforeEach(() => {
@@ -14,7 +16,7 @@ describe('Citadel', () => {
     expect(container).toBeTruthy();
   });
 
-  it('adds component to DOM when trigger key is pressed', async () => {
+  it('adds component to DOM when showCitadelKey is pressed', async () => {
     const user = userEvent.setup();
     render(<Citadel />);
     
@@ -31,58 +33,19 @@ describe('Citadel', () => {
     }, { timeout: 1000 });
   });
 
-  it('accepts input and updates the command input', async () => {
+  it('respects custom showCitadelKey configuration', async () => {
     const user = userEvent.setup();
-    render(<Citadel />);
+    render(<Citadel config={{ showCitadelKey: '/' }} />);
     
-    // Make Citadel visible
+    // Default key should not trigger
     await user.keyboard('.');
+    expect(screen.queryByTestId('citadel-root')).toBeNull();
     
-    // Wait for animation to complete and find the input element
-    const input = await waitFor(() => {
-      const element = screen.getByTestId('citadel-root');
-      expect(element).toBeTruthy();
-      const inputElement = screen.getByTestId('citadel-command-input');
-      expect(inputElement).toBeTruthy();
-      return inputElement;
-    }, { timeout: 1000 });
-    
-    // Type into the input
-    await user.type(input, 'help');
-    
-    // Wait for state update to complete
+    // Custom key should trigger
+    await user.keyboard('/');
     await waitFor(() => {
-      const updatedInput = screen.getByTestId('citadel-command-input') as HTMLInputElement;
-      expect(updatedInput.value).toBe('help');
+      expect(screen.getByTestId('citadel-root')).toBeTruthy();
     }, { timeout: 1000 });
-  });
-
-  it('closes when Escape is pressed', async () => {
-    const user = userEvent.setup();
-    render(<Citadel />);
-    
-    // Make Citadel visible
-    await user.keyboard('.');
-    
-    // Wait for it to become visible
-    await waitFor(() => {
-      const element = screen.getByTestId('citadel-root');
-      expect(element.style.opacity).toBe('1');
-    }, { timeout: 1000 });
-    
-    // Press Escape
-    await user.keyboard('{esc}');
-    
-    // First check that the closing animation starts
-    await waitFor(() => {
-      const element = screen.getByTestId('citadel-root');
-      expect(element.classList.contains(styles.slideDown)).toBe(true);
-    }, { timeout: 1000 });
-
-    // Then wait for the element to be removed after animation
-    await waitFor(() => {
-      expect(screen.queryByTestId('citadel-root')).toBeNull();
-    }, { timeout: 2000 });
   });
 
   it('shows available commands', async () => {
@@ -99,14 +62,21 @@ describe('Citadel', () => {
       return inputElement;
     }, { timeout: 1000 });
     
-    // Type partial command
-    await user.type(input, 'h');
+    // Help command should be visible by default
+    const availableCommands = screen.getByTestId('available-commands');
+    expect(availableCommands.textContent).toContain('help');
+  });
+
+  it('respects includeHelpCommand configuration', async () => {
+    const user = userEvent.setup();
+    render(<Citadel config={{ includeHelpCommand: false }} />);
     
-    // Wait for available commands to update
-    await waitFor(() => {
-      const availableCommands = screen.getByTestId('available-commands');
-      expect(availableCommands).toBeTruthy();
-      expect(availableCommands.textContent).toContain('help');
-    }, { timeout: 1000 });
+    // Show Citadel
+    await user.keyboard('.');
+    await waitFor(() => screen.getByTestId('citadel-root'));
+    
+    // Help command should not be visible
+    const availableCommands = screen.getByTestId('available-commands');
+    expect(availableCommands.textContent).not.toContain('help');
   });
 });

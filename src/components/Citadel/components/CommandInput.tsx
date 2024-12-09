@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { CommandNode } from '../types/command-trie';
+import { CommandNode, CommandTrie } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
 import { useCommandParser } from '../hooks/useCommandParser';
 import styles from './CommandInput.module.css';
@@ -8,15 +8,17 @@ interface CommandInputProps {
   state: CitadelState;
   actions: CitadelActions;
   availableCommands: CommandNode[];
+  commandTrie: CommandTrie;
 }
 
 export const CommandInput: React.FC<CommandInputProps> = ({
   state,
   actions,
   availableCommands,
+  commandTrie,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { handleKeyDown, handleInputChange } = useCommandParser();
+  const { handleKeyDown, handleInputChange } = useCommandParser({ commandTrie });
   const [showInvalidAnimation, setShowInvalidAnimation] = useState(false);
 
   // Helper function to check if input would match any available command
@@ -109,7 +111,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       <div className="flex items-center gap-2">
         <div className="text-gray-400 font-mono">&gt;</div>
         <div className="flex-1 font-mono flex items-center">
-          <span className="text-blue-400 whitespace-pre">
+          <span className="text-blue-400 whitespace-pre" data-testid="user-input-area">
             {state.commandStack.join(' ')}
             {state.commandStack.length > 0 && ' '}
           </span>

@@ -1,8 +1,6 @@
 # Citadel
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-Citadel is a powerful React component that adds quick command capabilities to your existing website. Originally designed with internal corporate websites in mind, Citadel provides a flexible and intuitive command interface that can be integrated into any web application. With Citadel, users can quickly access functionality through a command palette interface, improving productivity and user experience.
+A command line for your webapp.
 
 ## Purpose
 
@@ -236,6 +234,8 @@ We welcome contributions to Citadel! Here's how you can help:
 - Use consistent formatting (the project uses ESLint and Prettier)
 
 ## License
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Citadel is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 

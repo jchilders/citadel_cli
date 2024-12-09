@@ -1,9 +1,12 @@
 import { useCallback } from 'react';
-import { commandTrie } from '../commands-config';
-import { CommandNode } from '../types/command-trie';
+import { CommandNode, CommandTrie } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
 
-export function useCommandParser() {
+export interface UseCommandParserProps {
+  commandTrie: CommandTrie;
+}
+
+export function useCommandParser({ commandTrie }: UseCommandParserProps) {
   const findMatchingCommands = useCallback((input: string, availableNodes: CommandNode[]): CommandNode[] => {
     if (!input) return availableNodes;
     return availableNodes.filter(node => node.name.toLowerCase().startsWith(input.toLowerCase()));
@@ -22,7 +25,7 @@ export function useCommandParser() {
       return Array.from(currentNode.children.values());
     }
     return commandTrie.getRootCommands();
-  }, []);
+  }, [commandTrie]);
 
   const handleInputChange = useCallback((
     newValue: string,
@@ -54,7 +57,7 @@ export function useCommandParser() {
         }
       }
     }
-  }, [getAvailableNodes, getAutocompleteSuggestion]);
+  }, [getAvailableNodes, getAutocompleteSuggestion, commandTrie]);
 
   const handleKeyDown = useCallback((
     e: KeyboardEvent,
@@ -112,7 +115,7 @@ export function useCommandParser() {
         }
       }
     }
-  }, [getAvailableNodes, getAutocompleteSuggestion]);
+  }, [getAvailableNodes, getAutocompleteSuggestion, commandTrie]);
 
   return {
     handleInputChange,
