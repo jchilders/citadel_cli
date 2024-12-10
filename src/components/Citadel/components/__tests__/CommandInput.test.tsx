@@ -42,14 +42,7 @@ const mockCommands: CommandNode[] = [
   }),
   new CommandNode({
     description: 'User management',
-    fullPath: ['user'],
-    children: new Map([
-      ['show', new CommandNode({
-        description: 'Show user details',
-        fullPath: ['user', 'show'],
-        argument: { name: 'userId', description: 'Enter user ID' }
-      })]
-    ])
+    fullPath: ['user']
   }),
   new CommandNode({
     description: '検索機能',
@@ -57,6 +50,14 @@ const mockCommands: CommandNode[] = [
     handler: async () => ({ text: '検索結果' })
   })
 ];
+
+// Create a child command for user management
+const userShowCommand = new CommandNode({
+  description: 'Show user details',
+  fullPath: ['user', 'show'],
+  argument: { name: 'userId', description: 'Enter user ID' }
+});
+mockCommands[1].addChild('show', userShowCommand);
 
 // Mock actions
 const mockActions = {
@@ -118,6 +119,66 @@ describe('CommandInput', () => {
     fireEvent.keyDown(input, { key: 'h' }); // Valid prefix for 'help'
 
     // Should allow valid input
+    expect(mockActions.setCurrentInput).toHaveBeenCalled();
+  });
+
+  it('prevents input at leaf nodes without handlers or arguments', () => {
+    const leafNode = new CommandNode({
+      description: 'Leaf node',
+      fullPath: ['leaf']
+    });
+    
+    const state = {
+      ...defaultState,
+      currentNode: leafNode
+    };
+
+    const { container } = render(
+      <TestWrapper>
+        <CommandInput
+          state={state}
+          actions={mockActions}
+          availableCommands={mockCommands}
+        />
+      </TestWrapper>
+    );
+
+    const input = container.querySelector('input');
+    if (!input) throw new Error('Input element not found');
+    
+    // Should prevent input at leaf nodes without handlers or arguments
+    fireEvent.keyDown(input, { key: 'a' });
+    expect(mockActions.setCurrentInput).not.toHaveBeenCalled();
+  });
+
+  it('allows input for nodes with handlers', () => {
+    const handlerNode = new CommandNode({
+      description: 'Node with handler',
+      fullPath: ['handler'],
+      handler: async () => ({ text: 'test' })
+    });
+    
+    const state = {
+      ...defaultState,
+      currentNode: handlerNode,
+      currentInput: 'handler'  // Set current input to match the node's name
+    };
+
+    const { container } = render(
+      <TestWrapper>
+        <CommandInput
+          state={state}
+          actions={mockActions}
+          availableCommands={[handlerNode]}  // Pass the handler node as available command
+        />
+      </TestWrapper>
+    );
+
+    const input = container.querySelector('input');
+    if (!input) throw new Error('Input element not found');
+    
+    // Should allow input for nodes with handlers
+    fireEvent.keyDown(input, { key: 'Enter' });  // Use Enter key instead of 'a'
     expect(mockActions.setCurrentInput).toHaveBeenCalled();
   });
 
@@ -196,7 +257,7 @@ describe('CommandInput', () => {
   it('allows argument input', () => {
     const argState: CitadelState = {
       ...defaultState,
-      currentNode: mockCommands[1].children?.get('show'),
+      currentNode: userShowCommand,
       commandStack: ['user', 'show'],
       isEnteringArg: true
     };

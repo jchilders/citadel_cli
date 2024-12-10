@@ -19,10 +19,10 @@ describe('CommandTrie', () => {
       
       const node = trie.getCommand(['test']);
       expect(node).toBeDefined();
-      expect(node?.name).toBe('test');
-      expect(node?.description).toBe('Test command');
-      expect(node?.handler).toBe(handler);
-      expect(node?.fullPath).toEqual(['test']);
+      expect(node?.getName()).toBe('test');
+      expect(node?.getDescription()).toBe('Test command');
+      expect(node?.getHandler()).toBe(handler);
+      expect(node?.getFullPath()).toEqual(['test']);
     });
 
     it('should add nested commands successfully', () => {
@@ -34,17 +34,17 @@ describe('CommandTrie', () => {
       });
       
       const parentNode = trie.getCommand(['parent']);
-      expect(parentNode?.name).toBe('parent');
-      expect(parentNode?.description).toBe('parent commands');
-      expect(parentNode?.handler).toBeUndefined();
-      expect(parentNode?.children?.size).toBe(1);
-      expect(parentNode?.fullPath).toEqual(['parent']);
+      expect(parentNode?.getName()).toBe('parent');
+      expect(parentNode?.getDescription()).toBe('parent commands');
+      expect(parentNode?.getHandler()).toBeUndefined();
+      expect(parentNode?.getChildren()?.size).toBe(1);
+      expect(parentNode?.getFullPath()).toEqual(['parent']);
 
       const childNode = trie.getCommand(['parent', 'child']);
-      expect(childNode?.name).toBe('child');
-      expect(childNode?.description).toBe('Child command');
-      expect(childNode?.handler).toBe(handler);
-      expect(childNode?.fullPath).toEqual(['parent', 'child']);
+      expect(childNode?.getName()).toBe('child');
+      expect(childNode?.getDescription()).toBe('Child command');
+      expect(childNode?.getHandler()).toBe(handler);
+      expect(childNode?.getFullPath()).toEqual(['parent', 'child']);
     });
 
     it('should throw on empty path', () => {
@@ -97,13 +97,13 @@ describe('CommandTrie', () => {
       const leaves = trie.getLeafCommands();
       expect(leaves).toHaveLength(2);
       
-      const cmd1 = leaves.find(node => node.fullPath.join(' ') === 'cmd1');
-      expect(cmd1?.description).toBe('Command 1');
-      expect(cmd1?.argument).toBeUndefined();
+      const cmd1 = leaves.find(node => node.getFullPath().join(' ') === 'cmd1');
+      expect(cmd1?.getDescription()).toBe('Command 1');
+      expect(cmd1?.getArgument()).toBeUndefined();
 
-      const cmd2 = leaves.find(node => node.fullPath.join(' ') === 'parent cmd2');
-      expect(cmd2?.description).toBe('Command 2');
-      expect(cmd2?.argument?.name).toBe('arg');
+      const cmd2 = leaves.find(node => node.getFullPath().join(' ') === 'parent cmd2');
+      expect(cmd2?.getDescription()).toBe('Command 2');
+      expect(cmd2?.getArgument()?.name).toBe('arg');
     });
 
     it('should return empty array for empty trie', () => {

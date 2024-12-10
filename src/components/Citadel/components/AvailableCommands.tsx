@@ -17,8 +17,8 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
   const containerClasses = "h-12 mt-2 border-t border-gray-700 px-4";
   const contentClasses = "text-gray-300 pt-2";
 
-  // Show description for leaf nodes without children or arguments
-  const isLeafNode = state.currentNode && !state.currentNode.children && !state.currentNode.argument;
+  // Show description for leaf nodes without handlers or arguments
+  const isLeafNode = state.currentNode?.isLeaf && !state.currentNode.hasHandler && !state.currentNode.requiresArgument;
 
   // Sort commands and handle help command placement
   const sortedCommands = React.useMemo(() => {
@@ -38,7 +38,7 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
           {state.currentNode ? (
             <>
               <span className="text-blue-400">{state.currentNode.name}</span>
-              <span className="text-gray-400 ml-2">- {state.currentNode.description}</span>
+              <span className="text-gray-400 ml-2">- {state.currentNode.getDescription()}</span>
             </>
           ) : null}
         </div>
@@ -61,7 +61,7 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
 
               return (
                 <div
-                  key={cmd.fullPath.join('.')}
+                  key={cmd.getFullPath().join('.')}
                   className="px-2 py-1 rounded bg-gray-800 mr-2 last:mr-0"
                 >
                   <span className="font-mono text-white">
@@ -75,9 +75,9 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
         </div>
       ) : (
         <div className={contentClasses}>
-          {state.isEnteringArg && state.currentNode?.argument ? (
+          {(state.isEnteringArg || state.currentNode?.requiresArgument) && state.currentNode?.hasArgument() ? (
             <div className="text-gray-400">
-              {state.currentNode.argument.description}
+              {state?.currentNode?.getArgument()?.description}
             </div>
           ) : (
             <div className="text-gray-500">No available commands</div>

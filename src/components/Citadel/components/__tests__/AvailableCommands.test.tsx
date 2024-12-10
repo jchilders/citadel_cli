@@ -18,7 +18,8 @@ describe('AvailableCommands', () => {
   const mockCommands: CommandNode[] = [
     new CommandNode({
       fullPath: ['help'],
-      description: 'Show help information'
+      description: 'Show help information',
+      handler: async () => ({ text: 'Help info' })
     }),
     new CommandNode({
       fullPath: ['test'],
@@ -69,10 +70,42 @@ describe('AvailableCommands', () => {
   it('renders without help command when disabled in config', () => {
     const { container } = renderWithConfig(
       defaultState,
-      mockCommands.filter(cmd => cmd.fullPath[0] !== 'help'),
+      mockCommands.filter(cmd => cmd.getName() !== 'help'),
       { includeHelpCommand: false, resetStateOnHide: true, showCitadelKey: '.' }
     );
     expect(container.textContent).not.toContain('help');
     expect(container.textContent).toContain('test');
+  });
+
+  it('renders leaf node description when appropriate', () => {
+    const leafNode = new CommandNode({
+      fullPath: ['leaf'],
+      description: 'Leaf node description'
+    });
+    
+    const state = {
+      ...defaultState,
+      currentNode: leafNode
+    };
+
+    const { container } = renderWithConfig(state, [leafNode]);
+    expect(container.textContent).toContain('leaf');
+    expect(container.textContent).toContain('Leaf node description');
+  });
+
+  it('does not render leaf node description for nodes with handlers', () => {
+    const handlerNode = new CommandNode({
+      fullPath: ['handler'],
+      description: 'Handler node',
+      handler: async () => ({ text: 'test' })
+    });
+    
+    const state = {
+      ...defaultState,
+      currentNode: handlerNode
+    };
+
+    const { container } = renderWithConfig(state, [handlerNode]);
+    expect(container.textContent).not.toContain('Handler node');
   });
 });

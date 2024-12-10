@@ -10,30 +10,31 @@ export interface CommandArgument {
   name: string;
   description: string;
 }
-
 export class CommandNode {
-  public readonly fullPath: string[];
-  public readonly description: string;
-  public readonly children?: Map<string, CommandNode>;
-  public readonly argument?: CommandArgument;
-  public readonly handler?: CommandHandler;
+  private readonly fullPath: string[];
+  private readonly description: string;
+  private readonly children: Map<string, CommandNode>;
+  private readonly argument?: CommandArgument;
+  private readonly handler?: CommandHandler;
+  private readonly parent?: CommandNode;
 
   constructor(params: {
     fullPath: string[];
     description: string;
-    children?: Map<string, CommandNode>;
-    argument?: CommandArgument;
+    parent?: CommandNode;
     handler?: CommandHandler;
+    argument?: CommandArgument;
   }) {
-    if (!params.fullPath || params.fullPath.length === 0) {
+    if (!params.fullPath?.length) {
       throw new Error('Command path cannot be empty');
     }
 
     this.fullPath = params.fullPath;
     this.description = params.description;
-    this.children = params.children;
+    this.children = new Map<string, CommandNode>();
     this.argument = params.argument;
     this.handler = params.handler;
+    this.parent = params.parent;
   }
 
   get name(): string {
@@ -41,7 +42,7 @@ export class CommandNode {
   }
 
   get isLeaf(): boolean {
-    return !this.children || this.children.size === 0;
+    return this.children.size === 0;
   }
 
   get hasHandler(): boolean {
@@ -51,106 +52,145 @@ export class CommandNode {
   get requiresArgument(): boolean {
     return !!this.argument;
   }
+
+  getChildren(): ReadonlyMap<string, CommandNode> {
+    return this.children;
+  }
+
+  hasChildren(): boolean {
+    return this.children.size > 0;
+  }
+
+  addChild(segment: string, node: CommandNode): void {
+    this.children.set(segment, node);
+  }
+
+  getRootPath(): string[] {
+    const path: string[] = [];
+    let current: CommandNode | undefined = this;
+
+    while (current) {
+      path.unshift(current.name);
+      current = current.parent;
+    }
+
+    return path;
+  }
+
+  getFullPath(): string[] {
+    return this.fullPath;
+  }
+
+  getName(): string {
+    return this.getFullPath()[this.getFullPath().length - 1];
+  }
+
+  getDescription(): string {
+    return this.description;
+  }
+
+  getArgument(): CommandArgument | undefined {
+    return this.argument;
+  }
+
+  hasArgument(): boolean {
+    return !!this.argument;
+  }
+
+  getHandler(): CommandHandler | undefined {
+    return this.handler;
+  }
 }
 
 export class CommandTrie {
-  private root: Map<string, CommandNode>;
+  private readonly root: CommandNode;
 
   constructor() {
-    this.root = new Map<string, CommandNode>();
+    // Create a root node with a special path
+    this.root = new CommandNode({
+      fullPath: ['ROOT'],
+      description: 'Root command node'
+    });
   }
 
-  /**
-   * Adds a command to the trie
-   * @param params Command node parameters
-   * @throws Error if attempting to add a duplicate command
-   */
-  addCommand(params: Omit<ConstructorParameters<typeof CommandNode>[0], 'fullPath'> & { path: string[] }): void {
+  addCommand(params: Omit<ConstructorParameters<typeof CommandNode>[0], 'fullPath' | 'parent'> & { path: string[] }): void {
     const { path, description, handler, argument } = params;
     
-    if (path.length === 0) {
+    if (!path?.length) {
       throw new Error("Command path cannot be empty");
     }
 
-    let current = this.root;
+    let currentNode = this.root;
     const lastIndex = path.length - 1;
 
     for (let i = 0; i < path.length; i++) {
       const segment = path[i];
       const isLeaf = i === lastIndex;
       const fullPath = path.slice(0, i + 1);
+      const children = currentNode.getChildren();
 
-      if (!current.has(segment)) {
-        current.set(segment, new CommandNode({
+      if (!children.has(segment)) {
+        const newNode = new CommandNode({
           description: isLeaf ? description : `${segment} commands`,
           fullPath,
-          children: isLeaf ? undefined : new Map<string, CommandNode>(),
+          parent: currentNode,
           handler: isLeaf ? handler : undefined,
           argument: isLeaf ? argument : undefined,
-        }));
+        });
+
+        currentNode.addChild(segment, newNode);
+        currentNode = newNode;
       } else {
-        const existingNode = current.get(segment)!;
+        const existingNode = children.get(segment)!;
         if (isLeaf && existingNode.isLeaf) {
           throw new Error(`Duplicate leaf command: ${path.join(" ")}`);
         }
         if (!isLeaf && existingNode.isLeaf) {
           throw new Error(`Cannot add subcommand to leaf command: ${path.slice(0, i + 1).join(" ")}`);
         }
+        
+        currentNode = existingNode;
       }
-
-      current = current.get(segment)!.children!;
     }
   }
 
-  /**
-   * Retrieves a command node from the trie
-   * @param path Array of command names forming the path to the desired command
-   * @returns The command node or undefined if not found
-   */
   getCommand(path: string[]): CommandNode | undefined {
     let current = this.root;
-    let node: CommandNode | undefined;
 
     for (const segment of path) {
-      node = current.get(segment);
+      const children = current.getChildren();
+      const node = children.get(segment);
       if (!node) {
         return undefined;
       }
-      if (!node.children) {
-        return node;
-      }
-      current = node.children;
+      current = node;
     }
 
-    return node;
+    return current;
   }
 
-  /**
-   * Returns all possible completions for a partial command path
-   * @param path Array of command names forming the partial path
-   * @returns Array of possible command names that could complete the path
-   */
   getCompletions(path: string[]): string[] {
     let current = this.root;
     
     // Navigate to the last node in the path
     for (const segment of path.slice(0, -1)) {
-      const node = current.get(segment);
-      if (!node?.children) {
+      const children = current.getChildren();
+      const node = children.get(segment);
+      if (!node) {
         return [];
       }
-      current = node.children;
+      current = node;
     }
 
-    // Get all possible completions from the last node
     const lastSegment = path[path.length - 1] || "";
     const completions: string[] = [];
+    const children = current.getChildren();
 
     if (path.length > 0) {
-      const node = current.get(lastSegment);
-      if (node?.children) {
-        // If we have an exact match and it has children, return its children's names
-        node.children.forEach((_node, key) => {
+      const node = children.get(lastSegment);
+      if (node) {
+        // If we have an exact match, return its children's names
+        node.getChildren().forEach((_node, key) => {
           completions.push(key);
         });
         return completions;
@@ -158,7 +198,7 @@ export class CommandTrie {
     }
 
     // Otherwise return filtered completions from current level
-    current.forEach((_node, key) => {
+    children.forEach((_node, key) => {
       if (key.startsWith(lastSegment)) {
         completions.push(key);
       }
@@ -167,101 +207,82 @@ export class CommandTrie {
     return completions;
   }
 
-  /**
-   * Returns all commands in the trie as flattened paths
-   * @returns Array of command paths
-   */
   getAllCommands(): string[][] {
     const paths: string[][] = [];
 
     const traverse = (node: CommandNode) => {
-      paths.push(node.fullPath);
-      if (node.children) {
-        node.children.forEach((child) => {
-          traverse(child);
-        });
+      if (node !== this.root) { // Skip the root node
+        paths.push(node.getFullPath());
       }
+      node.getChildren().forEach((child) => {
+        traverse(child);
+      });
     };
 
-    this.root.forEach((node) => {
-      traverse(node);
-    });
-
+    traverse(this.root);
     return paths;
   }
 
-  /**
-   * Returns all root level command nodes in the trie
-   * @returns Array of root level command nodes
-   */
   getRootCommands(): CommandNode[] {
-    return Array.from(this.root.values());
+    return Array.from(this.root.getChildren().values());
   }
 
-  /**
-   * Returns all leaf command nodes in the trie
-   * @returns Array of leaf command nodes
-   */
   getLeafCommands(): CommandNode[] {
     const leaves: CommandNode[] = [];
 
     const traverse = (node: CommandNode) => {
-      if (!node.children || node.children.size === 0) {
+      if (node.isLeaf) {
         leaves.push(node);
       } else {
-        node.children.forEach((child) => {
+        node.getChildren().forEach((child) => {
           traverse(child);
         });
       }
     };
 
-    this.root.forEach((node) => {
+    this.root.getChildren().forEach((node) => {
       traverse(node);
     });
 
     return leaves;
   }
 
-  /**
-   * Validates the entire command trie
-   * @returns Object containing validation result and any error messages
-   */
   validate(): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
     const seen = new Set<string>();
     
     const traverse = (node: CommandNode) => {
-      const pathStr = node.fullPath.join(" ");
+      if (node === this.root) {
+        return; // Skip validation for root node
+      }
 
-      // Check for duplicate paths
+      const pathStr = node.getFullPath().join(" ");
+
       if (seen.has(pathStr)) {
         errors.push(`Duplicate command path: ${pathStr}`);
       }
       seen.add(pathStr);
 
-      // A node with children is a non-leaf node
-      if (node.children) {
-        // Non-leaf nodes cannot have handlers or arguments
-        if (node.handler) {
+      const children = node.getChildren();
+      if (children.size > 0) {
+        if (node.getHandler()) {
           errors.push(`Non-leaf command cannot have handler: ${pathStr}`);
         }
-        if (node.argument) {
+        if (node.getArgument()) {
           errors.push(`Non-leaf command cannot have argument: ${pathStr}`);
         }
 
-        // Recursively validate children
-        node.children.forEach((child) => {
+        children.forEach((child) => {
           traverse(child);
         });
       } else {
-        // Leaf nodes must have handlers
-        if (!node.handler) {
+        if (!node.getHandler()) {
           errors.push(`Leaf command missing handler: ${pathStr}`);
         }
       }
     };
 
-    this.root.forEach((node) => {
+    this.root.getChildren().forEach((node) => {
       traverse(node);
     });
 

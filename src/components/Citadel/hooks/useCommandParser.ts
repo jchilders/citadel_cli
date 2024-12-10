@@ -9,20 +9,20 @@ export interface UseCommandParserProps {
 export function useCommandParser({ commandTrie }: UseCommandParserProps) {
   const findMatchingCommands = useCallback((input: string, availableNodes: CommandNode[]): CommandNode[] => {
     if (!input) return availableNodes;
-    return availableNodes.filter(node => node.name.toLowerCase().startsWith(input.toLowerCase()));
+    return availableNodes.filter(node => node.getName().toLowerCase().startsWith(input.toLowerCase()));
   }, []);
 
   const getAutocompleteSuggestion = useCallback((input: string, availableNodes: CommandNode[]): string | null => {
     const matches = findMatchingCommands(input, availableNodes);
     if (matches.length === 1) {
-      return matches[0].name;
+      return matches[0].getName();
     }
     return null;
   }, [findMatchingCommands]);
 
   const getAvailableNodes = useCallback((currentNode?: CommandNode): CommandNode[] => {
-    if (currentNode?.children) {
-      return Array.from(currentNode.children.values());
+    if (currentNode?.hasChildren()) {
+      return Array.from(currentNode.getChildren().values());
     }
     return commandTrie.getRootCommands();
   }, [commandTrie]);
@@ -49,7 +49,7 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
           actions.setCurrentNode(nextNode);
           
           // If this is a leaf node with an argument, enter argument mode
-          if (!nextNode.children && nextNode.argument) {
+          if (!nextNode.hasChildren() && nextNode.getArgument()) {
             actions.setIsEnteringArg(true);
           } else {
             actions.setIsEnteringArg(false);
@@ -94,28 +94,36 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
     if (e.key === 'Enter') {
       e.preventDefault();
       
-      if (isEnteringArg && currentNode?.handler) {
-        // Execute command with argument
+      if (isEnteringArg && currentNode?.getHandler() && currentInput.trim()) {
+        // Execute command with argument if we have a valid command and input
         actions.executeCommand(commandStack, [currentInput]);
-      } else if (!isEnteringArg) {
-        if (currentInput) {
-          // Try to execute command from current input
-          const availableNodes = getAvailableNodes(currentNode);
-          const matchingNode = availableNodes.find(
-            node => node.name.toLowerCase() === currentInput.toLowerCase()
-          );
+        // Reset state after execution
+        actions.setCurrentInput('');
+        actions.setIsEnteringArg(false);
+      } else if (!isEnteringArg && currentInput) {
+        // Try to execute a new command
+        const availableNodes = getAvailableNodes(currentNode);
+        const matches = findMatchingCommands(currentInput, availableNodes);
+        
+        if (matches.length === 1) {
+          const matchedNode = matches[0];
+          const newStack = [...commandStack, matchedNode.getName()];
           
-          if (matchingNode?.handler && !matchingNode.argument) {
-            const newStack = [...commandStack, matchingNode.name];
+          if (matchedNode.getArgument()) {
+            // Command requires an argument, enter argument mode
+            actions.setCommandStack(newStack);
+            actions.setCurrentNode(matchedNode);
+            actions.setCurrentInput('');
+            actions.setIsEnteringArg(true);
+          } else if (matchedNode.getHandler()) {
+            // Command has a handler but no argument, execute immediately
             actions.executeCommand(newStack);
+            actions.setCurrentInput('');
           }
-        } else if (currentNode?.hasHandler && !currentNode.requiresArgument) {
-          // Execute current node's handler if it exists and doesn't need arguments
-          actions.executeCommand(commandStack);
         }
       }
     }
-  }, [getAvailableNodes, getAutocompleteSuggestion, commandTrie]);
+  }, [getAvailableNodes, findMatchingCommands, commandTrie]);
 
   return {
     handleInputChange,

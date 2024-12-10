@@ -24,7 +24,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   // Helper function to check if input would match any available command
   const isValidCommandPrefix = useCallback((input: string, availableNodes: CommandNode[]): boolean => {
     return availableNodes.some(node => 
-      node.name.toLowerCase().startsWith(input.toLowerCase())
+      node.getName().toLowerCase().startsWith(input.toLowerCase())
     );
   }, []);
 
@@ -49,29 +49,33 @@ export const CommandInput: React.FC<CommandInputProps> = ({
           return;
         }
 
-        // If we're at a leaf node with no children and no arguments, prevent all input except Enter
-        if (state.currentNode && !state.currentNode.children && !state.currentNode.argument) {
+        // If we're entering an argument or at a node that requires an argument, allow all input
+        if (state.isEnteringArg || state.currentNode?.requiresArgument) {
+          handleKeyDown(e, state, actions);
+          return;
+        }
+
+        // If we're at a leaf node with no handler and no arguments, prevent all input except Enter
+        if (state.currentNode?.isLeaf && !state.currentNode.hasHandler && !state.currentNode.requiresArgument) {
           e.preventDefault();
           return;
         }
 
-        // Only validate when not entering arguments
-        if (!state.isEnteringArg) {
-          // If we're at root level, use availableCommands
-          // Otherwise, use the current node's children if they exist
-          const currentCommands = state.currentNode?.children ? 
-            Array.from(state.currentNode.children.values()) : 
-            availableCommands;
-          
-          const newInput = (state.currentInput + e.key).toLowerCase();
-          
-          // Show error if the new input wouldn't match any commands
-          if (!isValidCommandPrefix(newInput, currentCommands)) {
-            e.preventDefault();
-            setShowInvalidAnimation(true);
-            setTimeout(() => setShowInvalidAnimation(false), 300);
-            return;
-          }
+        // Only validate command input when not entering arguments
+        // If we're at root level, use availableCommands
+        // Otherwise, use the current node's children
+        const currentCommands = state.currentNode ? 
+          Array.from(state.currentNode.getChildren().values()) : 
+          availableCommands;
+        
+        const newInput = (state.currentInput + e.key).toLowerCase();
+        
+        // Show error if the new input wouldn't match any commands
+        if (!isValidCommandPrefix(newInput, currentCommands)) {
+          e.preventDefault();
+          setShowInvalidAnimation(true);
+          setTimeout(() => setShowInvalidAnimation(false), 300);
+          return;
         }
         
         handleKeyDown(e, state, actions);
