@@ -1,19 +1,18 @@
 import React from 'react';
 import { CommandNode } from '../types/command-trie';
 import { CitadelState } from '../types/state';
-import { CitadelConfig } from '../config/types';
+import { useCitadelConfig } from '../config/CitadelConfigContext';
 
 interface AvailableCommandsProps {
   state: CitadelState;
   availableCommands: CommandNode[];
-  config: CitadelConfig;
 }
 
 export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
   state,
-  availableCommands,
-  config
+  availableCommands
 }) => {
+  const config = useCitadelConfig();
   const showCommands = !state.isEnteringArg && availableCommands.length > 0;
   const containerClasses = "h-12 mt-2 border-t border-gray-700 px-4";
   const contentClasses = "text-gray-300 pt-2";

@@ -45,6 +45,25 @@ describe('Citadel', () => {
     }, { timeout: 1000 });
   });
 
+  it('uses custom config when provided', async () => {
+    const user = userEvent.setup();
+    render(<Citadel config={{ showCitadelKey: 'k', includeHelpCommand: true, resetStateOnHide: true }} />);
+    
+    // It should not exist in DOM on page load
+    expect(document.getElementById('citadel-root')).toBeNull();
+    
+    // Try default key (should not work)
+    await user.keyboard('.');
+    expect(document.getElementById('citadel-root')).toBeNull();
+    
+    // Try custom key
+    await user.keyboard('k');
+    await waitFor(() => {
+      const element = document.getElementById('citadel-root');
+      expect(element).toBeTruthy();
+    }, { timeout: 1000 });
+  });
+
   it('shows available commands', async () => {
     const user = userEvent.setup();
     render(<Citadel />);

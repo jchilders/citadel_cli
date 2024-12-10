@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useGlobalShortcut } from './hooks/useGlobalShortcut';
 import { useSlideAnimation } from './hooks/useSlideAnimation';
+import { useCommandTrie } from './hooks/useCommandTrie';
 import styles from './Citadel.module.css';
 import { CommandInput } from './components/CommandInput';
 import { CommandOutput } from './components/CommandOutput';
@@ -10,24 +11,14 @@ import { CitadelState, CitadelActions, OutputItem } from './types/state';
 import { CitadelConfig } from './config/types';
 import { defaultConfig } from './config/defaults';
 import { initializeCommands } from './commands-config';
+import { CitadelConfigProvider, useCitadelConfig } from './config/CitadelConfigContext';
 
-export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = defaultConfig }) => {
+const CitadelInner: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const outputRef = useRef<HTMLDivElement>(null);
-
-  const mergedConfig = {
-    ...defaultConfig,
-    ...config,
-    showCitadelKey: config.showCitadelKey || '.'
-  };
-
-  // Initialize command trie with the merged config
-  const commandTrie = useMemo(() => {
-    const trie = new CommandTrie(mergedConfig);
-    initializeCommands(trie);
-    return trie;
-  }, [mergedConfig.includeHelpCommand]);
+  const config = useCitadelConfig();
+  const commandTrie = useCommandTrie();
 
   const [state, setState] = useState<CitadelState>({
     commandStack: [],
@@ -113,7 +104,7 @@ export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = default
     onOpen: () => setIsVisible(true),
     onClose: () => setIsClosing(true),
     isVisible,
-    showCitadelKey: mergedConfig.showCitadelKey
+    showCitadelKey: config.showCitadelKey
   });
 
   // Handle animation completion
@@ -155,9 +146,16 @@ export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = default
         <AvailableCommands
           state={state}
           availableCommands={getAvailableCommands()}
-          config={mergedConfig}
         />
       </div>
     </div>
+  );
+};
+
+export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = defaultConfig }) => {
+  return (
+    <CitadelConfigProvider config={config}>
+      <CitadelInner />
+    </CitadelConfigProvider>
   );
 };

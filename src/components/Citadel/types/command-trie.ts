@@ -54,21 +54,12 @@ export class CommandNode {
 }
 
 import { createHelpCommand } from './default-commands';
-import { CitadelConfig } from '../config/types';
-import { defaultConfig } from '../config/defaults';
 
 export class CommandTrie {
   private root: Map<string, CommandNode>;
-  public readonly includeHelpCommand: boolean;
 
-  constructor(config: Partial<CitadelConfig> = {}) {
+  constructor() {
     this.root = new Map<string, CommandNode>();
-    const mergedConfig = { ...defaultConfig, ...config };
-    this.includeHelpCommand = mergedConfig.includeHelpCommand;
-    if (this.includeHelpCommand) {
-      const [helpCommandName, helpCommandNode] = createHelpCommand(this);
-      this.root.set(helpCommandName, helpCommandNode);
-    }
   }
 
   /**
