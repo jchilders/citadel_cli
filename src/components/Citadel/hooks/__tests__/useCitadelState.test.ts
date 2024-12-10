@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useCitadelState } from '../useCitadelState';
-import { CommandArg, Command, OutputItem } from '../../types';
+import { CommandArg, Command, OutputItem } from '../types';
 
 describe('useCitadelState', () => {
   beforeEach(() => {
@@ -71,8 +71,7 @@ describe('useCitadelState', () => {
     const { result } = renderHook(() => useCitadelState());
     const arg: CommandArg = {
       name: 'testArg',
-      type: 'string',
-      required: true,
+      description: 'test argument',
     };
 
     act(() => {
@@ -96,7 +95,11 @@ describe('useCitadelState', () => {
   it('should handle SET_AVAILABLE action', () => {
     const { result } = renderHook(() => useCitadelState());
     const commands: Command[] = [
-      { name: 'test', description: 'test command', execute: () => {} },
+      { 
+        name: 'test',
+        description: 'test command',
+        execute: () => Promise.resolve({ text: 'test' })
+      },
     ];
 
     act(() => {
@@ -109,8 +112,9 @@ describe('useCitadelState', () => {
   it('should handle ADD_OUTPUT action', () => {
     const { result } = renderHook(() => useCitadelState());
     const output: OutputItem = {
-      type: 'command',
-      content: 'test output',
+      command: ['test'],
+      result: { text: 'test output' },
+      timestamp: Date.now(),
     };
 
     act(() => {
@@ -125,7 +129,11 @@ describe('useCitadelState', () => {
     
     // First add some output
     act(() => {
-      result.current.actions.addOutput({ type: 'command', content: 'test' });
+      result.current.actions.addOutput({
+        command: ['test'],
+        result: { text: 'test output' },
+        timestamp: Date.now(),
+      });
     });
 
     // Then clear it
