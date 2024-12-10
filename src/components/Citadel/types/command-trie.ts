@@ -1,5 +1,5 @@
-export interface CommandResult {
   // Base result interface that can be extended for specific result types
+export interface CommandResult {
   json?: any;
   text?: string;
 }
@@ -52,8 +52,6 @@ export class CommandNode {
     return !!this.argument;
   }
 }
-
-import { createHelpCommand } from './default-commands';
 
 export class CommandTrie {
   private root: Map<string, CommandNode>;

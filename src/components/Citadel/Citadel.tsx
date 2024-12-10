@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useGlobalShortcut } from './hooks/useGlobalShortcut';
 import { useSlideAnimation } from './hooks/useSlideAnimation';
 import { useCommandTrie } from './hooks/useCommandTrie';
@@ -6,11 +6,9 @@ import styles from './Citadel.module.css';
 import { CommandInput } from './components/CommandInput';
 import { CommandOutput } from './components/CommandOutput';
 import { AvailableCommands } from './components/AvailableCommands';
-import { CommandTrie } from './types/command-trie';
 import { CitadelState, CitadelActions, OutputItem } from './types/state';
 import { CitadelConfig } from './config/types';
 import { defaultConfig } from './config/defaults';
-import { initializeCommands } from './commands-config';
 import { CitadelConfigProvider, useCitadelConfig } from './config/CitadelConfigContext';
 
 const CitadelInner: React.FC = () => {
