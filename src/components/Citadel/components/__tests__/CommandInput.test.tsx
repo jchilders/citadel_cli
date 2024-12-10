@@ -2,13 +2,22 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
 import { CommandInput } from '../CommandInput';
-import { CommandNode } from '../../types/command-trie';
+import { CommandNode, CommandTrie } from '../../types/command-trie';
 import { CitadelState } from '../../types/state';
 
 // Mock useCommandParser hook
 vi.mock('../../hooks/useCommandParser', () => ({
   useCommandParser: () => ({
-    handleKeyDown: (e: KeyboardEvent, state: CitadelState, actions: any) => {
+    handleKeyDown: vi.fn((e: KeyboardEvent, state: CitadelState, actions: any) => {
+      // Simulate Enter key behavior for help command
+      if (e.key === 'Enter' && state.currentNode?.getName() === 'help') {
+        const handler = state.currentNode.getHandler();
+        if (handler) {
+          actions.executeCommand(['help']);
+        }
+        return;
+      }
+
       // If not entering an argument and key is 'x', prevent default
       if (e.key === 'x' && !state.isEnteringArg && !state.currentNode) {
         e.preventDefault();
@@ -17,10 +26,11 @@ vi.mock('../../hooks/useCommandParser', () => ({
       
       // For all other cases, allow the input
       actions.setCurrentInput(state.currentInput + e.key);
-    },
-    handleInputChange: (value: string, state: CitadelState, actions: any) => {
+    }),
+    handleInputChange: vi.fn((value: string, state: CitadelState, actions: any) => {
       actions.setCurrentInput(value);
-    },
+    }),
+    inputState: 'idle'
   }),
 }));
 
@@ -91,6 +101,7 @@ describe('CommandInput', () => {
           state={defaultState}
           actions={mockActions}
           availableCommands={mockCommands}
+          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -99,7 +110,6 @@ describe('CommandInput', () => {
     if (!input) throw new Error('Input element not found');
     fireEvent.keyDown(input, { key: 'x' });
 
-    // Invalid input should be prevented
     expect(mockActions.setCurrentInput).not.toHaveBeenCalled();
   });
 
@@ -110,6 +120,7 @@ describe('CommandInput', () => {
           state={defaultState}
           actions={mockActions}
           availableCommands={mockCommands}
+          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -118,7 +129,6 @@ describe('CommandInput', () => {
     if (!input) throw new Error('Input element not found');
     fireEvent.keyDown(input, { key: 'h' }); // Valid prefix for 'help'
 
-    // Should allow valid input
     expect(mockActions.setCurrentInput).toHaveBeenCalled();
   });
 
@@ -139,6 +149,7 @@ describe('CommandInput', () => {
           state={state}
           actions={mockActions}
           availableCommands={mockCommands}
+          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -146,7 +157,6 @@ describe('CommandInput', () => {
     const input = container.querySelector('input');
     if (!input) throw new Error('Input element not found');
     
-    // Should prevent input at leaf nodes without handlers or arguments
     fireEvent.keyDown(input, { key: 'a' });
     expect(mockActions.setCurrentInput).not.toHaveBeenCalled();
   });
@@ -170,6 +180,7 @@ describe('CommandInput', () => {
           state={state}
           actions={mockActions}
           availableCommands={[handlerNode]}  // Pass the handler node as available command
+          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -177,7 +188,6 @@ describe('CommandInput', () => {
     const input = container.querySelector('input');
     if (!input) throw new Error('Input element not found');
     
-    // Should allow input for nodes with handlers
     fireEvent.keyDown(input, { key: 'Enter' });  // Use Enter key instead of 'a'
     expect(mockActions.setCurrentInput).toHaveBeenCalled();
   });
@@ -195,6 +205,7 @@ describe('CommandInput', () => {
           state={leafState}
           actions={mockActions}
           availableCommands={mockCommands}
+          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -203,7 +214,6 @@ describe('CommandInput', () => {
     if (!input) throw new Error('Input element not found');
     fireEvent.keyDown(input, { key: 'x' });
 
-    // Should prevent input at leaf nodes
     expect(mockActions.setCurrentInput).not.toHaveBeenCalled();
   });
 
@@ -220,6 +230,7 @@ describe('CommandInput', () => {
           state={subcommandState}
           actions={mockActions}
           availableCommands={mockCommands}
+          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -228,7 +239,6 @@ describe('CommandInput', () => {
     if (!input) throw new Error('Input element not found');
     fireEvent.keyDown(input, { key: 's' }); // Valid prefix for 'show'
 
-    // Should allow valid subcommand input
     expect(mockActions.setCurrentInput).toHaveBeenCalled();
   });
 
@@ -239,6 +249,7 @@ describe('CommandInput', () => {
           state={defaultState}
           actions={mockActions}
           availableCommands={mockCommands}
+          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -249,7 +260,6 @@ describe('CommandInput', () => {
 
     specialKeys.forEach(key => {
       fireEvent.keyDown(input, { key });
-      // Special keys should be allowed
       expect(mockActions.setCurrentInput).toHaveBeenCalled();
     });
   });
@@ -268,6 +278,7 @@ describe('CommandInput', () => {
           state={argState}
           actions={mockActions}
           availableCommands={mockCommands}
+          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -276,7 +287,6 @@ describe('CommandInput', () => {
     if (!input) throw new Error('Input element not found');
     fireEvent.keyDown(input, { key: '1' }); // Valid argument input
 
-    // Should allow argument input
     expect(mockActions.setCurrentInput).toHaveBeenCalled();
   });
 
@@ -287,6 +297,7 @@ describe('CommandInput', () => {
           state={defaultState}
           actions={mockActions}
           availableCommands={mockCommands}
+          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -294,15 +305,94 @@ describe('CommandInput', () => {
     const input = container.querySelector('input');
     if (!input) throw new Error('Input element not found');
     
-    // Test input of first character
     fireEvent.change(input, { target: { value: '検' } });
     expect(mockActions.setCurrentInput).toHaveBeenCalledWith('検');
     
-    // Reset mock
     vi.clearAllMocks();
     
-    // Test complete word
     fireEvent.change(input, { target: { value: '検索' } });
     expect(mockActions.setCurrentInput).toHaveBeenCalledWith('検索');
+  });
+
+  it('executes help command when Enter is pressed', () => {
+    const helpNode = mockCommands[0];
+    const state = {
+      ...defaultState,
+      currentNode: helpNode,
+      commandStack: ['help']
+    };
+
+    const { container } = render(
+      <TestWrapper>
+        <CommandInput
+          state={state}
+          actions={mockActions}
+          availableCommands={mockCommands}
+          commandTrie={new CommandTrie()}
+        />
+      </TestWrapper>
+    );
+
+    const input = container.querySelector('input');
+    if (!input) throw new Error('Input element not found');
+    
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(mockActions.executeCommand).toHaveBeenCalledWith(['help']);
+  });
+
+  it('handles input state transitions correctly', () => {
+    const { container } = render(
+      <TestWrapper>
+        <CommandInput
+          state={{
+            ...defaultState,
+            isEnteringArg: true,
+            currentNode: userShowCommand
+          }}
+          actions={mockActions}
+          availableCommands={mockCommands}
+          commandTrie={new CommandTrie()}
+        />
+      </TestWrapper>
+    );
+
+    const input = container.querySelector('input');
+    expect(input).toHaveAttribute('placeholder', 'Enter argument...');
+  });
+
+  it('maintains focus when command stack changes', () => {
+    const { container } = render(
+      <TestWrapper>
+        <CommandInput
+          state={defaultState}
+          actions={mockActions}
+          availableCommands={mockCommands}
+          commandTrie={new CommandTrie()}
+        />
+      </TestWrapper>
+    );
+
+    const input = container.querySelector('input');
+    if (!input) throw new Error('Input element not found');
+    
+    expect(document.activeElement).toBe(input);
+
+    const newState = {
+      ...defaultState,
+      commandStack: ['help']
+    };
+
+    render(
+      <TestWrapper>
+        <CommandInput
+          state={newState}
+          actions={mockActions}
+          availableCommands={mockCommands}
+          commandTrie={new CommandTrie()}
+        />
+      </TestWrapper>
+    );
+
+    expect(document.activeElement).toBe(input);
   });
 });

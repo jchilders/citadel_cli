@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { CommandNode, CommandTrie } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
 import { useCommandParser } from '../hooks/useCommandParser';
@@ -18,82 +18,51 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   commandTrie,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { handleKeyDown, handleInputChange } = useCommandParser({ commandTrie });
+  const { handleKeyDown, handleInputChange, inputState } = useCommandParser({ commandTrie });
   const [showInvalidAnimation, setShowInvalidAnimation] = useState(false);
 
-  // Helper function to check if input would match any available command
-  const isValidCommandPrefix = useCallback((input: string, availableNodes: CommandNode[]): boolean => {
-    return availableNodes.some(node => 
-      node.getName().toLowerCase().startsWith(input.toLowerCase())
-    );
-  }, []);
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    const isValidKey = e.key === 'Backspace' || 
+      e.key === 'Escape' ||
+      e.key === 'Tab' ||
+      e.key === 'Shift' ||
+      e.key === 'Control' ||
+      e.key === 'Alt' ||
+      e.key === 'Meta' ||
+      e.key === 'ArrowLeft' ||
+      e.key === 'ArrowRight' ||
+      e.key === 'ArrowUp' ||
+      e.key === 'ArrowDown' ||
+      e.key === 'Enter';
 
-  useEffect(() => {
-    const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if (inputRef.current) {
-        // Always allow special keys
-        if (e.key === 'Backspace' || 
-            e.key === 'Escape' ||
-            e.key === 'Tab' ||
-            e.key === 'Shift' ||
-            e.key === 'Control' ||
-            e.key === 'Alt' ||
-            e.key === 'Meta' ||
-            e.key === 'ArrowLeft' ||
-            e.key === 'ArrowRight' ||
-            e.key === 'ArrowUp' ||
-            e.key === 'ArrowDown' ||
-            e.key === 'Enter' ||
-            e.key.length > 1) {  // Ignore all special keys that produce strings longer than 1 char
-          handleKeyDown(e, state, actions);
-          return;
-        }
+    // Show animation for invalid input
+    if (!isValidKey && !state.isEnteringArg && !state.currentNode?.requiresArgument) {
+      const currentCommands = state.currentNode ? 
+        Array.from(state.currentNode.getChildren().values()) : 
+        availableCommands;
+      
+      const newInput = (state.currentInput + e.key).toLowerCase();
+      const isValid = currentCommands.some(node => 
+        node.getName().toLowerCase().startsWith(newInput)
+      );
 
-        // If we're entering an argument or at a node that requires an argument, allow all input
-        if (state.isEnteringArg || state.currentNode?.requiresArgument) {
-          handleKeyDown(e, state, actions);
-          return;
-        }
-
-        // If we're at a leaf node with no handler and no arguments, prevent all input except Enter
-        if (state.currentNode?.isLeaf && !state.currentNode.hasHandler && !state.currentNode.requiresArgument) {
-          e.preventDefault();
-          return;
-        }
-
-        // Only validate command input when not entering arguments
-        // If we're at root level, use availableCommands
-        // Otherwise, use the current node's children
-        const currentCommands = state.currentNode ? 
-          Array.from(state.currentNode.getChildren().values()) : 
-          availableCommands;
-        
-        const newInput = (state.currentInput + e.key).toLowerCase();
-        
-        // Show error if the new input wouldn't match any commands
-        if (!isValidCommandPrefix(newInput, currentCommands)) {
-          e.preventDefault();
-          setShowInvalidAnimation(true);
-          setTimeout(() => setShowInvalidAnimation(false), 300);
-          return;
-        }
-        
-        handleKeyDown(e, state, actions);
+      if (!isValid) {
+        setShowInvalidAnimation(true);
+        setTimeout(() => setShowInvalidAnimation(false), 300);
       }
-    };
+    }
 
-    window.addEventListener('keydown', handleGlobalKeyDown);
-    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [handleKeyDown, state, actions, availableCommands, isValidCommandPrefix]);
+    handleKeyDown(e.nativeEvent, state, actions);
+  };
+
+  const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    handleInputChange(event.target.value, state, actions);
+  };
 
   const handlePaste = (event: React.ClipboardEvent) => {
     event.preventDefault();
     const pastedText = event.clipboardData.getData('text');
     handleInputChange(pastedText, state, actions);
-  };
-
-  const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    handleInputChange(event.target.value, state, actions);
   };
 
   // Focus input on mount
@@ -118,6 +87,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
           <span className="text-blue-400 whitespace-pre" data-testid="user-input-area">
             {state.commandStack.join(' ')}
             {state.commandStack.length > 0 && ' '}
+            {state.isEnteringArg && state.currentNode?.getArgument()?.prompt}
           </span>
           <input
             ref={inputRef}
@@ -125,9 +95,13 @@ export const CommandInput: React.FC<CommandInputProps> = ({
             role="textbox"
             value={state.currentInput}
             onChange={onInputChange}
+            onKeyDown={onKeyDown}
             onPaste={handlePaste}
             data-testid="citadel-command-input"
             className={`flex-1 bg-transparent outline-none text-gray-200 ${showInvalidAnimation ? styles.invalidInput : ''}`}
+            spellCheck={false}
+            autoComplete="off"
+            placeholder={state.isEnteringArg ? 'Enter argument...' : 'Type a command...'}
           />
         </div>
       </div>

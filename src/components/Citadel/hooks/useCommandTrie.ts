@@ -10,7 +10,7 @@ export const useCommandTrie = () => {
   const commandTrie = useMemo(() => {
     const trie = new CommandTrie();
     if (config.includeHelpCommand) {
-      const [helpCommandName, helpCommandNode] = createHelpCommand(trie);
+      const [helpCommandName, helpCommandNode] = createHelpCommand(trie, config);
       trie.addCommand({
         path: [helpCommandName],
         description: helpCommandNode.description,

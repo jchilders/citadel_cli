@@ -61,7 +61,7 @@ const CitadelInner: React.FC = () => {
 
     executeCommand: useCallback(async (path: string[], args?: string[]) => {
       const node = commandTrie.getCommand(path);
-      if (!node?.handler) {
+      if (!node?.getHandler) {
         actions.setValidation({
           isValid: false,
           message: 'Invalid command or missing handler'
@@ -70,22 +70,27 @@ const CitadelInner: React.FC = () => {
       }
 
       try {
-        const result = await node.handler(args || []);
-        actions.addOutput({
-          command: path,
-          result,
-          timestamp: Date.now()
-        });
-        actions.setValidation({ isValid: true });
-        // Reset all command-related state
-        setState(prev => ({
-          ...prev,
-          commandStack: [],
-          currentInput: '',
-          isEnteringArg: false,
-          currentNode: undefined,
-          validation: { isValid: true }
-        }));
+        if (node && node.getHandler) {
+          const handler = node.getHandler();
+          if (handler) {
+            const result = await handler(args || []);
+            actions.addOutput({
+              command: path,
+              result,
+              timestamp: Date.now()
+            });
+            actions.setValidation({ isValid: true });
+            // Reset all command-related state
+            setState(prev => ({
+              ...prev,
+              commandStack: [],
+              currentInput: '',
+              isEnteringArg: false,
+              currentNode: undefined,
+              validation: { isValid: true }
+            }));
+          }
+        }
       } catch (error) {
         actions.addOutput({
           command: path,
@@ -123,8 +128,8 @@ const CitadelInner: React.FC = () => {
   if (!isVisible) return null;
 
   const getAvailableCommands = () => {
-    if (state.currentNode?.children) {
-      return Array.from(state.currentNode.children.values());
+    if (state.currentNode?.getChildren()) {
+      return Array.from(state.currentNode.getChildren().values());
     }
     return commandTrie.getRootCommands();
   };

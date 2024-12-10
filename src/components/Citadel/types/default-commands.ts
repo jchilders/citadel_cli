@@ -1,17 +1,18 @@
 import { CommandNode, CommandTrie } from './command-trie';
+import { CitadelConfig } from '../config/types';
 
-export const createHelpCommand = (trie: CommandTrie): [string, CommandNode] => {
+export const createHelpCommand = (trie: CommandTrie, config: CitadelConfig): [string, CommandNode] => {
   const handler = async function() {
     const commands = trie.getLeafCommands()
-      .filter((cmd: CommandNode) => cmd.fullPath[0] !== 'help')
+      .filter((cmd: CommandNode) => cmd.getName() !== 'help')
       .map((cmd: CommandNode) => {
-        const cmdStr = cmd.fullPath.join(' ') + (cmd.argument ? ` <${cmd.argument.name}>` : '');
-        return `${cmdStr} - ${cmd.description}`;
+        const cmdStr = cmd.getFullPath().join(' ') + (cmd.hasArgument() ? ` <${cmd.getArgument()?.name}>` : '');
+        return `${cmdStr} - ${cmd.getDescription()}`;
       })
       .sort();
 
     // Add help command at the end if it's enabled
-    if (trie.includeHelpCommand) {
+    if (config.includeHelpCommand) {
       commands.push('help - Show available commands');
     }
 

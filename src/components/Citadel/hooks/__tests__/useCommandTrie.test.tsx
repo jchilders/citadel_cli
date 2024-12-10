@@ -38,6 +38,32 @@ describe('useCommandTrie', () => {
     expect(helpCommand?.description).toBe('Show available commands');
   });
 
+  it('help command handler returns correct output based on config', async () => {
+    const { result } = renderHook(() => useCommandTrie(), {
+      wrapper: createWrapper({ includeHelpCommand: true })
+    });
+
+    const trie = result.current;
+    const helpCommand = trie.getCommand(['help']);
+    expect(helpCommand).toBeDefined();
+
+    // Add a test command to verify it appears in help output
+    trie.addCommand({
+      path: ['test'],
+      description: 'Test command',
+      handler: async () => ({ text: 'test' })
+    });
+
+    const handler = helpCommand?.getHandler();
+    expect(handler).toBeDefined();
+    if (handler) {
+      const output = await handler([]);
+      expect(output.text).toContain('Available Commands:');
+      expect(output.text).toContain('test - Test command');
+      expect(output.text).toContain('help - Show available commands');
+    }
+  });
+
   it('maintains the same trie instance when irrelevant config changes', () => {
     const { result, rerender } = renderHook(() => useCommandTrie(), {
       wrapper: createWrapper({ includeHelpCommand: true })
