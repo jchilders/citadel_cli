@@ -102,7 +102,7 @@ const CitadelInner: React.FC = () => {
     onOpen: () => setIsVisible(true),
     onClose: () => setIsClosing(true),
     isVisible,
-    showCitadelKey: config.showCitadelKey
+    showCitadelKey: config.showCitadelKey || '.'
   });
 
   // Handle animation completion
