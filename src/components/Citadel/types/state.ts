@@ -5,6 +5,7 @@ export interface OutputItem {
   result: CommandResult;
   timestamp: number;
   error?: string;
+  status: 'pending' | 'success';
 }
 
 export interface CitadelState {

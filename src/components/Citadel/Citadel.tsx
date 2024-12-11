@@ -49,9 +49,9 @@ const CitadelInner: React.FC = () => {
     }, []),
 
     addOutput: useCallback((output: OutputItem) => {
-      setState(prev => ({
-        ...prev,
-        output: [...prev.output, output]
+      setState(prev => ({ 
+        ...prev, 
+        output: [...prev.output, output] 
       }));
     }, []),
 
@@ -60,44 +60,50 @@ const CitadelInner: React.FC = () => {
     }, []),
 
     executeCommand: useCallback(async (path: string[], args?: string[]) => {
-      const node = commandTrie.getCommand(path);
-      if (!node?.handler) {
-        actions.setValidation({
-          isValid: false,
-          message: 'Invalid command or missing handler'
-        });
-        return;
-      }
+      const command = commandTrie.getCommand(path);
+      if (!command || !command.handler) return;
+
+      // Add pending output immediately
+      const timestamp = Date.now();
+      const outputItem: OutputItem = {
+        command: [...path, ...(args || [])],
+        timestamp,
+        result: { json: {} },
+        status: 'pending'
+      };
+      actions.addOutput(outputItem);
+
+      // Reset command line state
+      setState(prev => ({
+        ...prev,
+        commandStack: [],
+        currentInput: '',
+        isEnteringArg: false,
+        currentNode: undefined,
+        validation: { isValid: true }
+      }));
 
       try {
-        if (node && node.handler) {
-          const handler = node.handler;
-          if (handler) {
-            const result = await handler(args || []);
-            actions.addOutput({
-              command: path,
-              result,
-              timestamp: Date.now()
-            });
-            actions.setValidation({ isValid: true });
-            // Reset all command-related state
-            setState(prev => ({
-              ...prev,
-              commandStack: [],
-              currentInput: '',
-              isEnteringArg: false,
-              currentNode: undefined,
-              validation: { isValid: true }
-            }));
-          }
-        }
+        const result = await command.handler(args || []);
+        // Update the output with the result
+        setState(prev => ({
+          ...prev,
+          output: prev.output.map(item => 
+            item.timestamp === timestamp
+              ? { ...item, result, status: 'success' }
+              : item
+          )
+        }));
       } catch (error) {
-        actions.addOutput({
-          command: path,
-          result: { text: 'Command failed' },
-          timestamp: Date.now(),
-          error: error instanceof Error ? error.message : 'Unknown error occurred'
-        });
+        // Update the output with the error
+        setState(prev => ({
+          ...prev,
+          output: prev.output.map(item => 
+            item.timestamp === timestamp
+              ? { ...item, error: error instanceof Error ? error.message : 'Unknown error', status: 'error' }
+              : item
+          )
+        }));
       }
     }, [commandTrie])
   };

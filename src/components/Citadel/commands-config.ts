@@ -1,4 +1,4 @@
-import { CommandNode, CommandTrie } from './types/command-trie';
+import { CommandTrie } from './types/command-trie';
 
 // Initialize and configure the command trie
 export function initializeCommands(commandTrie: CommandTrie) {
@@ -6,14 +6,17 @@ export function initializeCommands(commandTrie: CommandTrie) {
   commandTrie.addCommand({
     path: ['user', 'show'],
     description: 'Show user details',
-    handler: async (args) => ({
-      json: {
-        id: args[0],
-        name: "John Doe",
-        email: "john@example.com",
-        status: "active"
-      }
-    }),
+    handler: async (args) => {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return {
+        json: {
+          id: args[0],
+          name: "John Doe",
+          email: "john@example.com",
+          status: "active"
+        }
+      };
+    },
     argument: { name: 'userId', description: 'Enter user ID' }
   });
 

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { OutputItem } from '../types/state';
+import { CommandOutputLine } from './CommandOutputLine';
 
 interface CommandOutputProps {
   output: OutputItem[];
@@ -41,15 +42,15 @@ export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef 
     >
       {output.map((item, index) => (
         <div key={index} className="mb-4 last:mb-0">
-          <div className="flex items-center gap-2 text-sm text-gray-400">
-            <span>&gt; {item.command.join(' ')}</span>
-            <span>·</span>
-            <span>{new Date(item.timestamp).toLocaleTimeString()}</span>
-          </div>
+          <CommandOutputLine
+            command={item.command.join(' ')}
+            timestamp={new Date(item.timestamp).toLocaleTimeString()}
+            status={item.status}
+          />
           {item.error ? (
             <div className="mt-1 text-red-400">{item.error}</div>
           ) : (
-              formatCommandOutput(item.result)
+            formatCommandOutput(item.result)
           )}
         </div>
       ))}
