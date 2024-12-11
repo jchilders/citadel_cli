@@ -54,7 +54,7 @@ describe('useCommandTrie', () => {
       handler: async () => ({ text: 'test' })
     });
 
-    const handler = helpCommand?.getHandler();
+    const handler = helpCommand?.handler;
     expect(handler).toBeDefined();
     if (handler) {
       const output = await handler([]);

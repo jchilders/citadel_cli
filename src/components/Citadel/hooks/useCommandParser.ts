@@ -13,20 +13,20 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
 
   const findMatchingCommands = useCallback((input: string, availableNodes: CommandNode[]): CommandNode[] => {
     if (!input) return availableNodes;
-    return availableNodes.filter(node => node.getName().toLowerCase().startsWith(input.toLowerCase()));
+    return availableNodes.filter(node => node.name.toLowerCase().startsWith(input.toLowerCase()));
   }, []);
 
   const getAutocompleteSuggestion = useCallback((input: string, availableNodes: CommandNode[]): string | null => {
     const matches = findMatchingCommands(input, availableNodes);
     if (matches.length === 1) {
-      return matches[0].getName();
+      return matches[0].name;
     }
     return null;
   }, [findMatchingCommands]);
 
   const getAvailableNodes = useCallback((currentNode?: CommandNode): CommandNode[] => {
-    if (currentNode?.hasChildren()) {
-      return Array.from(currentNode.getChildren().values());
+    if (currentNode?.hasChildren) {
+      return Array.from(currentNode.children.values());
     }
     return commandTrie.getRootCommands();
   }, [commandTrie]);
@@ -42,7 +42,7 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
     args?: string[]
   ) => {
     const node = commandTrie.getCommand(commandStack);
-    if (node?.getHandler()) {
+    if (node?.handler) {
       actions.executeCommand(commandStack, args);
       actions.setCurrentInput('');
       actions.setIsEnteringArg(false);
@@ -72,7 +72,7 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
           actions.setCurrentNode(nextNode);
           
           // If this is a leaf node with an argument, enter argument mode
-          if (!nextNode.hasChildren() && nextNode.getArgument()) {
+          if (!nextNode.hasChildren && nextNode.argument) {
             actions.setIsEnteringArg(true);
             setInputState('entering_argument');
           } else {
@@ -121,7 +121,7 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
 
       case 'Enter':
         e.preventDefault();
-        if (isEnteringArg && currentNode?.getHandler()) {
+        if (isEnteringArg && currentNode?.handler) {
           if (currentInput.trim()) {
             executeCommand(commandStack, actions, [currentInput]);
           }
@@ -131,19 +131,19 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
           
           if (matches.length === 1) {
             const matchedNode = matches[0];
-            const newStack = [...commandStack, matchedNode.getName()];
+            const newStack = [...commandStack, matchedNode.name];
             
-            if (matchedNode.getArgument()) {
+            if (matchedNode.argument) {
               actions.setCommandStack(newStack);
               actions.setCurrentNode(matchedNode);
               actions.setCurrentInput('');
               actions.setIsEnteringArg(true);
               setInputState('entering_argument');
-            } else if (matchedNode.getHandler()) {
+            } else if (matchedNode.handler) {
               executeCommand(newStack, actions);
             }
           }
-        } else if (currentNode?.getHandler() && !currentNode.getArgument()) {
+        } else if (currentNode?.handler && !currentNode.argument) {
           // Execute handler for current node if it exists and doesn't need args
           executeCommand(commandStack, actions);
         }
@@ -153,7 +153,7 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
     // Handle regular input
     if (!isEnteringArg && !state.currentNode?.requiresArgument) {
       const currentCommands = currentNode ? 
-        Array.from(currentNode.getChildren().values()) : 
+        Array.from(currentNode.children.values()) : 
         commandTrie.getRootCommands();
       
       if (!isValidCommandInput(currentInput + e.key, currentCommands)) {

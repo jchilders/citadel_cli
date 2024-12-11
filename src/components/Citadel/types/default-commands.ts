@@ -4,10 +4,10 @@ import { CitadelConfig } from '../config/types';
 export const createHelpCommand = (trie: CommandTrie, config: CitadelConfig): [string, CommandNode] => {
   const handler = async function() {
     const commands = trie.getLeafCommands()
-      .filter((cmd: CommandNode) => cmd.getName() !== 'help')
+      .filter((cmd: CommandNode) => cmd.name !== 'help')
       .map((cmd: CommandNode) => {
-        const cmdStr = cmd.getFullPath().join(' ') + (cmd.hasArgument() ? ` <${cmd.getArgument()?.name}>` : '');
-        return `${cmdStr} - ${cmd.getDescription()}`;
+        const cmdStr = cmd.fullPath.join(' ') + (cmd.requiresArgument ? ` <${cmd.argument?.name}>` : '');
+        return `${cmdStr} - ${cmd.description}`;
       })
       .sort();
 

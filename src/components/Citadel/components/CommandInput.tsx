@@ -36,8 +36,8 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       e.key === 'Enter';
 
     // Prevent input for leaf nodes without handlers or arguments
-    if (!isValidKey && !state.isEnteringArg && !state.currentNode?.hasChildren()) {
-      if (state.currentNode && !state.currentNode.requiresArgument && !state.currentNode.getHandler()) {
+    if (!isValidKey && !state.isEnteringArg && !state.currentNode?.hasChildren) {
+      if (state.currentNode && !state.currentNode.requiresArgument && !state.currentNode.handler) {
         e.preventDefault();
         return;
       }
@@ -46,12 +46,12 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     // Show animation for invalid input
     if (!isValidKey && !state.isEnteringArg && !state.currentNode?.requiresArgument) {
       const currentCommands = state.currentNode ? 
-        Array.from(state.currentNode.getChildren().values()) : 
+        Array.from(state.currentNode.children.values()) : 
         availableCommands;
       
       const newInput = (state.currentInput + e.key).toLowerCase();
       const isValid = currentCommands.some(node => 
-        node.getName().toLowerCase().startsWith(newInput)
+        node.name.toLowerCase().startsWith(newInput)
       );
 
       if (!isValid) {
@@ -97,7 +97,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
           <span className="text-blue-400 whitespace-pre" data-testid="user-input-area">
             {state.commandStack.join(' ')}
             {state.commandStack.length > 0 && ' '}
-            {state.isEnteringArg && state.currentNode?.getArgument()?.prompt}
+            {state.isEnteringArg && state.currentNode?.argument?.prompt}
           </span>
           <input
             ref={inputRef}

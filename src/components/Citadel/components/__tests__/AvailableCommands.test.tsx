@@ -70,7 +70,7 @@ describe('AvailableCommands', () => {
   it('renders without help command when disabled in config', () => {
     const { container } = renderWithConfig(
       defaultState,
-      mockCommands.filter(cmd => cmd.getName() !== 'help'),
+      mockCommands.filter(cmd => cmd.name !== 'help'),
       { includeHelpCommand: false, resetStateOnHide: true, showCitadelKey: '.' }
     );
     expect(container.textContent).not.toContain('help');

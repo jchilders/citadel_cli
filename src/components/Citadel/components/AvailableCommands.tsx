@@ -38,7 +38,7 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
           {state.currentNode ? (
             <>
               <span className="text-blue-400">{state.currentNode.name}</span>
-              <span className="text-gray-400 ml-2">- {state.currentNode.getDescription()}</span>
+              <span className="text-gray-400 ml-2">- {state.currentNode.description}</span>
             </>
           ) : null}
         </div>
@@ -61,7 +61,7 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
 
               return (
                 <div
-                  key={cmd.getFullPath().join('.')}
+                  key={cmd.fullPath.join('.')}
                   className="px-2 py-1 rounded bg-gray-800 mr-2 last:mr-0"
                 >
                   <span className="font-mono text-white">
@@ -75,9 +75,9 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
         </div>
       ) : (
         <div className={contentClasses}>
-          {(state.isEnteringArg || state.currentNode?.requiresArgument) && state.currentNode?.hasArgument() ? (
+          {(state.isEnteringArg || state.currentNode?.requiresArgument) && state.currentNode?.argument ? (
             <div className="text-gray-400">
-              {state?.currentNode?.getArgument()?.description}
+              {state.currentNode.argument.description}
             </div>
           ) : (
             <div className="text-gray-500">No available commands</div>
