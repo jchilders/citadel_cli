@@ -18,7 +18,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   commandTrie,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { handleKeyDown, handleInputChange, inputState } = useCommandParser({ commandTrie });
+  const { handleKeyDown, handleInputChange } = useCommandParser({ commandTrie });
   const [showInvalidAnimation, setShowInvalidAnimation] = useState(false);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -35,6 +35,14 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       e.key === 'ArrowDown' ||
       e.key === 'Enter';
 
+    // Prevent input for leaf nodes without handlers or arguments
+    if (!isValidKey && !state.isEnteringArg && !state.currentNode?.hasChildren()) {
+      if (state.currentNode && !state.currentNode.requiresArgument && !state.currentNode.getHandler()) {
+        e.preventDefault();
+        return;
+      }
+    }
+
     // Show animation for invalid input
     if (!isValidKey && !state.isEnteringArg && !state.currentNode?.requiresArgument) {
       const currentCommands = state.currentNode ? 
@@ -49,6 +57,8 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       if (!isValid) {
         setShowInvalidAnimation(true);
         setTimeout(() => setShowInvalidAnimation(false), 300);
+        e.preventDefault();
+        return;
       }
     }
 

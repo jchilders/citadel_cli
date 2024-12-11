@@ -38,8 +38,8 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
 
   const executeCommand = useCallback((
     commandStack: string[],
-    args?: string[],
-    actions: CitadelActions
+    actions: CitadelActions,
+    args?: string[]
   ) => {
     const node = commandTrie.getCommand(commandStack);
     if (node?.getHandler()) {
@@ -123,7 +123,7 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
         e.preventDefault();
         if (isEnteringArg && currentNode?.getHandler()) {
           if (currentInput.trim()) {
-            executeCommand(commandStack, [currentInput], actions);
+            executeCommand(commandStack, actions, [currentInput]);
           }
         } else if (!isEnteringArg && currentInput) {
           const availableNodes = getAvailableNodes(currentNode);
@@ -140,12 +140,12 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
               actions.setIsEnteringArg(true);
               setInputState('entering_argument');
             } else if (matchedNode.getHandler()) {
-              executeCommand(newStack, undefined, actions);
+              executeCommand(newStack, actions);
             }
           }
         } else if (currentNode?.getHandler() && !currentNode.getArgument()) {
           // Execute handler for current node if it exists and doesn't need args
-          executeCommand(commandStack, undefined, actions);
+          executeCommand(commandStack, actions);
         }
         return;
     }

@@ -357,7 +357,7 @@ describe('CommandInput', () => {
     );
 
     const input = container.querySelector('input');
-    expect(input).toHaveAttribute('placeholder', 'Enter argument...');
+    expect(input?.getAttribute('placeholder')).toBe('Enter argument...');
   });
 
   it('maintains focus when command stack changes', () => {
@@ -375,7 +375,7 @@ describe('CommandInput', () => {
     const input = container.querySelector('input');
     if (!input) throw new Error('Input element not found');
     
-    expect(document.activeElement).toBe(input);
+    expect(document.activeElement).toStrictEqual(input);
 
     const newState = {
       ...defaultState,
@@ -393,6 +393,6 @@ describe('CommandInput', () => {
       </TestWrapper>
     );
 
-    expect(document.activeElement).toBe(input);
+    expect(document.activeElement).toStrictEqual(input);
   });
 });
