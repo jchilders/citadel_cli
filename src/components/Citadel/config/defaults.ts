@@ -11,9 +11,12 @@ import { CitadelConfig } from './types';
  * 
  * @property includeHelpCommand - When true, automatically adds a 'help' command that displays all available commands.
  *                               When false, no help command is included in the command trie.
+ * 
+ * @property commandTimeoutMs - The time in milliseconds before a command execution fails with a timeout. Default is 10000 (10 seconds).
  */
 export const defaultConfig: CitadelConfig = {
   resetStateOnHide: false,
   showCitadelKey: '.',
-  includeHelpCommand: true
+  includeHelpCommand: true,
+  commandTimeoutMs: 10000
 };

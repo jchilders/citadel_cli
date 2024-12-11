@@ -87,7 +87,7 @@ const CitadelInner: React.FC = () => {
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(() => {
             reject(new Error('Request timed out'));
-          }, 10000);
+          }, config.commandTimeoutMs);
         });
 
         const result = await Promise.race([
@@ -119,7 +119,7 @@ const CitadelInner: React.FC = () => {
           )
         }));
       }
-    }, [commandTrie])
+    }, [commandTrie, config])
   };
 
   // Toggle visibility with keyboard shortcut
