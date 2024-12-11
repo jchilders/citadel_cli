@@ -173,7 +173,12 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
   return {
     handleInputChange,
     handleKeyDown,
+    inputState,
+    // Expose internal functions for testing
+    findMatchingCommands,
+    getAutocompleteSuggestion,
     getAvailableNodes,
-    inputState
+    isValidCommandInput,
+    executeCommand,
   };
 }
