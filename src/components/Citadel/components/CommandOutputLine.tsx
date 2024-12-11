@@ -4,7 +4,7 @@ import { Spinner } from './Spinner';
 interface CommandOutputLineProps {
   command: string;
   timestamp: string;
-  status: 'pending' | 'success';
+  status: 'pending' | 'success' | 'timeout' | 'error';
 }
 
 export const CommandOutputLine: React.FC<CommandOutputLineProps> = ({
@@ -22,6 +22,12 @@ export const CommandOutputLine: React.FC<CommandOutputLineProps> = ({
         <div 
           data-testid="success-indicator"
           className="w-4 h-4 rounded-full bg-green-500" 
+        />
+      )}
+      {(status === 'timeout' || status === 'error') && (
+        <div 
+          data-testid="error-indicator"
+          className="w-4 h-4 rounded-full bg-red-500" 
         />
       )}
     </div>

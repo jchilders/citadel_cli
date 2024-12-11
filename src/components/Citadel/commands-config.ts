@@ -7,7 +7,7 @@ export function initializeCommands(commandTrie: CommandTrie) {
     path: ['user', 'show'],
     description: 'Show user details',
     handler: async (args) => {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 11000));
       return {
         json: {
           id: args[0],

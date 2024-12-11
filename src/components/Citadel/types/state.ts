@@ -2,10 +2,10 @@ import { CommandNode, CommandResult } from './command-trie';
 
 export interface OutputItem {
   command: string[];
-  result: CommandResult;
   timestamp: number;
+  result: { json: any };
   error?: string;
-  status: 'pending' | 'success';
+  status: 'pending' | 'success' | 'timeout' | 'error';
 }
 
 export interface CitadelState {

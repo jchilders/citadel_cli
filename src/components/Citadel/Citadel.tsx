@@ -84,7 +84,17 @@ const CitadelInner: React.FC = () => {
       }));
 
       try {
-        const result = await command.handler(args || []);
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('Request timed out'));
+          }, 10000);
+        });
+
+        const result = await Promise.race([
+          command.handler(args || []),
+          timeoutPromise
+        ]);
+
         // Update the output with the result
         setState(prev => ({
           ...prev,
@@ -100,7 +110,11 @@ const CitadelInner: React.FC = () => {
           ...prev,
           output: prev.output.map(item => 
             item.timestamp === timestamp
-              ? { ...item, error: error instanceof Error ? error.message : 'Unknown error', status: 'error' }
+              ? { 
+                  ...item, 
+                  error: error instanceof Error ? error.message : 'Unknown error', 
+                  status: error instanceof Error && error.message === 'Request timed out' ? 'timeout' : 'error'
+                }
               : item
           )
         }));
