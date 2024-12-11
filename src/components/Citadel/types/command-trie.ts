@@ -53,6 +53,10 @@ export class CommandNode {
     return !!this.argument;
   }
 
+  getParent(): CommandNode | undefined {
+    return this.parent;
+  }
+
   getChildren(): ReadonlyMap<string, CommandNode> {
     return this.children;
   }
