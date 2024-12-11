@@ -1,4 +1,5 @@
-import { CommandNode, CommandResult, CommandArgument } from '../command-trie';
+import { describe, it, expect } from 'vitest';
+import { CommandNode, CommandResult } from '../command-trie';
 import {
   isCommandResult,
   isCommandArgument,
@@ -41,8 +42,10 @@ describe('Type Guards', () => {
 
   describe('isCommandHandler', () => {
     it('should validate valid command handlers', () => {
-      expect(isCommandHandler(() => {})).toBe(true);
-      expect(isCommandHandler(async () => {})).toBe(true);
+      const syncHandler = () => ({ text: 'test' });
+      const asyncHandler = async () => ({ text: 'test' });
+      expect(isCommandHandler(syncHandler)).toBe(true);
+      expect(isCommandHandler(asyncHandler)).toBe(true);
     });
 
     it('should reject invalid command handlers', () => {

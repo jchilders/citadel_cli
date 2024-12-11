@@ -2,19 +2,52 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useCommandParser } from '../useCommandParser';
 import { CommandNode } from '../../types/command-trie';
-import { CitadelState, CitadelActions } from '../../types/citadel';
+import { CitadelState, CitadelActions } from '../../types';
+import { CommandTrie } from '../../types/command-trie';
 
 describe('useCommandParser', () => {
-  let mockCommandTrie: any;
+  let mockCommandTrie: CommandTrie;
   let mockState: CitadelState;
   let mockActions: CitadelActions;
+
+  const createMockNode = (name: string = 'test1', overrides = {}) => ({
+    name,
+    _fullPath: [name],
+    _description: 'Test command',
+    _children: new Map(),
+    _argument: undefined,
+    _handler: vi.fn(),
+    _parent: undefined,
+    isLeaf: true,
+    hasHandler: true,
+    requiresArgument: false,
+    parent: undefined,
+    children: new Map(),
+    hasChildren: false,
+    fullPath: [name],
+    description: 'Test command',
+    argument: undefined,
+    handler: vi.fn(),
+    addChild: vi.fn(),
+    getChild: vi.fn(),
+    ...overrides
+  } as unknown as CommandNode);
 
   beforeEach(() => {
     // Setup mock command trie
     mockCommandTrie = {
-      getRootCommands: vi.fn().mockReturnValue([]),
+      getRootCommands: vi.fn(),
       getCommand: vi.fn(),
-    };
+      addCommand: vi.fn(),
+      getCommandNames: vi.fn(),
+      getCommandsWithPrefix: vi.fn(),
+    } as unknown as CommandTrie;
+
+    // Setup default return values
+    (mockCommandTrie.getRootCommands as ReturnType<typeof vi.fn>).mockReturnValue([]);
+    (mockCommandTrie.getCommand as ReturnType<typeof vi.fn>).mockReturnValue(undefined);
+    (mockCommandTrie.getCommandNames as ReturnType<typeof vi.fn>).mockReturnValue([]);
+    (mockCommandTrie.getCommandsWithPrefix as ReturnType<typeof vi.fn>).mockReturnValue([]);
 
     // Setup mock state
     mockState = {
@@ -22,6 +55,8 @@ describe('useCommandParser', () => {
       currentInput: '',
       isEnteringArg: false,
       currentNode: undefined,
+      output: [],
+      validation: { isValid: true }
     };
 
     // Setup mock actions
@@ -31,6 +66,8 @@ describe('useCommandParser', () => {
       setCurrentNode: vi.fn(),
       setIsEnteringArg: vi.fn(),
       executeCommand: vi.fn(),
+      addOutput: vi.fn(),
+      setValidation: vi.fn()
     };
   });
 
@@ -131,10 +168,10 @@ describe('useCommandParser', () => {
     });
 
     it('should autocomplete when single match is found', () => {
-      const mockNode = { name: 'test1' } as CommandNode;
+      const mockNode = createMockNode();
       const availableNodes = [mockNode];
-      mockCommandTrie.getRootCommands.mockReturnValue(availableNodes);
-      mockCommandTrie.getCommand.mockReturnValue(mockNode);
+      (mockCommandTrie.getRootCommands as ReturnType<typeof vi.fn>).mockReturnValue(availableNodes);
+      (mockCommandTrie.getCommand as ReturnType<typeof vi.fn>).mockReturnValue(mockNode);
       
       const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
       
@@ -148,13 +185,9 @@ describe('useCommandParser', () => {
     });
 
     it('should handle node with no children', () => {
-      const mockNode = {
-        name: 'test1',
-        hasChildren: false,
-        handler: vi.fn(),
-      } as CommandNode;
-      mockCommandTrie.getRootCommands.mockReturnValue([mockNode]);
-      mockCommandTrie.getCommand.mockReturnValue(mockNode);
+      const mockNode = createMockNode();
+      (mockCommandTrie.getRootCommands as ReturnType<typeof vi.fn>).mockReturnValue([mockNode]);
+      (mockCommandTrie.getCommand as ReturnType<typeof vi.fn>).mockReturnValue(mockNode);
 
       const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
       
@@ -169,14 +202,9 @@ describe('useCommandParser', () => {
     });
 
     it('should set input state to idle for non-argument nodes', () => {
-      const mockNode = {
-        name: 'test1',
-        hasChildren: false,
-        handler: vi.fn(),
-        argument: false,
-      } as CommandNode;
-      mockCommandTrie.getRootCommands.mockReturnValue([mockNode]);
-      mockCommandTrie.getCommand.mockReturnValue(mockNode);
+      const mockNode = createMockNode();
+      (mockCommandTrie.getRootCommands as ReturnType<typeof vi.fn>).mockReturnValue([mockNode]);
+      (mockCommandTrie.getCommand as ReturnType<typeof vi.fn>).mockReturnValue(mockNode);
 
       const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
       
@@ -192,7 +220,7 @@ describe('useCommandParser', () => {
     it('should handle Tab key for autocompletion', () => {
       const mockEvent = new KeyboardEvent('keydown', { key: 'Tab' });
       const availableNodes = [{ name: 'test1' }] as CommandNode[];
-      mockCommandTrie.getRootCommands.mockReturnValue(availableNodes);
+      (mockCommandTrie.getRootCommands as ReturnType<typeof vi.fn>).mockReturnValue(availableNodes);
 
       const stateWithInput = { ...mockState, currentInput: 'te' };
       const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
@@ -224,14 +252,11 @@ describe('useCommandParser', () => {
 
     it('should handle Enter for command execution', () => {
       const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
-      const mockNode = {
-        name: 'test1',
-        handler: vi.fn(),
-      } as CommandNode;
+      const mockNode = createMockNode();
 
-      mockCommandTrie.getCommand.mockReturnValue(mockNode);
+      (mockCommandTrie.getCommand as ReturnType<typeof vi.fn>).mockReturnValue(mockNode);
       const availableNodes = [mockNode];
-      mockCommandTrie.getRootCommands.mockReturnValue(availableNodes);
+      (mockCommandTrie.getRootCommands as ReturnType<typeof vi.fn>).mockReturnValue(availableNodes);
 
       const stateWithCommand = {
         ...mockState,
@@ -251,13 +276,9 @@ describe('useCommandParser', () => {
 
     it('should handle Enter for argument submission', () => {
       const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
-      const mockNode = {
-        name: 'test1',
-        handler: vi.fn(),
-        argument: true,
-      } as CommandNode;
+      const mockNode = createMockNode('test1', { argument: true });
 
-      mockCommandTrie.getCommand.mockReturnValue(mockNode);
+      (mockCommandTrie.getCommand as ReturnType<typeof vi.fn>).mockReturnValue(mockNode);
 
       const stateWithArg = {
         ...mockState,
@@ -280,11 +301,7 @@ describe('useCommandParser', () => {
 
     it('should handle Enter for current node without argument', () => {
       const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
-      const mockNode = {
-        name: 'test1',
-        handler: vi.fn(),
-        argument: false,
-      } as CommandNode;
+      const mockNode = createMockNode('test1', { argument: false });
 
       const stateWithNode = {
         ...mockState,
@@ -293,7 +310,7 @@ describe('useCommandParser', () => {
         currentNode: mockNode,
       };
 
-      mockCommandTrie.getCommand.mockReturnValue(mockNode);
+      (mockCommandTrie.getCommand as ReturnType<typeof vi.fn>).mockReturnValue(mockNode);
 
       const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
       
@@ -306,13 +323,9 @@ describe('useCommandParser', () => {
 
     it('should handle Enter for command without arguments', () => {
       const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
-      const mockNode = {
-        name: 'test1',
-        handler: vi.fn(),
-        argument: false,
-      } as CommandNode;
+      const mockNode = createMockNode('test1', { argument: false });
 
-      mockCommandTrie.getCommand.mockReturnValue(mockNode);
+      (mockCommandTrie.getCommand as ReturnType<typeof vi.fn>).mockReturnValue(mockNode);
 
       const stateWithCommand = {
         ...mockState,
@@ -341,7 +354,7 @@ describe('useCommandParser', () => {
         { name: 'test1' },
         { name: 'test2' },
       ] as CommandNode[];
-      mockCommandTrie.getRootCommands.mockReturnValue(availableNodes);
+      (mockCommandTrie.getRootCommands as ReturnType<typeof vi.fn>).mockReturnValue(availableNodes);
 
       const stateWithInput = {
         ...mockState,
@@ -386,14 +399,13 @@ describe('useCommandParser', () => {
         value: mockPreventDefault,
       });
 
-      const mockNode = {
-        name: 'test1',
+      const childNode = createMockNode('child1');
+      const mockNode = createMockNode('test1', {
         hasChildren: true,
         children: new Map([
-          ['child1', { name: 'child1' } as CommandNode],
-          ['child2', { name: 'child2' } as CommandNode],
-        ]),
-      } as CommandNode;
+          ['child1', childNode]
+        ])
+      });
 
       const stateWithNode = {
         ...mockState,
@@ -415,12 +427,9 @@ describe('useCommandParser', () => {
 
   describe('executeCommand', () => {
     it('should execute command with handler', () => {
-      const mockNode = {
-        name: 'test1',
-        handler: vi.fn(),
-      } as CommandNode;
+      const mockNode = createMockNode();
 
-      mockCommandTrie.getCommand.mockReturnValue(mockNode);
+      (mockCommandTrie.getCommand as ReturnType<typeof vi.fn>).mockReturnValue(mockNode);
 
       const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
       
@@ -434,13 +443,9 @@ describe('useCommandParser', () => {
     });
 
     it('should execute command with arguments', () => {
-      const mockNode = {
-        name: 'test1',
-        handler: vi.fn(),
-        argument: true,
-      } as CommandNode;
+      const mockNode = createMockNode('test1', { argument: true });
 
-      mockCommandTrie.getCommand.mockReturnValue(mockNode);
+      (mockCommandTrie.getCommand as ReturnType<typeof vi.fn>).mockReturnValue(mockNode);
 
       const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
       

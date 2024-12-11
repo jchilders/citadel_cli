@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { CommandTrie, CommandNode } from '../command-trie';
+import { CommandTrie } from '../command-trie';
 
 describe('CommandTrie', () => {
   let trie: CommandTrie;
