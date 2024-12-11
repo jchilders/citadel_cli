@@ -61,7 +61,7 @@ const CitadelInner: React.FC = () => {
 
     executeCommand: useCallback(async (path: string[], args?: string[]) => {
       const node = commandTrie.getCommand(path);
-      if (!node?.getHandler) {
+      if (!node?.handler) {
         actions.setValidation({
           isValid: false,
           message: 'Invalid command or missing handler'
@@ -70,8 +70,8 @@ const CitadelInner: React.FC = () => {
       }
 
       try {
-        if (node && node.getHandler) {
-          const handler = node.getHandler();
+        if (node && node.handler) {
+          const handler = node.handler;
           if (handler) {
             const result = await handler(args || []);
             actions.addOutput({
@@ -128,8 +128,8 @@ const CitadelInner: React.FC = () => {
   if (!isVisible) return null;
 
   const getAvailableCommands = () => {
-    if (state.currentNode?.getChildren()) {
-      return Array.from(state.currentNode.getChildren().values());
+    if (state.currentNode && state.currentNode.children) {
+      return Array.from(state.currentNode.children.values());
     }
     return commandTrie.getRootCommands();
   };

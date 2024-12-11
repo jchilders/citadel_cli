@@ -95,4 +95,31 @@ describe('Citadel', () => {
     const availableCommands = screen.getByTestId('available-commands');
     expect(availableCommands.textContent).not.toContain('help');
   });
+
+  it('executes help command when typed and entered', async () => {
+    const user = userEvent.setup();
+    render(<Citadel />);
+    
+    // Show Citadel
+    await user.keyboard('.');
+    
+    // Wait for the input element
+    const input = await waitFor(() => {
+      const inputElement = screen.getByTestId('citadel-command-input');
+      expect(inputElement).toBeTruthy();
+      return inputElement;
+    }, { timeout: 1000 });
+    
+    // Type "help" and press enter
+    await user.type(input, 'help');
+    await user.keyboard('{Enter}');
+    
+    // Verify help output is displayed
+    await waitFor(() => {
+      const outputElement = screen.getByText((content) => {
+        return content.includes('Available Commands:') && content.includes('help - Show available commands');
+      }, { selector: 'pre' });
+      expect(outputElement).toBeTruthy();
+    }, { timeout: 1000 });
+  });
 });
