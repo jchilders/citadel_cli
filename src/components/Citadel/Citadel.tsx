@@ -100,7 +100,7 @@ const CitadelInner: React.FC = () => {
           ...prev,
           output: prev.output.map(item => 
             item.timestamp === timestamp
-              ? { ...item, result, status: 'success' }
+              ? ({ ...item, result: { json: result }, status: 'success' } as OutputItem)
               : item
           )
         }));
