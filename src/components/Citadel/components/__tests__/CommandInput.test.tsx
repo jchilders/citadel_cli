@@ -27,7 +27,7 @@ vi.mock('../../hooks/useCommandParser', () => ({
       // For all other cases, allow the input
       actions.setCurrentInput(state.currentInput + e.key);
     }),
-    handleInputChange: vi.fn((value: string, state: CitadelState, actions: any) => {
+    handleInputChange: vi.fn((value: string, _state: CitadelState, actions: any) => {
       actions.setCurrentInput(value);
     }),
     inputState: 'idle'
@@ -357,7 +357,7 @@ describe('CommandInput', () => {
     );
 
     const input = container.querySelector('input');
-    expect(input?.getAttribute('placeholder')).toBe('Enter argument...');
+    expect(input?.getAttribute('placeholder')).toBe('userId');
   });
 
   it('maintains focus when command stack changes', () => {

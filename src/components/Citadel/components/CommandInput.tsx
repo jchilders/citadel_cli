@@ -97,7 +97,6 @@ export const CommandInput: React.FC<CommandInputProps> = ({
           <span className="text-blue-400 whitespace-pre" data-testid="user-input-area">
             {state.commandStack.join(' ')}
             {state.commandStack.length > 0 && ' '}
-            {state.isEnteringArg && state.currentNode?.argument?.prompt}
           </span>
           <input
             ref={inputRef}
@@ -111,7 +110,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
             className={`flex-1 bg-transparent outline-none text-gray-200 ${showInvalidAnimation ? styles.invalidInput : ''}`}
             spellCheck={false}
             autoComplete="off"
-            placeholder={state.isEnteringArg ? 'Enter argument...' : 'Type a command...'}
+            placeholder={state.isEnteringArg ? state.currentNode?.argument?.name : ''}
           />
         </div>
       </div>

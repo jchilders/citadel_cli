@@ -13,7 +13,6 @@ interface CursorProps {
 export const Cursor: React.FC<CursorProps> = ({
   style = { type: 'blink' },
   isValid = true,
-  errorMessage
 }) => {
   const config = {
     ...DEFAULT_CURSOR_CONFIGS[style.type],

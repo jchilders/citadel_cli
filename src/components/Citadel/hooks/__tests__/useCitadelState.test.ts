@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useCitadelState } from '../useCitadelState';
-import { CommandArg, Command, OutputItem } from '../types';
+import { OutputItem } from '../../types';
+import { createMockNode } from '../../../../__test-utils__/factories';
 
 describe('useCitadelState', () => {
   beforeEach(() => {
@@ -12,51 +13,16 @@ describe('useCitadelState', () => {
     const { result } = renderHook(() => useCitadelState());
 
     expect(result.current.state).toEqual({
-      isOpen: false,
-      isClosing: false,
       commandStack: [],
-      currentArg: null,
-      input: '',
-      available: [],
+      currentInput: '',
+      isEnteringArg: false,
+      currentNode: undefined,
       output: [],
-      isLoading: false,
-      inputValidation: { isValid: true },
+      validation: { isValid: true },
     });
   });
 
-  it('should handle OPEN action', () => {
-    const { result } = renderHook(() => useCitadelState());
-
-    act(() => {
-      result.current.actions.open();
-    });
-
-    expect(result.current.state.isOpen).toBe(true);
-    expect(result.current.state.isClosing).toBe(false);
-  });
-
-  it('should handle CLOSE action', () => {
-    const { result } = renderHook(() => useCitadelState());
-
-    act(() => {
-      result.current.actions.close();
-    });
-
-    expect(result.current.state.isOpen).toBe(false);
-    expect(result.current.state.isClosing).toBe(false);
-  });
-
-  it('should handle SET_CLOSING action', () => {
-    const { result } = renderHook(() => useCitadelState());
-
-    act(() => {
-      result.current.actions.setClosing(true);
-    });
-
-    expect(result.current.state.isClosing).toBe(true);
-  });
-
-  it('should handle SET_COMMAND_STACK action', () => {
+  it('should handle setCommandStack action', () => {
     const { result } = renderHook(() => useCitadelState());
     const commandStack = ['command1', 'command2'];
 
@@ -67,54 +33,35 @@ describe('useCitadelState', () => {
     expect(result.current.state.commandStack).toEqual(commandStack);
   });
 
-  it('should handle SET_CURRENT_ARG action', () => {
-    const { result } = renderHook(() => useCitadelState());
-    const arg: CommandArg = {
-      name: 'testArg',
-      description: 'test argument',
-    };
-
-    act(() => {
-      result.current.actions.setCurrentArg(arg);
-    });
-
-    expect(result.current.state.currentArg).toEqual(arg);
-  });
-
-  it('should handle SET_INPUT action', () => {
+  it('should handle setCurrentInput action', () => {
     const { result } = renderHook(() => useCitadelState());
     const input = 'test input';
 
     act(() => {
-      result.current.actions.setInput(input);
+      result.current.actions.setCurrentInput(input);
     });
 
-    expect(result.current.state.input).toBe(input);
+    expect(result.current.state.currentInput).toBe(input);
   });
 
-  it('should handle SET_AVAILABLE action', () => {
+  it('should handle setCurrentNode action', () => {
     const { result } = renderHook(() => useCitadelState());
-    const commands: Command[] = [
-      { 
-        name: 'test',
-        description: 'test command',
-        execute: () => Promise.resolve({ text: 'test' })
-      },
-    ];
+    const node = createMockNode('test');
 
     act(() => {
-      result.current.actions.setAvailable(commands);
+      result.current.actions.setCurrentNode(node);
     });
 
-    expect(result.current.state.available).toEqual(commands);
+    expect(result.current.state.currentNode).toBe(node);
   });
 
-  it('should handle ADD_OUTPUT action', () => {
+  it('should handle addOutput action', () => {
     const { result } = renderHook(() => useCitadelState());
     const output: OutputItem = {
       command: ['test'],
-      result: { text: 'test output' },
+      result: { json: 'test output' },
       timestamp: Date.now(),
+      status: 'success',
     };
 
     act(() => {
@@ -124,59 +71,30 @@ describe('useCitadelState', () => {
     expect(result.current.state.output).toContainEqual(output);
   });
 
-  it('should handle CLEAR_OUTPUT action', () => {
-    const { result } = renderHook(() => useCitadelState());
-    
-    // First add some output
-    act(() => {
-      result.current.actions.addOutput({
-        command: ['test'],
-        result: { text: 'test output' },
-        timestamp: Date.now(),
-      });
-    });
-
-    // Then clear it
-    act(() => {
-      result.current.actions.clearOutput();
-    });
-
-    expect(result.current.state.output).toEqual([]);
-  });
-
-  it('should handle SET_LOADING action', () => {
-    const { result } = renderHook(() => useCitadelState());
-
-    act(() => {
-      result.current.actions.setLoading(true);
-    });
-
-    expect(result.current.state.isLoading).toBe(true);
-  });
-
-  it('should handle SET_INPUT_VALIDATION action', () => {
+  it('should handle setValidation action', () => {
     const { result } = renderHook(() => useCitadelState());
     const validation = { isValid: false, message: 'Invalid input' };
 
     act(() => {
-      result.current.actions.setInputValidation(validation);
+      result.current.actions.setValidation(validation);
     });
 
-    expect(result.current.state.inputValidation).toEqual(validation);
+    expect(result.current.state.validation).toEqual(validation);
   });
 
   it('should handle multiple actions in sequence', () => {
     const { result } = renderHook(() => useCitadelState());
+    const node = createMockNode('test');
 
     act(() => {
-      result.current.actions.open();
-      result.current.actions.setInput('test');
-      result.current.actions.setLoading(true);
+      result.current.actions.setCurrentInput('test');
+      result.current.actions.setCurrentNode(node);
+      result.current.actions.setIsEnteringArg(true);
     });
 
-    expect(result.current.state.isOpen).toBe(true);
-    expect(result.current.state.input).toBe('test');
-    expect(result.current.state.isLoading).toBe(true);
+    expect(result.current.state.currentInput).toBe('test');
+    expect(result.current.state.currentNode).toBe(node);
+    expect(result.current.state.isEnteringArg).toBe(true);
   });
 
   it('should maintain immutability of state', () => {
@@ -184,11 +102,11 @@ describe('useCitadelState', () => {
     const initialState = { ...result.current.state };
 
     act(() => {
-      result.current.actions.setInput('test');
+      result.current.actions.setCurrentInput('test');
     });
 
     expect(result.current.state).not.toBe(initialState);
-    expect(initialState.input).toBe('');
-    expect(result.current.state.input).toBe('test');
+    expect(initialState.currentInput).toBe('');
+    expect(result.current.state.currentInput).toBe('test');
   });
 });

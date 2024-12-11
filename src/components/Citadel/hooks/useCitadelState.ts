@@ -1,79 +1,41 @@
 import { useReducer, useRef } from 'react';
-import { CommandArg, Command, OutputItem } from '../types';
-
-interface CitadelState {
-  isOpen: boolean;         // Controls if the interface is visible
-  isClosing: boolean;      // Tracks closing animation state
-  commandStack: string[];  // History of commands
-  currentArg: CommandArg | null;  // Current command argument being processed
-  input: string;           // Current user input
-  available: Command[];    // Available commands
-  output: OutputItem[];    // Command output history
-  isLoading: boolean;      // Loading state indicator
-  inputValidation: {       // Input validation state
-    isValid: boolean;
-    message?: string;
-  };
-}
+import { OutputItem, CitadelState, CitadelActions } from '../types';
+import { CommandNode } from '../types/command-trie';
 
 type CitadelAction =
-  | { type: 'OPEN' }
-  | { type: 'CLOSE' }
-  | { type: 'SET_CLOSING', payload: boolean }
   | { type: 'SET_COMMAND_STACK', payload: string[] }
-  | { type: 'SET_CURRENT_ARG', payload: CommandArg | null }
-  | { type: 'SET_INPUT', payload: string }
-  | { type: 'SET_AVAILABLE', payload: Command[] }
+  | { type: 'SET_CURRENT_INPUT', payload: string }
+  | { type: 'SET_IS_ENTERING_ARG', payload: boolean }
+  | { type: 'SET_CURRENT_NODE', payload: CommandNode | undefined }
   | { type: 'ADD_OUTPUT', payload: OutputItem }
-  | { type: 'CLEAR_OUTPUT' }
-  | { type: 'SET_LOADING', payload: boolean }
-  | { type: 'SET_INPUT_VALIDATION', payload: { isValid: boolean; message?: string } }
-  | { type: 'RESET' };
+  | { type: 'SET_VALIDATION', payload: { isValid: boolean; message?: string } }
+  | { type: 'EXECUTE_COMMAND', payload: { path: string[], args?: string[] } };
 
 const initialState: CitadelState = {
-  isOpen: false,
-  isClosing: false,
   commandStack: [],
-  currentArg: null,
-  input: '',
-  available: [],
+  currentInput: '',
+  isEnteringArg: false,
+  currentNode: undefined,
   output: [],
-  isLoading: false,
-  inputValidation: { isValid: true },
+  validation: { isValid: true },
 };
 
 function citadelReducer(state: CitadelState, action: CitadelAction): CitadelState {
   switch (action.type) {
-    case 'OPEN':
-      return { ...state, isOpen: true, isClosing: false };
-    case 'CLOSE':
-      return { ...state, isOpen: false, isClosing: false };
-    case 'SET_CLOSING':
-      return { ...state, isClosing: action.payload };
     case 'SET_COMMAND_STACK':
       return { ...state, commandStack: action.payload };
-    case 'SET_CURRENT_ARG':
-      return { ...state, currentArg: action.payload };
-    case 'SET_INPUT':
-      return { ...state, input: action.payload };
-    case 'SET_AVAILABLE':
-      return { ...state, available: action.payload };
+    case 'SET_CURRENT_INPUT':
+      return { ...state, currentInput: action.payload };
+    case 'SET_IS_ENTERING_ARG':
+      return { ...state, isEnteringArg: action.payload };
+    case 'SET_CURRENT_NODE':
+      return { ...state, currentNode: action.payload };
     case 'ADD_OUTPUT':
       return { ...state, output: [...state.output, action.payload] };
-    case 'CLEAR_OUTPUT':
-      return { ...state, output: [] };
-    case 'SET_LOADING':
-      return { ...state, isLoading: action.payload };
-    case 'SET_INPUT_VALIDATION':
-      return { ...state, inputValidation: action.payload };
-    case 'RESET':
-      return {
-        ...state,
-        commandStack: [],
-        input: '',
-        currentArg: null,
-        available: [],
-      };
+    case 'SET_VALIDATION':
+      return { ...state, validation: action.payload };
+    case 'EXECUTE_COMMAND':
+      return state;
     default:
       return state;
   }
@@ -83,23 +45,21 @@ export function useCitadelState() {
   const [state, dispatch] = useReducer(citadelReducer, initialState);
   const outputRef = useRef<HTMLDivElement>(null);
 
+  const actions: CitadelActions = {
+    setCommandStack: (stack: string[]) => dispatch({ type: 'SET_COMMAND_STACK', payload: stack }),
+    setCurrentInput: (input: string) => dispatch({ type: 'SET_CURRENT_INPUT', payload: input }),
+    setIsEnteringArg: (isEntering: boolean) => dispatch({ type: 'SET_IS_ENTERING_ARG', payload: isEntering }),
+    setCurrentNode: (node: CommandNode | undefined) => dispatch({ type: 'SET_CURRENT_NODE', payload: node }),
+    addOutput: (output: OutputItem) => dispatch({ type: 'ADD_OUTPUT', payload: output }),
+    setValidation: (validation: { isValid: boolean; message?: string }) => 
+      dispatch({ type: 'SET_VALIDATION', payload: validation }),
+    executeCommand: async (path: string[], args?: string[]) => 
+      dispatch({ type: 'EXECUTE_COMMAND', payload: { path, args } }),
+  };
+
   return {
     state,
     outputRef,
-    actions: {
-      open: () => dispatch({ type: 'OPEN' }),
-      close: () => dispatch({ type: 'CLOSE' }),
-      setClosing: (isClosing: boolean) => dispatch({ type: 'SET_CLOSING', payload: isClosing }),
-      setCommandStack: (stack: string[]) => dispatch({ type: 'SET_COMMAND_STACK', payload: stack }),
-      setCurrentArg: (arg: CommandArg | null) => dispatch({ type: 'SET_CURRENT_ARG', payload: arg }),
-      setInput: (input: string) => dispatch({ type: 'SET_INPUT', payload: input }),
-      setAvailable: (available: Command[]) => dispatch({ type: 'SET_AVAILABLE', payload: available }),
-      addOutput: (output: OutputItem) => dispatch({ type: 'ADD_OUTPUT', payload: output }),
-      clearOutput: () => dispatch({ type: 'CLEAR_OUTPUT' }),
-      setLoading: (loading: boolean) => dispatch({ type: 'SET_LOADING', payload: loading }),
-      setInputValidation: (validation: { isValid: boolean; message?: string }) => 
-        dispatch({ type: 'SET_INPUT_VALIDATION', payload: validation }),
-      reset: () => dispatch({ type: 'RESET' }),
-    },
+    actions,
   };
 }

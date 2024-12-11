@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { Citadel } from '../Citadel';
 import userEvent from '@testing-library/user-event';
 
@@ -21,7 +21,9 @@ describe('Citadel', () => {
     expect(document.getElementById('citadel-root')).toBeNull();
     
     // Activate Citadel
-    await user.keyboard('.');
+    await act(async () => {
+      await user.keyboard('.');
+    });
     
     // Now it should be there
     await waitFor(() => {
@@ -35,11 +37,15 @@ describe('Citadel', () => {
     render(<Citadel config={{ showCitadelKey: '/' }} />);
     
     // Default key should not trigger
-    await user.keyboard('.');
+    await act(async () => {
+      await user.keyboard('.');
+    });
     expect(document.getElementById('citadel-root')).toBeNull();
     
     // Custom key should trigger
-    await user.keyboard('/');
+    await act(async () => {
+      await user.keyboard('/');
+    });
     await waitFor(() => {
       expect(document.getElementById('citadel-root')).toBeTruthy();
     }, { timeout: 1000 });
@@ -53,11 +59,15 @@ describe('Citadel', () => {
     expect(document.getElementById('citadel-root')).toBeNull();
     
     // Try default key (should not work)
-    await user.keyboard('.');
+    await act(async () => {
+      await user.keyboard('.');
+    });
     expect(document.getElementById('citadel-root')).toBeNull();
     
     // Try custom key
-    await user.keyboard('k');
+    await act(async () => {
+      await user.keyboard('k');
+    });
     await waitFor(() => {
       const element = document.getElementById('citadel-root');
       expect(element).toBeTruthy();
@@ -69,10 +79,12 @@ describe('Citadel', () => {
     render(<Citadel />);
     
     // Make Citadel visible
-    await user.keyboard('.');
+    await act(async () => {
+      await user.keyboard('.');
+    });
     
     // Wait for and find the input element
-    const input = await waitFor(() => {
+    await waitFor(() => {
       const inputElement = screen.getByTestId('citadel-command-input');
       expect(inputElement).toBeTruthy();
       return inputElement;
@@ -88,7 +100,9 @@ describe('Citadel', () => {
     render(<Citadel config={{ includeHelpCommand: false }} />);
     
     // Show Citadel
-    await user.keyboard('.');
+    await act(async () => {
+      await user.keyboard('.');
+    });
     await waitFor(() => document.getElementById('citadel-root'));
     
     // Help command should not be visible
@@ -101,7 +115,9 @@ describe('Citadel', () => {
     render(<Citadel />);
     
     // Show Citadel
-    await user.keyboard('.');
+    await act(async () => {
+      await user.keyboard('.');
+    });
     
     // Wait for the input element
     const input = await waitFor(() => {
@@ -111,8 +127,10 @@ describe('Citadel', () => {
     }, { timeout: 1000 });
     
     // Type "help" and press enter
-    await user.type(input, 'help');
-    await user.keyboard('{Enter}');
+    await act(async () => {
+      await user.type(input, 'help');
+      await user.keyboard('{Enter}');
+    });
     
     // Verify help output is displayed
     await waitFor(() => {

@@ -14,15 +14,12 @@ import {
 describe('Type Guards', () => {
   describe('isCommandResult', () => {
     it('should validate valid command results', () => {
-      expect(isCommandResult({ text: 'test' })).toBe(true);
       expect(isCommandResult({ json: { data: 'test' } })).toBe(true);
-      expect(isCommandResult({ text: 'test', json: { data: 'test' } })).toBe(true);
     });
 
     it('should reject invalid command results', () => {
       expect(isCommandResult(null)).toBe(false);
       expect(isCommandResult(undefined)).toBe(false);
-      expect(isCommandResult({ text: 123 })).toBe(false);
       expect(isCommandResult({ json: 'not an object' })).toBe(false);
     });
   });
@@ -42,9 +39,7 @@ describe('Type Guards', () => {
 
   describe('isCommandHandler', () => {
     it('should validate valid command handlers', () => {
-      const syncHandler = () => ({ text: 'test' });
-      const asyncHandler = async () => ({ text: 'test' });
-      expect(isCommandHandler(syncHandler)).toBe(true);
+      const asyncHandler = async () => ({ json: { data: 'test' } });
       expect(isCommandHandler(asyncHandler)).toBe(true);
     });
 
@@ -78,7 +73,7 @@ describe('Type Guards', () => {
       const node = new CommandNode({
         fullPath: ['test'],
         description: 'test command',
-        handler: () => ({ text: 'test' })
+        handler: async () => ({ json: { data: 'test' } })
       });
       expect(isExecutableCommand(node)).toBe(true);
     });
@@ -99,8 +94,7 @@ describe('Type Guards', () => {
         description: 'child command',
         parent: parentNode
       });
-      parentNode.addChild('child', childNode);
-      expect(isExecutableCommand(parentNode)).toBe(false);
+      expect(isExecutableCommand(childNode)).toBe(false);
     });
   });
 

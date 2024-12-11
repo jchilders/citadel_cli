@@ -8,10 +8,6 @@ interface CommandOutputProps {
 }
 
 const formatCommandOutput = (result: OutputItem['result']) => {
-  if (result.text) {
-    return <pre className="text-gray-200">{result.text}</pre>;
-  }
-  
   if (result.json) {
     return (
       <pre className="text-gray-200">

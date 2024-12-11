@@ -12,6 +12,12 @@ To run the linter against a single file use `npx eslint <file>`
 
 To run the linting for all files use `npx eslint`
 
+On success, the linter will display no output, just a success code.
+
 ## Test Coverage
 
 To get code coverage for a single test file use `npx vitest --coverage <test_file>`
+
+## Building
+
+To build the project use `npm run build`

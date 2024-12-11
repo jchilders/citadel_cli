@@ -1,4 +1,4 @@
-import { CommandNode, CommandResult } from './command-trie';
+import { CommandNode } from './command-trie';
 
 export interface OutputItem {
   command: string[];

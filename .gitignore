@@ -15,6 +15,9 @@ dist-ssr
 # vitest generates this directory
 coverage/
 
+# TypeScript build info
+*.tsbuildinfo
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

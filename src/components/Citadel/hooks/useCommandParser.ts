@@ -43,7 +43,7 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
   ) => {
     const node = commandTrie.getCommand(commandStack);
     if (node?.handler) {
-      actions.executeCommand(commandStack, args);
+      actions.executeCommand(commandStack, args || undefined);
       actions.setCurrentInput('');
       actions.setIsEnteringArg(false);
       setInputState('idle');
@@ -123,7 +123,7 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
         e.preventDefault();
         if (isEnteringArg && currentNode?.handler) {
           if (currentInput.trim()) {
-            executeCommand(commandStack, actions, [currentInput]);
+            executeCommand(commandStack, actions, [currentInput.trim()]);
           }
         } else if (!isEnteringArg && currentInput) {
           const availableNodes = getAvailableNodes(currentNode);
@@ -140,23 +140,26 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
               actions.setIsEnteringArg(true);
               setInputState('entering_argument');
             } else if (matchedNode.handler) {
-              executeCommand(newStack, actions);
+              executeCommand(newStack, actions, undefined);
             }
           }
         } else if (currentNode?.handler && !currentNode.argument) {
           // Execute handler for current node if it exists and doesn't need args
-          executeCommand(commandStack, actions);
+          executeCommand(commandStack, actions, undefined);
         }
         return;
     }
 
     // Handle regular input
-    if (!isEnteringArg && !state.currentNode?.requiresArgument) {
-      const currentCommands = currentNode ? 
-        Array.from(currentNode.children.values()) : 
-        commandTrie.getRootCommands();
-      
-      if (!isValidCommandInput(currentInput + e.key, currentCommands)) {
+    if (!isEnteringArg && !currentNode?.argument) {
+      const availableNodes = getAvailableNodes(currentNode);
+      if (!isValidCommandInput(currentInput + e.key, availableNodes)) {
+        e.preventDefault();
+        return;
+      }
+    } else if (isEnteringArg) {
+      const availableNodes = getAvailableNodes(currentNode);
+      if (!isValidCommandInput(currentInput + e.key, availableNodes)) {
         e.preventDefault();
         return;
       }
@@ -173,12 +176,12 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
   return {
     handleInputChange,
     handleKeyDown,
+    executeCommand,
     inputState,
     // Expose internal functions for testing
     findMatchingCommands,
     getAutocompleteSuggestion,
     getAvailableNodes,
     isValidCommandInput,
-    executeCommand,
   };
 }
