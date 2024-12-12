@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useGlobalShortcut } from './hooks/useGlobalShortcut';
 import { useSlideAnimation } from './hooks/useSlideAnimation';
 import { useCommandTrie } from './hooks/useCommandTrie';
@@ -18,9 +18,50 @@ export interface CitadelProps {
 const CitadelInner: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [height, setHeight] = useState<number | null>(null);
   const outputRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const startYRef = useRef(0);
+  const startHeightRef = useRef(0);
   const config = useCitadelConfig();
   const commandTrie = useCommandTrie();
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (containerRef.current) {
+      isDraggingRef.current = true;
+      startYRef.current = e.clientY;
+      startHeightRef.current = containerRef.current.offsetHeight;
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDraggingRef.current) return;
+    
+    const delta = startYRef.current - e.clientY;
+    const newHeight = Math.min(
+      Math.max(startHeightRef.current + delta, 200),
+      window.innerHeight * 0.8
+    );
+    
+    setHeight(newHeight);
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    isDraggingRef.current = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  }, []);
+
+  // Cleanup event listeners
+  useEffect(() => {
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [handleMouseMove, handleMouseUp]);
 
   const [state, setState] = useState<CitadelState>({
     commandStack: [],
@@ -159,21 +200,29 @@ const CitadelInner: React.FC = () => {
   };
 
   return (
-    <div className={`${styles.container} ${animationClass}`} style={style} id="citadel-root">
-      <div className="flex-1 min-h-0 pt-3 px-2">
-        <CommandOutput output={state.output} outputRef={outputRef} />
-      </div>
-      <div className="flex-shrink-0">
-        <CommandInput
-          state={state}
-          actions={actions}
-          availableCommands={getAvailableCommands()}
-          commandTrie={commandTrie}
-        />
-        <AvailableCommands
-          state={state}
-          availableCommands={getAvailableCommands()}
-        />
+    <div 
+      ref={containerRef}
+      className={`${styles.container} ${isVisible ? styles.slideUp : ''} ${isClosing ? styles.slideDown : ''}`}
+      style={height ? { height: `${height}px` } : undefined}
+      id="citadel-root"
+    >
+      <div className={styles.resizeHandle} onMouseDown={handleMouseDown} />
+      <div className={styles.innerContainer}>
+        <div className="flex-1 min-h-0 pt-3 px-4">
+          <CommandOutput output={state.output} outputRef={outputRef} />
+        </div>
+        <div className="flex-shrink-0">
+          <CommandInput
+            state={state}
+            actions={actions}
+            availableCommands={getAvailableCommands()}
+            commandTrie={commandTrie}
+          />
+          <AvailableCommands
+            state={state}
+            availableCommands={getAvailableCommands()}
+          />
+        </div>
       </div>
     </div>
   );

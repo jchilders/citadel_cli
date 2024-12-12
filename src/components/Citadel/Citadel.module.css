@@ -4,21 +4,40 @@
   left: 0;
   right: 0;
   height: 33vh;
-  display: flex;
-  flex-direction: column;
-  background-color: rgb(17, 24, 39); /* bg-gray-900 */
+  min-height: 200px;
+  max-height: 80vh;
+  background-color: rgb(17, 24, 39);
   color: white;
+  overflow: hidden;
+  width: 100%;
 }
 
 .innerContainer {
-  max-width: 56rem; /* max-w-4xl */
-  margin-left: auto;
-  margin-right: auto;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .inputSection {
-  border-top: 1px solid rgb(55, 65, 81); /* border-gray-700 */
-  padding: 1rem; /* p-4 */
+  border-top: 1px solid rgb(55, 65, 81);
+  padding: 1rem;
+}
+
+.resizeHandle {
+  width: 100%;
+  height: 6px;
+  background: transparent;
+  cursor: ns-resize;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.resizeHandle:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* Animation classes */
