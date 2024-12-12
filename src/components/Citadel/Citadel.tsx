@@ -11,6 +11,10 @@ import { CitadelConfig } from './config/types';
 import { defaultConfig } from './config/defaults';
 import { CitadelConfigProvider, useCitadelConfig } from './config/CitadelConfigContext';
 
+export interface CitadelProps {
+  config?: CitadelConfig;
+}
+
 const CitadelInner: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -61,7 +65,7 @@ const CitadelInner: React.FC = () => {
 
     executeCommand: useCallback(async (path: string[], args?: string[]) => {
       const command = commandTrie.getCommand(path);
-      if (!command) return;
+      if (!command || !command.handler) return;
 
       // Add pending output immediately
       const timestamp = Date.now();
@@ -175,7 +179,7 @@ const CitadelInner: React.FC = () => {
   );
 };
 
-export const Citadel: React.FC<{ config?: CitadelConfig }> = ({ config = defaultConfig }) => {
+export const Citadel: React.FC<CitadelProps> = ({ config = defaultConfig }) => {
   return (
     <CitadelConfigProvider config={config}>
       <CitadelInner />

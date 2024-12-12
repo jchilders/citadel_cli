@@ -1,7 +1,11 @@
 {
   "name": "citadel",
   "description": "A command line for your webapp",
-  "keywords": ["react", "command", "interface"],
+  "keywords": [
+    "react",
+    "command",
+    "interface"
+  ],
   "author": "James Childers",
   "license": "MIT",
   "repository": {
@@ -10,19 +14,22 @@
   },
   "version": "1.0.0",
   "type": "module",
-  "main": "./dist/citadel.umd.js",
-  "module": "./dist/citadel.es.js",
-  "types": "./dist/components/Citadel/Citadel.d.ts",
+  "main": "./dist/citadel.umd.cjs",
+  "module": "./dist/citadel.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/citadel.es.js",
-      "require": "./dist/citadel.umd.js",
-      "types": "./dist/components/Citadel/Citadel.d.ts"
+      "import": "./dist/citadel.js",
+      "require": "./dist/citadel.umd.cjs",
+      "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
