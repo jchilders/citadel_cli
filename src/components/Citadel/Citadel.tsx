@@ -14,6 +14,7 @@ import { ErrorCommandResult, BaseCommandResult } from './types/command-results';
 
 export interface CitadelProps {
   config?: CitadelConfig;
+  commands?: Record<string, any>;
 }
 
 const CitadelInner: React.FC = () => {
@@ -169,7 +170,7 @@ const CitadelInner: React.FC = () => {
     }, [commandTrie, config])
   };
 
-  // Toggle visibility with keyboard shortcut
+  // Toggle visibility with key from config or '.'
   useGlobalShortcut({
     onOpen: () => setIsVisible(true),
     onClose: () => setIsClosing(true),
@@ -230,9 +231,9 @@ const CitadelInner: React.FC = () => {
   );
 };
 
-export const Citadel: React.FC<CitadelProps> = ({ config = defaultConfig }) => {
+export const Citadel: React.FC<CitadelProps> = ({ config = defaultConfig, commands }) => {
   return (
-    <CitadelConfigProvider config={config}>
+    <CitadelConfigProvider config={config} commands={commands}>
       <CitadelInner />
     </CitadelConfigProvider>
   );

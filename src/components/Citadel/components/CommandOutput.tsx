@@ -31,7 +31,9 @@ export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef 
             timestamp={new Date(item.timestamp).toLocaleTimeString()}
             status={item.result.status}
           />
-          {item.result.render()}
+          <pre className="text-gray-200 whitespace-pre font-mono">
+            {item.result.render()}
+          </pre>
         </div>
       ))}
     </div>

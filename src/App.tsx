@@ -1,4 +1,11 @@
 import { Citadel } from './components/Citadel';
+import { commands } from '../command_examples/basic-commands';
+
+export const config = {
+  includeHelpCommand: true, // default true
+  resetStateOnHide: true, // default true
+  showCitadelKey: '.', // default
+};
 
 function App() {
   return (
@@ -7,7 +14,7 @@ function App() {
         <p className="text-gray-700">
           Press <code className="px-2 py-1 bg-gray-100 border border-gray-300 rounded">.</code>
         </p>
-        <Citadel />
+        <Citadel config={config} commands={commands} />
       </div>
     </div>
   );

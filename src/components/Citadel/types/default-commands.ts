@@ -3,6 +3,13 @@ import { CitadelConfig } from '../config/types';
 import { TextCommandResult } from './command-results';
 
 export const createHelpCommand = (trie: CommandTrie, config: CitadelConfig): [string, CommandNode] => {
+  /**
+   * Handles the help command, printing out all available leaf commands
+   * with their descriptions. If includeHelpCommand is true, the help
+   * command itself is also included in the output.
+   * @returns TextCommandResult with a string containing a list of all
+   * available commands.
+   */
   const handler = async function() {
     const commands = trie.getLeafCommands()
       .filter((cmd: CommandNode) => cmd.name !== 'help')
