@@ -1,9 +1,14 @@
 import React from 'react';
 
-export type CommandStatus = 'pending' | 'success' | 'failure' | 'timeout';
+export enum CommandStatus {
+  Pending = 'pending',
+  Success = 'success',
+  Failure = 'failure',
+  Timeout = 'timeout'
+}
 
 export abstract class BaseCommandResult {
-  private _status: CommandStatus = 'pending';
+  private _status: CommandStatus = CommandStatus.Pending;
   
   constructor(
     public readonly timestamp: number = Date.now()
@@ -14,15 +19,15 @@ export abstract class BaseCommandResult {
   }
 
   markSuccess(): void {
-    this._status = 'success';
+    this._status = CommandStatus.Success;
   }
 
   markFailure(): void {
-    this._status = 'failure';
+    this._status = CommandStatus.Failure;
   }
 
   markTimeout(): void {
-    this._status = 'timeout';
+    this._status = CommandStatus.Timeout;
   }
 
   abstract render(): React.ReactNode;
