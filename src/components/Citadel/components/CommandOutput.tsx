@@ -7,18 +7,6 @@ interface CommandOutputProps {
   outputRef: React.RefObject<HTMLDivElement>;
 }
 
-const formatCommandOutput = (result: OutputItem['result']) => {
-  if (result.json) {
-    return (
-      <pre className="text-gray-200">
-        {JSON.stringify(result.json, null, 2)}
-      </pre>
-    );
-  }
-  
-  return null;
-};
-
 export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef }) => {
   // Scroll to bottom when output changes
   useEffect(() => {
@@ -41,13 +29,9 @@ export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef 
           <CommandOutputLine
             command={item.command.join(' ')}
             timestamp={new Date(item.timestamp).toLocaleTimeString()}
-            status={item.status}
+            status={item.result.status}
           />
-          {item.error ? (
-            <div className="mt-1 text-red-400">{item.error}</div>
-          ) : (
-            formatCommandOutput(item.result)
-          )}
+          {item.result.render()}
         </div>
       ))}
     </div>

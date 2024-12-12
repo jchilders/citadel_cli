@@ -1,11 +1,16 @@
 import { CommandNode } from './command-trie';
+import { BaseCommandResult, PendingCommandResult } from './command-results';
 
-export interface OutputItem {
-  command: string[];
-  timestamp: number;
-  result: { json: any };
-  error?: string;
-  status: 'pending' | 'success' | 'timeout' | 'error';
+export class OutputItem {
+  readonly timestamp: number;
+  readonly command: string[];
+  result: BaseCommandResult;
+
+  constructor(command: string[], result?: BaseCommandResult) {
+    this.command = command;
+    this.timestamp = Date.now();
+    this.result = result ?? new PendingCommandResult();
+  }
 }
 
 export interface CitadelState {

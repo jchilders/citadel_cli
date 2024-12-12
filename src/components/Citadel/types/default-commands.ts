@@ -1,5 +1,6 @@
 import { CommandNode, CommandTrie } from './command-trie';
 import { CitadelConfig } from '../config/types';
+import { TextCommandResult } from './command-results';
 
 export const createHelpCommand = (trie: CommandTrie, config: CitadelConfig): [string, CommandNode] => {
   const handler = async function() {
@@ -16,11 +17,11 @@ export const createHelpCommand = (trie: CommandTrie, config: CitadelConfig): [st
       commands.push('help - Show available commands');
     }
 
-    return {
-      text: commands.length > 0
+    return new TextCommandResult(
+      commands.length > 0
         ? 'Available Commands:\n' + commands.join('\n')
         : 'No commands available yet. Add some commands to get started!'
-    };
+    );
   };
 
   return ['help', new CommandNode({

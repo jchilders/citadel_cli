@@ -10,6 +10,7 @@ import { CitadelState, CitadelActions, OutputItem } from './types/state';
 import { CitadelConfig } from './config/types';
 import { defaultConfig } from './config/defaults';
 import { CitadelConfigProvider, useCitadelConfig } from './config/CitadelConfigContext';
+import { ErrorCommandResult, BaseCommandResult } from './types/command-results';
 
 export interface CitadelProps {
   config?: CitadelConfig;
@@ -109,13 +110,7 @@ const CitadelInner: React.FC = () => {
       if (!command || !command.isLeaf) return;
 
       // Add pending output immediately
-      const timestamp = Date.now();
-      const outputItem: OutputItem = {
-        command: [...path, ...(args || [])],
-        timestamp,
-        result: { json: {} },
-        status: 'pending'
-      };
+      const outputItem = new OutputItem([...path, ...(args || [])]);
       actions.addOutput(outputItem);
 
       // Reset command line state
@@ -129,37 +124,44 @@ const CitadelInner: React.FC = () => {
       }));
 
       try {
-        const timeoutPromise = new Promise((_, reject) => {
+        const timeoutPromise = new Promise<never>((_, reject) => {
           setTimeout(() => {
             reject(new Error('Request timed out'));
           }, config.commandTimeoutMs);
         });
 
-        const result = await Promise.race([
+        const result: BaseCommandResult = await Promise.race([
           command.handler(args || []),
           timeoutPromise
         ]);
+
+        result.markSuccess();
 
         // Update the output with the result
         setState(prev => ({
           ...prev,
           output: prev.output.map(item => 
-            item.timestamp === timestamp
-              ? ({ ...item, result: { json: result }, status: 'success' } as OutputItem)
+            item.timestamp === outputItem.timestamp
+              ? { ...item, result }
               : item
           )
         }));
       } catch (error) {
-        // Update the output with the error
+        // Create error result
+        const result = new ErrorCommandResult(
+          error instanceof Error ? error.message : 'Unknown error'
+        );
+
+        if (error instanceof Error && error.message === 'Request timed out') {
+          result.markTimeout();
+        }
+
+        // Update the output with the error result
         setState(prev => ({
           ...prev,
-          output: prev.output.map(item => 
-            item.timestamp === timestamp
-              ? { 
-                  ...item, 
-                  error: error instanceof Error ? error.message : 'Unknown error', 
-                  status: error instanceof Error && error.message === 'Request timed out' ? 'timeout' : 'error'
-                }
+          output: prev.output.map(item =>
+            item.timestamp === outputItem.timestamp
+              ? { ...item, result }
               : item
           )
         }));
@@ -183,8 +185,8 @@ const CitadelInner: React.FC = () => {
     }
   }, [isClosing]);
 
-  // Animation styles
-  const { style, animationClass } = useSlideAnimation({
+  // Show/hide animation
+  useSlideAnimation({
     isVisible,
     isClosing,
     onAnimationComplete: handleAnimationComplete

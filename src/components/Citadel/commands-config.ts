@@ -1,4 +1,5 @@
 import { CommandTrie } from './types/command-trie';
+import { JsonCommandResult } from './types/command-results';
 
 // Initialize and configure the command trie
 export function initializeCommands(commandTrie: CommandTrie) {
@@ -8,14 +9,12 @@ export function initializeCommands(commandTrie: CommandTrie) {
     description: 'Show user details',
     handler: async (args) => {
       await new Promise(resolve => setTimeout(resolve, 11000));
-      return {
-        json: {
-          id: args[0],
-          name: "John Doe",
-          email: "john@example.com",
-          status: "active"
-        }
-      };
+      return new JsonCommandResult({
+        id: args[0],
+        name: "John Doe",
+        email: "john@example.com",
+        status: "active"
+      });
     },
     argument: { name: 'userId', description: 'Enter user ID' }
   });
@@ -23,11 +22,9 @@ export function initializeCommands(commandTrie: CommandTrie) {
   commandTrie.addCommand({
     path: ['user', 'deactivate'],
     description: 'Deactivate user account',
-    handler: async (args) => ({
-      json: {
-        id: args[0],
-        status: "deactivated"
-      }
+    handler: async (args) => new JsonCommandResult({
+      id: args[0],
+      status: "deactivated"
     }),
     argument: { name: 'userId', description: 'Enter user ID' }
   });
@@ -35,13 +32,11 @@ export function initializeCommands(commandTrie: CommandTrie) {
   commandTrie.addCommand({
     path: ['user', 'query', 'firstname'],
     description: 'Search by first name',
-    handler: async (args) => ({
-      json: {
-        users: [
-          { id: 1, name: `${args[0]} Smith` },
-          { id: 2, name: `${args[0]} Jones` }
-        ]
-      }
+    handler: async (args) => new JsonCommandResult({
+      users: [
+        { id: 1, name: `${args[0]} Smith` },
+        { id: 2, name: `${args[0]} Jones` }
+      ]
     }),
     argument: { name: 'firstName', description: 'Enter first name' }
   });
@@ -49,13 +44,11 @@ export function initializeCommands(commandTrie: CommandTrie) {
   commandTrie.addCommand({
     path: ['user', 'query', 'lastname'],
     description: 'Search by last name',
-    handler: async (args) => ({
-      json: {
-        users: [
-          { id: 1, name: `John ${args[0]}` },
-          { id: 2, name: `Jane ${args[0]}` }
-        ]
-      }
+    handler: async (args) => new JsonCommandResult({
+      users: [
+        { id: 1, name: `John ${args[0]}` },
+        { id: 2, name: `Jane ${args[0]}` }
+      ]
     }),
     argument: { name: 'lastName', description: 'Enter last name' }
   });
@@ -64,12 +57,10 @@ export function initializeCommands(commandTrie: CommandTrie) {
   commandTrie.addCommand({
     path: ['unit', 'build'],
     description: 'Build a new unit',
-    handler: async (args) => ({
-      json: {
-        unitId: args[0],
-        name: "La Boca Vista",
-        result: "Construction completed"
-      }
+    handler: async (args) => new JsonCommandResult({
+      unitId: args[0],
+      name: "La Boca Vista",
+      result: "Construction completed"
     }),
     argument: { name: 'unitId', description: 'Enter unit ID' }
   });
@@ -77,12 +68,10 @@ export function initializeCommands(commandTrie: CommandTrie) {
   commandTrie.addCommand({
     path: ['unit', 'demolish'],
     description: 'Demolish a unit',
-    handler: async (args) => ({
-      json: {
-        unitId: args[0],
-        name: "La Boca Vista",
-        result: "💣 🧨 💥💥💥"
-      }
+    handler: async (args) => new JsonCommandResult({
+      unitId: args[0],
+      name: "La Boca Vista",
+      result: "💣 🧨 💥💥💥"
     }),
     argument: { name: 'unitId', description: 'Enter unit ID' }
   });
@@ -91,11 +80,9 @@ export function initializeCommands(commandTrie: CommandTrie) {
   commandTrie.addCommand({
     path: ['order', 'create'],
     description: 'Create new order',
-    handler: async (args) => ({
-      json: {
-        orderId: args[0],
-        status: "created"
-      }
+    handler: async (args) => new JsonCommandResult({
+      orderId: args[0],
+      status: "created"
     }),
     argument: { name: 'orderId', description: 'Enter order ID' }
   });
@@ -103,11 +90,9 @@ export function initializeCommands(commandTrie: CommandTrie) {
   commandTrie.addCommand({
     path: ['order', 'close'],
     description: 'Close order',
-    handler: async (args) => ({
-      json: {
-        orderId: args[0],
-        status: "closed"
-      }
+    handler: async (args) => new JsonCommandResult({
+      orderId: args[0],
+      status: "closed"
     }),
     argument: { name: 'orderId', description: 'Enter order ID' }
   });

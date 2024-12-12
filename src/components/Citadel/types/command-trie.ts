@@ -1,13 +1,10 @@
+import { BaseCommandResult, TextCommandResult } from './command-results';
+
 /**
  * Represents the result of a command execution.
  * Can be extended for specific result types.
  */
-export interface CommandResult {
-  /** Optional JSON data returned by the command */
-  json?: any;
-  /** Optional text output returned by the command */
-  text?: string;
-}
+export type CommandResult = BaseCommandResult;
 
 /** Function type for handling command execution */
 export type CommandHandler = (args: string[]) => Promise<CommandResult>;
@@ -39,7 +36,7 @@ export interface CommandNodeParams {
  * for CommandNodes that don't specify a handler.
  */
 export const NoopHandler: CommandHandler = async () => {
-  return { text: '' };
+  return new TextCommandResult('');
 };
 
 export class CommandNode {
