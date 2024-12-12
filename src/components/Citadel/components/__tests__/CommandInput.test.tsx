@@ -11,10 +11,8 @@ vi.mock('../../hooks/useCommandParser', () => ({
     handleKeyDown: vi.fn((e: KeyboardEvent, state: CitadelState, actions: any) => {
       // Simulate Enter key behavior for help command
       if (e.key === 'Enter' && state.currentNode?.name === 'help') {
-        const handler = state.currentNode.handler;
-        if (handler) {
-          actions.executeCommand(['help']);
-        }
+        state.currentNode.handler([]);
+        actions.executeCommand(['help']);
         return;
       }
 

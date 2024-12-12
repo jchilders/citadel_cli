@@ -1,4 +1,4 @@
-  /**
+/**
  * Represents the result of a command execution.
  * Can be extended for specific result types.
  */
@@ -34,12 +34,20 @@ export interface CommandNodeParams {
   handler?: CommandHandler;
 }
 
+/**
+ * A no-op handler that does nothing when executed. Used as the default handler
+ * for CommandNodes that don't specify a handler.
+ */
+export const NoopHandler: CommandHandler = async () => {
+  return { text: '' };
+};
+
 export class CommandNode {
   private _fullPath: string[];
   private _description: string;
   private _children: Map<string, CommandNode>;
   private _argument?: CommandArgument;
-  private _handler?: CommandHandler;
+  private _handler: CommandHandler;
   private _parent?: CommandNode;
 
   /**
@@ -89,7 +97,7 @@ export class CommandNode {
     this._description = params.description;
     this._children = new Map<string, CommandNode>();
     this._argument = params.argument;
-    this._handler = params.handler;
+    this._handler = params.handler || NoopHandler;
     this._parent = params.parent;
   }
 
@@ -185,16 +193,16 @@ export class CommandNode {
   }
 
   /**
-   * Gets the command's handler if it exists
+   * Gets the command's handler
    */
-  get handler(): CommandHandler | undefined {
+  get handler(): CommandHandler {
     return this._handler;
   }
 
   /**
    * Sets the command's handler
    */
-  set handler(value: CommandHandler | undefined) {
+  set handler(value: CommandHandler) {
     this._handler = value;
   }
 }
@@ -486,9 +494,9 @@ export class CommandTrie {
    * 
    * Performs the following validations:
    * 1. Checks for duplicate command paths
-   * 2. Ensures non-leaf nodes (nodes with children) don't have handlers
+   * 2. Ensures non-leaf nodes (nodes with children) use NoopHandler
    * 3. Ensures non-leaf nodes don't have arguments
-   * 4. Verifies leaf nodes have required handlers
+   * 4. Verifies all nodes have a handler (either custom or NoopHandler)
    * 5. Validates command path uniqueness
    * 
    * @returns An object containing:
@@ -520,10 +528,16 @@ export class CommandTrie {
       }
       seen.add(pathStr);
 
+      // All nodes must have a handler
+      if (!node.handler) {
+        errors.push(`Command missing handler: ${pathStr}`);
+      }
+
       const children = node.children;
       if (children.size > 0) {
-        if (node.handler) {
-          errors.push(`Non-leaf command cannot have handler: ${pathStr}`);
+        // Non-leaf nodes should use NoopHandler
+        if (node.handler !== NoopHandler) {
+          errors.push(`Non-leaf command should use NoopHandler: ${pathStr}`);
         }
         if (node.argument) {
           errors.push(`Non-leaf command cannot have argument: ${pathStr}`);
@@ -532,10 +546,6 @@ export class CommandTrie {
         children.forEach((child) => {
           traverse(child);
         });
-      } else {
-        if (!node.handler) {
-          errors.push(`Leaf command missing handler: ${pathStr}`);
-        }
       }
     };
 

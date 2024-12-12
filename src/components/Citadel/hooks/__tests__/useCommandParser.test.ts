@@ -107,8 +107,8 @@ describe('useCommandParser', () => {
     });
 
     it('should prevent invalid command input', () => {
-      const mockEvent = new KeyboardEvent('keydown', { key: 'x' });
       const mockPreventDefault = vi.fn();
+      const mockEvent = new KeyboardEvent('keydown', { key: 'x' });
       Object.defineProperty(mockEvent, 'preventDefault', {
         value: mockPreventDefault,
       });
@@ -131,6 +131,61 @@ describe('useCommandParser', () => {
       });
 
       expect(mockPreventDefault).toHaveBeenCalled();
+    });
+
+    it('should allow any input when entering arguments', () => {
+      const mockNode = createMockNode('test1', {
+        argument: {
+          name: 'arg1',
+          description: 'Test argument'
+        }
+      });
+
+      const stateWithArg = {
+        ...mockState,
+        currentInput: 'some invalid command',
+        commandStack: ['test1'],
+        currentNode: mockNode,
+        isEnteringArg: true,
+      };
+
+      const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
+
+      let preventDefaultCalled = false;
+      const mockEventWithPreventDefault = new KeyboardEvent('keydown', { key: 'x' });
+      mockEventWithPreventDefault.preventDefault = () => { preventDefaultCalled = true; };
+      
+      act(() => {
+        result.current.handleKeyDown(mockEventWithPreventDefault, stateWithArg, mockActions);
+      });
+
+      // Verify preventDefault was not called, meaning the input was allowed
+      expect(preventDefaultCalled).toBe(false);
+    });
+
+    it('should prevent invalid command input when not entering arguments', () => {
+      const mockNode = createMockNode('test1');
+
+      // Mock findMatchingCommands to return no matches
+      const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
+      
+      let preventDefaultCalled = false;
+      const mockEventWithPreventDefault = new KeyboardEvent('keydown', { key: 'x' });
+      mockEventWithPreventDefault.preventDefault = () => { preventDefaultCalled = true; };
+
+      const stateWithInvalidCommand = {
+        ...mockState,
+        currentInput: 'invalid',
+        currentNode: mockNode,
+        isEnteringArg: false,
+      };
+      
+      act(() => {
+        result.current.handleKeyDown(mockEventWithPreventDefault, stateWithInvalidCommand, mockActions);
+      });
+
+      // Verify preventDefault was called, meaning the input was prevented
+      expect(preventDefaultCalled).toBe(true);
     });
   });
 

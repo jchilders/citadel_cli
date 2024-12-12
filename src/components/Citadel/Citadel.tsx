@@ -61,7 +61,7 @@ const CitadelInner: React.FC = () => {
 
     executeCommand: useCallback(async (path: string[], args?: string[]) => {
       const command = commandTrie.getCommand(path);
-      if (!command || !command.handler) return;
+      if (!command) return;
 
       // Add pending output immediately
       const timestamp = Date.now();

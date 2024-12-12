@@ -42,7 +42,7 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
     args?: string[]
   ) => {
     const node = commandTrie.getCommand(commandStack);
-    if (node?.handler) {
+    if (node) {
       actions.executeCommand(commandStack, args || undefined);
       actions.setCurrentInput('');
       actions.setIsEnteringArg(false);
@@ -139,12 +139,12 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
               actions.setCurrentInput('');
               actions.setIsEnteringArg(true);
               setInputState('entering_argument');
-            } else if (matchedNode.handler) {
+            } else {
               executeCommand(newStack, actions, undefined);
             }
           }
-        } else if (currentNode?.handler && !currentNode.argument) {
-          // Execute handler for current node if it exists and doesn't need args
+        } else if (currentNode && !currentNode.argument) {
+          // Execute handler for current node if it doesn't need args
           executeCommand(commandStack, actions, undefined);
         }
         return;
@@ -152,12 +152,6 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
 
     // Handle regular input
     if (!isEnteringArg && !currentNode?.argument) {
-      const availableNodes = getAvailableNodes(currentNode);
-      if (!isValidCommandInput(currentInput + e.key, availableNodes)) {
-        e.preventDefault();
-        return;
-      }
-    } else if (isEnteringArg) {
       const availableNodes = getAvailableNodes(currentNode);
       if (!isValidCommandInput(currentInput + e.key, availableNodes)) {
         e.preventDefault();

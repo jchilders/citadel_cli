@@ -1,5 +1,5 @@
 import React from 'react';
-import { CommandNode } from '../types/command-trie';
+import { CommandNode, NoopHandler } from '../types/command-trie';
 import { CitadelState } from '../types/state';
 import { useCitadelConfig } from '../config/CitadelConfigContext';
 
@@ -18,7 +18,7 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
   const contentClasses = "text-gray-300 pt-2";
 
   // Show description for leaf nodes without handlers or arguments
-  const isLeafNode = state.currentNode?.isLeaf && !state.currentNode.hasHandler && !state.currentNode.requiresArgument;
+  const isLeafNode = state.currentNode?.isLeaf && state.currentNode.handler === NoopHandler && !state.currentNode.requiresArgument;
 
   // Sort commands and handle help command placement
   const sortedCommands = React.useMemo(() => {

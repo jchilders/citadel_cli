@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
 import { AvailableCommands } from '../AvailableCommands';
 import { CitadelState } from '../../types/state';
-import { CommandNode } from '../../types/command-trie';
+import { CommandNode, NoopHandler } from '../../types/command-trie';
 import { CitadelConfigProvider } from '../../config/CitadelConfigContext';
 
 describe('AvailableCommands', () => {
@@ -80,7 +80,8 @@ describe('AvailableCommands', () => {
   it('renders leaf node description when appropriate', () => {
     const leafNode = new CommandNode({
       fullPath: ['leaf'],
-      description: 'Leaf node description'
+      description: 'Leaf node description',
+      handler: NoopHandler
     });
     
     const state = {

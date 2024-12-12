@@ -1,4 +1,4 @@
-import { CommandNode, CommandResult, CommandArgument, CommandHandler } from './command-trie';
+import { CommandNode, CommandResult, CommandArgument, CommandHandler, NoopHandler } from './command-trie';
 
 /**
  * Type guard to check if a value is a valid CommandResult
@@ -43,10 +43,10 @@ export function isCommandNode(value: unknown): value is CommandNode {
 }
 
 /**
- * Type guard to check if a command node is a leaf node with a handler
+ * Type guard to check if a command node is a leaf node with a non-NoopHandler handler
  */
 export function isExecutableCommand(node: CommandNode): boolean {
-  return node.isLeaf && node.hasHandler;
+  return node.isLeaf && node.handler !== NoopHandler;
 }
 
 /**

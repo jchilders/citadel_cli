@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { CommandTrie } from '../command-trie';
+import { CommandTrie, NoopHandler, CommandNode } from '../command-trie';
 
 describe('CommandTrie', () => {
   let trie: CommandTrie;
@@ -36,7 +36,7 @@ describe('CommandTrie', () => {
       const parentNode = trie.getCommand(['parent']);
       expect(parentNode?.name).toBe('parent');
       expect(parentNode?.description).toBe('parent commands');
-      expect(parentNode?.handler).toBeUndefined();
+      expect(parentNode?.handler).toBe(NoopHandler);
       expect(parentNode?.children?.size).toBe(1);
       expect(parentNode?.fullPath).toEqual(['parent']);
 
@@ -132,34 +132,87 @@ describe('CommandTrie', () => {
       expect(errors).toHaveLength(0);
     });
 
-    it('should detect missing handlers', () => {
-      trie.addCommand({
-        path: ['cmd'],
-        description: 'Command without handler'
-      });
-
-      const { isValid, errors } = trie.validate();
-      expect(isValid).toBe(false);
-      expect(errors).toContain('Leaf command missing handler: cmd');
-    });
-
-    it('should detect invalid handler on non-leaf', () => {
+    it('should detect non-NoopHandler on non-leaf nodes', () => {
       const handler = async () => ({ text: 'success' });
       
-      // First add a parent command with a handler (making it a leaf)
-      trie.addCommand({
-        path: ['parent'],
+      // Create a parent node directly with a custom handler
+      const parentNode = new CommandNode({
+        fullPath: ['parent'],
         description: 'Parent command',
         handler
       });
+      
+      // Create a child node
+      const childNode = new CommandNode({
+        fullPath: ['parent', 'child'],
+        description: 'Child command',
+        handler,
+        parent: parentNode
+      });
+      
+      // Set up the hierarchy manually
+      parentNode.addChild('child', childNode);
+      trie['_root'].addChild('parent', parentNode);
 
-      // Then try to add a child command, which should fail
-      expect(() => 
-        trie.addCommand({
-          path: ['parent', 'child'],
-          description: 'Child command'
-        })
-      ).toThrow('Cannot add subcommand to leaf command: parent');
+      const { isValid, errors } = trie.validate();
+      expect(isValid).toBe(false);
+      expect(errors).toContain('Non-leaf command should use NoopHandler: parent');
+    });
+
+    it('should detect argument on non-leaf node', () => {
+      const handler = async () => ({ text: 'success' });
+      
+      // Create a parent node directly with an argument
+      const parentNode = new CommandNode({
+        fullPath: ['parent'],
+        description: 'Parent command',
+        handler: NoopHandler,
+        argument: { name: 'arg', description: 'test arg' }
+      });
+      
+      // Create a child node
+      const childNode = new CommandNode({
+        fullPath: ['parent', 'child'],
+        description: 'Child command',
+        handler,
+        parent: parentNode
+      });
+      
+      // Set up the hierarchy manually
+      parentNode.addChild('child', childNode);
+      trie['_root'].addChild('parent', parentNode);
+
+      const { isValid, errors } = trie.validate();
+      expect(isValid).toBe(false);
+      expect(errors).toContain('Non-leaf command cannot have argument: parent');
+    });
+
+    it('should detect duplicate command paths', () => {
+      const handler = async () => ({ text: 'success' });
+      
+      // Add commands through different paths that end up with the same full path
+      trie.addCommand({
+        path: ['cmd'],
+        description: 'Command 1',
+        handler
+      });
+      
+      // Add a second command that will create the same path through a different route
+      trie.addCommand({
+        path: ['other', 'cmd'],
+        description: 'Command 2',
+        handler
+      });
+      
+      // Now manually move the second command to create a duplicate
+      const cmd2 = trie.getCommand(['other', 'cmd']);
+      if (cmd2) {
+        trie['_root'].addChild('cmd', cmd2);
+      }
+
+      const { isValid, errors } = trie.validate();
+      expect(isValid).toBe(false);
+      expect(errors).toContain('Duplicate command path: other cmd');
     });
   });
 
