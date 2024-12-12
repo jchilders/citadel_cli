@@ -74,15 +74,7 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
           </div>
         </div>
       ) : (
-        <div className={contentClasses}>
-          {(state.isEnteringArg || state.currentNode?.requiresArgument) && state.currentNode?.argument ? (
-            <div className="text-gray-400">
-              {state.currentNode.argument.description}
-            </div>
-          ) : (
-            <div className="text-gray-500">No available commands</div>
-          )}
-        </div>
+        <div className={contentClasses}>{state.currentNode?.description}</div>
       )}
     </div>
   );

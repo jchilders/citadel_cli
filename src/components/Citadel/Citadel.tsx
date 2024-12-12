@@ -131,10 +131,18 @@ const CitadelInner: React.FC = () => {
           }, config.commandTimeoutMs);
         });
 
-        const result: BaseCommandResult = await Promise.race([
+        const result = await Promise.race([
           command.handler(args || []),
           timeoutPromise
         ]);
+
+        if (!(result instanceof BaseCommandResult)) {
+          throw new Error(
+            'The ' + command.fullPath.join('.') + ' command returned an invalid result type. Commands must return an instance of a CommandResult.\n' +
+            'For example:\n   return new JsonCommandResult({ text: "Hello World" });\n' +
+            'Check the definition of the ' + command.fullPath.join('.') + ' command and update the return type.'
+          );
+        }
 
         result.markSuccess();
 

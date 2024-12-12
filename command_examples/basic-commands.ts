@@ -16,6 +16,14 @@ export const commands = {
     argument: { name: 'userId', description: 'Enter user ID' }
   },
 
+  'error.timeout': {
+    description: 'A command which will intentionally timeout',
+    handler: async (_args: string[]) => {
+      await new Promise(resolve => setTimeout(resolve, 11000));
+      return new JsonCommandResult({ });
+    }
+  },
+
   'user.deactivate': {
     description: 'Deactivate user account',
     handler: async (args: string[]) => new JsonCommandResult({

@@ -1,5 +1,7 @@
 import { Citadel } from './components/Citadel';
 import { commands } from '../command_examples/basic-commands';
+// import { commands } from '../command_examples/devops-commands';
+// import { commands } from '../command_examples/customer-service-commands';
 
 export const config = {
   includeHelpCommand: true, // default true
