@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { OutputItem } from '../types/state';
 import { CommandOutputLine } from './CommandOutputLine';
 
@@ -8,16 +8,29 @@ interface CommandOutputProps {
 }
 
 export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef }) => {
-  // Scroll to bottom when output changes
-  useEffect(() => {
+  const scrollToBottom = useCallback(() => {
     if (outputRef.current) {
       const scrollContainer = outputRef.current;
-      // Use requestAnimationFrame to ensure DOM is updated
       requestAnimationFrame(() => {
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       });
     }
-  }, [output]);
+  }, [outputRef]);
+
+  // Scroll to bottom when output changes
+  useEffect(() => {
+    scrollToBottom();
+
+    // Also set up listeners for any images that might load
+    if (outputRef.current) {
+      const images = outputRef.current.getElementsByTagName('img');
+      const lastImage = images[images.length - 1];
+      if (lastImage && !lastImage.complete) {
+        lastImage.addEventListener('load', scrollToBottom);
+        return () => lastImage.removeEventListener('load', scrollToBottom);
+      }
+    }
+  }, [output, scrollToBottom]);
 
   return (
     <div 

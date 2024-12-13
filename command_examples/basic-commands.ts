@@ -1,11 +1,9 @@
-import { JsonCommandResult } from '../src/components/Citadel/types/command-results';
+import { JsonCommandResult, ImageCommandResult, TextCommandResult, ErrorCommandResult } from '../src/components/Citadel/types/command-results';
 
 export const commands = {
   'user.show': {
-    // This one is intended to show what happens when a command times out
-    description: 'Show user details (will intentionally timeout)',
+    description: 'Show user details',
     handler: async (args: string[]) => {
-      await new Promise(resolve => setTimeout(resolve, 11000));
       return new JsonCommandResult({
         id: args[0],
         name: "John Doe",
@@ -14,14 +12,6 @@ export const commands = {
       });
     },
     argument: { name: 'userId', description: 'Enter user ID' }
-  },
-
-  'error.timeout': {
-    description: 'A command which will intentionally timeout',
-    handler: async (_args: string[]) => {
-      await new Promise(resolve => setTimeout(resolve, 11000));
-      return new JsonCommandResult({ });
-    }
   },
 
   'user.deactivate': {
@@ -53,38 +43,79 @@ export const commands = {
     }),
     argument: { name: 'lastName', description: 'Enter last name' }
   },
-  'unit.build': {
-    description: 'Build a new unit',
-    handler: async (args: string[]) => new JsonCommandResult({
-      unitId: args[0],
-      name: "La Boca Vista",
-      result: "Construction completed"
-    }),
-    argument: { name: 'unitId', description: 'Enter unit ID' }
+  'error.timeout': {
+    description: 'This command intentionally times out after 11 seconds',
+    handler: async (_args: string[]) => {
+      // Fake a long-running operation to demo the spinner
+      await new Promise(resolve => setTimeout(resolve, 11000));
+      return new JsonCommandResult({ });
+    }
   },
-  'unit.demolish': {
-    description: 'Demolish a unit',
-    handler: async (args: string[]) => new JsonCommandResult({
-      unitId: args[0],
-      name: "La Boca Vista",
-      result: "💣 🧨 💥💥💥"
-    }),
-    argument: { name: 'unitId', description: 'Enter unit ID' }
+  'error.raise': {
+    description: 'This command intentionally raises an error',
+    handler: async (_args: string[]) => {
+      throw new Error('This is an intentionally raised error for testing purposes');
+    }
   },
-  'order.create': {
-    description: 'Create new order',
-    handler: async (args: string[]) => new JsonCommandResult({
-      orderId: args[0],
-      status: "created"
-    }),
-    argument: { name: 'orderId', description: 'Enter order ID' }
+
+  'image.random.picsum': {
+    description: 'Get a random image from Picsum Photos',
+    handler: async () => {
+      return new ImageCommandResult(
+        'https://picsum.photos/800/600',
+        'Random image from Picsum Photos'
+      );
+    }
   },
-  'order.close': {
-    description: 'Close order',
-    handler: async (args: string[]) => new JsonCommandResult({
-      orderId: args[0],
-      status: "closed"
-    }),
-    argument: { name: 'orderId', description: 'Enter order ID' }
+  'image.random.dog': {
+    description: 'Get a random dog image',
+    handler: async () => {
+      const response = await fetch('https://dog.ceo/api/breeds/image/random');
+      const data = await response.json();
+      return new ImageCommandResult(
+        data.message,
+        'Random dog image'
+      );
+    }
+  },
+  'image.random.cat': {
+    description: 'Get a random cat image',
+    handler: async () => {
+      const response = await fetch('https://api.thecatapi.com/v1/images/search');
+      const data = await response.json();
+      return new ImageCommandResult(
+        data[0].url,
+        'Random cat image'
+      );
+    }
+  },
+  'cowsay': {
+    description: 'Get a cow to say something using cowsay API',
+    handler: async (args: string[]) => {
+      try {
+        const message = args[0];
+        const response = await fetch(`/api/cowsay?message=${encodeURIComponent(message)}&format=text`, {
+          headers: {
+            'Accept': 'text/plain'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('text/plain')) {
+          console.error('Unexpected content type:', contentType);
+        }
+        
+        const text = await response.text();
+        return new TextCommandResult(text);
+      } catch (error) {
+        console.error('Cowsay error:', error);
+        throw error;
+      }
+    },
+    argument: { name: 'message', description: 'Enter the message for the cow to say' }
   }
 };

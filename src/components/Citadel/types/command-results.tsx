@@ -84,3 +84,25 @@ export class PendingCommandResult extends BaseCommandResult {
     return <div className="text-gray-400">...</div>;
   }
 }
+
+export class ImageCommandResult extends BaseCommandResult {
+  constructor(
+    public readonly imageUrl: string,
+    public readonly altText: string = '',
+    timestamp?: number
+  ) {
+    super(timestamp);
+  }
+
+  render(): React.ReactNode {
+    return (
+      <div className="my-2">
+        <img
+          src={this.imageUrl}
+          alt={this.altText}
+          className="max-w-[400px] max-h-[300px] h-auto rounded-lg object-contain"
+        />
+      </div>
+    );
+  }
+}
