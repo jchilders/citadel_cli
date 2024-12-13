@@ -3,11 +3,13 @@ import { commands } from '../command_examples/basic-commands';
 // import { commands } from '../command_examples/devops-commands';
 // import { commands } from '../command_examples/customer-service-commands';
 
-export const config = {
-  includeHelpCommand: true, // default true
-  resetStateOnHide: true, // default true
-  showCitadelKey: '.', // default
-};
+// export const config = {
+  // commandTimeoutMs: 10000, // default 10000
+  // includeHelpCommand: false, // default true
+  // resetStateOnHide: true, // default true
+  // showCitadelKey: '.', // default '.'
+  // maxHeight: '80vh', // default '80vh'
+// };
 
 function App() {
   return (
@@ -16,7 +18,8 @@ function App() {
         <p className="text-gray-700">
           Press <code className="px-2 py-1 bg-gray-100 border border-gray-300 rounded">.</code>
         </p>
-        <Citadel config={config} commands={commands} />
+        {/* <Citadel config={config} commands={commands} /> */}
+        <Citadel commands={commands} />
       </div>
     </div>
   );

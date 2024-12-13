@@ -43,13 +43,18 @@ const CitadelInner: React.FC = () => {
     if (!isDraggingRef.current) return;
     
     const delta = startYRef.current - e.clientY;
+    // Convert maxHeight to pixels for calculation
+    const maxHeightValue = config.maxHeight?.endsWith('vh') 
+      ? (window.innerHeight * parseInt(config.maxHeight, 10) / 100)
+      : parseInt(config.maxHeight || '80vh', 10);
+    
     const newHeight = Math.min(
       Math.max(startHeightRef.current + delta, 200),
-      window.innerHeight * 0.8
+      maxHeightValue
     );
     
     setHeight(newHeight);
-  }, []);
+  }, [config.maxHeight]);
 
   const handleMouseUp = useCallback(() => {
     isDraggingRef.current = false;
@@ -214,7 +219,10 @@ const CitadelInner: React.FC = () => {
     <div 
       ref={containerRef}
       className={`${styles.container} ${isVisible ? styles.slideUp : ''} ${isClosing ? styles.slideDown : ''}`}
-      style={height ? { height: `${height}px` } : undefined}
+      style={{
+        ...height ? { height: `${height}px` } : undefined,
+        maxHeight: config.maxHeight
+      }}
       id="citadel-root"
     >
       <div className={styles.resizeHandle} onMouseDown={handleMouseDown} />
