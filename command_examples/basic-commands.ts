@@ -4,6 +4,7 @@ export const commands = {
   'user.show': {
     description: 'Show user details',
     handler: async (args: string[]) => {
+      await new Promise(resolve => setTimeout(resolve, 2000));
       return new JsonCommandResult({
         id: args[0],
         name: "John Doe",
