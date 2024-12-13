@@ -2,6 +2,9 @@ import React, { useRef, useEffect, useState } from 'react';
 import { CommandNode, CommandTrie } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
 import { useCommandParser } from '../hooks/useCommandParser';
+import { Cursor } from '../Cursor';
+import { defaultConfig } from '../config/defaults';
+import { useCitadelConfig } from '../config/CitadelConfigContext';
 import styles from './CommandInput.module.css';
 
 interface CommandInputProps {
@@ -20,6 +23,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const { handleKeyDown, handleInputChange } = useCommandParser({ commandTrie });
   const [showInvalidAnimation, setShowInvalidAnimation] = useState(false);
+  const config = useCitadelConfig();
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     const isValidKey = e.key === 'Backspace' || 
@@ -98,20 +102,34 @@ export const CommandInput: React.FC<CommandInputProps> = ({
             {state.commandStack.join(' ')}
             {state.commandStack.length > 0 && ' '}
           </span>
-          <input
-            ref={inputRef}
-            type="text"
-            role="textbox"
-            value={state.currentInput}
-            onChange={onInputChange}
-            onKeyDown={onKeyDown}
-            onPaste={handlePaste}
-            data-testid="citadel-command-input"
-            className={`flex-1 bg-transparent outline-none text-gray-200 ${showInvalidAnimation ? styles.invalidInput : ''}`}
-            spellCheck={false}
-            autoComplete="off"
-            placeholder={state.isEnteringArg ? state.currentNode?.argument?.name : ''}
-          />
+          <div className="relative flex-1">
+            <input
+              ref={inputRef}
+              type="text"
+              role="textbox"
+              value={state.currentInput}
+              onChange={onInputChange}
+              onKeyDown={onKeyDown}
+              onPaste={handlePaste}
+              data-testid="citadel-command-input"
+              className={`w-full bg-transparent outline-none text-gray-200 caret-transparent ${showInvalidAnimation ? styles.invalidInput : ''}`}
+              spellCheck={false}
+              autoComplete="off"
+              placeholder={state.isEnteringArg ? state.currentNode?.argument?.name : ''}
+            />
+            <div className="absolute top-0 left-0 pointer-events-none">
+              <Cursor 
+                style={{ 
+                  type: config.cursorType || defaultConfig.cursorType,
+                  color: config.cursorColor || defaultConfig.cursorColor,
+                  speed: config.cursorSpeed || defaultConfig.cursorSpeed,
+                  character: config.cursorCharacter || defaultConfig.cursorCharacter
+                }}
+                isValid={!showInvalidAnimation && state.validation.isValid}
+                errorMessage={state.validation.message}
+              />
+            </div>
+          </div>
         </div>
       </div>
       {state.validation.message && (

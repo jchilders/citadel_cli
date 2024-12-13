@@ -16,6 +16,14 @@ import { CitadelConfig } from './types';
  *                             When false, the interface preserves the last input when hidden. Default: false.
  * 
  * @property showCitadelKey - The keyboard key that shows the command interface. Default: '.' (period).
+ * 
+ * @property cursorType - The type of cursor animation to display. Can be one of 'blink', 'spin', 'solid', or 'bbs'. Default: 'bbs'.
+ * 
+ * @property cursorColor - The color of the cursor. Default: 'var(--cursor-color, #fff)'.
+ * 
+ * @property cursorSpeed - The speed of cursor animation in milliseconds. Default varies by cursor type:
+ *                        blink: 530ms, spin/bbs: 120ms, solid: N/A
+ * @property cursorCharacter - The character used to render the cursor. Default: '▋'.
  */
 export const defaultConfig: CitadelConfig = {
   commandTimeoutMs: 10000,
@@ -23,5 +31,9 @@ export const defaultConfig: CitadelConfig = {
   maxHeight: '80vh',
   outputFontSize: 'text-sm',
   resetStateOnHide: false,
-  showCitadelKey: '.'
+  showCitadelKey: '.',
+  cursorType: 'bbs',
+  cursorColor: 'var(--cursor-color, #fff)',
+  cursorSpeed: 530,
+  cursorCharacter: '▋'
 };

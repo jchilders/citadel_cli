@@ -1,3 +1,5 @@
+import { CursorType } from '../types/cursor';
+
 export interface CitadelConfig {
   /**
    * Whether to include the default help command in the command trie.
@@ -30,4 +32,20 @@ export interface CitadelConfig {
    * Accepts Tailwind text size classes: 'text-xs', 'text-sm', 'text-base', 'text-lg', etc.
    */
   outputFontSize?: string;
+  /**
+   * The type of cursor to display. Can be one of 'blink', 'spin', 'solid', or 'bbs'. Default is 'bbs'.
+   */
+  cursorType?: CursorType;
+  /**
+   * The color of the cursor. Default is 'var(--cursor-color, #fff)'.
+   * Accepts any valid CSS color value.
+   */
+  cursorColor?: string;
+  /**
+   * The speed of the cursor animation in milliseconds.
+   * - For 'blink': Time between blinks (default: 530ms)
+   * - For 'spin' and 'bbs': Time between frame changes (default: 120ms)
+   * - For 'solid': Has no effect
+   */
+  cursorSpeed?: number;
 }

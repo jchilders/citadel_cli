@@ -13,6 +13,9 @@ export default defineConfig({
     coverage: {
       exclude: ['node_modules', 'dist', 'command_examples', 'prompts', '.cache',
         '*.js', '*.cjs', '*.ts', // exclude config files in project root
+        'src/App.tsx', 'src/index.ts', 'src/main.tsx', // exclude entry files
+        'src/components/Citadel/index.ts',
+        'src/components/Citadel/types/index.ts',
       ],
     }
   }
