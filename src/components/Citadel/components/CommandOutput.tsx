@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { OutputItem } from '../types/state';
 import { CommandOutputLine } from './CommandOutputLine';
+import { useCitadelConfig } from '../config/CitadelConfigContext';
 
 interface CommandOutputProps {
   output: OutputItem[];
@@ -8,6 +9,7 @@ interface CommandOutputProps {
 }
 
 export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef }) => {
+  const config = useCitadelConfig();
   const scrollToBottom = useCallback(() => {
     if (outputRef.current) {
       const scrollContainer = outputRef.current;
@@ -44,7 +46,7 @@ export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef 
             timestamp={new Date(item.timestamp).toLocaleTimeString()}
             status={item.result.status}
           />
-          <pre className="text-gray-200 whitespace-pre font-mono">
+          <pre className={`text-gray-200 whitespace-pre font-mono ${config.outputFontSize}`}>
             {item.result.render()}
           </pre>
         </div>

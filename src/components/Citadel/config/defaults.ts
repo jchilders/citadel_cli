@@ -10,6 +10,8 @@ import { CitadelConfig } from './types';
  * 
  * @property maxHeight - The maximum CSS height of the interface. Default: '80vh'.
  * 
+ * @property outputFontSize - The TailwindCSS class for the font size of the output text. Default: 'text-sm'.
+ * 
  * @property resetStateOnHide - When true, hiding the interface (via Escape key or other means) will clear the command input.
  *                             When false, the interface preserves the last input when hidden. Default: false.
  * 
@@ -19,6 +21,7 @@ export const defaultConfig: CitadelConfig = {
   commandTimeoutMs: 10000,
   includeHelpCommand: true,
   maxHeight: '80vh',
+  outputFontSize: 'text-sm',
   resetStateOnHide: false,
   showCitadelKey: '.'
 };
