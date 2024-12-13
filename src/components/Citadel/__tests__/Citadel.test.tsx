@@ -136,7 +136,7 @@ describe('Citadel', () => {
     await waitFor(() => {
       const outputElement = screen.getByText((content) => {
         return content.includes('Available Commands:') && content.includes('help - Show available commands');
-      }, { selector: 'pre' });
+      }, { selector: 'div' });
       expect(outputElement).toBeTruthy();
     }, { timeout: 1000 });
   });

@@ -32,7 +32,7 @@ export const useCommandTrie = () => {
     }
 
     return trie;
-  }, [config, commands]);
+  }, [config.includeHelpCommand, commands]);
 
   return commandTrie;
 };
