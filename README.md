@@ -1,25 +1,85 @@
 # Citadel
 
-A command line for your webapp.
+A command-line interface for web applications that empowers power users with keyboard-driven access to functionality.
 
 ## Purpose
 
-Citadel aims to simplify the way users interact with web applications by providing a centralized command interface. This interface allows users to quickly access functionality, reducing the need for navigation and improving overall user experience.
+Citadel transforms web applications by providing a command palette interface similar to VS Code or Sublime Text, enabling power users to execute complex operations without leaving their keyboard. It significantly reduces cognitive load and improves workflow efficiency in complex web applications.
+
+It is intended to serve as an interface for web applications that require users to navigate through multiple UI layers to perform common tasks, and was designed with RESTful API endpoints in mind.
+
+## Why Citadel?
+
+Modern web applications often require users to navigate through multiple UI layers to perform common tasks. Consider these scenarios where Citadel shines:
+
+## Examples
+
+### Customer Service Portal
+**Without Citadel:**
+```
+1. Click Customer tab
+2. Open search form
+3. Enter customer ID
+4. Click search
+5. Navigate to tickets tab
+6. Click create ticket
+7. Fill form
+```
+
+**With Citadel:**
+Type in `tn1234`, which expands to:
+```
+> ticket new 1234
+```
+
+### Financial Trading Platform
+**Without Citadel:**
+```
+1. Select trading pair
+2. Open order form
+3. Switch to limit order
+4. Enter price and quantity
+5. Review and submit
+```
+
+**With Citadel:**
+Type `tlbu5000 0.5`, which expands to:
+```
+> trade limit btc usd 50000 0.5
+```
+
+### DevOps Dashboard
+**Without Citadel:**
+```
+1. Navigate to deployments
+2. Filter by environment
+3. Select service
+4. Click rollback
+5. Confirm action
+```
+
+**With Citadel:**
+Type in `drap1.2.3`, which expands to:
+```
+> deploy rollback api-service prod 1.2.3
+```
 
 ## Features
 
-- Quick command interface with real-time suggestions
-- Hierarchical command structure with subcommands
-- Customizable configuration and theming
-- TypeScript support for type safety
-- Easy integration with existing React applications
-- Built on Vite for fast development and optimal production builds
+- [x] **Keyboard Navigation**: Complete keyboard control with customizable shortcuts
+- [x] **Instant Command Access**: Sub-100ms response time for command suggestions
+- [x] **Context-Aware Commands**: Commands can be configured on a per-page or per-app basis
+
+Coming soon:
+- [ ] **Command History**: Quick access to recent and frequent commands
+- [ ] **Themeable Interface**: Seamlessly matches your application's design
+- [ ] **Real-Time Updates**: Live command results with WebSocket support
 
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/citadel.git
+git clone https://github.com/jchilders/citadel.git
 cd citadel
 ```
 
@@ -28,145 +88,242 @@ cd citadel
 npm install
 ```
 
-## Getting Started
-
-To run Citadel locally in development mode:
-
-```bash
-npm run dev
-```
-
-This will start the development server at `http://localhost:5173`. The app supports hot module replacement (HMR) for quick development iterations.
-
-For production builds:
-
+3. Build the package:
 ```bash
 npm run build
-npm run preview
 ```
 
-## Customization
+4. Link for local development (optional):
+```bash
+npm link
+```
 
-### Themes
-Citadel supports custom themes through CSS variables. To modify the appearance:
+## Quick Start
 
-1. Create a new theme file in `src/styles/themes/`
-2. Import and apply your theme in `src/styles/main.css`
-3. Update theme variables as needed:
+```typescript
+import { Citadel, CommandTrie } from 'citadel';
 
-```css
-:root {
-  --primary-color: #your-color;
-  --background-color: #your-color;
-  --text-color: #your-color;
+// Initialize command system
+const commands = new CommandTrie();
+
+// Register commands
+commands.addCommand(
+  ['customer', 'search'],
+  'Search for customer records',
+  async (args) => ({
+    json: await customerService.search(args.query)
+  }),
+  { name: 'query', description: 'Customer name or ID' }
+);
+
+// Mount in your React app
+function App() {
+  return (
+    <div>
+      <Citadel commands={commands} />
+      {/* Your app content */}
+    </div>
+  );
 }
 ```
 
-### Components
-You can customize existing components or add new ones in the `src/components/` directory. Each component should be typed using TypeScript interfaces.
+## Command Usage
 
-## Configuration
+Citadel commands composed of one or more words followed by zero or one arguments. For example:
+```
+> ticket new customer 1234
+```
+Where the user typed "tnc1234" to achieve the above result.
 
-### Basic Configuration
 
-Citadel can be customized through its configuration options. The main configuration options are:
+### Quick Execution
 
-```typescript
-{
-  resetStateOnEscape: boolean; // Whether to reset the command state when Escape is pressed
-  toggleKey: string;          // The key that toggles the Citadel interface (default: '.')
-}
+Commands can be typed using abbreviated forms. For example:
+```
+ticket new   →  tn
+deploy status  →  ds
+customer history  →  ch
 ```
 
-To customize these options, pass a configuration object when initializing Citadel:
+Simply type the first letter of each word in the command and press Enter. 
 
-```typescript
-import { Citadel } from 'citadel';
+### Arguments
 
-<Citadel config={{
-  resetStateOnEscape: true,
-  toggleKey: '/'
-}} />
+Commands can have zero or more arguments.
+
+```bash
+> ticket new customer 1234 
 ```
 
-### Command Configuration
+### JavaScript Integration
 
-Commands in Citadel are organized using a command trie structure, which allows for efficient command lookup and hierarchical organization. Commands are added using the `CommandTrie` class.
-
-Here's how to configure commands:
+Commands can execute any JavaScript code, making them powerful automation tools:
 
 ```typescript
-const commandTrie = new CommandTrie();
+commands.addCommand(
+  ['refresh', 'cache'],
+  'Refresh application cache',
+  async () => {
+    // Clear local storage
+    localStorage.clear();
+    // Reset Redux store
+    store.dispatch(resetState());
+    // Reload application
+    window.location.reload();
+    return { json: { status: 'Cache cleared' } };
+  }
+);
+```
 
-// Basic command structure:
-commandTrie.addCommand(
-  ['command', 'subcommand'],  // Command path as array
-  'Command description',      // Description shown in UI
-  async (args) => {          // Handler function
-    // Command implementation
-    return {
-      json: {                // Return data to display
-        // your data here
-      }
-    };
+### Dynamic Results
+
+Commands can return different types of results:
+- JSON data for structured information
+- React components for rich visualizations
+- Plain text for simple outputs
+- Promises for async operations
+
+```typescript
+commands.addCommand(
+  ['user', 'activity'],
+  'Show user activity',
+  async (args) => ({
+    // Return both data and visualization
+    json: await getUserActivity(args.userId),
+    component: <ActivityGraph userId={args.userId} />
+  })
+);
+```
+
+## Real-World Examples
+
+### Customer Service Application
+
+```typescript
+// Customer service command configuration
+commands.addCommand(
+  ['ticket', 'new'],
+  'Create support ticket',
+  async (args) => {
+    const ticket = await ticketService.create({
+      customerId: args.customer,
+      priority: args.priority,
+      description: args.description
+    });
+    return { json: { ticketId: ticket.id, status: 'created' } };
   },
-  { name: 'argName', description: 'Argument description' }  // Command argument (optional)
+  [
+    { name: 'customer', description: 'Customer ID' },
+    { name: 'priority', description: 'Ticket priority (high|medium|low)' },
+    { name: 'description', description: 'Issue description' }
+  ]
+);
+
+commands.addCommand(
+  ['customer', 'history'],
+  'View customer interaction history',
+  async (args) => ({
+    json: await customerService.getHistory(args.id, {
+      last: args.days || 30
+    })
+  }),
+  [
+    { name: 'id', description: 'Customer ID' },
+    { name: 'days', description: 'Number of days (default: 30)' }
+  ]
 );
 ```
 
-#### Command Structure
-
-1. **Command Path**
-   - Commands are defined as an array of strings representing the command hierarchy
-   - For example, `['user', 'show']` creates a command accessible as "user show"
-   - Nested commands like `['user', 'query', 'firstname']` create deeper command structures
-
-2. **Command Description**
-   - A string describing what the command does
-   - Displayed in the UI to help users understand the command's purpose
-
-3. **Handler Function**
-   - An async function that receives command arguments
-   - Should return an object with a `json` property containing the data to display
-   - The returned data will be rendered in the UI
-
-4. **Command Arguments**
-   - Optional argument configuration
-   - Specifies the name and description of the argument
-   - Arguments are passed to the handler function in order
-
-Example configuration:
+### Trading Platform Integration
 
 ```typescript
-// User management commands
-commandTrie.addCommand(
-  ['user', 'show'],
-  'Show user details',
+// Trading command configuration
+commands.addCommand(
+  ['trade', 'limit'],
+  'Place limit order',
+  async (args) => {
+    const order = await tradingService.placeLimitOrder({
+      pair: args.pair,
+      price: args.price,
+      quantity: args.quantity,
+      side: args.side || 'buy'
+    });
+    return { json: { orderId: order.id, status: order.status } };
+  },
+  [
+    { name: 'pair', description: 'Trading pair (e.g., btc-usd)' },
+    { name: 'price', description: 'Limit price' },
+    { name: 'quantity', description: 'Order quantity' },
+    { name: 'side', description: 'Order side (buy|sell)' }
+  ]
+);
+```
+
+### DevOps Dashboard Commands
+
+```typescript
+// Deployment command configuration
+commands.addCommand(
+  ['deploy', 'status'],
+  'Check deployment status',
   async (args) => ({
-    json: {
-      id: args[0],
-      name: "John Doe",
-      email: "john@example.com",
-      status: "active"
-    }
+    json: await deploymentService.getStatus(args.service, args.environment)
   }),
-  { name: 'userId', description: 'Enter user ID' }
+  [
+    { name: 'service', description: 'Service name' },
+    { name: 'environment', description: 'Environment (dev|staging|prod)' }
+  ]
 );
 
-// Nested command example
-commandTrie.addCommand(
-  ['user', 'query', 'firstname'],
-  'Search by first name',
+commands.addCommand(
+  ['metrics', 'alert'],
+  'Configure service alerts',
   async (args) => ({
-    json: {
-      users: [
-        { id: 1, name: `${args[0]} Smith` },
-        { id: 2, name: `${args[0]} Jones` }
-      ]
-    }
+    json: await metricsService.setAlert(args.service, {
+      metric: args.metric,
+      threshold: args.threshold,
+      duration: args.duration
+    })
   }),
-  { name: 'firstName', description: 'Enter first name' }
+  [
+    { name: 'service', description: 'Service name' },
+    { name: 'metric', description: 'Metric name (cpu|memory|latency)' },
+    { name: 'threshold', description: 'Alert threshold' },
+    { name: 'duration', description: 'Duration in minutes' }
+  ]
 );
+```
+
+## Advanced Configuration
+
+### Custom Command Rendering
+
+Citadel supports custom rendering of command results:
+
+```typescript
+commands.addCommand(
+  ['dashboard', 'metrics'],
+  'Show service metrics',
+  async (args) => ({
+    component: <MetricsVisualization serviceId={args.service} />,
+    json: await metricsService.get(args.service)
+  }),
+  { name: 'service', description: 'Service ID' }
+);
+```
+
+### Authentication Integration
+
+```typescript
+const citadelConfig = {
+  commandFilter: (command) => {
+    const userPermissions = getUserPermissions();
+    return command.requiredPermissions.every(
+      (perm) => userPermissions.includes(perm)
+    );
+  },
+  // ... other config
+};
 ```
 
 ## Development

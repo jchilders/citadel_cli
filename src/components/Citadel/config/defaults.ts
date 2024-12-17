@@ -29,7 +29,7 @@ export const defaultConfig: CitadelConfig = {
   commandTimeoutMs: 10000,
   includeHelpCommand: true,
   maxHeight: '80vh',
-  outputFontSize: 'text-sm',
+  outputFontSize: 'text-xs',
   resetStateOnHide: false,
   showCitadelKey: '.',
   cursorType: 'bbs',
