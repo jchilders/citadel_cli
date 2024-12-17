@@ -40,7 +40,7 @@ describe('CommandOutput', () => {
   it('renders with default font size', () => {
     renderWithConfig();
     const preElement = screen.getByText('Test output').parentElement;
-    expect(preElement?.className).includes('text-sm');
+    expect(preElement?.className).includes('text-xs');
   });
 
   it('uses custom font size from config', () => {

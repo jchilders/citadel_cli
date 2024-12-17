@@ -47,7 +47,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       }
     }
 
-    // Show animation for invalid input
+    // Show animation for invalid input - only for command names, not arguments
     if (!isValidKey && !state.isEnteringArg && !state.currentNode?.requiresArgument) {
       const currentCommands = state.currentNode ? 
         Array.from(state.currentNode.children.values()) : 
@@ -117,7 +117,13 @@ export const CommandInput: React.FC<CommandInputProps> = ({
               autoComplete="off"
               placeholder={state.isEnteringArg ? state.currentNode?.argument?.name : ''}
             />
-            <div className="absolute top-0 left-0 pointer-events-none">
+            <div 
+              className="absolute top-0 pointer-events-none"
+              style={{
+                left: `${state.currentInput.length}ch`,
+                transition: 'left 0.05s ease-out'
+              }}
+            >
               <Cursor 
                 style={{ 
                   type: config.cursorType || defaultConfig.cursorType,
