@@ -17,8 +17,8 @@ export class TextCommandResult extends BaseCommandResult {
 /**
  * Result containing JSON data
  */
-export class JsonCommandResult extends BaseCommandResult {
-  constructor(public readonly json: any) {
+export class JsonCommandResult<T = any> extends BaseCommandResult {
+  constructor(public readonly data: T) {
     super('json');
   }
 }
