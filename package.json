@@ -32,7 +32,7 @@
     "build": "tsc && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest",
+    "test": "vitest --run",
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
