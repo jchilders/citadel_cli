@@ -1,4 +1,4 @@
-import { BaseCommand } from '../types/command-registry';
+import { BaseCommand, ICommandRegistry } from '../types/command-registry';
 import { TextCommandResult, JsonCommandResult } from '../types/command-results';
 import { validateCommandArguments } from '../utils/command-validation';
 
@@ -23,17 +23,81 @@ export class EchoCommand extends BaseCommand {
  * Help command that displays information about available commands
  */
 export class HelpCommand extends BaseCommand {
-  constructor() {
+  constructor(private readonly registry: ICommandRegistry) {
     super(
       'system.help',
       'Display help information',
-      { name: 'command', description: 'Command to get help for' }
+      { name: 'command', description: 'Command to get help for (optional)' }
     );
   }
 
   async execute(args: string[]): Promise<TextCommandResult> {
-    // This will be implemented when we have the registry available
-    return new TextCommandResult('Help system not yet implemented');
+    if (args.length === 0) {
+      return this.listAllCommands();
+    }
+
+    const commandId = args[0];
+    const command = this.registry.get(commandId);
+    
+    if (!command) {
+      return new TextCommandResult(`Command not found: ${commandId}`);
+    }
+
+    return this.showCommandHelp(command);
+  }
+
+  private async listAllCommands(): Promise<TextCommandResult> {
+    const commands = this.registry.list();
+    const categories = new Map<string, BaseCommand[]>();
+
+    // Group commands by category
+    for (const command of commands) {
+      const category = command.id.split('.')[0];
+      const categoryCommands = categories.get(category) || [];
+      categoryCommands.push(command);
+      categories.set(category, categoryCommands);
+    }
+
+    // Format output
+    const lines: string[] = ['Available Commands:'];
+    
+    for (const [category, categoryCommands] of categories) {
+      lines.push(`\n${category}:`);
+      for (const command of categoryCommands) {
+        lines.push(`  ${command.id.padEnd(20)} ${command.description}`);
+      }
+    }
+
+    lines.push('\nUse "system.help <command>" for detailed information about a command');
+    return new TextCommandResult(lines.join('\n'));
+  }
+
+  private showCommandHelp(command: BaseCommand): TextCommandResult {
+    const lines: string[] = [
+      `Command: ${command.id}`,
+      `Description: ${command.description}`
+    ];
+
+    if (command.argument) {
+      lines.push('\nArguments:');
+      lines.push(`  ${command.argument.name}: ${command.argument.description}`);
+    }
+
+    const metadata = this.registry.getMetadata(command.id);
+    if (metadata) {
+      lines.push('\nMetadata:');
+      if (metadata.permissions) {
+        lines.push(`  Required Permissions: ${metadata.permissions.join(', ')}`);
+      }
+      if (metadata.timeout) {
+        lines.push(`  Timeout: ${metadata.timeout}ms`);
+      }
+      if (metadata.rateLimits) {
+        lines.push(`  Rate Limits: ${metadata.rateLimits.maxRequests} requests per ${metadata.rateLimits.timeWindow}ms`);
+      }
+    }
+
+    return new TextCommandResult(lines.join('\n'));
   }
 }
 
