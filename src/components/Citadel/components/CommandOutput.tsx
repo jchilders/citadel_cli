@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { OutputItem } from '../types/state';
 import { CommandOutputLine } from './CommandOutputLine';
 import { useCitadelConfig } from '../config/CitadelConfigContext';
@@ -23,6 +23,23 @@ const renderValue = (type: CommandResultType, value: any) => {
           src={value.src} 
           alt={value.alt || ''} 
           className="max-w-full h-auto rounded-lg shadow-lg"
+          loading="lazy"
+          onLoad={(e) => {
+            const img = e.currentTarget;
+            if (!img) return;
+            
+            // Force a reflow to ensure the image height is calculated
+            const currentHeight = img.offsetHeight;
+            if (currentHeight) {
+              img.style.height = currentHeight + 'px';
+              // Remove the fixed height after a frame to allow responsive sizing
+              requestAnimationFrame(() => {
+                if (img.style) {
+                  img.style.height = '';
+                }
+              });
+            }
+          }}
         />
       );
     
@@ -51,13 +68,10 @@ const renderValue = (type: CommandResultType, value: any) => {
           </thead>
           <tbody className="divide-y divide-gray-700">
             {value.rows.map((row: any[], i: number) => (
-              <tr key={i}>
-                {row.map((cell: any, j: number) => (
-                  <td 
-                    key={j}
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-200"
-                  >
-                    {String(cell)}
+              <tr key={i} className={i % 2 === 0 ? 'bg-gray-900' : 'bg-gray-800'}>
+                {row.map((cell, j) => (
+                  <td key={j} className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    {cell}
                   </td>
                 ))}
               </tr>
@@ -77,35 +91,154 @@ const renderValue = (type: CommandResultType, value: any) => {
       return null;
     
     default:
-      return <pre className="whitespace-pre-wrap">{JSON.stringify(value)}</pre>;
+      return <pre className="whitespace-pre-wrap">{JSON.stringify(value, null, 2)}</pre>;
   }
 };
 
 export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef }) => {
   const config = useCitadelConfig();
+  const lastScrollRef = useRef<number>(0);
+  const isUserScrollingRef = useRef<boolean>(false);
+  const pendingScrollRef = useRef<boolean>(false);
+
   const scrollToBottom = useCallback(() => {
     if (outputRef.current) {
       const scrollContainer = outputRef.current;
-      requestAnimationFrame(() => {
-        scrollContainer.scrollTop = scrollContainer.scrollHeight;
-      });
+      const isAtBottom = Math.abs(
+        (scrollContainer.scrollHeight - scrollContainer.scrollTop) - 
+        scrollContainer.clientHeight
+      ) < 50;
+
+      // Only auto-scroll if user is already near the bottom or hasn't scrolled manually
+      if (isAtBottom || !isUserScrollingRef.current) {
+        // Set a flag to indicate we want to scroll
+        pendingScrollRef.current = true;
+        
+        // Try to scroll immediately
+        requestAnimationFrame(() => {
+          if (pendingScrollRef.current && outputRef.current) {
+            outputRef.current.scrollTop = outputRef.current.scrollHeight;
+            lastScrollRef.current = outputRef.current.scrollHeight;
+            
+            // Try again after a short delay to handle late DOM updates
+            setTimeout(() => {
+              if (pendingScrollRef.current && outputRef.current) {
+                outputRef.current.scrollTop = outputRef.current.scrollHeight;
+                pendingScrollRef.current = false;
+              }
+            }, 100);
+          }
+        });
+      }
     }
   }, [outputRef]);
 
-  // Scroll to bottom when output changes
+  // Handle manual scrolling
+  useEffect(() => {
+    if (!outputRef.current) return;
+
+    const scrollContainer = outputRef.current;
+    const handleScroll = () => {
+      const isAtBottom = Math.abs(
+        (scrollContainer.scrollHeight - scrollContainer.scrollTop) - 
+        scrollContainer.clientHeight
+      ) < 50;
+
+      // If user scrolls up, mark as manual scrolling
+      if (!isAtBottom && scrollContainer.scrollTop < lastScrollRef.current) {
+        isUserScrollingRef.current = true;
+      }
+
+      // If user scrolls to bottom, reset manual scroll flag
+      if (isAtBottom) {
+        isUserScrollingRef.current = false;
+      }
+
+      lastScrollRef.current = scrollContainer.scrollTop;
+    };
+
+    scrollContainer.addEventListener('scroll', handleScroll);
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Set up a mutation observer to detect any DOM changes
+  useEffect(() => {
+    if (!outputRef.current) return;
+
+    const observer = new MutationObserver((mutations) => {
+      const hasLayoutChanges = mutations.some(mutation => 
+        mutation.type === 'childList' || 
+        mutation.type === 'characterData' ||
+        [...(mutation.addedNodes || [])].some(node => 
+          node instanceof HTMLElement && 
+          (node.tagName === 'IMG' || node.tagName === 'PRE')
+        )
+      );
+
+      if (hasLayoutChanges) {
+        scrollToBottom();
+      }
+    });
+
+    observer.observe(outputRef.current, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['class', 'style', 'src']
+    });
+
+    return () => observer.disconnect();
+  }, [scrollToBottom]);
+
+  // Scroll to bottom when output array changes
   useEffect(() => {
     scrollToBottom();
-
-    // Also set up listeners for any images that might load
-    if (outputRef.current) {
-      const images = outputRef.current.getElementsByTagName('img');
-      const lastImage = images[images.length - 1];
-      if (lastImage && !lastImage.complete) {
-        lastImage.addEventListener('load', scrollToBottom);
-        return () => lastImage.removeEventListener('load', scrollToBottom);
-      }
-    }
   }, [output, scrollToBottom]);
+
+  // Handle all images, including cached ones
+  useEffect(() => {
+    if (!outputRef.current) return;
+
+    const handleImageLoad = () => {
+      scrollToBottom();
+    };
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach(mutation => {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach(node => {
+            if (node instanceof HTMLElement) {
+              // Handle both new images and existing images
+              const images = [
+                ...(node.tagName === 'IMG' ? [node] : []),
+                ...Array.from(node.getElementsByTagName('img'))
+              ];
+              
+              images.forEach(img => {
+                if (img instanceof HTMLImageElement) {
+                  if (img.complete) {
+                    // Image is already loaded (possibly from cache)
+                    handleImageLoad();
+                  } else {
+                    // Image is still loading
+                    img.addEventListener('load', handleImageLoad);
+                  }
+                }
+              });
+            }
+          });
+        }
+      });
+    });
+
+    observer.observe(outputRef.current, {
+      childList: true,
+      subtree: true
+    });
+
+    return () => observer.disconnect();
+  }, [scrollToBottom]);
 
   return (
     <div 
