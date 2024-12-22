@@ -1,6 +1,6 @@
 # Command Architecture Improvements
 
-This document outlines potential improvements to make the command handling system more robust, extensible, and maintainable.
+This document outlines improvements to make the command handling system more robust and maintainable.
 
 ## 1. Command Registry Pattern
 
@@ -47,64 +47,9 @@ abstract class BaseCommand implements Command {
 }
 ```
 
-### 1.3 Example Commands
-
-```typescript
-// Simple echo command
-class EchoCommand extends BaseCommand {
-  constructor() {
-    super(
-      'system.echo',
-      'Echo back the input',
-      { name: 'message', description: 'Message to echo' }
-    );
-  }
-
-  async execute(args: string[]): Promise<CommandResult> {
-    return new TextCommandResult(args.join(' '));
-  }
-}
-
-// Calculator command with subcommands
-class CalculatorCommand extends BaseCommand {
-  constructor() {
-    super(
-      'math.add',
-      'Add two numbers',
-      { name: 'numbers', description: 'Space-separated numbers to add' }
-    );
-  }
-
-  async execute(args: string[]): Promise<CommandResult> {
-    const sum = args
-      .map(Number)
-      .reduce((a, b) => a + b, 0);
-    return new JsonCommandResult({ result: sum });
-  }
-}
-```
-
-### 1.4 Command Validation
-
-Commands must follow these rules:
-1. IDs must use dot notation (e.g., 'category.command')
-2. IDs must contain only alphanumeric characters and dots
-3. IDs must have at least one dot separator
-4. Each segment must be at least one character long
-5. Command names (last segment) should be descriptive
-
-### 1.5 Registry Features
-
-The registry provides:
-1. Command registration and lookup
-2. Metadata management
-3. Permission checking
-4. Command completion
-5. Validation
-
 ## 2. Command Categories and Namespacing
 
-Enhance the current dot-notation system with formal categorization:
+Enhance the dot-notation system with formal categorization:
 
 ```typescript
 interface CommandCategory {
@@ -112,13 +57,6 @@ interface CommandCategory {
   description: string;
   commands: Command[];
   subcategories: CommandCategory[];
-}
-
-interface Command {
-  name: string;
-  aliases: string[];
-  category: string;
-  // ... other properties
 }
 ```
 
@@ -162,15 +100,9 @@ type JsonCommand = TypedCommand<any, JsonCommandResult>;
 type ImageCommand = TypedCommand<any, ImageCommandResult>;
 ```
 
-Benefits:
-- Compile-time type checking
-- Runtime type validation
-- Type-safe command results
-- Better IDE support
-
 ## 5. Command Documentation and Discovery
 
-Improve command documentation and discovery:
+Implement robust documentation and discovery:
 
 ```typescript
 interface CommandDoc {
@@ -192,45 +124,65 @@ Features:
 
 ## 6. Command State Management
 
-Implement robust state management:
+Implement state management and history:
 
 ```typescript
 interface CommandState {
-  history: Command[];
+  history: CommandHistoryEntry[];
   context: CommandContext;
   status: CommandStatus;
   progress: number;
   canUndo: boolean;
   canRedo: boolean;
 }
-```
 
-Features:
-- Command history
-- Undo/Redo support
-- Progress tracking
-- Execution context
-- State persistence
-
-## 7. Testing Improvements
-
-Enhance testing capabilities:
-
-```typescript
-interface CommandTestKit {
-  mockCommand(name: string): MockCommand;
-  createTestContext(): CommandContext;
-  executeCommand(name: string, args: any[]): Promise<CommandResult>;
-  assertCommandOutput(result: CommandResult, expected: any): void;
+interface CommandHistoryEntry {
+  commandId: string;
+  args: string[];
+  timestamp: Date;
+  result?: CommandResult;
+  error?: Error;
 }
 ```
 
 Features:
-- Command mocking utilities
-- Test context creation
-- Snapshot testing
-- Performance testing
-- Integration test helpers
+- Command history tracking
+- Undo/redo support
+- Progress tracking
+- State persistence
+
+## 7. Front-end Integration
+
+### 7.1 Command UI Components
+
+Required React/Vue components:
+- Command input/terminal interface
+- Command history display
+- Command documentation viewer
+- Command state/progress visualization
+
+### 7.2 Event System
+
+Implement event handling for:
+- Command state changes
+- Real-time progress updates
+- Command completion/errors
+- UI updates for undo/redo
+
+### 7.3 Output Rendering
+
+Components needed:
+- Output format renderers (text, JSON, table, markdown, HTML)
+- Output styling system
+- Interactive output elements
+
+### 7.4 Integration Layer
+
+Implementation requirements:
+- Service layer for UI-command system connection
+- State management integration (Redux/Vuex)
+- Real-time updates system
+- Error boundary handling
 
 ## 8. Error Handling
 
@@ -292,74 +244,7 @@ Features:
 - Custom parsers
 - Third-party integration
 
-## 11. Command History
-
-The command history system will provide a way to track, store, and query command executions. This will be implemented after the core command registry is complete.
-
-### 11.1 History Entry Interface
-
-```typescript
-interface CommandHistoryEntry {
-  commandId: string;        // Unique command identifier
-  timestamp: Date;          // When the command was executed
-  args: string[];          // Arguments passed to the command
-  result: CommandResult;   // Result of the execution
-  metadata?: {
-    executionTime: number; // Time taken to execute
-    user?: string;        // User who executed the command
-    context?: any;        // Additional execution context
-  };
-}
-```
-
-### 11.2 Implementation Steps
-
-1. **Storage Layer**
-   - Implement `ICommandHistoryStorage` interface
-   - Create in-memory implementation for development
-   - Add persistent storage implementation (e.g., SQLite, IndexedDB)
-   - Support pagination and filtering
-
-2. **Registry Integration**
-   - Add history middleware to CommandRegistry
-   - Extend registry interface with history methods
-   - Add history-related metadata to commands
-   - Implement command replay capability
-
-3. **Query Interface**
-   ```typescript
-   interface ICommandHistory {
-     getEntries(options: {
-       commandId?: string;
-       startTime?: Date;
-       endTime?: Date;
-       user?: string;
-       limit?: number;
-       offset?: number;
-     }): Promise<CommandHistoryEntry[]>;
-     
-     getLastExecution(commandId: string): Promise<CommandHistoryEntry | undefined>;
-     
-     clearHistory(options?: {
-       before?: Date;
-       commandId?: string;
-     }): Promise<void>;
-   }
-   ```
-
-4. **Performance Considerations**
-   - Implement efficient indexing for common queries
-   - Add entry compression for long-term storage
-   - Support history pruning policies
-   - Consider caching frequently accessed entries
-
-5. **UI Integration**
-   - Add command history view component
-   - Support command re-execution from history
-   - Add history search and filtering
-   - Display execution statistics and trends
-
-## Implementation Strategy
+## 11. Implementation Strategy
 
 1. **Phase 1: Foundation**
    - Implement Command Registry
@@ -381,7 +266,7 @@ interface CommandHistoryEntry {
    - Add monitoring and analytics
    - Documentation and examples
 
-## Migration Path
+## 12. Migration Path
 
 1. Create new interfaces alongside existing code
 2. Gradually migrate commands to new system
@@ -389,6 +274,6 @@ interface CommandHistoryEntry {
 4. Deprecate old interfaces
 5. Remove legacy code
 
-## Conclusion
+## 13. Conclusion
 
 These improvements will create a more maintainable, extensible, and robust command system while providing a better developer and user experience.

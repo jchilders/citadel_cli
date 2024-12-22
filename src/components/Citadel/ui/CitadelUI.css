@@ -1,0 +1,39 @@
+.citadel-ui {
+  display: flex;
+  height: 100%;
+  background-color: #252525;
+  color: #fff;
+}
+
+.citadel-main {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Allows content to shrink below its minimum content size */
+}
+
+.citadel-sidebar {
+  width: 300px;
+  border-left: 1px solid #333;
+  overflow-y: auto;
+}
+
+/* Dark theme scrollbar styles */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

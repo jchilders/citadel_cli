@@ -18,14 +18,14 @@ export const CommandOutputLine: React.FC<CommandOutputLineProps> = ({
       <span className="text-gray-200">&gt; {command}</span>
       <span className="text-gray-400">·</span>
       <span className="text-gray-500">{timestamp}</span>
-      {status === CommandStatus.Pending && <Spinner />}
-      {status === CommandStatus.Success && (
+      {status === 'pending' && <Spinner />}
+      {status === 'success' && (
         <div 
           data-testid="success-indicator"
           className="w-4 h-4 rounded-full bg-green-500" 
         />
       )}
-      {(status === CommandStatus.Timeout || status === CommandStatus.Failure) && (
+      {(status === 'timeout' || status === 'error') && (
         <div 
           data-testid="error-indicator"
           className="w-4 h-4 rounded-full bg-red-500" 

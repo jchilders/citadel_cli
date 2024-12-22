@@ -1,0 +1,168 @@
+.doc-view {
+  background-color: #1e1e1e;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.doc-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-style: italic;
+}
+
+.doc-header {
+  position: sticky;
+  top: 0;
+  background-color: #252525;
+  padding: 16px;
+  border-bottom: 1px solid #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  z-index: 1;
+}
+
+.doc-title {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+}
+
+.doc-deprecated {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 8px;
+  background-color: rgba(255, 68, 68, 0.1);
+  color: #f44;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.doc-close {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.doc-close:hover {
+  color: #fff;
+}
+
+.doc-content {
+  padding: 16px;
+}
+
+.doc-section {
+  margin-bottom: 24px;
+}
+
+.doc-section h3 {
+  color: #0f0;
+  margin: 0 0 12px 0;
+  font-size: 16px;
+}
+
+.doc-description {
+  color: #fff;
+  margin: 0 0 12px 0;
+  line-height: 1.6;
+}
+
+.doc-long-description {
+  color: #ccc;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.doc-arguments {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.doc-argument {
+  background-color: #252525;
+  padding: 12px;
+  border-radius: 4px;
+}
+
+.doc-argument-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.doc-argument-name {
+  color: #0f0;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+.doc-argument-type {
+  color: #666;
+  font-size: 12px;
+  padding: 2px 6px;
+  background-color: #333;
+  border-radius: 4px;
+}
+
+.doc-argument-required {
+  color: #f44;
+  font-size: 12px;
+}
+
+.doc-argument-description {
+  color: #ccc;
+  margin: 0;
+  font-size: 14px;
+}
+
+.doc-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.doc-example {
+  background-color: #252525;
+  padding: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.doc-example:hover {
+  background-color: #2a2a2a;
+}
+
+.doc-example-command {
+  margin: 0 0 8px 0;
+  padding: 8px;
+  background-color: #1e1e1e;
+  border-radius: 4px;
+  color: #0f0;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+.doc-example-description {
+  margin: 0;
+  color: #ccc;
+  font-size: 14px;
+}
+
+.doc-metadata {
+  color: #666;
+  font-size: 12px;
+}
+
+.doc-since,
+.doc-returns {
+  margin: 0;
+  line-height: 1.6;
+}

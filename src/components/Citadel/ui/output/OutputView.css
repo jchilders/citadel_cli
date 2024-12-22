@@ -1,0 +1,104 @@
+.output-view {
+  margin: 8px 0;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.output-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #666;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.output-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f44;
+  background-color: rgba(255, 68, 68, 0.1);
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+
+.output-text {
+  margin: 0;
+  padding: 8px 12px;
+  background-color: #1e1e1e;
+  color: #fff;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.output-json {
+  margin: 0;
+  padding: 8px 12px;
+  background-color: #1e1e1e;
+  color: #fff;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.output-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.output-table-wrapper {
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.output-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #1e1e1e;
+  color: #fff;
+  border-radius: 4px;
+}
+
+.output-table th,
+.output-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border: 1px solid #333;
+}
+
+.output-table th {
+  background-color: #333;
+  font-weight: bold;
+}
+
+.output-markdown,
+.output-html {
+  color: #fff;
+  line-height: 1.6;
+}
+
+.output-markdown pre,
+.output-html pre {
+  background-color: #1e1e1e;
+  padding: 8px 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.output-unknown {
+  color: #666;
+  font-style: italic;
+}

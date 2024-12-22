@@ -1,6 +1,6 @@
 import { Command, CommandMetadata, ICommandRegistry } from '../types/command-registry';
 import { CommandTrie } from '../types/command-trie';
-import { validateCommandId } from '../utils/command-validation';
+import { validateCommandId, validateCommandDescription, validateCommandArgument, validateCommandHandler } from '../validation/command-validation';
 
 /**
  * Implementation of the command registry using a trie data structure
@@ -9,16 +9,26 @@ export class CommandRegistry implements ICommandRegistry {
   private readonly trie: CommandTrie;
   private readonly metadata: Map<string, CommandMetadata>;
   private readonly permissionIndex: Map<string, Set<string>>;
+  private readonly commands: Map<string, Command>;
 
   constructor() {
     this.trie = new CommandTrie();
     this.metadata = new Map();
     this.permissionIndex = new Map();
+    this.commands = new Map();
   }
 
   register(command: Command, metadata?: CommandMetadata): void {
-    // Validate command ID
+    // Validate command
     validateCommandId(command.id);
+    validateCommandDescription(command.description);
+    if (command.argument) {
+      validateCommandArgument(command.argument);
+    }
+    validateCommandHandler(command.execute);
+
+    // Store command
+    this.commands.set(command.id, command);
 
     // Convert dot notation to path array
     const path = command.id.split('.');
@@ -45,59 +55,42 @@ export class CommandRegistry implements ICommandRegistry {
   }
 
   unregister(commandId: string): void {
+    // Remove command
+    this.commands.delete(commandId);
+
     // Remove metadata
     this.metadata.delete(commandId);
 
     // Remove from permission index
-    const metadata = this.metadata.get(commandId);
-    metadata?.permissions?.forEach(permission => {
-      const commands = this.permissionIndex.get(permission);
-      commands?.delete(commandId);
-      if (commands?.size === 0) {
+    for (const [permission, commands] of this.permissionIndex.entries()) {
+      commands.delete(commandId);
+      if (commands.size === 0) {
         this.permissionIndex.delete(permission);
       }
-    });
+    }
 
     // Remove from trie
-    // Note: We need to implement removal in CommandTrie
-    // For now, we'll just leave it there as removing from a trie is complex
-    // and the current implementation doesn't support it
+    this.trie.removeCommand(commandId.split('.'));
   }
 
   get(commandId: string): Command | undefined {
-    const path = commandId.split('.');
-    const node = this.trie.getCommand(path);
-    
-    if (!node) return undefined;
-
-    return {
-      id: commandId,
-      description: node._description,
-      argument: node.argument,
-      execute: node.handler,
-      getName: () => node.name
-    };
+    return this.commands.get(commandId);
   }
 
   list(): Command[] {
-    return this.trie.getLeafCommands().map(node => ({
-      id: node._fullPath.join('.'),
-      description: node._description,
-      argument: node.argument,
-      execute: node.handler,
-      getName: () => node.name
-    }));
+    return Array.from(this.commands.values());
   }
 
   findByName(name: string): Command[] {
-    return this.list().filter(cmd => cmd.getName() === name);
+    return this.list().filter(command => command.id.split('.').pop() === name);
   }
 
   findByPermission(permission: string): Command[] {
-    const commandIds = this.permissionIndex.get(permission) ?? new Set();
-    return Array.from(commandIds)
-      .map(id => this.get(id))
-      .filter((cmd): cmd is Command => cmd !== undefined);
+    const commandIds = this.permissionIndex.get(permission);
+    if (!commandIds) {
+      return [];
+    }
+    return Array.from(commandIds).map(id => this.commands.get(id)!);
   }
 
   getMetadata(commandId: string): CommandMetadata | undefined {
@@ -105,33 +98,11 @@ export class CommandRegistry implements ICommandRegistry {
   }
 
   updateMetadata(commandId: string, metadata: Partial<CommandMetadata>): void {
-    const existing = this.metadata.get(commandId);
-    if (!existing) {
-      throw new Error(`No metadata found for command ${commandId}`);
+    const existingMetadata = this.metadata.get(commandId);
+    if (!existingMetadata) {
+      throw new Error(`Command not found: ${commandId}`);
     }
-
-    // Update metadata
-    const updated = { ...existing, ...metadata };
-    this.metadata.set(commandId, updated);
-
-    // Update permission index if permissions changed
-    if (metadata.permissions) {
-      // Remove from old permission index
-      existing.permissions?.forEach(permission => {
-        const commands = this.permissionIndex.get(permission);
-        commands?.delete(commandId);
-        if (commands?.size === 0) {
-          this.permissionIndex.delete(permission);
-        }
-      });
-
-      // Add to new permission index
-      metadata.permissions.forEach(permission => {
-        const commands = this.permissionIndex.get(permission) ?? new Set();
-        commands.add(commandId);
-        this.permissionIndex.set(permission, commands);
-      });
-    }
+    this.metadata.set(commandId, { ...existingMetadata, ...metadata });
   }
 
   getCompletions(path: string[]): string[] {
@@ -139,6 +110,40 @@ export class CommandRegistry implements ICommandRegistry {
   }
 
   validate(): { isValid: boolean; errors: string[] } {
-    return this.trie.validate();
+    const errors: string[] = [];
+
+    // Check for duplicate command IDs
+    const commandIds = new Set<string>();
+    for (const command of this.commands.values()) {
+      if (commandIds.has(command.id)) {
+        errors.push(`Duplicate command ID: ${command.id}`);
+      }
+      commandIds.add(command.id);
+    }
+
+    // Check for orphaned metadata
+    for (const [commandId] of this.metadata) {
+      if (!this.commands.has(commandId)) {
+        errors.push(`Metadata exists for unknown command: ${commandId}`);
+      }
+    }
+
+    // Check for orphaned permission index entries
+    for (const [permission, commandIds] of this.permissionIndex) {
+      for (const commandId of commandIds) {
+        if (!this.commands.has(commandId)) {
+          errors.push(`Permission index contains unknown command: ${commandId} for permission ${permission}`);
+        }
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+
+  getAllCommands(): Command[] {
+    return Array.from(this.commands.values());
   }
 }

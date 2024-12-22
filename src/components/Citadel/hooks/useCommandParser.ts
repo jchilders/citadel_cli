@@ -45,7 +45,9 @@ export function useCommandParser({ commandTrie }: UseCommandParserProps) {
     if (node) {
       actions.executeCommand(commandStack, args || undefined);
       actions.setCurrentInput('');
+      actions.setCommandStack([]);
       actions.setIsEnteringArg(false);
+      actions.setCurrentNode(undefined);
       setInputState('idle');
     }
   }, [commandTrie]);
