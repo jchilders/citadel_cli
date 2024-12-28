@@ -48,4 +48,8 @@ export interface CitadelConfig {
    * - For 'solid': Has no effect
    */
   cursorSpeed?: number;
+  /**
+   * The character used to render the cursor. Default is '▋'.
+   */
+  cursorCharacter?: string;
 }

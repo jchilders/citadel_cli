@@ -16,13 +16,13 @@ describe('Basic Commands', () => {
       const cmd = new EchoCommand();
       const result = await cmd.execute(['hello', 'world']);
       expect(result).toBeInstanceOf(TextCommandResult);
-      expect(result.text).toBe('hello world');
+      expect(result.value).toBe('hello world');
     });
 
     it('should handle empty input', async () => {
       const cmd = new EchoCommand();
       const result = await cmd.execute([]);
-      expect(result.text).toBe('');
+      expect(result.value).toBe('');
     });
 
     it('should have correct metadata', () => {
@@ -50,22 +50,22 @@ describe('Basic Commands', () => {
     it('should list all commands when no argument provided', async () => {
       const result = await helpCommand.execute([]);
       expect(result).toBeInstanceOf(TextCommandResult);
-      expect(result.text).toContain('Available Commands:');
-      expect(result.text).toContain('system.echo');
-      expect(result.text).toContain('math.add');
-      expect(result.text).toContain('system.help');
+      expect(result.value).toContain('Available Commands:');
+      expect(result.value).toContain('system.echo');
+      expect(result.value).toContain('math.add');
+      expect(result.value).toContain('system.help');
     });
 
     it('should show detailed help for a specific command', async () => {
       const result = await helpCommand.execute(['system.echo']);
-      expect(result.text).toContain('Command: system.echo');
-      expect(result.text).toContain('Description: Echo back the input');
-      expect(result.text).toContain('message: Message to echo back');
+      expect(result.value).toContain('Command: system.echo');
+      expect(result.value).toContain('Description: Echo back the input');
+      expect(result.value).toContain('message: Message to echo back');
     });
 
     it('should handle unknown commands', async () => {
       const result = await helpCommand.execute(['unknown.command']);
-      expect(result.text).toBe('Command not found: unknown.command');
+      expect(result.value).toBe('Command not found: unknown.command');
     });
 
     it('should show command metadata when available', async () => {
@@ -79,9 +79,9 @@ describe('Basic Commands', () => {
       });
 
       const result = await helpCommand.execute(['system.echo']);
-      expect(result.text).toContain('Required Permissions: user.basic');
-      expect(result.text).toContain('Timeout: 1000ms');
-      expect(result.text).toContain('Rate Limits: 10 requests per 1000ms');
+      expect(result.value).toContain('Required Permissions: user.basic');
+      expect(result.value).toContain('Timeout: 1000ms');
+      expect(result.value).toContain('Rate Limits: 10 requests per 1000ms');
     });
 
     it('should have correct metadata', () => {
@@ -99,13 +99,13 @@ describe('Basic Commands', () => {
       const cmd = new CalculatorCommand();
       const result = await cmd.execute(['1', '2', '3']);
       expect(result).toBeInstanceOf(JsonCommandResult);
-      expect(result.json).toEqual({ result: 6 });
+      expect(result.value).toEqual({ result: 6 });
     });
 
     it('should handle empty input', async () => {
       const cmd = new CalculatorCommand();
       const result = await cmd.execute([]);
-      expect(result.json).toEqual({ result: 0 });
+      expect(result.value).toEqual({ result: 0 });
     });
 
     it('should handle invalid numbers', async () => {

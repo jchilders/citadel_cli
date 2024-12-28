@@ -1,4 +1,5 @@
-import React, { createContext, useContext } from 'react';
+import * as React from 'react';
+import { createContext, useContext } from 'react';
 import { CitadelConfig } from './types';
 import { defaultConfig } from './defaults';
 
@@ -13,11 +14,10 @@ export const CitadelConfigProvider: React.FC<{
   config?: CitadelConfig;
   commands?: Record<string, any>;
   children: React.ReactNode;
-}> = ({ config = defaultConfig, commands, children }) => {
+}> = ({ config = {}, commands, children }) => {
   const mergedConfig = {
     ...defaultConfig,
     ...config,
-    showCitadelKey: config.showCitadelKey || '.'
   };
 
   const contextValue = {

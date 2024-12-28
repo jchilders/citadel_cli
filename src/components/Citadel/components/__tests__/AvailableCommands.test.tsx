@@ -4,6 +4,7 @@ import { AvailableCommands } from '../AvailableCommands';
 import { CitadelState } from '../../types/state';
 import { CommandNode, NoopHandler } from '../../types/command-trie';
 import { CitadelConfigProvider } from '../../config/CitadelConfigContext';
+import { TextCommandResult } from '../../types/command-results';
 
 describe('AvailableCommands', () => {
   const defaultState: CitadelState = {
@@ -19,7 +20,7 @@ describe('AvailableCommands', () => {
     new CommandNode({
       fullPath: ['help'],
       description: 'Show help information',
-      handler: async () => ({ text: 'Help info' })
+      handler: async () => new TextCommandResult('Help info')
     }),
     new CommandNode({
       fullPath: ['test'],
@@ -98,7 +99,7 @@ describe('AvailableCommands', () => {
     const handlerNode = new CommandNode({
       fullPath: ['handler'],
       description: 'Handler node',
-      handler: async () => ({ text: 'test' })
+      handler: async () => new TextCommandResult('test')
     });
     
     const state = {

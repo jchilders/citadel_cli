@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { CommandNode, NoopHandler } from '../types/command-trie';
 import { CitadelState } from '../types/state';
 import { useCitadelConfig } from '../config/CitadelConfigContext';
@@ -67,7 +67,7 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
   // Show available commands for non-leaf nodes
   return (
     <div className={containerClasses} data-testid="available-commands">
-      {availableCommands.length > 0 && (
+      {sortedCommands.length > 0 && (
         <div className={contentClasses}>
           <div className="flex flex-wrap gap-2">
             {sortedCommands.map((cmd) => {

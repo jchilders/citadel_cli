@@ -1,6 +1,6 @@
 import { BaseCommand, ICommandRegistry } from '../types/command-registry';
 import { TextCommandResult, JsonCommandResult } from '../types/command-results';
-import { validateCommandArguments } from '../utils/command-validation';
+import { validateCommandArguments } from '../validation/command-validation';
 
 /**
  * Echo command that repeats the input back
