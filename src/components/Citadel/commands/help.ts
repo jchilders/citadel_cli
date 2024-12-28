@@ -6,7 +6,7 @@ export class HelpCommand extends BaseCommand {
     super('help', 'Show available commands');
   }
 
-  async execute(args: string[]): Promise<TextCommandResult> {
+  async execute(_args: string[]): Promise<TextCommandResult> {
     return new TextCommandResult(`Available Commands:
 help - Show available commands`);
   }

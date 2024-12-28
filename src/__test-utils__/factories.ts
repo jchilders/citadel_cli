@@ -1,12 +1,13 @@
 import { vi } from 'vitest';
 import { CommandNode, CommandTrie, CommandNodeParams } from '../components/Citadel/types/command-trie';
+import { TextCommandResult } from '../components/Citadel/types/command-results';
 import { CitadelState, CitadelActions } from '../components/Citadel/types';
 
 export const createMockNode = (name: string = 'test1', overrides: Partial<CommandNodeParams> = {}): CommandNode => {
   const node = new CommandNode({
     fullPath: [name],
     description: 'Test command',
-    handler: async () => ({ json: {} }),
+    handler: async () => new TextCommandResult('Test command executed'),
     ...overrides
   });
 

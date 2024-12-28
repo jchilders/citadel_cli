@@ -1,5 +1,5 @@
 import { CommandResult } from '../types/command-results';
-import { CommandState } from '../types/command-state';
+import { CommandState, CommandHistoryEntry } from '../types/command-state';
 
 export interface TerminalProps {
   onCommand: (command: string) => Promise<void>;
