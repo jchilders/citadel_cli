@@ -4,7 +4,7 @@ import {
   ValidationError,
   ValidationResult,
   ICommandValidator
-} from '../types/command-validation';
+} from '../validation/command-validation';
 
 /**
  * Default command validator implementation

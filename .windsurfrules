@@ -1,6 +1,6 @@
 When adding error messages, include the value that is causing the error, when possible. For example, if the error is due to an invalid argument, include the argument in the error message (preferably towards the beginning of the message).
 
-Use `npx tsc --jsx react` when building individual files and checking for TypeScript errors.
+Use `npx tsc --noEmit --jsx react` when building individual files or checking for TypeScript errors.
 
 ## Testing
 

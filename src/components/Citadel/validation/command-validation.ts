@@ -76,6 +76,35 @@ export interface ValidationResult {
 }
 
 /**
+ * Interface for command validation
+ */
+export interface ICommandValidator {
+  /**
+   * Validate command arguments against schema
+   * @param args Array of command arguments to validate
+   * @param schema Validation schema defining rules
+   * @returns ValidationResult containing validation status and any errors
+   */
+  validate(args: string[], schema: ValidationSchema): Promise<ValidationResult>;
+
+  /**
+   * Add custom validation rule
+   * @param type Type identifier for the custom rule
+   * @param validate Function implementing the validation logic
+   */
+  addRule(
+    type: string,
+    validate: (value: any, rule: ValidationRule) => boolean | Promise<boolean>
+  ): void;
+
+  /**
+   * Remove custom validation rule
+   * @param type Type identifier of the rule to remove
+   */
+  removeRule(type: string): void;
+}
+
+/**
  * Validates a command ID
  * @throws CommandValidationError if validation fails
  */

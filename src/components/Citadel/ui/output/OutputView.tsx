@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { OutputViewProps } from '../types';
 import {
   TextCommandResult,
@@ -43,22 +43,23 @@ export const OutputView: React.FC<OutputViewProps> = ({
 
   const renderResult = () => {
     if (result instanceof TextCommandResult) {
-      return <pre className="output-text">{result.text}</pre>;
+      return <pre className="output-text">{result.value}</pre>;
     }
 
     if (result instanceof JsonCommandResult) {
       return (
         <pre className="output-json">
-          {JSON.stringify(result.data, null, 2)}
+          {JSON.stringify(result.value, null, 2)}
         </pre>
       );
     }
 
     if (result instanceof ImageCommandResult) {
+      const { src, alt } = result.value;
       return (
         <img
-          src={result.url}
-          alt={result.alt || 'Command output'}
+          src={src}
+          alt={alt || 'Command output'}
           className="output-image"
         />
       );
@@ -70,13 +71,13 @@ export const OutputView: React.FC<OutputViewProps> = ({
           <table className="output-table">
             <thead>
               <tr>
-                {result.columns.map((col, i) => (
+                {result.value.headers.map((col, i) => (
                   <th key={i}>{col}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {result.rows.map((row, i) => (
+              {result.value.rows.map((row, i) => (
                 <tr key={i}>
                   {row.map((cell, j) => (
                     <td key={j}>{cell}</td>
@@ -93,7 +94,7 @@ export const OutputView: React.FC<OutputViewProps> = ({
       return (
         <div
           className="output-markdown"
-          dangerouslySetInnerHTML={{ __html: result.html }}
+          dangerouslySetInnerHTML={{ __html: result.value }}
         />
       );
     }
@@ -102,7 +103,7 @@ export const OutputView: React.FC<OutputViewProps> = ({
       return (
         <div
           className="output-html"
-          dangerouslySetInnerHTML={{ __html: result.html }}
+          dangerouslySetInnerHTML={{ __html: result.value }}
         />
       );
     }

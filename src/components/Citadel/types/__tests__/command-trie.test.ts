@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { CommandTrie, NoopHandler, CommandNode } from '../command-trie';
+import { TextCommandResult } from '../command-results';
 
 describe('CommandTrie', () => {
   let trie: CommandTrie;
@@ -10,7 +11,7 @@ describe('CommandTrie', () => {
 
   describe('addCommand', () => {
     it('should add a leaf command successfully', () => {
-      const handler = async () => ({ text: 'success' });
+      const handler = async () => new TextCommandResult('success');
       trie.addCommand({
         path: ['test'],
         description: 'Test command',
@@ -26,7 +27,7 @@ describe('CommandTrie', () => {
     });
 
     it('should add nested commands successfully', () => {
-      const handler = async () => ({ text: 'success' });
+      const handler = async () => new TextCommandResult('success');
       trie.addCommand({
         path: ['parent', 'child'],
         description: 'Child command',
@@ -79,8 +80,8 @@ describe('CommandTrie', () => {
 
   describe('getLeafCommands', () => {
     it('should return all leaf commands', async () => {
-      const handler1 = async () => ({ text: 'success1' });
-      const handler2 = async () => ({ text: 'success2' });
+      const handler1 = async () => new TextCommandResult('success1');
+      const handler2 = async () => new TextCommandResult('success2');
       
       trie.addCommand({
         path: ['cmd1'],
@@ -115,7 +116,7 @@ describe('CommandTrie', () => {
 
   describe('validate', () => {
     it('should validate a valid trie', () => {
-      const handler = async () => ({ text: 'success' });
+      const handler = async () => new TextCommandResult('success');
       trie.addCommand({
         path: ['cmd1'],
         description: 'Command 1',
@@ -133,7 +134,7 @@ describe('CommandTrie', () => {
     });
 
     it('should detect non-NoopHandler on non-leaf nodes', () => {
-      const handler = async () => ({ text: 'success' });
+      const handler = async () => new TextCommandResult('success');
       
       // Create a parent node directly with a custom handler
       const parentNode = new CommandNode({
@@ -146,7 +147,7 @@ describe('CommandTrie', () => {
       const childNode = new CommandNode({
         fullPath: ['parent', 'child'],
         description: 'Child command',
-        handler,
+        handler: NoopHandler,
         parent: parentNode
       });
       
@@ -160,8 +161,6 @@ describe('CommandTrie', () => {
     });
 
     it('should detect argument on non-leaf node', () => {
-      const handler = async () => ({ text: 'success' });
-      
       // Create a parent node directly with an argument
       const parentNode = new CommandNode({
         fullPath: ['parent'],
@@ -174,7 +173,7 @@ describe('CommandTrie', () => {
       const childNode = new CommandNode({
         fullPath: ['parent', 'child'],
         description: 'Child command',
-        handler,
+        handler: NoopHandler,
         parent: parentNode
       });
       
@@ -188,20 +187,18 @@ describe('CommandTrie', () => {
     });
 
     it('should detect duplicate command paths', () => {
-      const handler = async () => ({ text: 'success' });
-      
       // Add commands through different paths that end up with the same full path
       trie.addCommand({
         path: ['cmd'],
         description: 'Command 1',
-        handler
+        handler: NoopHandler
       });
       
       // Add a second command that will create the same path through a different route
       trie.addCommand({
         path: ['other', 'cmd'],
         description: 'Command 2',
-        handler
+        handler: NoopHandler
       });
       
       // Now manually move the second command to create a duplicate
@@ -218,21 +215,20 @@ describe('CommandTrie', () => {
 
   describe('getCompletions', () => {
     beforeEach(() => {
-      const handler = async () => ({ text: 'success' });
       trie.addCommand({
         path: ['help'],
         description: 'Help command',
-        handler
+        handler: NoopHandler
       });
       trie.addCommand({
         path: ['user', 'create'],
         description: 'Create user',
-        handler
+        handler: NoopHandler
       });
       trie.addCommand({
         path: ['user', 'delete'],
         description: 'Delete user',
-        handler
+        handler: NoopHandler
       });
     });
 
@@ -259,16 +255,15 @@ describe('CommandTrie', () => {
 
   describe('getAllCommands', () => {
     it('should return all command paths', () => {
-      const handler = async () => ({ text: 'success' });
       trie.addCommand({
         path: ['cmd1'],
         description: 'Command 1',
-        handler
+        handler: NoopHandler
       });
       trie.addCommand({
         path: ['parent', 'cmd2'],
         description: 'Command 2',
-        handler
+        handler: NoopHandler
       });
 
       const paths = trie.getAllCommands();

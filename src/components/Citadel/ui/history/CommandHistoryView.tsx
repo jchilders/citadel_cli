@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { CommandHistoryViewProps } from '../types';
 import './CommandHistoryView.css';
 
@@ -30,14 +30,14 @@ export const CommandHistoryView: React.FC<CommandHistoryViewProps> = ({
       <div className="history-list">
         {history.map((entry, index) => (
           <div
-            key={`${entry.commandId}-${entry.timestamp.getTime()}`}
+            key={`${entry.id}-${entry.startTime.getTime()}`}
             className="history-item"
-            onClick={() => onCommandSelect(`${entry.commandId} ${entry.args.join(' ')}`)}
+            onClick={() => onCommandSelect(`${entry.command.id} ${entry.args.join(' ')}`)}
           >
             <div className="history-item-header">
-              <span className="history-item-command">{entry.commandId}</span>
+              <span className="history-item-command">{entry.command.id}</span>
               <span className="history-item-time">
-                {entry.timestamp.toLocaleTimeString()}
+                {entry.startTime.toLocaleTimeString()}
               </span>
             </div>
             {entry.args.length > 0 && (
