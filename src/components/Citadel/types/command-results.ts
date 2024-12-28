@@ -24,6 +24,11 @@ export abstract class BaseCommandResult {
 }
 
 /**
+ * A type alias for BaseCommandResult to maintain compatibility
+ */
+export type CommandResult = BaseCommandResult;
+
+/**
  * Result containing text output
  */
 export class TextCommandResult extends BaseCommandResult {

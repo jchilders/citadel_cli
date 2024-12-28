@@ -7,7 +7,7 @@ import { BaseCommandResult, TextCommandResult } from './command-results';
 export type CommandResult = BaseCommandResult;
 
 /** Function type for handling command execution */
-export type CommandHandler = (args: string[]) => Promise<CommandResult>;
+export type CommandHandler = (args: string[]) => Promise<BaseCommandResult>;
 
 /**
  * Represents an argument that can be passed to a command
@@ -408,7 +408,7 @@ export class CommandTrie {
    * @returns The command result or undefined if command not found
    * @throws Error if command validation fails
    */
-  async executeCommand(path: string[], args: string[] = []): Promise<CommandResult | undefined> {
+  async executeCommand(path: string[], args: string[] = []): Promise<BaseCommandResult | undefined> {
     const command = this.getCommand(path);
     
     if (!command) {

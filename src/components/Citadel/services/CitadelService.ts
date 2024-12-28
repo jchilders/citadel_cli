@@ -107,23 +107,19 @@ export class CitadelService {
             }, 10000);
           });
 
-          // Race between command execution and timeout
-          const result = await Promise.race([
+          // Run command with middleware and timeout
+          const result = (await Promise.race([
             this.middlewareManager.execute(
               {
-                command: command,
+                command,
                 args: args || [],
-                startTime: new Date(),
-                metadata: typeof window !== 'undefined' ? { 
-                  userAgent: window.navigator.userAgent,
-                  platform: window.navigator.platform,
-                  language: window.navigator.language
-                } : {},
+                metadata: new TextCommandResult('Command metadata'),
+                startTime: new Date()
               },
               () => command.execute(args || [])
             ),
             timeoutPromise
-          ]);
+          ])) as BaseCommandResult;
 
           // Mark as success and update state history
           if (result instanceof BaseCommandResult) {
@@ -132,9 +128,12 @@ export class CitadelService {
 
           // Update state history
           this.stateManager.addHistoryEntry({
+            id: Math.random().toString(36).substring(7),
             command: command,
             args: args || [],
-            timestamp: new Date(),
+            startTime: new Date(),
+            status: CommandExecutionStatus.Completed,
+            context: new TextCommandResult('Command context'),
             result: result
           });
 
@@ -150,8 +149,8 @@ export class CitadelService {
 
           // Update state history
           this.stateManager.addHistoryEntry({
-            id: error.id,
-            context: {},
+            id: Math.random().toString(36).substring(7),
+            context: new TextCommandResult('Error context'),
             status: CommandExecutionStatus.Failed,
             command: command,
             args: args || [],
@@ -187,7 +186,7 @@ export class CitadelService {
     return this.events.on('stateChange', callback);
   }
 
-  onCommandComplete(callback: (data: { commandId: string, result: CommandResult }) => void): () => void {
+  onCommandComplete(callback: (data: { commandId: string, result: BaseCommandResult }) => void): () => void {
     return this.events.on('commandComplete', callback);
   }
 
