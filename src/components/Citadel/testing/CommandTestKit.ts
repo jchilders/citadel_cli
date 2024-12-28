@@ -81,12 +81,15 @@ class ResultMatcherImpl implements ResultMatcher {
 
   matches(actual: BaseCommandResult): boolean {
     if (this.expected instanceof BaseCommandResult) {
-      // Compare string representations for now
       return this.expected.toString() === actual.toString();
     }
 
+    if (actual instanceof TextCommandResult && typeof this.expected === 'string') {
+      return actual.value === this.expected;
+    }
+
     if (actual instanceof TextCommandResult) {
-      return actual.text === this.expected;
+      return actual.value === this.expected?.toString();
     }
 
     return JSON.stringify(actual) === JSON.stringify(this.expected);

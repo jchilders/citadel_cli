@@ -111,7 +111,7 @@ describe('CommandRegistry', () => {
 
       if (registered) {
         const result = await registered.execute(['hello', 'world']);
-        expect(result.text).toBe('hello world');
+        expect(result.value).toBe('hello world');
       }
     });
   });

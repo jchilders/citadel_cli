@@ -67,7 +67,7 @@ describe('MiddlewarePipeline', () => {
         };
 
         const result = await pipeline.execute(testCommand, ['test'], user);
-        expect(result.result.text).toBe('test');
+        expect(result.result.value).toBe('test');
       });
 
       it('should block users without required permissions', async () => {

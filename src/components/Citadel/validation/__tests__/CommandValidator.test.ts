@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { CommandValidator } from '../CommandValidator';
-import { ValidationSchema } from '../../types/command-validation';
+import { ValidationSchema } from '../command-validation';
 
 describe('CommandValidator', () => {
   let validator: CommandValidator;

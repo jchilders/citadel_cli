@@ -58,9 +58,9 @@ describe('useCommandTrie', () => {
     expect(handler).toBeDefined();
     if (handler) {
       const output = await handler([]);
-      expect(output.text).toContain('Available Commands:');
-      expect(output.text).toContain('test - Test command');
-      expect(output.text).toContain('help - Show available commands');
+      expect(output.value).toContain('Available Commands:');
+      expect(output.value).toContain('test - Test command');
+      expect(output.value).toContain('help - Show available commands');
     }
   });
 

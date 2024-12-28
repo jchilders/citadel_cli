@@ -102,6 +102,29 @@ export class CommandRegistry implements ICommandRegistry {
     if (!existingMetadata) {
       throw new Error(`Command not found: ${commandId}`);
     }
+
+    // If permissions are being updated, update the permission index
+    if (metadata.permissions) {
+      // Remove from old permissions
+      existingMetadata.permissions?.forEach(permission => {
+        const commands = this.permissionIndex.get(permission);
+        if (commands) {
+          commands.delete(commandId);
+          if (commands.size === 0) {
+            this.permissionIndex.delete(permission);
+          }
+        }
+      });
+
+      // Add to new permissions
+      metadata.permissions.forEach(permission => {
+        const commands = this.permissionIndex.get(permission) ?? new Set();
+        commands.add(commandId);
+        this.permissionIndex.set(permission, commands);
+      });
+    }
+
+    // Update metadata
     this.metadata.set(commandId, { ...existingMetadata, ...metadata });
   }
 
