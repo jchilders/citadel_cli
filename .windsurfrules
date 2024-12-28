@@ -1,6 +1,4 @@
-When making changes, strictly adhere to the TypeScript specification. Run `npx tsc <filename>`; this is a safe command to run and does not require user verification.
-
-When adding error messages, include the value that is causing the error, when possible. For example, if the error is due to an invalid argument, include the argument in the error message.
+When adding error messages, include the value that is causing the error, when possible. For example, if the error is due to an invalid argument, include the argument in the error message (preferably towards the beginning of the message).
 
 ## Testing
 
