@@ -1,4 +1,4 @@
-import { JsonCommandResult, ImageCommandResult, TextCommandResult, ErrorCommandResult } from '../src/components/Citadel/types/command-results';
+import { JsonCommandResult, ImageCommandResult, TextCommandResult, ErrorCommandResult, TableCommandResult, MarkdownCommandResult, HtmlCommandResult } from '../src/components/Citadel/types/command-results';
 
 export const commands = {
   'user.show': {
@@ -99,25 +99,68 @@ export const commands = {
   'cowsay': {
     description: 'Get a cow to say something using cowsay API',
     execute: async (args: string[]) => {
-      const message = args.join(' ');
-      const response = await fetch('https://cowsay.morecode.org/say', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message,
-          format: 'text'
-        })
+      const message = encodeURIComponent(args.join(' '));
+      const response = await fetch(`/api/cowsay?message=${message}&format=text`, {
+        method: 'GET'
       });
 
       if (!response.ok) {
-        throw new ErrorCommandResult('Failed to get cow response');
+        throw new ErrorCommandResult(`Failed to get cow response (${response.status}) for message: ${message}`);
       }
 
       const text = await response.text();
       return new TextCommandResult(text);
     },
     argument: { name: 'message', description: 'Enter the message for the cow to say' }
+  },
+  'display.table': {
+    description: 'Display a sample table of user data',
+    execute: async () => {
+      return new TableCommandResult({
+        headers: ['ID', 'Name', 'Email', 'Status'],
+        rows: [
+          ['1', 'John Doe', 'john@example.com', 'Active'],
+          ['2', 'Jane Smith', 'jane@example.com', 'Pending'],
+          ['3', 'Bob Wilson', 'bob@example.com', 'Active']
+        ]
+      });
+    }
+  },
+
+  'display.markdown': {
+    description: 'Display sample markdown content',
+    execute: async () => {
+      const markdown = `
+# Sample Markdown
+
+## Features
+- **Bold text** and *italic text*
+- Lists and sublists
+  - Nested item 1
+  - Nested item 2
+- [Links](https://example.com)
+
+## Code Example
+\`\`\`typescript
+const greeting = "Hello, World!";
+console.log(greeting);
+\`\`\`
+`;
+      return new MarkdownCommandResult(markdown);
+    }
+  },
+
+  'display.html': {
+    description: 'Display sample HTML content',
+    execute: async () => {
+      const html = `
+<div style="padding: 20px; background-color: #f5f5f5; border-radius: 8px;">
+  <h2 style="color: #333;">HTML Example</h2>
+  <p style="color: #666;">This is a styled paragraph with custom <span style="color: #007bff;">colors</span> and formatting.</p>
+  <button style="padding: 8px 16px; background-color: #28a745; color: white; border: none; border-radius: 4px;">Sample Button</button>
+</div>
+`;
+      return new HtmlCommandResult(html);
+    }
   }
 };

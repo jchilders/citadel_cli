@@ -2,8 +2,7 @@ import { CommandRegistry } from '../registry/CommandRegistry';
 import { CommandStateManager } from '../registry/CommandStateManager';
 import { CommandDocManager } from '../registry/CommandDocManager';
 import { MiddlewareManager } from '../middleware/MiddlewareManager';
-import { OutputManager } from '../output/OutputManager';
-import { CommandResult, ErrorCommandResult, BaseCommandResult, TextCommandResult } from '../types/command-results';
+import { ErrorCommandResult, BaseCommandResult, TextCommandResult } from '../types/command-results';
 import { CitadelState, CitadelActions, OutputItem } from '../types/state';
 import { CommandDoc } from '../types/command-docs';
 import { CommandNode, CommandTrie } from '../types/command-trie';
@@ -19,7 +18,6 @@ export class CitadelService {
     private readonly stateManager: CommandStateManager,
     private readonly docManager: CommandDocManager,
     private readonly middlewareManager: MiddlewareManager,
-    private readonly outputManager: OutputManager,
   ) {
     this.commandTrie = new CommandTrie();
     this.state = {

@@ -155,28 +155,3 @@ export interface IOutputStream {
    */
   setOptions(options: OutputOptions): void;
 }
-
-/**
- * Output manager interface
- */
-export interface IOutputManager {
-  /**
-   * Get output stream
-   */
-  getOutputStream(): IOutputStream;
-
-  /**
-   * Get formatter for format
-   */
-  getFormatter(format: OutputFormat): IOutputFormatter;
-
-  /**
-   * Register custom formatter
-   */
-  registerFormatter(formatter: IOutputFormatter): void;
-
-  /**
-   * Format and write result
-   */
-  writeResult(result: BaseCommandResult, options?: OutputOptions): void;
-}

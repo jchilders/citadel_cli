@@ -2,7 +2,6 @@ import { CommandRegistry } from '../registry/CommandRegistry';
 import { CommandStateManager } from '../registry/CommandStateManager';
 import { CommandDocManager } from '../registry/CommandDocManager';
 import { MiddlewareManager } from '../middleware/MiddlewareManager';
-import { OutputManager } from '../output/OutputManager';
 import { CitadelService } from './CitadelService';
 import { LocalStorageStateStorage } from '../registry/CommandStateManager';
 import { Command } from '../types/command-registry';
@@ -45,7 +44,6 @@ export function createCitadelService(options: CreateCitadelServiceOptions = {}):
   const registry = new CommandRegistry();
   const docManager = new CommandDocManager();
   const middlewareManager = new MiddlewareManager();
-  const outputManager = new OutputManager();
 
   // Initialize state manager with appropriate storage
   const stateStorage = options.persistState
@@ -95,6 +93,5 @@ export function createCitadelService(options: CreateCitadelServiceOptions = {}):
     stateManager,
     docManager,
     middlewareManager,
-    outputManager
   );
 }

@@ -2,7 +2,6 @@ import { CommandRegistry } from '../registry/CommandRegistry';
 import { CommandStateManager } from '../registry/CommandStateManager';
 import { CommandDocManager } from '../registry/CommandDocManager';
 import { MiddlewareManager } from '../middleware/MiddlewareManager';
-import { OutputManager } from '../output/OutputManager';
 import { CommandResult } from '../types/command-results';
 import { CommandState } from '../types/command-state';
 import { CommandDoc } from '../types/command-docs';
@@ -16,7 +15,6 @@ export class CommandService {
     private readonly stateManager: CommandStateManager,
     private readonly docManager: CommandDocManager,
     private readonly middlewareManager: MiddlewareManager,
-    private readonly outputManager: OutputManager,
   ) {}
 
   async executeCommand(commandLine: string): Promise<CommandResult> {
