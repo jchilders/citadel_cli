@@ -1,17 +1,14 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useGlobalShortcut } from './hooks/useGlobalShortcut';
 import { useSlideAnimation } from './hooks/useSlideAnimation';
-import { useCommandTrie } from './hooks/useCommandTrie';
 import { useCitadelService } from './hooks/useCitadelService';
 import styles from './Citadel.module.css';
 import { CommandInput } from './components/CommandInput';
 import { CommandOutput } from './components/CommandOutput';
 import { AvailableCommands } from './components/AvailableCommands';
-import { CitadelState, CitadelActions, OutputItem } from './types/state';
 import { CitadelConfig } from './config/types';
 import { defaultConfig } from './config/defaults';
 import { CitadelConfigProvider, useCitadelConfig } from './config/CitadelConfigContext';
-import { ErrorCommandResult, BaseCommandResult } from './types/command-results';
 import { CitadelService } from './services/CitadelService';
 import { createCitadelService } from './services/createCitadelService';
 
