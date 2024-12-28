@@ -84,19 +84,18 @@ export function validateCommandId(id: string): void {
     throw new CommandValidationError('Command ID is required');
   }
 
-  // Check for valid characters in entire ID
-  if (!/^[a-zA-Z][a-zA-Z0-9_.]*$/.test(id)) {
-    throw new CommandValidationError('Command ID must start with a letter and contain only letters, numbers, dots, and underscores');
+  // Split into segments using either dot or middle dot
+  const segments = id.split(/[.・]/);
+
+  // Check for empty segments (handles consecutive dots/middle dots, leading/trailing dots)
+  if (segments.some(segment => !segment)) {
+    throw new CommandValidationError(`Command ID segments cannot be empty. Got: "${id}"`);
   }
 
-  // If using dot notation, validate each segment
-  if (id.includes('.')) {
-    const segments = id.split('.');
-    if (segments.some(segment => !segment)) {
-      throw new CommandValidationError('Command ID segments cannot be empty');
-    }
-    if (segments.some(segment => !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(segment))) {
-      throw new CommandValidationError('Command ID segments must start with a letter and contain only letters, numbers, and underscores');
+  // Validate each segment only contains valid characters
+  for (const segment of segments) {
+    if (!/^[\p{L}][\p{L}\p{N}_]*$/u.test(segment)) {
+      throw new CommandValidationError(`Command ID segments must start with a letter and contain only letters, numbers, and underscores. Invalid segment: "${segment}"`);
     }
   }
 }

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { CommandRegistry } from '../CommandRegistry';
 import { BaseCommand } from '../../types/command-registry';
 import { TextCommandResult } from '../../types/command-results';
-import { CommandValidationError } from '../../utils/command-validation';
+import { CommandValidationError } from '../../validation/command-validation';
 
 class TestCommand extends BaseCommand {
   constructor(id: string, description: string) {
@@ -29,7 +29,7 @@ describe('CommandRegistry', () => {
     });
 
     it('should reject invalid command IDs', () => {
-      const cmd = new TestCommand('invalid', 'Invalid command');
+      const cmd = new TestCommand('💥invalid💥', 'Invalid command');
       expect(() => registry.register(cmd)).toThrow(CommandValidationError);
     });
 

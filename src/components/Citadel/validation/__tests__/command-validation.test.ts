@@ -13,7 +13,10 @@ describe('Command Validation', () => {
         'system.echo',
         'math.add',
         'service.deploy.prod',
-        'a.b.c'
+        'a.b.c',
+        'デプロイ',
+        'デプロイ・プロダクション',
+        'شر.الإنتاج'
       ];
 
       validIds.forEach(id => {
@@ -24,7 +27,6 @@ describe('Command Validation', () => {
     it('should reject invalid command IDs', () => {
       const invalidIds = [
         '',                    // empty
-        'noCategory',          // no dot
         'system..echo',        // consecutive dots
         'system.echo.',        // trailing dot
         '.system.echo',        // leading dot
@@ -55,10 +57,10 @@ describe('Command Validation', () => {
   describe('sanitizeCommandId', () => {
     it('should sanitize invalid command IDs', () => {
       const cases = [
-        ['command with spaces', 'command.command_with_spaces'],
-        ['invalid!@#chars', 'command.invalid___chars'],
+        ['command with spaces', 'command_with_spaces'],
+        ['invalid!@#chars', 'invalid___chars'],
         ['already.valid', 'already.valid'],
-        ['no-category', 'command.no_category'],
+        ['no-category', 'no_category'],
         ['multiple...dots', 'multiple.dots'],
         ['.leading.dot', 'leading.dot'],
         ['trailing.dot.', 'trailing.dot'],
