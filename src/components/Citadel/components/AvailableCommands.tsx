@@ -30,8 +30,17 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
     );
   }
 
-  // Show command description for leaf nodes
-  if (state.currentNode?.isLeaf) {
+  // Don't show commands when entering arguments
+  if (state.isEnteringArg) {
+    return (
+      <div className={containerClasses} data-testid="available-commands">
+        <div className={contentClasses}></div>
+      </div>
+    );
+  }
+
+  // Show command description for leaf nodes without handlers
+  if (state.currentNode?.isLeaf && state.currentNode.handler === NoopHandler) {
     return (
       <div className={containerClasses} data-testid="available-commands">
         <div className={contentClasses}>
