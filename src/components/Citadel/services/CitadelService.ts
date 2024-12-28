@@ -7,6 +7,7 @@ import { CitadelState, CitadelActions, OutputItem } from '../types/state';
 import { CommandDoc } from '../types/command-docs';
 import { CommandNode, CommandTrie } from '../types/command-trie';
 import { EventEmitter } from './EventEmitter';
+import { CommandExecutionStatus } from '../types/command-state';
 
 export class CitadelService {
   private events = new EventEmitter();
@@ -110,15 +111,14 @@ export class CitadelService {
           const result = await Promise.race([
             this.middlewareManager.execute(
               {
-                commandId: path.join('.'),
+                command: command,
                 args: args || [],
                 startTime: new Date(),
-                environment: typeof window !== 'undefined' ? { 
+                metadata: typeof window !== 'undefined' ? { 
                   userAgent: window.navigator.userAgent,
                   platform: window.navigator.platform,
                   language: window.navigator.language
                 } : {},
-                metadata: {}
               },
               () => command.execute(args || [])
             ),
@@ -132,10 +132,10 @@ export class CitadelService {
 
           // Update state history
           this.stateManager.addHistoryEntry({
-            commandId: path.join('.'),
+            command: command,
             args: args || [],
             timestamp: new Date(),
-            result,
+            result: result
           });
 
           // Update output
@@ -150,9 +150,12 @@ export class CitadelService {
 
           // Update state history
           this.stateManager.addHistoryEntry({
-            commandId: path.join('.'),
+            id: error.id,
+            context: {},
+            status: CommandExecutionStatus.Failed,
+            command: command,
             args: args || [],
-            timestamp: new Date(),
+            startTime: new Date(),
             error: error instanceof Error ? error : new Error(String(error)),
           });
 

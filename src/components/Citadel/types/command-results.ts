@@ -2,7 +2,7 @@
  * Base class for command execution results
  */
 export abstract class BaseCommandResult {
-  private status: CommandStatus = 'pending';
+  private status: CommandResultStatus = 'pending';
 
   constructor(public readonly type: string, public readonly value: any) {}
 
@@ -18,7 +18,7 @@ export abstract class BaseCommandResult {
     this.status = 'timeout';
   }
 
-  getStatus(): CommandStatus {
+  getStatus(): CommandResultStatus {
     return this.status;
   }
 }
@@ -100,9 +100,9 @@ export class ErrorCommandResult extends BaseCommandResult {
 }
 
 /**
- * Command execution status
+ * Status of a command result
  */
-export type CommandStatus = 'pending' | 'success' | 'error' | 'timeout';
+export type CommandResultStatus = 'pending' | 'success' | 'error' | 'timeout';
 
 /**
  * Command result type

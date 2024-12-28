@@ -4,7 +4,7 @@ import { BaseCommandResult } from './command-results';
 /**
  * Command execution status
  */
-export enum CommandStatus {
+export enum CommandExecutionStatus {
   Ready = 'ready',
   Running = 'running',
   Completed = 'completed',
@@ -21,7 +21,7 @@ export interface CommandHistoryEntry {
   args: string[];
   startTime: Date;
   endTime?: Date;
-  status: CommandStatus;
+  status: CommandExecutionStatus;
   result?: BaseCommandResult;
   error?: Error;
   context: Record<string, any>;
@@ -46,7 +46,7 @@ export interface CommandContext {
 export interface CommandState {
   history: CommandHistoryEntry[];
   context: CommandContext;
-  status: CommandStatus;
+  status: CommandExecutionStatus;
   progress: number;
   canUndo: boolean;
   canRedo: boolean;
@@ -79,7 +79,7 @@ export interface ICommandStateManager {
   /**
    * Update command status
    */
-  updateStatus(status: CommandStatus, progress?: number): void;
+  updateStatus(status: CommandExecutionStatus, progress?: number): void;
 
   /**
    * Get current context

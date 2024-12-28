@@ -45,17 +45,33 @@ export class MarkdownFormatter extends BaseFormatter {
 
   private formatObject(obj: Record<string, any>): string {
     const lines = [];
-    for (const [key, value] of Object.entries(obj)) {
-      if (Array.isArray(value)) {
-        lines.push(`### ${key}`);
-        lines.push(this.formatList(value));
-      } else if (typeof value === 'object' && value !== null) {
-        lines.push(`### ${key}`);
-        lines.push(this.formatObject(value));
-      } else {
-        lines.push(`**${key}**: ${this.stringify(value)}`);
+    
+    if (obj.title) {
+      lines.push(`# ${obj.title}`);
+    }
+
+    if (obj.description) {
+      lines.push('');
+      lines.push(obj.description);
+    }
+
+    if (obj.items) {
+      if (lines.length > 0) lines.push('');
+      lines.push(this.formatList(obj.items));
+    }
+
+    if (lines.length === 0) {
+      // Default object formatting
+      for (const [key, value] of Object.entries(obj)) {
+        if (Array.isArray(value)) {
+          lines.push(`### ${key}`);
+          lines.push(this.formatList(value));
+        } else {
+          lines.push(`**${key}**: ${this.stringify(value)}`);
+        }
       }
     }
-    return lines.join('\n\n');
+
+    return lines.join('\n');
   }
 }

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CommandStateManager, InMemoryStateStorage } from '../CommandStateManager';
 import { Command } from '../../types/command-registry';
 import { TextCommandResult } from '../../types/command-results';
-import { CommandStatus } from '../../types/command-state';
+import { CommandExecutionStatus } from '../../types/command-state';
 
 describe('CommandStateManager', () => {
   let manager: CommandStateManager;
@@ -23,23 +23,23 @@ describe('CommandStateManager', () => {
   describe('state management', () => {
     it('should initialize with default state', () => {
       const state = manager.getState();
-      expect(state.status).toBe(CommandStatus.Ready);
+      expect(state.status).toBe(CommandExecutionStatus.Ready);
       expect(state.progress).toBe(0);
       expect(state.history).toHaveLength(0);
     });
 
     it('should update status and progress', () => {
-      manager.updateStatus(CommandStatus.Running, 50);
+      manager.updateStatus(CommandExecutionStatus.Running, 50);
       const state = manager.getState();
-      expect(state.status).toBe(CommandStatus.Running);
+      expect(state.status).toBe(CommandExecutionStatus.Running);
       expect(state.progress).toBe(50);
     });
 
     it('should clamp progress values', () => {
-      manager.updateStatus(CommandStatus.Running, 150);
+      manager.updateStatus(CommandExecutionStatus.Running, 150);
       expect(manager.getState().progress).toBe(100);
 
-      manager.updateStatus(CommandStatus.Running, -50);
+      manager.updateStatus(CommandExecutionStatus.Running, -50);
       expect(manager.getState().progress).toBe(0);
     });
   });
@@ -52,7 +52,7 @@ describe('CommandStateManager', () => {
         command,
         args: ['hello'],
         startTime: new Date(),
-        status: CommandStatus.Completed,
+        status: CommandExecutionStatus.Completed,
         context: {}
       };
 
@@ -67,7 +67,7 @@ describe('CommandStateManager', () => {
         command: createCommand(`test${i}`),
         args: ['test'],
         startTime: new Date(),
-        status: CommandStatus.Completed,
+        status: CommandExecutionStatus.Completed,
         context: {}
       }));
 
@@ -82,7 +82,7 @@ describe('CommandStateManager', () => {
         command: createCommand('test'),
         args: [],
         startTime: new Date(),
-        status: CommandStatus.Completed,
+        status: CommandExecutionStatus.Completed,
         context: {}
       });
 
@@ -122,7 +122,7 @@ describe('CommandStateManager', () => {
         command: undoableCommand,
         args: ['test'],
         startTime: new Date(),
-        status: CommandStatus.Completed,
+        status: CommandExecutionStatus.Completed,
         context: {}
       };
 
@@ -142,7 +142,7 @@ describe('CommandStateManager', () => {
         command: undoableCommand,
         args: ['test'],
         startTime: new Date(),
-        status: CommandStatus.Completed,
+        status: CommandExecutionStatus.Completed,
         context: {}
       };
 
@@ -164,7 +164,7 @@ describe('CommandStateManager', () => {
         command: undoableCommand,
         args: ['test'],
         startTime: new Date(),
-        status: CommandStatus.Completed,
+        status: CommandExecutionStatus.Completed,
         context: {}
       };
 
@@ -189,13 +189,13 @@ describe('CommandStateManager', () => {
   describe('persistence', () => {
     it('should save and load state', async () => {
       // Setup initial state
-      manager.updateStatus(CommandStatus.Running, 50);
+      manager.updateStatus(CommandExecutionStatus.Running, 50);
       manager.addHistoryEntry({
         id: '1',
         command: createCommand('test'),
         args: ['test'],
         startTime: new Date(),
-        status: CommandStatus.Completed,
+        status: CommandExecutionStatus.Completed,
         context: {}
       });
 
@@ -208,7 +208,7 @@ describe('CommandStateManager', () => {
 
       // Verify state
       const state = newManager.getState();
-      expect(state.status).toBe(CommandStatus.Running);
+      expect(state.status).toBe(CommandExecutionStatus.Running);
       expect(state.progress).toBe(50);
       expect(state.history).toHaveLength(1);
     });

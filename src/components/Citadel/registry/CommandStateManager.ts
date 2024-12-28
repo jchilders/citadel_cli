@@ -1,10 +1,10 @@
 import {
   CommandState,
-  CommandStatus,
   CommandContext,
   CommandHistoryEntry,
   ICommandStateManager,
-  IStateStorage
+  IStateStorage,
+  CommandExecutionStatus
 } from '../types/command-state';
 
 /**
@@ -26,7 +26,7 @@ export class CommandStateManager implements ICommandStateManager {
         startTime: new Date(),
         metadata: {}
       },
-      status: CommandStatus.Ready,
+      status: CommandExecutionStatus.Ready,
       progress: 0,
       canUndo: false,
       canRedo: false,
@@ -69,7 +69,7 @@ export class CommandStateManager implements ICommandStateManager {
     this.state.canRedo = false;
   }
 
-  updateStatus(status: CommandStatus, progress?: number): void {
+  updateStatus(status: CommandExecutionStatus, progress?: number): void {
     this.state.status = status;
     if (progress !== undefined) {
       this.state.progress = Math.max(0, Math.min(100, progress));
@@ -205,3 +205,5 @@ export class LocalStorageStateStorage implements IStateStorage {
     localStorage.removeItem(this.key);
   }
 }
+
+export { CommandExecutionStatus } from '../types/command-state';

@@ -5,12 +5,12 @@ import { BaseCommandResult } from '../../types/command-results';
  * Base class for output formatters
  */
 export abstract class BaseFormatter implements IOutputFormatter {
-  constructor(protected format: OutputFormat) {}
+  constructor(protected formatType: OutputFormat) {}
 
   abstract format(result: BaseCommandResult): string;
 
   getFormat(): OutputFormat {
-    return this.format;
+    return this.formatType;
   }
 
   protected stringify(value: any): string {

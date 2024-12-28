@@ -9,8 +9,7 @@ export class OutputStream implements IOutputStream {
     color: { enabled: true },
     style: {
       indent: 2,
-      maxWidth: 120,
-      truncate: true,
+      maxWidth: 80,
       wordWrap: true
     }
   };
