@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { CommandTrie } from '../types/command-trie';
 import { useCitadelConfig, useCitadelCommands } from '../config/CitadelConfigContext';
-import { createHelpCommand } from '../types/default-commands';
+import { createHelpCommand } from '../types/help-command';
 
 export const useCommandTrie = () => {
   const config = useCitadelConfig();
