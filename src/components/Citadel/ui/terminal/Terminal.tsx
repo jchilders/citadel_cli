@@ -1,6 +1,20 @@
-import React, { useState, useRef, useEffect, KeyboardEvent } from 'react';
-import { TerminalProps, TerminalState } from '../types';
+import * as React from 'react';
+import { useState, useRef, useEffect } from 'react';
 import './Terminal.css';
+
+interface TerminalProps {
+  onCommand: (command: string) => Promise<void>;
+  history: string[];
+  placeholder?: string;
+  autoFocus?: boolean;
+  disabled?: boolean;
+}
+
+interface TerminalState {
+  commandHistory: string[];
+  historyIndex: number;
+  currentInput: string;
+}
 
 export const Terminal: React.FC<TerminalProps> = ({
   onCommand,
@@ -31,7 +45,7 @@ export const Terminal: React.FC<TerminalProps> = ({
     }));
   }, [history]);
 
-  const handleKeyDown = async (e: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (disabled) return;
 
     switch (e.key) {
@@ -47,7 +61,7 @@ export const Terminal: React.FC<TerminalProps> = ({
             historyIndex: prev.commandHistory.length,
           }));
         } catch (error) {
-          console.error('Command execution failed:', error);
+          console.error('Command execution failed:', error instanceof Error ? error.message : String(error));
         }
         break;
 
