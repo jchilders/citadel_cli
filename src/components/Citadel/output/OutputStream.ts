@@ -6,7 +6,16 @@ import { IOutputStream, OutputOptions } from '../types/command-output';
 export class OutputStream implements IOutputStream {
   private options: OutputOptions = {
     format: 'text',
-    color: { enabled: true },
+    color: {
+      enabled: true,
+      theme: {
+        success: 'green',
+        error: 'red',
+        warning: 'yellow',
+        info: 'blue',
+        highlight: 'cyan'
+      }
+    },
     style: {
       indent: 2,
       maxWidth: 80,
@@ -92,4 +101,15 @@ export class OutputStream implements IOutputStream {
     if (text.length <= width) return text;
     return text.slice(0, width - 3) + '...';
   }
+}
+
+export interface ColorOptions {
+  enabled: boolean;
+  theme?: {
+    success: string;
+    error: string;
+    warning: string;
+    info: string;
+    highlight: string;
+  };
 }

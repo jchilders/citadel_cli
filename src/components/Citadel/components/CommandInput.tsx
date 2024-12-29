@@ -93,6 +93,8 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     }
   }, [state.commandStack]);
 
+  const cursorType = config?.cursor?.type || 'blink';
+
   return (
     <div className="flex flex-col w-full bg-gray-900 rounded-lg p-4">
       <div className="flex items-center gap-2">
@@ -126,7 +128,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
             >
               <Cursor 
                 style={{ 
-                  type: config.cursorType || defaultConfig.cursorType,
+                  type: cursorType,
                   color: config.cursorColor || defaultConfig.cursorColor,
                   speed: config.cursorSpeed || defaultConfig.cursorSpeed,
                   character: config.cursorCharacter || defaultConfig.cursorCharacter

@@ -12,7 +12,7 @@ export interface Command {
   id: string;
   
   /** Detailed description of what the command does */
-  description: string;
+  description?: string;
 
   /** Optional argument definition */
   argument?: CommandArgument;
@@ -42,7 +42,7 @@ export const getCommandName = (id: string): string => {
 export abstract class BaseCommand implements Command {
   constructor(
     public readonly id: string,
-    public readonly description: string,
+    public readonly description?: string,
     public readonly argument?: CommandArgument,
   ) {}
 
@@ -137,4 +137,33 @@ export interface ICommandRegistry {
    * @returns Validation result with any errors
    */
   validate(): { isValid: boolean; errors: string[] };
+}
+
+/**
+ * Context object passed to command execution
+ */
+export interface CommandContext {
+  command: Command;
+  args: string[];
+  startTime: Date;
+  environment?: {
+    userAgent?: string;
+    platform?: string;
+    language?: string;
+  };
+  metadata: Record<string, any>;
+  mocks?: Record<string, any>;
+}
+
+/**
+ * Command history entry
+ */
+export interface CommandHistoryEntry {
+  command: Command;
+  commandId: string;
+  args: string[];
+  startTime: Date;
+  endTime?: Date;
+  result?: BaseCommandResult;
+  error?: string;
 }

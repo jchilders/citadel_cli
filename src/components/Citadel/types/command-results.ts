@@ -2,23 +2,24 @@
  * Base class for command execution results
  */
 export abstract class BaseCommandResult {
-  private status: CommandResultStatus = 'pending';
+  private status: CommandStatus = CommandStatus.Pending;
+  public json?: any;
 
   constructor(public readonly type: string, public readonly value: any) {}
 
   markSuccess() {
-    this.status = 'success';
+    this.status = CommandStatus.Success;
   }
 
   markError() {
-    this.status = 'error';
+    this.status = CommandStatus.Error;
   }
 
   markTimeout() {
-    this.status = 'timeout';
+    this.status = CommandStatus.Timeout;
   }
 
-  getStatus(): CommandResultStatus {
+  getStatus(): CommandStatus {
     return this.status;
   }
 }
@@ -105,9 +106,21 @@ export class ErrorCommandResult extends BaseCommandResult {
 }
 
 /**
+ * Command status
+ */
+export enum CommandStatus {
+  Pending = 'pending',
+  Running = 'running',
+  Success = 'success',
+  Error = 'error',
+  Cancelled = 'cancelled',
+  Timeout = 'timeout'
+}
+
+/**
  * Status of a command result
  */
-export type CommandResultStatus = 'pending' | 'success' | 'error' | 'timeout';
+export type CommandResultStatus = CommandStatus;
 
 /**
  * Command result type

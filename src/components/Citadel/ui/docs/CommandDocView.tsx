@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { CommandDocViewProps } from '../types';
 import { CommandDoc } from '../../types/command-docs';
 import './CommandDocView.css';
 
@@ -33,6 +32,13 @@ const Argument: React.FC<ArgumentProps> = ({ name, type, description, required }
     <p className="doc-argument-description">{description}</p>
   </div>
 );
+
+export interface CommandDocViewProps {
+  commandId: string;
+  onClose: () => void;
+  onExampleSelect?: (example: string) => void;
+  docs: CommandDoc[];
+}
 
 export const CommandDocView: React.FC<CommandDocViewProps> = ({
   commandId,

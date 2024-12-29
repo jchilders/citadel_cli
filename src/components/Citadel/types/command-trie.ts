@@ -555,4 +555,31 @@ export class CommandTrie {
       errors,
     };
   }
+
+  /**
+   * Removes a command from the trie.
+   * 
+   * @param path The path of the command to remove.
+   * @returns Whether the command was successfully removed.
+   */
+  removeCommand(path: string[]): boolean {
+    let current = this._root;
+
+    for (let i = 0; i < path.length; i++) {
+      const segment = path[i];
+      const children = current.children;
+      const node = children.get(segment);
+      if (!node) {
+        return false;
+      }
+      if (i === path.length - 1) {
+        // Remove the node
+        children.delete(segment);
+        return true;
+      }
+      current = node;
+    }
+
+    return false;
+  }
 }

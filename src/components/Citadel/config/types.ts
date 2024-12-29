@@ -33,6 +33,31 @@ export interface CitadelConfig {
    */
   outputFontSize?: string;
   /**
+   * The cursor configuration.
+   */
+  cursor?: {
+    /**
+     * The type of cursor to display. Can be one of 'blink', 'spin', 'solid', or 'bbs'. Default is 'bbs'.
+     */
+    type?: 'blink' | 'spin' | 'solid' | 'bbs';
+    /**
+     * The color of the cursor. Default is 'var(--cursor-color, #fff)'.
+     * Accepts any valid CSS color value.
+     */
+    color?: string;
+    /**
+     * The speed of the cursor animation in milliseconds.
+     * - For 'blink': Time between blinks (default: 530ms)
+     * - For 'spin' and 'bbs': Time between frame changes (default: 120ms)
+     * - For 'solid': Has no effect
+     */
+    speed?: number;
+    /**
+     * The character used to render the cursor. Default is '▋'.
+     */
+    character?: string;
+  };
+  /**
    * The type of cursor to display. Can be one of 'blink', 'spin', 'solid', or 'bbs'. Default is 'bbs'.
    */
   cursorType?: CursorType;
