@@ -48,13 +48,13 @@ export class CommandRegistry implements ICommandRegistry {
     // Add to trie
     this.trie.addCommand({
       path,
-      description: command.description,
+      description: command.description || '',
       argument: command.argument,
       handler: args => command.execute(args)
     });
 
     const meta: DefaultMetadata = {
-      name: command.getName(),
+      name: command.id,
       description: command.description || '',
       category: 'default',
       version: '1.0.0',

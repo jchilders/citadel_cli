@@ -14,13 +14,13 @@ export const CommandDocView: React.FC<CommandDocViewProps> = ({
     onExampleSelect?.(command);
   };
 
-  const renderReturnValue = (doc: CommandDoc) => {
+  const renderReturnValue = (doc: CommandDoc): JSX.Element | null => {
     if (!doc.returns) return null;
     
     return (
       <div className="command-doc-section">
         <h3>Returns</h3>
-        <div>{doc.returns}</div>
+        <div>{typeof doc.returns === 'string' ? doc.returns : JSON.stringify(doc.returns)}</div>
       </div>
     );
   };

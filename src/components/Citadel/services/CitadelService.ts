@@ -37,7 +37,7 @@ export class CitadelService {
       const path = command.id.split('.');
       this.commandTrie.addCommand({
         path,
-        description: command.description,
+        description: command.description || '',
         argument: command.argument,
         handler: args => command.execute(args)
       });

@@ -133,9 +133,9 @@ export function validateCommandId(id: string): void {
  * Validates command description
  * @throws CommandValidationError if validation fails
  */
-export function validateCommandDescription(description: string): void {
-  if (!description) {
-    throw new CommandValidationError('Command description is required');
+export function validateCommandDescription(description?: string): void {
+  if (description !== undefined && typeof description !== 'string') {
+    throw new Error('Command description must be a string');
   }
 }
 

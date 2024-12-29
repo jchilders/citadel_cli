@@ -3,12 +3,13 @@ import { CommandStateManager } from '../registry/CommandStateManager';
 import { CommandDocManager } from '../registry/CommandDocManager';
 import { MiddlewareManager } from '../middleware/MiddlewareManager';
 import { CommandResult } from '../types/command-results';
-import { CommandState } from '../types/command-state';
 import { CommandDoc } from '../types/command-docs';
+import { CommandState, CommandExecutionStatus } from '../types/command-state';
+import { Command } from '../types/command-registry';
 import { EventEmitter } from './EventEmitter';
 
-interface CommandContext {
-  command: string;
+export interface CommandContext {
+  command: Command;
   args: string[];
   startTime: Date;
   environment: {
@@ -16,16 +17,16 @@ interface CommandContext {
     platform: string;
     language: string;
   };
-  metadata: {};
+  metadata: Record<string, any>;
 }
 
-interface CommandHistoryEntry {
+export interface CommandHistoryEntry {
   id: string;
-  command: string;
+  command: Command;
   args: string[];
   timestamp: Date;
   startTime: Date;
-  status: string;
+  status: CommandExecutionStatus;
   context: CommandContext;
   result?: CommandResult;
   error?: Error;
@@ -52,7 +53,7 @@ export class CommandService {
 
     // Create execution context
     const context: CommandContext = {
-      command: command.id,
+      command,
       args: args.slice(1),
       startTime: new Date(),
       environment: {
@@ -72,12 +73,15 @@ export class CommandService {
       // Update state
       const historyEntry: CommandHistoryEntry = {
         id: Date.now().toString(),
-        command: command.id,
+        command,
         args: args.slice(1),
         timestamp: new Date(),
         result,
         startTime: context.startTime,
-        status: result.getStatus(),
+        status: result.getStatus() === 'success' ? CommandExecutionStatus.Completed : 
+               result.getStatus() === 'error' ? CommandExecutionStatus.Failed :
+               result.getStatus() === 'cancelled' ? CommandExecutionStatus.Cancelled :
+               CommandExecutionStatus.Ready,
         context
       };
 
@@ -88,12 +92,12 @@ export class CommandService {
       // Update state with error
       const historyEntry: CommandHistoryEntry = {
         id: Date.now().toString(),
-        command: command.id,
+        command,
         args: args.slice(1),
         timestamp: new Date(),
         error: error instanceof Error ? error : new Error(String(error)),
         startTime: context.startTime,
-        status: 'error',
+        status: CommandExecutionStatus.Failed,
         context
       };
 
