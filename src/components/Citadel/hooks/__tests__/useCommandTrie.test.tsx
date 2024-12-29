@@ -3,6 +3,7 @@ import { renderHook } from '@testing-library/react';
 import { useCommandTrie } from '../useCommandTrie';
 import { CitadelConfigProvider } from '../../config/CitadelConfigContext';
 import type { ReactNode } from 'react';
+import { BaseCommandResult, TextCommandResult } from '../../types/command-results';
 
 describe('useCommandTrie', () => {
   const createWrapper = (config = {}) => ({ children }: { children: ReactNode }) => (
@@ -51,7 +52,7 @@ describe('useCommandTrie', () => {
     trie.addCommand({
       path: ['test'],
       description: 'Test command',
-      handler: async () => ({ text: 'test' })
+      handler: async () => new TextCommandResult('test')
     });
 
     const handler = helpCommand?.handler;

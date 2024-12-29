@@ -19,6 +19,10 @@ export class CommandRegistry implements ICommandRegistry {
   }
 
   register(command: Command, metadata?: CommandMetadata): void {
+    if (!command || !command.id) {
+      throw new Error('Command and command ID are required');
+    }
+
     // Validate command
     validateCommandId(command.id);
     validateCommandDescription(command.description);
@@ -46,11 +50,16 @@ export class CommandRegistry implements ICommandRegistry {
       this.metadata.set(command.id, metadata);
       
       // Index permissions
-      metadata.permissions?.forEach(permission => {
-        const commands = this.permissionIndex.get(permission) ?? new Set();
-        commands.add(command.id);
-        this.permissionIndex.set(permission, commands);
-      });
+      if (metadata.permissions) {
+        metadata.permissions.forEach(permission => {
+          let commands = this.permissionIndex.get(permission);
+          if (!commands) {
+            commands = new Set();
+            this.permissionIndex.set(permission, commands);
+          }
+          commands.add(command.id);
+        });
+      }
     }
   }
 

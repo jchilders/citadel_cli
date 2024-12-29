@@ -105,7 +105,7 @@ export class OutputStream implements IOutputStream {
 
 export interface ColorOptions {
   enabled: boolean;
-  theme?: {
+  theme: {
     success: string;
     error: string;
     warning: string;

@@ -563,19 +563,21 @@ export class CommandTrie {
    * @returns Whether the command was successfully removed.
    */
   removeCommand(path: string[]): boolean {
-    let current = this._root;
+    if (!path || path.length === 0) {
+      return false;
+    }
 
+    let current = this._root;
     for (let i = 0; i < path.length; i++) {
       const segment = path[i];
-      const children = current.children;
+      const children = current._children;
       const node = children.get(segment);
       if (!node) {
         return false;
       }
       if (i === path.length - 1) {
-        // Remove the node
-        children.delete(segment);
-        return true;
+        // Remove the node using Map's delete method
+        return current._children.delete(segment);
       }
       current = node;
     }
