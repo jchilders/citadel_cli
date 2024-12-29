@@ -1,5 +1,4 @@
 import { Command } from '../types/command-registry';
-import { BaseCommandResult } from '../types/command-results';
 import {
   CommandContext,
   CommandExecutionResult,

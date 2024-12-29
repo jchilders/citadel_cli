@@ -2,6 +2,14 @@ import { Command, CommandMetadata, ICommandRegistry } from '../types/command-reg
 import { CommandTrie } from '../types/command-trie';
 import { validateCommandId, validateCommandDescription, validateCommandArgument, validateCommandHandler } from '../validation/command-validation';
 
+interface DefaultMetadata {
+  name: string;
+  description: string;
+  category: string;
+  version: string;
+  permissions?: string[];
+}
+
 /**
  * Implementation of the command registry using a trie data structure
  */
@@ -45,21 +53,23 @@ export class CommandRegistry implements ICommandRegistry {
       handler: args => command.execute(args)
     });
 
-    // Store metadata if provided
-    if (metadata) {
-      this.metadata.set(command.id, metadata);
-      
-      // Index permissions
-      if (metadata.permissions) {
-        metadata.permissions.forEach(permission => {
-          let commands = this.permissionIndex.get(permission);
-          if (!commands) {
-            commands = new Set();
-            this.permissionIndex.set(permission, commands);
-          }
-          commands.add(command.id);
-        });
-      }
+    const meta: DefaultMetadata = {
+      name: command.getName(),
+      description: command.description || '',
+      category: 'default',
+      version: '1.0.0',
+      ...metadata
+    };
+
+    this.metadata.set(command.id, meta as CommandMetadata);
+
+    // Index permissions
+    if (meta.permissions) {
+      meta.permissions.forEach(permission => {
+        const commands = this.permissionIndex.get(permission) || new Set();
+        commands.add(command.id);
+        this.permissionIndex.set(permission, commands);
+      });
     }
   }
 

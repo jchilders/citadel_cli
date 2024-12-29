@@ -28,7 +28,7 @@ export const CommandHistoryView: React.FC<CommandHistoryViewProps> = ({
         </button>
       </div>
       <div className="history-list">
-        {history.map((entry, index) => (
+        {history.map(entry => (
           <div
             key={`${entry.id}-${entry.startTime.getTime()}`}
             className="history-item"

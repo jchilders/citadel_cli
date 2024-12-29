@@ -570,14 +570,14 @@ export class CommandTrie {
     let current = this._root;
     for (let i = 0; i < path.length; i++) {
       const segment = path[i];
-      const children = current._children;
+      const children = current.children;
       const node = children.get(segment);
       if (!node) {
         return false;
       }
       if (i === path.length - 1) {
         // Remove the node using Map's delete method
-        return current._children.delete(segment);
+        return (current as any)._children.delete(segment);
       }
       current = node;
     }

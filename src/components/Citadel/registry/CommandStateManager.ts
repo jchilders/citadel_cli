@@ -12,8 +12,7 @@ import {
  */
 export class CommandStateManager implements ICommandStateManager {
   private state: CommandState;
-  private undoStack: CommandHistoryEntry[] = [];
-  private redoStack: CommandHistoryEntry[] = [];
+  private readonly maxHistory: number = 100;
 
   constructor(
     private readonly storage: IStateStorage,
@@ -45,26 +44,22 @@ export class CommandStateManager implements ICommandStateManager {
 
   addHistoryEntry(entry: CommandHistoryEntry): void {
     // Clear redo stack when new command is executed
-    this.redoStack = [];
+    this.state.canRedo = false;
     
     // Add to history
     this.state.history.push(entry);
     
     // Update undo/redo state
     this.state.canUndo = true;
-    this.state.canRedo = false;
 
     // Limit history size (optional)
-    const maxHistory = 100;
-    if (this.state.history.length > maxHistory) {
-      this.state.history = this.state.history.slice(-maxHistory);
+    if (this.state.history.length > this.maxHistory) {
+      this.state.history = this.state.history.slice(-this.maxHistory);
     }
   }
 
   clearHistory(): void {
     this.state.history = [];
-    this.undoStack = [];
-    this.redoStack = [];
     this.state.canUndo = false;
     this.state.canRedo = false;
   }
@@ -103,9 +98,6 @@ export class CommandStateManager implements ICommandStateManager {
     const lastEntry = this.state.history.pop();
     if (!lastEntry) return;
 
-    // Move to redo stack
-    this.redoStack.push(lastEntry);
-
     // Update state
     this.state.canRedo = true;
     this.state.canUndo = this.state.history.length > 0;
@@ -122,15 +114,12 @@ export class CommandStateManager implements ICommandStateManager {
       throw new Error('No commands to redo');
     }
 
-    const nextEntry = this.redoStack.pop();
+    const nextEntry = this.state.history[this.state.history.length - 1];
     if (!nextEntry) return;
-
-    // Move back to history
-    this.state.history.push(nextEntry);
 
     // Update state
     this.state.canUndo = true;
-    this.state.canRedo = this.redoStack.length > 0;
+    this.state.canRedo = false;
 
     // Re-execute command
     await nextEntry.command.execute(nextEntry.args);
@@ -145,7 +134,7 @@ export class CommandStateManager implements ICommandStateManager {
     
     // Recompute undo/redo state
     this.state.canUndo = this.state.history.length > 0;
-    this.state.canRedo = this.redoStack.length > 0;
+    this.state.canRedo = false;
   }
 }
 

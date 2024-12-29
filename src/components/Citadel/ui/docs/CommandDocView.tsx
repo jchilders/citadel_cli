@@ -1,135 +1,74 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { CommandDoc } from '../../types/command-docs';
-import './CommandDocView.css';
 
-interface ExampleProps {
-  command: string;
-  description: string;
-  onSelect: (command: string) => void;
-}
-
-const Example: React.FC<ExampleProps> = ({ command, description, onSelect }) => (
-  <div className="doc-example" onClick={() => onSelect(command)}>
-    <pre className="doc-example-command">{command}</pre>
-    <p className="doc-example-description">{description}</p>
-  </div>
-);
-
-interface ArgumentProps {
-  name: string;
-  description: string;
-  type: string;
-  required: boolean;
-}
-
-const Argument: React.FC<ArgumentProps> = ({ name, type, description, required }) => (
-  <div className="doc-argument">
-    <div className="doc-argument-header">
-      <code className="doc-argument-name">{name}</code>
-      <span className="doc-argument-type">{type}</span>
-      {required && <span className="doc-argument-required">Required</span>}
-    </div>
-    <p className="doc-argument-description">{description}</p>
-  </div>
-);
-
-export interface CommandDocViewProps {
-  commandId: string;
-  onClose: () => void;
-  onExampleSelect?: (example: string) => void;
-  docs: CommandDoc[];
+interface CommandDocViewProps {
+  doc: CommandDoc;
+  onExampleSelect?: (command: string) => void;
 }
 
 export const CommandDocView: React.FC<CommandDocViewProps> = ({
-  commandId,
-  onClose,
-  onExampleSelect,
-  docs,
+  doc: activeDoc,
+  onExampleSelect
 }) => {
-  const [activeDoc, setActiveDoc] = useState<CommandDoc | null>(null);
+  const handleExampleClick = (command: string) => {
+    onExampleSelect?.(command);
+  };
 
-  useEffect(() => {
-    if (commandId && docs) {
-      const doc = docs.find(d => d.name === commandId);
-      setActiveDoc(doc || null);
-    } else {
-      setActiveDoc(null);
-    }
-  }, [commandId, docs]);
-
-  if (!activeDoc) {
+  const renderReturnValue = (doc: CommandDoc) => {
+    if (!doc.returns) return null;
+    
     return (
-      <div className="doc-view doc-empty">
-        <p>Select a command to view its documentation</p>
+      <div className="command-doc-section">
+        <h3>Returns</h3>
+        <div>{doc.returns}</div>
       </div>
     );
-  }
-
-  const handleExampleSelect = (command: string) => {
-    onExampleSelect?.(command);
   };
 
   return (
     <div className="doc-view">
       <div className="doc-header">
-        <div>
-          <h2 className="doc-title">{activeDoc.name}</h2>
-          {activeDoc.deprecated && (
-            <span className="doc-deprecated">
-              ⚠️ Deprecated: {activeDoc.deprecated}
-            </span>
-          )}
-        </div>
-        <button className="doc-close" onClick={onClose}>×</button>
+        <h2>{activeDoc.name}</h2>
+        {activeDoc.description && <p>{activeDoc.description}</p>}
       </div>
 
       <div className="doc-content">
-        <section className="doc-section">
-          <p className="doc-description">{activeDoc.description}</p>
-          {activeDoc.longDescription && (
-            <p className="doc-long-description">{activeDoc.longDescription}</p>
-          )}
-        </section>
-
         {activeDoc.arguments?.length > 0 && (
           <section className="doc-section">
             <h3>Arguments</h3>
-            <div className="doc-arguments">
-              {activeDoc.arguments.map(arg => (
-                <Argument
-                  key={arg.name}
-                  name={arg.name}
-                  type={arg.type}
-                  description={arg.description}
-                  required={arg.required}
-                />
+            <ul>
+              {activeDoc.arguments.map((arg: { name: string; description: string; type?: string; optional?: boolean }, index: number) => (
+                <li key={index}>
+                  <code>{arg.name}</code>: {arg.description}
+                  {arg.type && <span className="type"> ({arg.type})</span>}
+                  {arg.optional && <span className="optional"> (optional)</span>}
+                </li>
               ))}
-            </div>
+            </ul>
           </section>
         )}
 
         {activeDoc.examples?.length > 0 && (
           <section className="doc-section">
             <h3>Examples</h3>
-            <div className="doc-examples">
-              {activeDoc.examples.map((example, index) => (
-                <Example
-                  key={index}
-                  command={example.command}
-                  description={example.description}
-                  onSelect={handleExampleSelect}
-                />
+            <ul>
+              {activeDoc.examples.map((example: { command: string; description?: string }, index: number) => (
+                <li key={index} onClick={() => handleExampleClick(example.command)}>
+                  <code>{example.command}</code>
+                  {example.description && (
+                    <p className="example-description">{example.description}</p>
+                  )}
+                </li>
               ))}
-            </div>
+            </ul>
           </section>
         )}
 
-        <section className="doc-section doc-metadata">
-          <p className="doc-since">Available since: {activeDoc.since}</p>
-          {activeDoc.returns && (
-            <p className="doc-returns">Returns: {activeDoc.returns}</p>
-          )}
-        </section>
+        {activeDoc.returns && (
+          <section className="doc-section">
+            {renderReturnValue(activeDoc)}
+          </section>
+        )}
       </div>
     </div>
   );

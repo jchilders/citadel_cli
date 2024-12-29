@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react';
 import { useCommandTrie } from '../useCommandTrie';
 import { CitadelConfigProvider } from '../../config/CitadelConfigContext';
 import type { ReactNode } from 'react';
-import { BaseCommandResult, TextCommandResult } from '../../types/command-results';
+import { TextCommandResult } from '../../types/command-results';
 
 describe('useCommandTrie', () => {
   const createWrapper = (config = {}) => ({ children }: { children: ReactNode }) => (

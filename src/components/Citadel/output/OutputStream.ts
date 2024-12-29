@@ -1,11 +1,11 @@
-import { IOutputStream, OutputOptions } from '../types/command-output';
+import { IOutputStream, OutputOptions, OutputFormat } from '../types/command-output';
 
 /**
  * Default output stream implementation
  */
 export class OutputStream implements IOutputStream {
   private options: OutputOptions = {
-    format: 'text',
+    format: 'text' as OutputFormat,
     color: {
       enabled: true,
       theme: {
@@ -13,7 +13,9 @@ export class OutputStream implements IOutputStream {
         error: 'red',
         warning: 'yellow',
         info: 'blue',
-        highlight: 'cyan'
+        highlight: 'cyan',
+        verbose: 'magenta',
+        debug: 'gray'
       }
     },
     style: {
@@ -103,13 +105,30 @@ export class OutputStream implements IOutputStream {
   }
 }
 
+export interface ColorTheme {
+  success: string;
+  error: string;
+  warning: string;
+  info: string;
+  highlight: string;
+  verbose: string;
+  debug: string;
+}
+
 export interface ColorOptions {
   enabled: boolean;
-  theme: {
-    success: string;
-    error: string;
-    warning: string;
-    info: string;
-    highlight: string;
-  };
+  theme: ColorTheme;
+}
+
+export interface StyleOptions {
+  indent?: number;
+  maxWidth?: number;
+  wordWrap?: boolean;
+  truncate?: boolean;
+}
+
+export interface StreamOptions {
+  format: string;
+  color: ColorOptions;
+  style: StyleOptions;
 }

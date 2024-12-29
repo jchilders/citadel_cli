@@ -7,6 +7,30 @@ import { CommandState } from '../types/command-state';
 import { CommandDoc } from '../types/command-docs';
 import { EventEmitter } from './EventEmitter';
 
+interface CommandContext {
+  command: string;
+  args: string[];
+  startTime: Date;
+  environment: {
+    userAgent: string;
+    platform: string;
+    language: string;
+  };
+  metadata: {};
+}
+
+interface CommandHistoryEntry {
+  id: string;
+  command: string;
+  args: string[];
+  timestamp: Date;
+  startTime: Date;
+  status: string;
+  context: CommandContext;
+  result?: CommandResult;
+  error?: Error;
+}
+
 export class CommandService {
   private events = new EventEmitter();
 
@@ -27,48 +51,53 @@ export class CommandService {
     }
 
     // Create execution context
-    const context = {
-      commandId,
-      args,
+    const context: CommandContext = {
+      command: command.id,
+      args: args.slice(1),
       startTime: new Date(),
-      environment: typeof window !== 'undefined' ? { 
-        userAgent: window.navigator.userAgent,
-        platform: window.navigator.platform,
-        language: window.navigator.language
-      } : {},
-      metadata: {},
+      environment: {
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'node',
+        platform: typeof navigator !== 'undefined' ? navigator.platform : process.platform,
+        language: typeof navigator !== 'undefined' ? navigator.language : 'en-US'
+      },
+      metadata: {}
     };
 
     try {
-      // Execute through middleware pipeline
-      const result = await this.middlewareManager.execute(context, () => 
-        command.execute(args)
-      );
+      // Execute command through middleware pipeline
+      const result = await this.middlewareManager.execute(context, async () => {
+        return command.execute(args.slice(1));
+      });
 
       // Update state
-      this.stateManager.addHistoryEntry({
-        commandId,
-        args,
+      const historyEntry: CommandHistoryEntry = {
+        id: Date.now().toString(),
+        command: command.id,
+        args: args.slice(1),
         timestamp: new Date(),
         result,
-      });
+        startTime: context.startTime,
+        status: result.getStatus(),
+        context
+      };
 
-      // Emit events
-      this.events.emit('commandComplete', { commandId, result });
-
+      this.stateManager.addHistoryEntry(historyEntry);
       return result;
+
     } catch (error) {
       // Update state with error
-      this.stateManager.addHistoryEntry({
-        commandId,
-        args,
+      const historyEntry: CommandHistoryEntry = {
+        id: Date.now().toString(),
+        command: command.id,
+        args: args.slice(1),
         timestamp: new Date(),
         error: error instanceof Error ? error : new Error(String(error)),
-      });
+        startTime: context.startTime,
+        status: 'error',
+        context
+      };
 
-      // Emit error event
-      this.events.emit('commandError', { commandId, error });
-
+      this.stateManager.addHistoryEntry(historyEntry);
       throw error;
     }
   }

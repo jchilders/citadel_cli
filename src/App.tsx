@@ -1,4 +1,3 @@
-import React from 'react';
 import { Citadel } from './components/Citadel';
 import { commands } from '../command_examples/basic-commands';
 // import { commands } from '../command_examples/devops-commands';
