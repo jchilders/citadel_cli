@@ -10,7 +10,7 @@ import { CitadelState, CitadelActions, OutputItem } from './types/state';
 import { CitadelConfig } from './config/types';
 import { defaultConfig } from './config/defaults';
 import { CitadelConfigProvider, useCitadelConfig } from './config/CitadelConfigContext';
-import { ErrorCommandResult, BaseCommandResult } from './types/command-results';
+import { ErrorCommandResult, CommandResult } from './types/command-results';
 
 export interface CitadelProps {
   config?: CitadelConfig;
@@ -141,7 +141,7 @@ const CitadelInner: React.FC = () => {
           timeoutPromise
         ]);
 
-        if (!(result instanceof BaseCommandResult)) {
+        if (!(result instanceof CommandResult)) {
           throw new Error(
             'The ' + command.fullPath.join('.') + ' command returned an invalid result type. Commands must return an instance of a CommandResult.\n' +
             'For example:\n   return new JsonCommandResult({ text: "Hello World" });\n' +

@@ -7,7 +7,7 @@ export enum CommandStatus {
   Timeout = 'timeout'
 }
 
-export abstract class BaseCommandResult {
+export abstract class CommandResult {
   private _status: CommandStatus = CommandStatus.Pending;
   
   constructor(
@@ -33,7 +33,7 @@ export abstract class BaseCommandResult {
   abstract render(): React.ReactNode;
 }
 
-export class JsonCommandResult extends BaseCommandResult {
+export class JsonCommandResult extends CommandResult {
   constructor(
     public readonly data: any,
     timestamp?: number
@@ -50,7 +50,7 @@ export class JsonCommandResult extends BaseCommandResult {
   }
 }
 
-export class TextCommandResult extends BaseCommandResult {
+export class TextCommandResult extends CommandResult {
   constructor(
     public readonly text: string,
     timestamp?: number
@@ -65,7 +65,7 @@ export class TextCommandResult extends BaseCommandResult {
   }
 }
 
-export class ErrorCommandResult extends BaseCommandResult {
+export class ErrorCommandResult extends CommandResult {
   constructor(
     public readonly error: string,
     timestamp?: number
@@ -79,13 +79,13 @@ export class ErrorCommandResult extends BaseCommandResult {
   }
 }
 
-export class PendingCommandResult extends BaseCommandResult {
+export class PendingCommandResult extends CommandResult {
   render(): React.ReactNode {
     return <div className="text-gray-400">...</div>;
   }
 }
 
-export class ImageCommandResult extends BaseCommandResult {
+export class ImageCommandResult extends CommandResult {
   constructor(
     public readonly imageUrl: string,
     public readonly altText: string = '',

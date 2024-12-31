@@ -1,10 +1,4 @@
-import { BaseCommandResult, TextCommandResult } from './command-results';
-
-/**
- * Represents the result of a command execution.
- * Can be extended for specific result types.
- */
-export type CommandResult = BaseCommandResult;
+import { CommandResult, TextCommandResult } from './command-results';
 
 /** Function type for handling command execution */
 export type CommandHandler = (args: string[]) => Promise<CommandResult>;
@@ -19,10 +13,6 @@ export interface CommandArgument {
   description: string;
 }
 
-/**
- * Represents a node in the command tree structure.
- * Each node can have children commands and optionally an argument and handler.
- */
 export interface CommandNodeParams {
   fullPath: string[];
   description: string;
@@ -39,6 +29,10 @@ export const NoopHandler: CommandHandler = async () => {
   return new TextCommandResult('');
 };
 
+/**
+ * Represents a node in the command tree structure.
+ * Each node can have zero or more children. Leaf nodes (nodes with no children) must have a handler and optional arguments.
+ */
 export class CommandNode {
   private _fullPath: string[];
   private _description: string;

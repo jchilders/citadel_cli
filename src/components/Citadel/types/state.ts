@@ -1,12 +1,12 @@
 import { CommandNode } from './command-trie';
-import { BaseCommandResult, PendingCommandResult } from './command-results';
+import { CommandResult, PendingCommandResult } from './command-results';
 
 export class OutputItem {
   readonly timestamp: number;
   readonly command: string[];
-  result: BaseCommandResult;
+  result: CommandResult;
 
-  constructor(command: string[], result?: BaseCommandResult) {
+  constructor(command: string[], result?: CommandResult) {
     this.command = command;
     this.timestamp = Date.now();
     this.result = result ?? new PendingCommandResult();
