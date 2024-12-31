@@ -1,4 +1,4 @@
-import { JsonCommandResult, ImageCommandResult, TextCommandResult, ErrorCommandResult } from '../src/components/Citadel/types/command-results';
+import { JsonCommandResult, ImageCommandResult, TextCommandResult } from '../src/components/Citadel/types/command-results';
 
 export const commands = {
   'user.show': {

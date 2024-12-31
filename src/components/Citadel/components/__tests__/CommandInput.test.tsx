@@ -2,8 +2,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
 import { CommandInput } from '../CommandInput';
-import { CommandNode, CommandTrie } from '../../types/command-trie';
+import { CommandNode } from '../../types/command-trie';
 import { CitadelState } from '../../types/state';
+import { TextCommandResult } from '../../types/command-results';
 
 // Mock useCommandParser hook
 vi.mock('../../hooks/useCommandParser', () => ({
@@ -46,7 +47,7 @@ const mockCommands: CommandNode[] = [
   new CommandNode({
     description: 'Show help information',
     fullPath: ['help'],
-    handler: async () => ({ text: 'Help info' })
+    handler: async () => new TextCommandResult('Help info')
   }),
   new CommandNode({
     description: 'User management',
@@ -55,7 +56,7 @@ const mockCommands: CommandNode[] = [
   new CommandNode({
     description: '検索機能',
     fullPath: ['検索'],
-    handler: async () => ({ text: '検索結果' })
+    handler: async () => new TextCommandResult('検索結果')
   })
 ];
 
@@ -99,7 +100,6 @@ describe('CommandInput', () => {
           state={defaultState}
           actions={mockActions}
           availableCommands={mockCommands}
-          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -118,7 +118,6 @@ describe('CommandInput', () => {
           state={defaultState}
           actions={mockActions}
           availableCommands={mockCommands}
-          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -147,7 +146,6 @@ describe('CommandInput', () => {
           state={state}
           actions={mockActions}
           availableCommands={mockCommands}
-          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -163,7 +161,7 @@ describe('CommandInput', () => {
     const handlerNode = new CommandNode({
       description: 'Node with handler',
       fullPath: ['handler'],
-      handler: async () => ({ text: 'test' })
+      handler: async () => new TextCommandResult('test')
     });
     
     const state = {
@@ -178,7 +176,6 @@ describe('CommandInput', () => {
           state={state}
           actions={mockActions}
           availableCommands={[handlerNode]}  // Pass the handler node as available command
-          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -203,7 +200,6 @@ describe('CommandInput', () => {
           state={leafState}
           actions={mockActions}
           availableCommands={mockCommands}
-          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -228,7 +224,6 @@ describe('CommandInput', () => {
           state={subcommandState}
           actions={mockActions}
           availableCommands={mockCommands}
-          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -247,7 +242,6 @@ describe('CommandInput', () => {
           state={defaultState}
           actions={mockActions}
           availableCommands={mockCommands}
-          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -276,7 +270,6 @@ describe('CommandInput', () => {
           state={argState}
           actions={mockActions}
           availableCommands={mockCommands}
-          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -295,7 +288,6 @@ describe('CommandInput', () => {
           state={defaultState}
           actions={mockActions}
           availableCommands={mockCommands}
-          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -326,7 +318,6 @@ describe('CommandInput', () => {
           state={state}
           actions={mockActions}
           availableCommands={mockCommands}
-          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -349,7 +340,6 @@ describe('CommandInput', () => {
           }}
           actions={mockActions}
           availableCommands={mockCommands}
-          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -365,7 +355,6 @@ describe('CommandInput', () => {
           state={defaultState}
           actions={mockActions}
           availableCommands={mockCommands}
-          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
@@ -386,7 +375,6 @@ describe('CommandInput', () => {
           state={newState}
           actions={mockActions}
           availableCommands={mockCommands}
-          commandTrie={new CommandTrie()}
         />
       </TestWrapper>
     );
