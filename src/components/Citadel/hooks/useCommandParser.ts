@@ -1,15 +1,18 @@
 import { useCallback, useState } from 'react';
 import { CommandNode, CommandTrie } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
+import { useCommandTrie } from './useCommandTrie';
 
 type InputState = 'idle' | 'entering_command' | 'entering_argument';
 
-export interface UseCommandParserProps {
-  commandTrie: CommandTrie;
+interface UseCommandParserProps {
+  commandTrie?: CommandTrie;
 }
 
-export function useCommandParser({ commandTrie }: UseCommandParserProps) {
+export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserProps = {}) {
   const [inputState, setInputState] = useState<InputState>('idle');
+  const defaultTrie = useCommandTrie();
+  const commandTrie = propsTrie || defaultTrie;
 
   const findMatchingCommands = useCallback((input: string, availableNodes: CommandNode[]): CommandNode[] => {
     if (!input) return availableNodes;

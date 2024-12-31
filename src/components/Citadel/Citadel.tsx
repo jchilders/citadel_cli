@@ -1,16 +1,15 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useGlobalShortcut } from './hooks/useGlobalShortcut';
 import { useSlideAnimation } from './hooks/useSlideAnimation';
-import { useCommandTrie } from './hooks/useCommandTrie';
+import { useCitadelConfig } from './config/CitadelConfigContext';
+import { useCitadelState } from './hooks/useCitadelState';
 import styles from './Citadel.module.css';
 import { CommandInput } from './components/CommandInput';
 import { CommandOutput } from './components/CommandOutput';
 import { AvailableCommands } from './components/AvailableCommands';
-import { CitadelState, CitadelActions, OutputItem } from './types/state';
 import { CitadelConfig } from './config/types';
+import { CitadelConfigProvider } from './config/CitadelConfigContext';
 import { defaultConfig } from './config/defaults';
-import { CitadelConfigProvider, useCitadelConfig } from './config/CitadelConfigContext';
-import { ErrorCommandResult, CommandResult } from './types/command-results';
 
 export interface CitadelProps {
   config?: CitadelConfig;
@@ -27,7 +26,7 @@ const CitadelInner: React.FC = () => {
   const startYRef = useRef(0);
   const startHeightRef = useRef(0);
   const config = useCitadelConfig();
-  const commandTrie = useCommandTrie();
+  const { state, actions, getAvailableCommands } = useCitadelState();
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (containerRef.current) {
@@ -43,7 +42,6 @@ const CitadelInner: React.FC = () => {
     if (!isDraggingRef.current) return;
     
     const delta = startYRef.current - e.clientY;
-    // Convert maxHeight to pixels for calculation
     const maxHeightValue = config.maxHeight?.endsWith('vh') 
       ? (window.innerHeight * parseInt(config.maxHeight, 10) / 100)
       : parseInt(config.maxHeight || '80vh', 10);
@@ -62,7 +60,6 @@ const CitadelInner: React.FC = () => {
     document.removeEventListener('mouseup', handleMouseUp);
   }, []);
 
-  // Cleanup event listeners
   useEffect(() => {
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
@@ -70,120 +67,6 @@ const CitadelInner: React.FC = () => {
     };
   }, [handleMouseMove, handleMouseUp]);
 
-  const [state, setState] = useState<CitadelState>({
-    commandStack: [],
-    currentInput: '',
-    isEnteringArg: false,
-    currentNode: undefined,
-    output: [],
-    validation: { isValid: true }
-  });
-
-  const actions: CitadelActions = {
-    setCommandStack: useCallback((stack: string[]) => {
-      setState(prev => ({ 
-        ...prev, 
-        commandStack: stack,
-        currentNode: commandTrie.getCommand(stack)
-      }));
-    }, [commandTrie]),
-
-    setCurrentInput: useCallback((input: string) => {
-      setState(prev => ({ ...prev, currentInput: input }));
-    }, []),
-
-    setIsEnteringArg: useCallback((isEntering: boolean) => {
-      setState(prev => ({ ...prev, isEnteringArg: isEntering }));
-    }, []),
-
-    setCurrentNode: useCallback((node) => {
-      setState(prev => ({ ...prev, currentNode: node }));
-    }, []),
-
-    addOutput: useCallback((output: OutputItem) => {
-      setState(prev => ({ 
-        ...prev, 
-        output: [...prev.output, output] 
-      }));
-    }, []),
-
-    setValidation: useCallback((validation: { isValid: boolean; message?: string }) => {
-      setState(prev => ({ ...prev, validation }));
-    }, []),
-
-    executeCommand: useCallback(async (path: string[], args?: string[]) => {
-      const command = commandTrie.getCommand(path);
-      if (!command || !command.isLeaf) return;
-
-      // Add pending output immediately
-      const outputItem = new OutputItem([...path, ...(args || [])]);
-      actions.addOutput(outputItem);
-
-      // Reset command line state
-      setState(prev => ({
-        ...prev,
-        commandStack: [],
-        currentInput: '',
-        isEnteringArg: false,
-        currentNode: undefined,
-        validation: { isValid: true }
-      }));
-
-      try {
-        const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => {
-            reject(new Error('Request timed out'));
-          }, config.commandTimeoutMs);
-        });
-
-        const result = await Promise.race([
-          command.handler(args || []),
-          timeoutPromise
-        ]);
-
-        if (!(result instanceof CommandResult)) {
-          throw new Error(
-            'The ' + command.fullPath.join('.') + ' command returned an invalid result type. Commands must return an instance of a CommandResult.\n' +
-            'For example:\n   return new JsonCommandResult({ text: "Hello World" });\n' +
-            'Check the definition of the ' + command.fullPath.join('.') + ' command and update the return type.'
-          );
-        }
-
-        result.markSuccess();
-
-        // Update the output with the result
-        setState(prev => ({
-          ...prev,
-          output: prev.output.map(item => 
-            item.timestamp === outputItem.timestamp
-              ? { ...item, result }
-              : item
-          )
-        }));
-      } catch (error) {
-        // Create error result
-        const result = new ErrorCommandResult(
-          error instanceof Error ? error.message : 'Unknown error'
-        );
-
-        if (error instanceof Error && error.message === 'Request timed out') {
-          result.markTimeout();
-        }
-
-        // Update the output with the error result
-        setState(prev => ({
-          ...prev,
-          output: prev.output.map(item =>
-            item.timestamp === outputItem.timestamp
-              ? { ...item, result }
-              : item
-          )
-        }));
-      }
-    }, [commandTrie, config])
-  };
-
-  // Toggle visibility with key from config or '.'
   useGlobalShortcut({
     onOpen: () => setIsVisible(true),
     onClose: () => setIsClosing(true),
@@ -191,7 +74,6 @@ const CitadelInner: React.FC = () => {
     showCitadelKey: config.showCitadelKey || '.'
   });
 
-  // Handle animation completion
   const handleAnimationComplete = useCallback(() => {
     if (isClosing) {
       setIsVisible(false);
@@ -199,7 +81,6 @@ const CitadelInner: React.FC = () => {
     }
   }, [isClosing]);
 
-  // Show/hide animation
   useSlideAnimation({
     isVisible,
     isClosing,
@@ -207,13 +88,6 @@ const CitadelInner: React.FC = () => {
   });
 
   if (!isVisible) return null;
-
-  const getAvailableCommands = () => {
-    if (state.currentNode && state.currentNode.children) {
-      return Array.from(state.currentNode.children.values());
-    }
-    return commandTrie.getRootCommands();
-  };
 
   return (
     <div 
@@ -235,7 +109,6 @@ const CitadelInner: React.FC = () => {
             state={state}
             actions={actions}
             availableCommands={getAvailableCommands()}
-            commandTrie={commandTrie}
           />
           <AvailableCommands
             state={state}

@@ -1,27 +1,26 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { CommandNode, CommandTrie } from '../types/command-trie';
+import { CommandNode } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
 import { useCommandParser } from '../hooks/useCommandParser';
 import { Cursor } from '../Cursor';
 import { defaultConfig } from '../config/defaults';
 import { useCitadelConfig } from '../config/CitadelConfigContext';
 import styles from './CommandInput.module.css';
+import { CursorType } from '../types/cursor';
 
 interface CommandInputProps {
   state: CitadelState;
   actions: CitadelActions;
   availableCommands: CommandNode[];
-  commandTrie: CommandTrie;
 }
 
 export const CommandInput: React.FC<CommandInputProps> = ({
   state,
   actions,
   availableCommands,
-  commandTrie,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { handleKeyDown, handleInputChange } = useCommandParser({ commandTrie });
+  const { handleKeyDown, handleInputChange } = useCommandParser();
   const [showInvalidAnimation, setShowInvalidAnimation] = useState(false);
   const config = useCitadelConfig();
 
@@ -126,10 +125,9 @@ export const CommandInput: React.FC<CommandInputProps> = ({
             >
               <Cursor 
                 style={{ 
-                  type: config.cursorType || defaultConfig.cursorType,
+                  type: (config.cursorType ?? defaultConfig.cursorType) as CursorType,
                   color: config.cursorColor || defaultConfig.cursorColor,
-                  speed: config.cursorSpeed || defaultConfig.cursorSpeed,
-                  character: config.cursorCharacter || defaultConfig.cursorCharacter
+                  speed: config.cursorSpeed || defaultConfig.cursorSpeed
                 }}
                 isValid={!showInvalidAnimation && state.validation.isValid}
                 errorMessage={state.validation.message}

@@ -1,65 +1,132 @@
-import { useReducer, useRef } from 'react';
-import { OutputItem, CitadelState, CitadelActions } from '../types';
-import { CommandNode } from '../types/command-trie';
+import { useState, useCallback } from 'react';
+import { CitadelState, CitadelActions, OutputItem } from '../types/state';
+import { useCommandTrie } from './useCommandTrie';
+import { useCitadelConfig } from '../config/CitadelConfigContext';
+import { CommandResult } from '../types/command-results';
+import { ErrorCommandResult } from '../types/command-results';
 
-type CitadelAction =
-  | { type: 'SET_COMMAND_STACK', payload: string[] }
-  | { type: 'SET_CURRENT_INPUT', payload: string }
-  | { type: 'SET_IS_ENTERING_ARG', payload: boolean }
-  | { type: 'SET_CURRENT_NODE', payload: CommandNode | undefined }
-  | { type: 'ADD_OUTPUT', payload: OutputItem }
-  | { type: 'SET_VALIDATION', payload: { isValid: boolean; message?: string } }
-  | { type: 'EXECUTE_COMMAND', payload: { path: string[], args?: string[] } };
+export const useCitadelState = () => {
+  const commandTrie = useCommandTrie();
+  const config = useCitadelConfig();
 
-const initialState: CitadelState = {
-  commandStack: [],
-  currentInput: '',
-  isEnteringArg: false,
-  currentNode: undefined,
-  output: [],
-  validation: { isValid: true },
-};
-
-function citadelReducer(state: CitadelState, action: CitadelAction): CitadelState {
-  switch (action.type) {
-    case 'SET_COMMAND_STACK':
-      return { ...state, commandStack: action.payload };
-    case 'SET_CURRENT_INPUT':
-      return { ...state, currentInput: action.payload };
-    case 'SET_IS_ENTERING_ARG':
-      return { ...state, isEnteringArg: action.payload };
-    case 'SET_CURRENT_NODE':
-      return { ...state, currentNode: action.payload };
-    case 'ADD_OUTPUT':
-      return { ...state, output: [...state.output, action.payload] };
-    case 'SET_VALIDATION':
-      return { ...state, validation: action.payload };
-    case 'EXECUTE_COMMAND':
-      return state;
-    default:
-      return state;
-  }
-}
-
-export function useCitadelState() {
-  const [state, dispatch] = useReducer(citadelReducer, initialState);
-  const outputRef = useRef<HTMLDivElement>(null);
+  const [state, setState] = useState<CitadelState>({
+    commandStack: [],
+    currentInput: '',
+    isEnteringArg: false,
+    currentNode: undefined,
+    output: [],
+    validation: { isValid: true }
+  });
 
   const actions: CitadelActions = {
-    setCommandStack: (stack: string[]) => dispatch({ type: 'SET_COMMAND_STACK', payload: stack }),
-    setCurrentInput: (input: string) => dispatch({ type: 'SET_CURRENT_INPUT', payload: input }),
-    setIsEnteringArg: (isEntering: boolean) => dispatch({ type: 'SET_IS_ENTERING_ARG', payload: isEntering }),
-    setCurrentNode: (node: CommandNode | undefined) => dispatch({ type: 'SET_CURRENT_NODE', payload: node }),
-    addOutput: (output: OutputItem) => dispatch({ type: 'ADD_OUTPUT', payload: output }),
-    setValidation: (validation: { isValid: boolean; message?: string }) => 
-      dispatch({ type: 'SET_VALIDATION', payload: validation }),
-    executeCommand: async (path: string[], args?: string[]) => 
-      dispatch({ type: 'EXECUTE_COMMAND', payload: { path, args } }),
+    setCommandStack: useCallback((stack: string[]) => {
+      setState(prev => ({ 
+        ...prev, 
+        commandStack: stack,
+        currentNode: commandTrie.getCommand(stack)
+      }));
+    }, [commandTrie]),
+
+    setCurrentInput: useCallback((input: string) => {
+      setState(prev => ({ ...prev, currentInput: input }));
+    }, []),
+
+    setIsEnteringArg: useCallback((isEntering: boolean) => {
+      setState(prev => ({ ...prev, isEnteringArg: isEntering }));
+    }, []),
+
+    setCurrentNode: useCallback((node) => {
+      setState(prev => ({ ...prev, currentNode: node }));
+    }, []),
+
+    addOutput: useCallback((output: OutputItem) => {
+      setState(prev => ({ 
+        ...prev, 
+        output: [...prev.output, output] 
+      }));
+    }, []),
+
+    setValidation: useCallback((validation: { isValid: boolean; message?: string }) => {
+      setState(prev => ({ ...prev, validation }));
+    }, []),
+
+    executeCommand: useCallback(async (path: string[], args?: string[]) => {
+      const command = commandTrie.getCommand(path);
+      if (!command || !command.isLeaf) return;
+
+      const outputItem = new OutputItem([...path, ...(args || [])]);
+      actions.addOutput(outputItem);
+
+      setState(prev => ({
+        ...prev,
+        commandStack: [],
+        currentInput: '',
+        isEnteringArg: false,
+        currentNode: undefined,
+        validation: { isValid: true }
+      }));
+
+      try {
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('Request timed out'));
+          }, config.commandTimeoutMs);
+        });
+
+        const result = await Promise.race([
+          command.handler(args || []),
+          timeoutPromise
+        ]);
+
+        if (!(result instanceof CommandResult)) {
+          throw new Error(
+            `The ${command.fullPath.join('.')} command returned an invalid result type. Commands must return an instance of a CommandResult.\n` +
+            'For example:\n   return new JsonCommandResult({ text: "Hello World" });\n' +
+            `Check the definition of the ${command.fullPath.join('.')} command and update the return type.`
+          );
+        }
+
+        result.markSuccess();
+
+        setState(prev => ({
+          ...prev,
+          output: prev.output.map(item => 
+            item.timestamp === outputItem.timestamp
+              ? { ...item, result }
+              : item
+          )
+        }));
+      } catch (error) {
+        const result = new ErrorCommandResult(
+          error instanceof Error ? error.message : 'Unknown error'
+        );
+
+        if (error instanceof Error && error.message === 'Request timed out') {
+          result.markTimeout();
+        }
+
+        setState(prev => ({
+          ...prev,
+          output: prev.output.map(item =>
+            item.timestamp === outputItem.timestamp
+              ? { ...item, result }
+              : item
+          )
+        }));
+      }
+    }, [commandTrie, config])
   };
+
+  const getAvailableCommands = useCallback(() => {
+    if (state.currentNode && state.currentNode.children) {
+      return Array.from(state.currentNode.children.values());
+    }
+    return commandTrie.getRootCommands();
+  }, [state.currentNode, commandTrie]);
 
   return {
     state,
-    outputRef,
     actions,
+    getAvailableCommands
   };
-}
+};
