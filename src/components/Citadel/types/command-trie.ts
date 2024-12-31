@@ -7,9 +7,7 @@ export type CommandHandler = (args: string[]) => Promise<CommandResult>;
  * Represents an argument that can be passed to a command
  */
 export interface CommandArgument {
-  /** The name of the argument */
   name: string;
-  /** Description of what the argument does */
   description: string;
 }
 
@@ -319,7 +317,7 @@ export class CommandTrie {
       } else {
         const existingNode = children.get(segment)!;
         if (isLeaf && existingNode.isLeaf) {
-          throw new Error(`Duplicate leaf command: ${path.join(" ")}`);
+          throw new Error(`Duplicate command: ${path.join(" ")}`);
         }
         if (!isLeaf && existingNode.isLeaf) {
           throw new Error(`Cannot add subcommand to leaf command: ${path.slice(0, i + 1).join(" ")}`);
@@ -423,27 +421,6 @@ export class CommandTrie {
     }
 
     return await handler(args);
-  }
-
-  /**
-   * Gets all commands in the trie.
-   * 
-   * @returns An array of command paths.
-   */
-  getAllCommands(): string[][] {
-    const paths: string[][] = [];
-
-    const traverse = (node: CommandNode) => {
-      if (node !== this._root) { // Skip the root node
-        paths.push(node.fullPath);
-      }
-      node.children.forEach((child) => {
-        traverse(child);
-      });
-    };
-
-    traverse(this._root);
-    return paths;
   }
 
   /**
