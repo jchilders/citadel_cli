@@ -23,7 +23,6 @@ import { CitadelConfig } from './types';
  * 
  * @property cursorSpeed - The speed of cursor animation in milliseconds. Default varies by cursor type:
  *                        blink: 530ms, spin/bbs: 120ms, solid: N/A
- * @property cursorCharacter - The character used to render the cursor. Default: '▋'.
  */
 export const defaultConfig: CitadelConfig = {
   commandTimeoutMs: 10000,
@@ -34,6 +33,5 @@ export const defaultConfig: CitadelConfig = {
   showCitadelKey: '.',
   cursorType: 'bbs',
   cursorColor: 'var(--cursor-color, #fff)',
-  cursorSpeed: 530,
-  cursorCharacter: '▋'
+  cursorSpeed: 530
 };

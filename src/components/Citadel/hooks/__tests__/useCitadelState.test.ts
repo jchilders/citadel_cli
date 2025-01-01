@@ -3,6 +3,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useCitadelState } from '../useCitadelState';
 import { OutputItem } from '../../types';
 import { createMockNode } from '../../../../__test-utils__/factories';
+import { JsonCommandResult } from '../../types/command-results';
 
 describe('useCitadelState', () => {
   beforeEach(() => {
@@ -57,11 +58,11 @@ describe('useCitadelState', () => {
 
   it('should handle addOutput action', () => {
     const { result } = renderHook(() => useCitadelState());
+    const timestamp = Date.now();
     const output: OutputItem = {
       command: ['test'],
-      result: { json: 'test output' },
-      timestamp: Date.now(),
-      status: 'success',
+      result: new JsonCommandResult({ data: 'test output' }, timestamp),
+      timestamp
     };
 
     act(() => {
