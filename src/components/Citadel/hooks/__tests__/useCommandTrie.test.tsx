@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useCommandTrie } from '../useCommandTrie';
 import { CitadelConfigProvider } from '../../config/CitadelConfigContext';
+import { TextCommandResult } from '../../types/command-results';
 import type { ReactNode } from 'react';
 
 describe('useCommandTrie', () => {
@@ -46,21 +47,24 @@ describe('useCommandTrie', () => {
     const trie = result.current;
     const helpCommand = trie.getCommand(['help']);
     expect(helpCommand).toBeDefined();
+    expect(helpCommand?.fullPath).toEqual(['help']);
 
     // Add a test command to verify it appears in help output
     trie.addCommand({
       path: ['test'],
       description: 'Test command',
-      handler: async () => ({ text: 'test' })
+      handler: async () => new TextCommandResult('test')
     });
 
     const handler = helpCommand?.handler;
     expect(handler).toBeDefined();
     if (handler) {
       const output = await handler([]);
-      expect(output.text).toContain('Available Commands:');
-      expect(output.text).toContain('test - Test command');
-      expect(output.text).toContain('help - Show available commands');
+      expect(output instanceof TextCommandResult).toBe(true);
+      const textOutput = output as TextCommandResult;
+      expect(textOutput.text).toContain('Available Commands:');
+      expect(textOutput.text).toContain('test - Test command');
+      expect(textOutput.text).toContain('help - Show available commands');
     }
   });
 
