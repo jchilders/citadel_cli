@@ -1,54 +1,16 @@
 import { renderHook, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useCommandParser } from '../useCommandParser';
 import { CommandTrie } from '../../types/command-trie';
 import { CitadelState, CitadelActions } from '../../types';
 import { createMockNode, createMockCommandTrie } from '../../../../__test-utils__/factories';
 
-// Create a mock KeyboardEvent for testing
-const createMockKeyboardEvent = (key: string): KeyboardEvent => {
-  return {
-    key,
-    preventDefault: vi.fn(),
-    altKey: false,
-    charCode: 0,
-    code: key,
-    ctrlKey: false,
-    isComposing: false,
-    keyCode: 0,
-    location: 0,
-    metaKey: false,
-    repeat: false,
-    shiftKey: false,
-    which: 0,
-    bubbles: true,
-    cancelBubble: false,
-    cancelable: true,
-    composed: true,
-    currentTarget: null,
-    defaultPrevented: false,
-    eventPhase: 0,
-    isTrusted: true,
-    returnValue: true,
-    srcElement: null,
-    target: null,
-    timeStamp: 0,
-    type: 'keydown',
-    composedPath: () => [],
-    initEvent: () => {},
-    stopImmediatePropagation: () => {},
-    stopPropagation: () => {},
-    AT_TARGET: 0,
-    BUBBLING_PHASE: 0,
-    CAPTURING_PHASE: 0,
-    NONE: 0,
-  } as KeyboardEvent;
-};
-
 describe('useCommandParser', () => {
   let mockCommandTrie: CommandTrie;
   let mockState: CitadelState;
   let mockActions: CitadelActions;
+  let user: ReturnType<typeof userEvent.setup>;
 
   beforeEach(() => {
     mockCommandTrie = createMockCommandTrie();
@@ -69,11 +31,11 @@ describe('useCommandParser', () => {
       setValidation: vi.fn(),
       executeCommand: vi.fn(),
     };
+    user = userEvent.setup();
   });
 
   describe('handleKeyDown', () => {
-    it('should handle Enter for argument submission', () => {
-      const mockEvent = createMockKeyboardEvent('Enter');
+    it('should handle Enter for argument submission', async () => {
       const mockNode = createMockNode('test1', {
         argument: {
           name: 'arg1',
@@ -85,15 +47,17 @@ describe('useCommandParser', () => {
 
       const stateWithArg = {
         ...mockState,
-        currentInput: 'arg1',
-        commandStack: ['test1'],
         currentNode: mockNode,
+        currentInput: 'arg1',
         isEnteringArg: true,
+        commandStack: ['test1'],
       };
 
       const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
       
-      act(() => {
+      const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
+      
+      await act(async () => {
         result.current.handleKeyDown(mockEvent, stateWithArg, mockActions);
       });
 
@@ -102,74 +66,76 @@ describe('useCommandParser', () => {
       expect(mockActions.setIsEnteringArg).toHaveBeenCalledWith(false);
     });
 
-    it('should handle Enter for current node without argument', () => {
-      const mockEvent = createMockKeyboardEvent('Enter');
+    it('should handle Enter for current node without argument', async () => {
       const mockNode = createMockNode('test1');
 
       vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockNode);
 
       const stateWithNode = {
         ...mockState,
-        currentInput: '',
-        commandStack: ['test1'],
         currentNode: mockNode,
+        commandStack: ['test1'],
       };
 
       const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
       
-      act(() => {
+      const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
+      
+      await act(async () => {
         result.current.handleKeyDown(mockEvent, stateWithNode, mockActions);
       });
 
       expect(mockActions.executeCommand).toHaveBeenCalledWith(['test1'], undefined);
+      expect(mockActions.setCurrentInput).toHaveBeenCalledWith('');
     });
 
-    it('should handle Enter for command without arguments', () => {
-      const mockEvent = createMockKeyboardEvent('Enter');
+    it('should handle Enter for command without arguments', async () => {
       const mockNode = createMockNode('test1');
 
       vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockNode);
+      vi.spyOn(mockCommandTrie, 'getRootCommands').mockReturnValue([mockNode]);
 
       const stateWithCommand = {
         ...mockState,
-        currentInput: '',
-        commandStack: ['test1'],
         currentNode: mockNode,
+        currentInput: '',  
+        commandStack: ['test1'],
       };
 
       const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
       
-      act(() => {
+      const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
+      
+      await act(async () => {
         result.current.handleKeyDown(mockEvent, stateWithCommand, mockActions);
       });
 
       expect(mockActions.executeCommand).toHaveBeenCalledWith(['test1'], undefined);
+      expect(mockActions.setCurrentInput).toHaveBeenCalledWith('');
     });
 
-    it('should prevent invalid command input', () => {
-      const mockPreventDefault = vi.fn();
-      const mockEvent = createMockKeyboardEvent('x');
-      const availableNodes = [
-        createMockNode('test1'),
-        createMockNode('test2'),
-      ];
-      vi.spyOn(mockCommandTrie, 'getRootCommands').mockReturnValue(availableNodes);
+    it('should prevent invalid command input', async () => {
+      vi.spyOn(mockCommandTrie, 'getCompletions').mockReturnValue(['test1', 'test2']);
 
       const stateWithInput = {
         ...mockState,
-        currentInput: 'invalid',
+        currentInput: 'x',
       };
 
       const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
       
-      act(() => {
-        result.current.handleKeyDown({ ...mockEvent, preventDefault: mockPreventDefault }, stateWithInput, mockActions);
+      const mockEvent = new KeyboardEvent('keydown');
+      vi.spyOn(mockEvent, 'preventDefault');
+      
+      await act(async () => {
+        await user.keyboard('x');
+        result.current.handleKeyDown(mockEvent, stateWithInput, mockActions);
       });
 
-      expect(mockPreventDefault).toHaveBeenCalled();
+      expect(mockEvent.preventDefault).toHaveBeenCalled();
     });
 
-    it('should allow any input when entering arguments', () => {
+    it('should allow any input when entering arguments', async () => {
       const mockNode = createMockNode('test1', {
         argument: {
           name: 'arg1',
@@ -188,34 +154,39 @@ describe('useCommandParser', () => {
       const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
 
       let preventDefaultCalled = false;
-      const mockEventWithPreventDefault = createMockKeyboardEvent('x');
-      
-      act(() => {
-        result.current.handleKeyDown({ ...mockEventWithPreventDefault, preventDefault: () => { preventDefaultCalled = true; } }, stateWithArg, mockActions);
+      await act(async () => {
+        await user.keyboard('x');
+        const mockEvent = new KeyboardEvent('keydown');
+        Object.defineProperty(mockEvent, 'preventDefault', {
+          value: () => { preventDefaultCalled = true; }
+        });
+        result.current.handleKeyDown(mockEvent, stateWithArg, mockActions);
       });
 
       // Verify preventDefault was not called, meaning the input was allowed
       expect(preventDefaultCalled).toBe(false);
     });
 
-    it('should prevent invalid command input when not entering arguments', () => {
+    it('should prevent invalid command input when not entering arguments', async () => {
       const mockNode = createMockNode('test1');
 
       // Mock findMatchingCommands to return no matches
       const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
       
       let preventDefaultCalled = false;
-      const mockEventWithPreventDefault = createMockKeyboardEvent('x');
-
-      const stateWithInvalidCommand = {
-        ...mockState,
-        currentInput: 'invalid',
-        currentNode: mockNode,
-        isEnteringArg: false,
-      };
+      const mockEvent = new KeyboardEvent('keydown');
+      Object.defineProperty(mockEvent, 'preventDefault', {
+        value: () => { preventDefaultCalled = true; }
+      });
       
-      act(() => {
-        result.current.handleKeyDown({ ...mockEventWithPreventDefault, preventDefault: () => { preventDefaultCalled = true; } }, stateWithInvalidCommand, mockActions);
+      await act(async () => {
+        await user.keyboard('x');
+        result.current.handleKeyDown(mockEvent, {
+          ...mockState,
+          currentInput: 'invalid',
+          currentNode: mockNode,
+          isEnteringArg: false,
+        }, mockActions);
       });
 
       // Verify preventDefault was called, meaning the input was prevented
@@ -224,14 +195,15 @@ describe('useCommandParser', () => {
   });
 
   describe('executeCommand', () => {
-    it('should execute command with handler', () => {
-      const mockNode = createMockNode();
+    it('should execute command with handler', async () => {
+      const mockNode = createMockNode('test1');
 
       vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockNode);
 
       const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
       
-      act(() => {
+      await act(async () => {
+        await user.keyboard('{enter}');
         result.current.executeCommand(['test1'], mockActions);
       });
 
@@ -240,7 +212,7 @@ describe('useCommandParser', () => {
       expect(mockActions.setIsEnteringArg).toHaveBeenCalledWith(false);
     });
 
-    it('should execute command with arguments', () => {
+    it('should execute command with arguments', async () => {
       const mockNode = createMockNode('test1', {
         argument: {
           name: 'arg1',
@@ -252,7 +224,8 @@ describe('useCommandParser', () => {
 
       const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
       
-      act(() => {
+      await act(async () => {
+        await user.keyboard('{enter}');
         result.current.executeCommand(['test1'], mockActions, ['arg1']);
       });
 
