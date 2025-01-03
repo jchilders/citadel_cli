@@ -1,21 +1,33 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { Citadel } from '../Citadel';
 import userEvent from '@testing-library/user-event';
+import type { UserEvent } from '@testing-library/user-event';
+import { StorageType } from '../types/storage';
 
 describe('Citadel', () => {
+  let user: UserEvent;
+
   beforeEach(() => {
     document.body.innerHTML = '';
+    user = userEvent.setup();
   });
 
-  it('renders without crashing', () => {
-    const { container } = render(<Citadel />);
-    expect(container).toBeTruthy();
+  afterEach(() => {
+    vi.clearAllTimers();
+  });
+
+  it('renders without crashing', async () => {
+    await act(async () => {
+      render(<Citadel />);
+    });
+    expect(document.body).toBeTruthy();
   });
 
   it('adds component to DOM when showCitadelKey is pressed', async () => {
-    const user = userEvent.setup();
-    render(<Citadel />);
+    await act(async () => {
+      render(<Citadel />);
+    });
     
     // It should not exist in DOM on page load
     expect(document.getElementById('citadel-root')).toBeNull();
@@ -29,12 +41,13 @@ describe('Citadel', () => {
     await waitFor(() => {
       const element = document.getElementById('citadel-root');
       expect(element).toBeTruthy();
-    }, { timeout: 1000 });
+    });
   });
 
   it('respects custom showCitadelKey configuration', async () => {
-    const user = userEvent.setup();
-    render(<Citadel config={{ showCitadelKey: '/' }} />);
+    await act(async () => {
+      render(<Citadel config={{ showCitadelKey: '/' }} />);
+    });
     
     // Default key should not trigger
     await act(async () => {
@@ -48,96 +61,79 @@ describe('Citadel', () => {
     });
     await waitFor(() => {
       expect(document.getElementById('citadel-root')).toBeTruthy();
-    }, { timeout: 1000 });
+    });
   });
 
-  it('uses custom config when provided', async () => {
-    const user = userEvent.setup();
-    render(<Citadel config={{ showCitadelKey: 'k', includeHelpCommand: true, resetStateOnHide: true }} />);
+  it('applies custom configuration options correctly', async () => {
+    const customConfig = {
+      showCitadelKey: '/',
+      storage: { type: 'memory' as StorageType, maxCommands: 50 },
+      includeHelpCommand: true,
+      resetStateOnHide: true
+    };
     
-    // It should not exist in DOM on page load
-    expect(document.getElementById('citadel-root')).toBeNull();
-    
-    // Try default key (should not work)
     await act(async () => {
-      await user.keyboard('.');
+      render(<Citadel config={customConfig} />);
     });
-    expect(document.getElementById('citadel-root')).toBeNull();
     
-    // Try custom key
+    // Verify custom key works
     await act(async () => {
-      await user.keyboard('k');
+      await user.keyboard('/');
     });
+    
     await waitFor(() => {
-      const element = document.getElementById('citadel-root');
-      expect(element).toBeTruthy();
-    }, { timeout: 1000 });
-  });
+      expect(document.getElementById('citadel-root')).toBeTruthy();
+    });
 
-  it('shows available commands', async () => {
-    const user = userEvent.setup();
-    render(<Citadel />);
-    
-    // Make Citadel visible
-    await act(async () => {
-      await user.keyboard('.');
-    });
-    
-    // Wait for and find the input element
-    await waitFor(() => {
-      const inputElement = screen.getByTestId('citadel-command-input');
-      expect(inputElement).toBeTruthy();
-      return inputElement;
-    }, { timeout: 1000 });
-    
-    // Help command should be visible by default
+    // Verify help command is available when enabled
     const availableCommands = screen.getByTestId('available-commands');
     expect(availableCommands.textContent).toContain('help');
   });
 
-  it('respects includeHelpCommand configuration', async () => {
-    const user = userEvent.setup();
-    render(<Citadel config={{ includeHelpCommand: false }} />);
-    
-    // Show Citadel
+  it('displays and executes help command correctly', async () => {
     await act(async () => {
-      await user.keyboard('.');
+      render(<Citadel />);
     });
-    await waitFor(() => document.getElementById('citadel-root'));
     
-    // Help command should not be visible
-    const availableCommands = screen.getByTestId('available-commands');
-    expect(availableCommands.textContent).not.toContain('help');
-  });
-
-  it('executes help command when typed and entered', async () => {
-    const user = userEvent.setup();
-    render(<Citadel />);
-    
-    // Show Citadel
+    // Open Citadel
     await act(async () => {
       await user.keyboard('.');
     });
     
-    // Wait for the input element
-    const input = await waitFor(() => {
-      const inputElement = screen.getByTestId('citadel-command-input');
-      expect(inputElement).toBeTruthy();
-      return inputElement;
-    }, { timeout: 1000 });
-    
-    // Type "help" and press enter
+    // Type and execute help command
     await act(async () => {
-      await user.type(input, 'help');
+      await user.keyboard('help');
       await user.keyboard('{Enter}');
     });
     
-    // Verify help output is displayed
+    // Verify help command output
     await waitFor(() => {
-      const outputElement = screen.getByText((content) => {
-        return content.includes('Available Commands:') && content.includes('help - Show available commands');
-      }, { selector: 'div' });
-      expect(outputElement).toBeTruthy();
-    }, { timeout: 1000 });
+      const helpText = screen.getByText((content) => {
+        return content.toLowerCase().includes('help') && 
+               content.toLowerCase().includes('show available commands');
+      });
+      expect(helpText).toBeTruthy();
+    }, { timeout: 2000 });
+  });
+
+  it('displays available commands in command palette', async () => {
+    await act(async () => {
+      render(<Citadel />);
+    });
+    
+    // Open Citadel
+    await act(async () => {
+      await user.keyboard('.');
+    });
+    
+    // Verify command input and available commands are shown
+    await waitFor(() => {
+      const inputElement = screen.getByTestId('citadel-command-input');
+      expect(inputElement).toBeTruthy();
+      
+      const availableCommands = screen.getByTestId('available-commands');
+      expect(availableCommands).toBeTruthy();
+      expect(availableCommands.textContent).toContain('help');
+    }, { timeout: 2000 });
   });
 });

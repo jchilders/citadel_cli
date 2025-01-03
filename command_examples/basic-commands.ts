@@ -49,73 +49,58 @@ export const commands = {
     handler: async (_args: string[]) => {
       // Fake a long-running operation to demo the spinner
       await new Promise(resolve => setTimeout(resolve, 11000));
-      return new JsonCommandResult({ });
+      return new JsonCommandResult({ status: 'done' });
     }
   },
   'error.raise': {
     description: 'This command intentionally raises an error',
     handler: async (_args: string[]) => {
-      throw new Error('This is an intentionally raised error for testing purposes');
+      throw new Error('This is an intentional error');
     }
   },
 
   'image.random.picsum': {
     description: 'Get a random image from Picsum Photos',
-    handler: async () => {
-      return new ImageCommandResult(
-        'https://picsum.photos/800/600',
-        'Random image from Picsum Photos'
-      );
+    handler: async (_args: string[]) => {
+      const width = 400;
+      const height = 300;
+      const url = `https://picsum.photos/${width}/${height}`;
+      return new ImageCommandResult(url);
     }
   },
   'image.random.dog': {
     description: 'Get a random dog image',
-    handler: async () => {
+    handler: async (_args: string[]) => {
       const response = await fetch('https://dog.ceo/api/breeds/image/random');
       const data = await response.json();
-      return new ImageCommandResult(
-        data.message,
-        'Random dog image'
-      );
+      return new ImageCommandResult(data.message);
     }
   },
   'image.random.cat': {
     description: 'Get a random cat image',
-    handler: async () => {
+    handler: async (_args: string[]) => {
       const response = await fetch('https://api.thecatapi.com/v1/images/search');
       const data = await response.json();
-      return new ImageCommandResult(
-        data[0].url,
-        'Random cat image'
-      );
+      return new ImageCommandResult(data[0].url);
     }
   },
   'cowsay': {
     description: 'Get a cow to say something using cowsay API',
     handler: async (args: string[]) => {
-      try {
-        const message = args[0];
-        const response = await fetch(`/api/cowsay?message=${encodeURIComponent(message)}&format=text`, {
-          headers: {
-            'Accept': 'text/plain'
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('text/plain')) {
-          console.error('Unexpected content type:', contentType);
-        }
-        
-        const text = await response.text();
-        return new TextCommandResult(text);
-      } catch (error) {
-        console.error('Cowsay error:', error);
-        throw error;
-      }
+      const message = args[0];
+      const response = await fetch('https://cowsay.morecode.org/say', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message,
+          format: 'text'
+        })
+      });
+
+      const data = await response.text();
+      return new TextCommandResult(data);
     },
     argument: { name: 'message', description: 'Enter the message for the cow to say' }
   }

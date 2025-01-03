@@ -1,20 +1,39 @@
-When adding error messages, include the value that is causing the error, when possible. For example, if the error is due to an invalid argument, include the argument in the error message (preferably towards the beginning of the message).
+## Version Compatibility
+
+All code must be compatible with React 18+ and TypeScript as configured in the project. When generating or modifying code, ensure it adheres to:
+- React 18+ type definitions and patterns
+- TypeScript strict mode and type checking
+- Modern React patterns (hooks, functional components)
+
+Check `package.json` for the specific versions of dependencies if needed.
+
+## Error Messages
+
+When adding or updating error messages:
+- Include the name and value that is causing the error, when possible. 
+- Offer a suggestion on how to fix the error, where possible
+
+Example of a good error message: say there was an error due to an invalid value of 1000 for the `param1` argument: "param1 was invalid. param1: 1000. You may want to prevent the user from entering invalid values in the UI."
 
 ## Testing
 
-All tests use vitest. See package.json for details.
+All tests use vitest. See `package.json` for details.
 
 To run one or more individual tests use `npx vitest --run <test_file1> <test_file2>`
 
-To run all tests use `npm test`
+To run a single test case within a test file use `npx vitest --run <test_file> --testNamePattern '<test_case>'`. For example: if the following test exists in "thing.test.ts":
 
-## Linting
+```
+it("does the thing", () => {
+  // test code
+});
+```
 
-To run the linter against a single file use `npx eslint <file>`
+Then this invididual test could be run with `npx vitest --run thing_test.ts" --testNamePattern 'does the thing'`.
 
-To run the linting for all files use `npx eslint`
+To run ALL tests use `npm test`.
 
-On success, the linter will display no output, just a success code.
+When creating or modifying mock objects, check to see if one already exists in `src/__test-utils__/factories.ts`, and use that mock if so.
 
 ## Test Coverage
 

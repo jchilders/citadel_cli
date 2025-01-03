@@ -33,5 +33,9 @@ export const defaultConfig: CitadelConfig = {
   showCitadelKey: '.',
   cursorType: 'bbs',
   cursorColor: 'var(--cursor-color, #fff)',
-  cursorSpeed: 530
+  cursorSpeed: 530,
+  storage: {
+    type: 'localStorage',
+    maxCommands: 100
+  }
 };

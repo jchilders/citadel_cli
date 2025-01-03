@@ -10,6 +10,7 @@ interface MockNodeOptions {
   };
   handler?: CommandHandler;
   description?: string;
+  isLeaf?: boolean;
 }
 
 export const createMockNode = (name: string, options: MockNodeOptions = {}): CommandNode => {
@@ -31,7 +32,7 @@ export const createMockNode = (name: string, options: MockNodeOptions = {}): Com
 
   // Mock the children map - use Map as ReadonlyMap since ReadonlyMap can't be instantiated directly
   const childrenMap: ReadonlyMap<string, CommandNode> = new Map<string, CommandNode>();
-  vi.spyOn(node as any, '_children', 'get').mockReturnValue(childrenMap);
+  vi.spyOn(node as any, '_children', 'get').mockReturnValue(options.isLeaf ? new Map() : childrenMap);
 
   return node;
 };
@@ -79,6 +80,12 @@ export const createMockCitadelState = (overrides = {}): CitadelState => ({
   currentNode: undefined,
   output: [],
   validation: { isValid: true },
+  history: {
+    commands: [],
+    position: null,
+    savedInput: null,
+    storage: undefined
+  },
   ...overrides
 });
 
@@ -90,5 +97,6 @@ export const createMockCitadelActions = (overrides = {}): CitadelActions => ({
   addOutput: vi.fn(),
   setValidation: vi.fn(),
   executeCommand: vi.fn(),
+  executeHistoryCommand: vi.fn(),
   ...overrides
 });

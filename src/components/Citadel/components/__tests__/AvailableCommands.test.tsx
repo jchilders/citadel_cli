@@ -5,16 +5,10 @@ import { CitadelState } from '../../types/state';
 import { CommandNode, NoopHandler } from '../../types/command-trie';
 import { CitadelConfigProvider } from '../../config/CitadelConfigContext';
 import { TextCommandResult } from '../../types/command-results';
+import { createMockCitadelState } from '../../../../__test-utils__/factories';
 
 describe('AvailableCommands', () => {
-  const defaultState: CitadelState = {
-    commandStack: [],
-    currentInput: '',
-    isEnteringArg: false,
-    currentNode: undefined,
-    output: [],
-    validation: { isValid: true }
-  };
+  const defaultState = createMockCitadelState();
 
   const mockCommands: CommandNode[] = [
     new CommandNode({

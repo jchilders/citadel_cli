@@ -5,6 +5,7 @@ import { CommandInput } from '../CommandInput';
 import { CommandNode } from '../../types/command-trie';
 import { CitadelState } from '../../types/state';
 import { TextCommandResult } from '../../types/command-results';
+import { createMockCitadelState } from '../../../../__test-utils__/factories';
 
 // Mock useCommandParser hook
 vi.mock('../../hooks/useCommandParser', () => ({
@@ -76,18 +77,12 @@ const mockActions = {
   setCurrentNode: vi.fn(),
   addOutput: vi.fn(),
   setValidation: vi.fn(),
-  executeCommand: vi.fn()
+  executeCommand: vi.fn(),
+  executeHistoryCommand: vi.fn()
 };
 
 describe('CommandInput', () => {
-  const defaultState: CitadelState = {
-    commandStack: [],
-    currentInput: '',
-    isEnteringArg: false,
-    currentNode: undefined,
-    output: [],
-    validation: { isValid: true }
-  };
+  const defaultState = createMockCitadelState();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -135,10 +130,9 @@ describe('CommandInput', () => {
       fullPath: ['leaf']
     });
     
-    const state = {
-      ...defaultState,
+    const state = createMockCitadelState({
       currentNode: leafNode
-    };
+    });
 
     const { container } = render(
       <TestWrapper>
@@ -164,11 +158,10 @@ describe('CommandInput', () => {
       handler: async () => new TextCommandResult('test')
     });
     
-    const state = {
-      ...defaultState,
+    const state = createMockCitadelState({
       currentNode: handlerNode,
       currentInput: 'handler'  // Set current input to match the node's name
-    };
+    });
 
     const { container } = render(
       <TestWrapper>
@@ -188,11 +181,10 @@ describe('CommandInput', () => {
   });
 
   it('prevents input for leaf commands without arguments', () => {
-    const leafState: CitadelState = {
-      ...defaultState,
+    const leafState = createMockCitadelState({
       currentNode: mockCommands[0], // 'help' command
       commandStack: ['help']
-    };
+    });
 
     const { container } = render(
       <TestWrapper>
@@ -212,11 +204,10 @@ describe('CommandInput', () => {
   });
 
   it('allows subcommand input', () => {
-    const subcommandState: CitadelState = {
-      ...defaultState,
+    const subcommandState = createMockCitadelState({
       currentNode: mockCommands[1], // 'user' command
       commandStack: ['user']
-    };
+    });
 
     const { container } = render(
       <TestWrapper>
@@ -257,12 +248,11 @@ describe('CommandInput', () => {
   });
 
   it('allows argument input', () => {
-    const argState: CitadelState = {
-      ...defaultState,
+    const argState = createMockCitadelState({
       currentNode: userShowCommand,
       commandStack: ['user', 'show'],
       isEnteringArg: true
-    };
+    });
 
     const { container } = render(
       <TestWrapper>
@@ -306,11 +296,10 @@ describe('CommandInput', () => {
 
   it('executes help command when Enter is pressed', () => {
     const helpNode = mockCommands[0];
-    const state = {
-      ...defaultState,
+    const state = createMockCitadelState({
       currentNode: helpNode,
       commandStack: ['help']
-    };
+    });
 
     const { container } = render(
       <TestWrapper>
@@ -333,11 +322,10 @@ describe('CommandInput', () => {
     const { container } = render(
       <TestWrapper>
         <CommandInput
-          state={{
-            ...defaultState,
+          state={createMockCitadelState({
             isEnteringArg: true,
             currentNode: userShowCommand
-          }}
+          })}
           actions={mockActions}
           availableCommands={mockCommands}
         />
@@ -364,10 +352,9 @@ describe('CommandInput', () => {
     
     expect(document.activeElement).toStrictEqual(input);
 
-    const newState = {
-      ...defaultState,
+    const newState = createMockCitadelState({
       commandStack: ['help']
-    };
+    });
 
     render(
       <TestWrapper>

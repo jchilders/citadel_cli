@@ -23,7 +23,7 @@ export interface CommandNodeParams {
  * A no-op handler that does nothing when executed. Used as the default handler
  * for CommandNodes that don't specify a handler.
  */
-export const NoopHandler: CommandHandler = async () => {
+export const NoopHandler: CommandHandler = async (_args) => {
   return new TextCommandResult('');
 };
 
@@ -62,7 +62,7 @@ export class CommandNode {
    *     name: 'environment',
    *     description: 'Target environment (dev/staging/prod)'
    *   },
-   *   handler: async (args: string[]) => {
+   *   handler: async (args, context) => {
    *     const env = args[0];
    *     return { 
    *       text: `Deploying service to ${env}...`
@@ -243,7 +243,7 @@ export class CommandTrie {
    *     name: 'environment',
    *     description: 'Target environment (dev/staging/prod)'
    *   },
-   *   handler: async (args) => {
+   *   handler: async (args, context) => {
    *     const env = args[0];
    *     return { 
    *       text: `Starting deployment to ${env}...`,
@@ -260,7 +260,7 @@ export class CommandTrie {
    *     name: 'service-name',
    *     description: 'Name of the service to check'
    *   },
-   *   handler: async (args) => {
+   *   handler: async (args, context) => {
    *     const serviceName = args[0];
    *     return {
    *       text: `Fetching status for ${serviceName}...`,
@@ -277,7 +277,7 @@ export class CommandTrie {
    *     name: 'version',
    *     description: 'Target version to roll back to'
    *   },
-   *   handler: async (args) => {
+   *   handler: async (args, context) => {
    *     const version = args[0];
    *     return {
    *       text: `Rolling back to version ${version}...`,

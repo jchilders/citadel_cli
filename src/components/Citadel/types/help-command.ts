@@ -10,7 +10,7 @@ export const createHelpCommand = (trie: CommandTrie, config: CitadelConfig): [st
    * @returns TextCommandResult with a string containing a list of all
    * available commands.
    */
-  const handler = async function() {
+  const handler = async function(_args: string[]) {
     const commands = trie.getLeafCommands()
       .filter((cmd: CommandNode) => cmd.name !== 'help')
       .map((cmd: CommandNode) => {

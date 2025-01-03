@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useCommandParser } from '../useCommandParser';
 import { CommandTrie } from '../../types/command-trie';
 import { CitadelState, CitadelActions } from '../../types';
-import { createMockNode, createMockCommandTrie } from '../../../../__test-utils__/factories';
+import { createMockNode, createMockCommandTrie, createMockCitadelState } from '../../../../__test-utils__/factories';
 
 describe('useCommandParser', () => {
   let mockCommandTrie: CommandTrie;
@@ -14,14 +14,7 @@ describe('useCommandParser', () => {
 
   beforeEach(() => {
     mockCommandTrie = createMockCommandTrie();
-    mockState = {
-      commandStack: [],
-      currentInput: '',
-      isEnteringArg: false,
-      currentNode: undefined,
-      output: [],
-      validation: { isValid: true },
-    };
+    mockState = createMockCitadelState();
     mockActions = {
       setCommandStack: vi.fn(),
       setCurrentInput: vi.fn(),
@@ -30,6 +23,7 @@ describe('useCommandParser', () => {
       addOutput: vi.fn(),
       setValidation: vi.fn(),
       executeCommand: vi.fn(),
+      executeHistoryCommand: vi.fn()
     };
     user = userEvent.setup();
   });

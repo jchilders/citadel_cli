@@ -1,6 +1,11 @@
 import { CursorType } from '../types/cursor';
+import { StorageConfig } from '../types/storage';
 
 export interface CitadelConfig {
+  /**
+   * Configuration for command history storage
+   */
+  storage?: StorageConfig;
   /**
    * Whether to include the default help command in the command trie.
    */

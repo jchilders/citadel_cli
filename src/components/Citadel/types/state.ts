@@ -1,5 +1,6 @@
 import { CommandNode } from './command-trie';
 import { CommandResult, PendingCommandResult } from './command-results';
+import { CommandStorage, StoredCommand } from './storage';
 
 export class OutputItem {
   readonly timestamp: number;
@@ -23,6 +24,12 @@ export interface CitadelState {
     isValid: boolean;
     message?: string;
   };
+  history: {
+    commands: StoredCommand[];
+    position: number | null;
+    savedInput: string | null;
+    storage?: CommandStorage;
+  };
 }
 
 export interface CitadelActions {
@@ -33,4 +40,5 @@ export interface CitadelActions {
   addOutput: (output: OutputItem) => void;
   setValidation: (validation: { isValid: boolean; message?: string }) => void;
   executeCommand: (path: string[], args?: string[]) => Promise<void>;
+  executeHistoryCommand: (index: number) => Promise<void>;
 }
