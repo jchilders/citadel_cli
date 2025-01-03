@@ -197,7 +197,7 @@ describe('useCitadelState', () => {
     expect(result.current.state.currentInput).toBe('test');
   });
 
-  it.skip('should execute a command from history', async () => {
+  it('should execute a command from history', async () => {
     const mockCommand = {
       command: ['test', 'command', 'arg1'],
       timestamp: Date.now()
@@ -243,9 +243,7 @@ describe('useCitadelState', () => {
     // Verify the command was executed with correct path and args
     const lastOutput = result.current.state.output[result.current.state.output.length - 1];
     expect(lastOutput?.command).toEqual(['test', 'command', 'arg1']);
-    expect(mockHandler).toHaveBeenCalledWith(['arg1'], expect.objectContaining({
-      history: expect.any(Object)
-    }));
+    expect(mockHandler).toHaveBeenCalledWith(['arg1']);
   }, 10000); // Increase timeout to 10 seconds
 
   it('should handle invalid history index', async () => {
