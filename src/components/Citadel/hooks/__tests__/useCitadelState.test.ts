@@ -266,4 +266,113 @@ describe('useCitadelState', () => {
       'No command found at history index 999'
     );
   });
+
+  it('should handle keyboard navigation through history', async () => {
+    const mockCommandTrie = createMockCommandTrie();
+    vi.mocked(useCommandTrie).mockReturnValue(mockCommandTrie);
+
+    // Mock history commands
+    const mockStorage = {
+      addCommand: vi.fn().mockResolvedValue(undefined),
+      getCommands: vi.fn().mockResolvedValue([
+        { command: ['test', 'command1'], timestamp: Date.now() },
+        { command: ['test', 'command2'], timestamp: Date.now() }
+      ]),
+      clear: vi.fn().mockResolvedValue(undefined)
+    };
+    vi.spyOn(StorageFactory.getInstance(), 'getStorage').mockReturnValue(mockStorage);
+
+    let result: any;
+    await act(async () => {
+      const hookResult = renderHook(() => useCitadelState());
+      result = hookResult.result;
+    });
+
+    // Wait for history to load
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    // Mock ArrowUp key press
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+    });
+
+    expect(result.current.state.currentInput).toBe('test command2');
+    expect(result.current.state.history.position).toBe(1);
+
+    // Mock ArrowUp key press again
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+    });
+
+    expect(result.current.state.currentInput).toBe('test command1');
+    expect(result.current.state.history.position).toBe(0);
+
+    // Mock ArrowDown key press
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+    });
+
+    expect(result.current.state.currentInput).toBe('test command2');
+    expect(result.current.state.history.position).toBe(1);
+
+    // Mock Escape key press
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+
+    expect(result.current.state.currentInput).toBe('');
+    expect(result.current.state.history.position).toBe(null);
+  });
+
+  it('should execute command from history on Enter', async () => {
+    const mockCommandTrie = createMockCommandTrie();
+    const mockHandler = vi.fn().mockResolvedValue(new JsonCommandResult({ text: 'success' }));
+    const mockCommand = createMockNode('test', mockHandler);
+    // Mock getCommand to return the mock command only for the correct path
+    mockCommandTrie.getCommand.mockImplementation((path) => {
+      if (path.join(' ') === 'test command') {
+        return mockCommand;
+      }
+      return undefined;
+    });
+    vi.mocked(useCommandTrie).mockReturnValue(mockCommandTrie);
+
+    // Mock history commands
+    const mockStorage = {
+      addCommand: vi.fn().mockResolvedValue(undefined),
+      getCommands: vi.fn().mockResolvedValue([
+        { command: ['test', 'command'], timestamp: Date.now() }
+      ]),
+      clear: vi.fn().mockResolvedValue(undefined)
+    };
+    vi.spyOn(StorageFactory.getInstance(), 'getStorage').mockReturnValue(mockStorage);
+
+    let result: any;
+    await act(async () => {
+      const hookResult = renderHook(() => useCitadelState());
+      result = hookResult.result;
+    });
+
+    // Wait for history to load
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    // Navigate to command
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+    });
+
+    // Execute command with Enter
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      // Wait for async operations to complete
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    expect(mockHandler).toHaveBeenCalledWith(['command']);
+    expect(result.current.state.output[0].result).toEqual(new JsonCommandResult({ text: 'success' }));
+  });
 });

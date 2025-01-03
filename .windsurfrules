@@ -21,7 +21,7 @@ All tests use vitest. See `package.json` for details.
 
 To run one or more individual tests use `npx vitest --run <test_file1> <test_file2>`
 
-To run a single test case within a test file use `npx vitest --run <test_file> --testNamePattern '<test_case>'`. For example: if the following test exists in "thing.test.ts":
+To run a single test case within a test file use `npx vitest --run <test_file> --testNamePattern 'individual test name'`. For example: if the following test exists in "thing.test.ts":
 
 ```
 it("does the thing", () => {

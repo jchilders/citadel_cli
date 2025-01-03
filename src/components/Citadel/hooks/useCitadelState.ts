@@ -122,6 +122,66 @@ export const useCitadelState = () => {
     }
   }, [commandTrie, config.commandTimeoutMs, historyActions, state]);
 
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    const { key } = event;
+
+    switch (key) {
+      case 'ArrowUp':
+        event.preventDefault();
+        const upResult = historyActions.navigateHistory('up', state.currentInput);
+        setState(prev => ({
+          ...prev,
+          currentInput: upResult.newInput
+        }));
+        break;
+
+      case 'ArrowDown':
+        event.preventDefault();
+        const downResult = historyActions.navigateHistory('down', state.currentInput);
+        setState(prev => ({
+          ...prev,
+          currentInput: downResult.newInput
+        }));
+        break;
+
+      case 'Enter':
+        event.preventDefault();
+        if (state.history.position !== null) {
+          const command = state.history.commands[state.history.position];
+          // For history execution, treat the last item as the argument if it exists
+          if (command.command.length > 1) {
+            const path = command.command.slice(0, -1);
+            const args = [command.command[command.command.length - 1]];
+            executeCommand(path, args);
+          } else {
+            executeCommand(command.command);
+          }
+        }
+        break;
+
+      case 'Escape':
+        event.preventDefault();
+        if (state.history.position !== null) {
+          const savedInput = state.history.savedInput || '';
+          setState(prev => ({
+            ...prev,
+            currentInput: savedInput,
+            history: {
+              ...prev.history,
+              position: null,
+              savedInput: null
+            }
+          }));
+        }
+        break;
+    }
+  }, [state.currentInput, state.history, historyActions, executeCommand]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
   const actions: CitadelActions = {
     setCommandStack: useCallback((stack: string[]) => {
       setState(prev => ({ 
