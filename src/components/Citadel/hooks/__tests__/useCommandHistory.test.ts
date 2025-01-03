@@ -3,6 +3,8 @@ import { renderHook, act } from '@testing-library/react';
 import { useCommandHistory } from '../useCommandHistory';
 import { StorageFactory } from '../../storage/StorageFactory';
 import { StoredCommand, CommandStorage } from '../../types/storage';
+import { CommandNode } from '../../types/command-trie';
+import { createMockNode } from '../../../../__test-utils__/factories';
 
 // Mock CitadelConfigContext
 vi.mock('../../config/CitadelConfigContext', () => ({
@@ -12,21 +14,26 @@ vi.mock('../../config/CitadelConfigContext', () => ({
 }));
 
 describe('useCommandHistory', () => {
-  const mockCommand: StoredCommand = {
-    node: {
-      name: 'test',
-      fullPath: ['test', 'command'],
+  let mockNode: CommandNode;
+  let mockCommand: StoredCommand;
+
+  beforeEach(() => {
+    // Create mock node using factory
+    mockNode = createMockNode('test', {
       description: 'Test command',
       isLeaf: true,
-      hasHandler: true,
-      requiresArgument: false,
-      hasChildren: false,
-      children: new Map(),
-      handler: async () => ({ text: 'test' }),
-    } as CommandNode,
-    args: [],
-    timestamp: Date.now()
-  };
+      handler: async () => ({ text: 'test' })
+    });
+
+    // Set the correct path for the node
+    (mockNode as any)._fullPath = ['test', 'command'];
+
+    mockCommand = {
+      node: mockNode,
+      args: ['arg1'],
+      timestamp: 1
+    };
+  });
 
   // Mock storage implementing CommandStorage interface
   const mockStorage = {
@@ -80,7 +87,7 @@ describe('useCommandHistory', () => {
     });
 
     expect(navigation).toEqual({
-      newInput: 'test command',
+      newInput: 'test command arg1',
       position: 0
     });
     expect(result.current[0].savedInput).toBe(currentInput);

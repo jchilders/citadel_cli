@@ -107,8 +107,9 @@ export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
     }
 
     // Otherwise return the historical command
-    const historicalCommand = history.commands[newPosition].command.join(' ');
-    return { newInput: historicalCommand, position: newPosition };
+    const historicalCommand = history.commands[newPosition];
+    const commandText = [...historicalCommand.node.fullPath, ...historicalCommand.args].join(' ');
+    return { newInput: commandText, position: newPosition };
   }, [history]);
 
   const saveInput = useCallback((input: string) => {
