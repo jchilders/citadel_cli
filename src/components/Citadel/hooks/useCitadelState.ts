@@ -38,8 +38,8 @@ export const useCitadelState = () => {
   }, [history]);
 
   const executeCommand = useCallback(async (path: string[], args?: string[]) => {
-    const command = commandTrie.getCommand(path);
-    if (!command || !command.isLeaf) return;
+    const node = commandTrie.getCommand(path);
+    if (!node || !node.isLeaf) return;
 
     const outputItem = new OutputItem([...path, ...(args || [])]);
     setState(prev => ({
@@ -64,15 +64,15 @@ export const useCitadelState = () => {
       });
 
       const result = await Promise.race([
-        command.handler(args || []),
+        node.handler(args || []),
         timeoutPromise
       ]);
 
       if (!(result instanceof CommandResult)) {
         throw new Error(
-          `The ${command.fullPath.join('.')} command returned an invalid result type. Commands must return an instance of a CommandResult.\n` +
+          `The ${node.fullPath.join('.')} command returned an invalid result type. Commands must return an instance of a CommandResult.\n` +
           'For example:\n   return new JsonCommandResult({ text: "Hello World" });\n' +
-          `Check the definition of the ${command.fullPath.join('.')} command and update the return type.`
+          `Check the definition of the ${node.fullPath.join('.')} command and update the return type.`
         );
       }
 
@@ -80,7 +80,8 @@ export const useCitadelState = () => {
 
       // Save successful command to history
       const storedCommand = {
-        command: [...path, ...(args || [])],
+        node,
+        args: args || [],
         timestamp: Date.now()
       };
 
@@ -148,14 +149,7 @@ export const useCitadelState = () => {
         event.preventDefault();
         if (state.history.position !== null) {
           const command = state.history.commands[state.history.position];
-          // For history execution, treat the last item as the argument if it exists
-          if (command.command.length > 1) {
-            const path = command.command.slice(0, -1);
-            const args = [command.command[command.command.length - 1]];
-            executeCommand(path, args);
-          } else {
-            executeCommand(command.command);
-          }
+          executeCommand(command.node.fullPath, command.args);
         }
         break;
 
@@ -217,20 +211,23 @@ export const useCitadelState = () => {
     executeCommand,
 
     executeHistoryCommand: useCallback(async (index: number) => {
-      const commands = historyActions.getCommands();
+      const commands = state.history.commands;
       const command = commands[index];
       if (!command) {
         console.warn(`No command found at history index ${index}`);
         return;
       }
 
-      // Split command array into path and args
-      // The last element is the argument (if any)
-      const path = command.command.slice(0, -1);
-      const args = command.command.length > 0 ? [command.command[command.command.length - 1]] : undefined;
+      await executeCommand(command.node.fullPath, command.args);
+    }, [state.history.commands, executeCommand]),
 
-      await executeCommand(path, args);
-    }, [historyActions, executeCommand])
+    clearHistory: useCallback(async () => {
+      try {
+        await historyActions.clear();
+      } catch (error) {
+        console.warn('Failed to clear history:', error);
+      }
+    }, [historyActions])
   };
 
   const getAvailableCommands = useCallback(() => {
