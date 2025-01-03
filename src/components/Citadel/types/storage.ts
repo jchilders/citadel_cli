@@ -1,3 +1,5 @@
+import { CommandNode } from "./command-trie";
+
 /**
  * Supported storage mechanisms for command history
  */
@@ -26,9 +28,15 @@ export interface StorageConfig {
  */
 export interface StoredCommand {
   /**
-   * The command and its arguments as an array of strings
+   * Reference to the command node that was executed
    */
-  command: string[];
+  node: CommandNode;
+  
+  /**
+   * The arguments provided by the user when executing the command.
+   * Will be empty if the command doesn't accept arguments.
+   */
+  args: string[];
   
   /**
    * Timestamp when the command was executed
@@ -41,17 +49,17 @@ export interface StoredCommand {
  */
 export interface CommandStorage {
   /**
-   * Add a command to history
+   * Add a command to storage
    */
-  addCommand(command: StoredCommand): Promise<void>;
-  
+  addCommand: (command: StoredCommand) => Promise<void>;
+
   /**
-   * Get all stored commands, ordered by timestamp ascending
+   * Get all stored commands
    */
-  getCommands(): Promise<StoredCommand[]>;
-  
+  getCommands: () => Promise<StoredCommand[]>;
+
   /**
    * Clear all stored commands
    */
-  clear(): Promise<void>;
+  clear: () => Promise<void>;
 }

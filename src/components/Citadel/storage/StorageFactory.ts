@@ -1,6 +1,7 @@
 import { StorageConfig, CommandStorage } from '../types/storage';
 import { LocalStorage } from './LocalStorage';
 import { MemoryStorage } from './MemoryStorage';
+import { CommandNode } from '../types/command-trie';
 
 /**
  * Factory for creating and managing command storage instances
@@ -9,6 +10,7 @@ export class StorageFactory {
   private static instance: StorageFactory;
   private currentStorage?: CommandStorage;
   private config?: StorageConfig;
+  private rootNode?: CommandNode;
 
   private constructor() {}
 
@@ -17,6 +19,16 @@ export class StorageFactory {
       StorageFactory.instance = new StorageFactory();
     }
     return StorageFactory.instance;
+  }
+
+  /**
+   * Set the command trie root node. This is required for localStorage to work properly.
+   */
+  setCommandTrie(rootNode: CommandNode) {
+    this.rootNode = rootNode;
+    if (this.currentStorage instanceof LocalStorage) {
+      this.currentStorage.setCommandTrie(rootNode);
+    }
   }
 
   /**
@@ -44,17 +56,14 @@ export class StorageFactory {
         window.localStorage.setItem('citadel_test', 'test');
         window.localStorage.removeItem('citadel_test');
         
-        this.currentStorage = new LocalStorage(config);
+        this.currentStorage = new LocalStorage(config, this.rootNode);
         return this.currentStorage;
       } catch (error) {
         console.warn('localStorage not available, falling back to memory storage:', error);
         // Fall back to memory storage
-        this.currentStorage = new MemoryStorage(config);
-        return this.currentStorage;
       }
     }
-
-    // Default to memory storage
+    
     this.currentStorage = new MemoryStorage(config);
     return this.currentStorage;
   }

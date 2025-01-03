@@ -13,7 +13,18 @@ vi.mock('../../config/CitadelConfigContext', () => ({
 
 describe('useCommandHistory', () => {
   const mockCommand: StoredCommand = {
-    command: ['test', 'command'],
+    node: {
+      name: 'test',
+      fullPath: ['test', 'command'],
+      description: 'Test command',
+      isLeaf: true,
+      hasHandler: true,
+      requiresArgument: false,
+      hasChildren: false,
+      children: new Map(),
+      handler: async () => ({ text: 'test' }),
+    } as CommandNode,
+    args: [],
     timestamp: Date.now()
   };
 
