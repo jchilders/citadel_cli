@@ -3,6 +3,7 @@ import { MemoryStorage } from '../MemoryStorage';
 import { StoredCommand } from '../../types/storage';
 import { CommandNode } from '../../types/command-trie';
 import { createMockNode } from '../../../../__test-utils__/factories';
+import { TextCommandResult } from '../../types/command-results';
 
 describe('MemoryStorage', () => {
   let memoryStorage: MemoryStorage;
@@ -12,7 +13,11 @@ describe('MemoryStorage', () => {
     mockNode = createMockNode('test', {
       description: 'Test command',
       isLeaf: true,
-      handler: async () => ({ text: 'test' })
+      handler: async () => {
+        const result = new TextCommandResult('test output');
+        result.markSuccess();
+        return result;
+      }
     });
 
     memoryStorage = new MemoryStorage({ maxCommands: 2 });
@@ -22,7 +27,7 @@ describe('MemoryStorage', () => {
     const command: StoredCommand = {
       node: mockNode,
       args: ['arg1'],
-      timestamp: 1
+      timestamp: Date.now()
     };
 
     await memoryStorage.addCommand(command);
@@ -31,26 +36,53 @@ describe('MemoryStorage', () => {
     expect(commands).toHaveLength(1);
     expect(commands[0].args).toEqual(command.args);
     expect(commands[0].timestamp).toEqual(command.timestamp);
-    expect(commands[0].node._fullPath).toEqual(command.node._fullPath);
+    expect(commands[0].node.fullPath).toEqual(command.node.fullPath);
   });
 
   it('should enforce maxCommands limit', async () => {
+    const mockCommand1 = createMockNode('test1', {
+      description: 'Test command 1',
+      handler: async () => {
+        const result = new TextCommandResult('test output 1');
+        result.markSuccess();
+        return result;
+      }
+    });
+
+    const mockCommand2 = createMockNode('test2', {
+      description: 'Test command 2',
+      handler: async () => {
+        const result = new TextCommandResult('test output 2');
+        result.markSuccess();
+        return result;
+      }
+    });
+
+    const mockCommand3 = createMockNode('test3', {
+      description: 'Test command 3',
+      handler: async () => {
+        const result = new TextCommandResult('test output 3');
+        result.markSuccess();
+        return result;
+      }
+    });
+
     const command1: StoredCommand = {
-      node: mockNode,
+      node: mockCommand1,
       args: ['first'],
-      timestamp: 1
+      timestamp: Date.now()
     };
 
     const command2: StoredCommand = {
-      node: mockNode,
+      node: mockCommand2,
       args: ['second'],
-      timestamp: 2
+      timestamp: Date.now()
     };
 
     const command3: StoredCommand = {
-      node: mockNode,
+      node: mockCommand3,
       args: ['third'],
-      timestamp: 3
+      timestamp: Date.now()
     };
 
     await memoryStorage.addCommand(command1);
@@ -61,15 +93,15 @@ describe('MemoryStorage', () => {
     expect(commands).toHaveLength(2);
     expect(commands[0].args).toEqual(command2.args);
     expect(commands[1].args).toEqual(command3.args);
-    expect(commands[0].node._fullPath).toEqual(command2.node._fullPath);
-    expect(commands[1].node._fullPath).toEqual(command3.node._fullPath);
+    expect(commands[0].node.fullPath).toEqual(command2.node.fullPath);
+    expect(commands[1].node.fullPath).toEqual(command3.node.fullPath);
   });
 
   it('should not allow external mutations of stored commands', async () => {
     const command: StoredCommand = {
       node: mockNode,
       args: ['arg1'],
-      timestamp: 1
+      timestamp: Date.now()
     };
 
     await memoryStorage.addCommand(command);
@@ -87,7 +119,7 @@ describe('MemoryStorage', () => {
     const command: StoredCommand = {
       node: mockNode,
       args: ['arg1'],
-      timestamp: 1
+      timestamp: Date.now()
     };
 
     await memoryStorage.addCommand(command);

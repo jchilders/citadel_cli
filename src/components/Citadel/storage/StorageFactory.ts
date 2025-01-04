@@ -22,16 +22,6 @@ export class StorageFactory {
   }
 
   /**
-   * Set the command trie root node. This is required for localStorage to work properly.
-   */
-  setCommandTrie(rootNode: CommandNode) {
-    this.rootNode = rootNode;
-    if (this.currentStorage instanceof LocalStorage) {
-      this.currentStorage.setCommandTrie(rootNode);
-    }
-  }
-
-  /**
    * Get or create a storage instance based on configuration
    */
   getStorage(config?: StorageConfig): CommandStorage {

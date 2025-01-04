@@ -5,6 +5,7 @@ import { StorageFactory } from '../../storage/StorageFactory';
 import { StoredCommand, CommandStorage } from '../../types/storage';
 import { CommandNode } from '../../types/command-trie';
 import { createMockNode } from '../../../../__test-utils__/factories';
+import { TextCommandResult } from '../../types/command-results';
 
 // Mock CitadelConfigContext
 vi.mock('../../config/CitadelConfigContext', () => ({
@@ -22,7 +23,11 @@ describe('useCommandHistory', () => {
     mockNode = createMockNode('test', {
       description: 'Test command',
       isLeaf: true,
-      handler: async () => ({ text: 'test' })
+      handler: async () => {
+        const result = new TextCommandResult('test');
+        result.markSuccess();
+        return result;
+      }
     });
 
     // Set the correct path for the node

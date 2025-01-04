@@ -20,7 +20,11 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    "types": [
+      "vitest",
+      "vitest/globals"
+    ]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

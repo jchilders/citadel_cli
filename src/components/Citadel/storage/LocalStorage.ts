@@ -13,26 +13,14 @@ interface SerializedStoredCommand {
  */
 export class LocalStorage extends BaseStorage {
   private readonly storageKey = 'citadel_command_history';
-  private commandTrie?: CommandNode;
+  private commandTrie: CommandNode;
 
-  constructor(config?: StorageConfig, rootNode?: CommandNode) {
+  constructor(config: StorageConfig, rootNode: CommandNode) {
     super(config);
     this.commandTrie = rootNode;
   }
 
-  /**
-   * Set the command trie root node. This is required for deserializing stored commands.
-   */
-  setCommandTrie(rootNode: CommandNode) {
-    this.commandTrie = rootNode;
-  }
-
   async getCommands(): Promise<StoredCommand[]> {
-    if (!this.commandTrie) {
-      console.warn('Command trie not set. Cannot deserialize stored commands.');
-      return [];
-    }
-
     try {
       const data = window.localStorage.getItem(this.storageKey);
       if (!data) return [];

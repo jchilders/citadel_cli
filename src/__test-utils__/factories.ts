@@ -1,4 +1,3 @@
-import { vi } from 'vitest';
 import { CommandNode, CommandTrie, CommandHandler } from '../components/Citadel/types/command-trie';
 import { TextCommandResult } from '../components/Citadel/types/command-results';
 import { CitadelState, CitadelActions } from '../components/Citadel/types';
@@ -35,15 +34,6 @@ export const createMockNode = (name: string, options: MockNodeOptions = {}): Com
   vi.spyOn(node as any, '_children', 'get').mockReturnValue(options.isLeaf ? new Map() : childrenMap);
 
   return node;
-};
-
-export const createMockNodeForTesting = (name: string, options: MockNodeOptions = {}): CommandNode => {
-  return new CommandNode({
-    fullPath: [name],
-    description: options.description || `Mock node for ${name}`,
-    argument: options.argument,
-    handler: options.handler || vi.fn()
-  });
 };
 
 export const createMockCommandTrie = (): CommandTrie => {
@@ -98,5 +88,6 @@ export const createMockCitadelActions = (overrides = {}): CitadelActions => ({
   setValidation: vi.fn(),
   executeCommand: vi.fn(),
   executeHistoryCommand: vi.fn(),
+  clearHistory: vi.fn(),
   ...overrides
 });

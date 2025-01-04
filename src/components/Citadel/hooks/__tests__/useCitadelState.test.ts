@@ -1,11 +1,9 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useCitadelState } from '../useCitadelState';
 import { useCommandTrie } from '../useCommandTrie';
 import { createMockCommandTrie, createMockNode } from '../../../../__test-utils__/factories';
 import { StorageFactory } from '../../storage/StorageFactory';
-import { JsonCommandResult } from '../../types/command-results';
-import { CommandNode } from '../../types/command-trie';
+import { CommandResult } from '../../types/command-results';
 import { OutputItem } from '../../types/state';
 
 // Mock CitadelConfigContext
@@ -30,7 +28,7 @@ describe('useCitadelState', () => {
 
   it('should initialize with default state', () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as jest.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
 
     const { result } = renderHook(() => useCitadelState());
 
@@ -54,7 +52,7 @@ describe('useCitadelState', () => {
 
   it('should handle setCommandStack action', () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as jest.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
 
     const { result } = renderHook(() => useCitadelState());
 
@@ -68,7 +66,7 @@ describe('useCitadelState', () => {
 
   it('should handle setCurrentInput action', () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as jest.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
 
     const { result } = renderHook(() => useCitadelState());
 
@@ -82,7 +80,7 @@ describe('useCitadelState', () => {
 
   it('should handle setIsEnteringArg action', () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as jest.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
 
     const { result } = renderHook(() => useCitadelState());
 
@@ -95,7 +93,7 @@ describe('useCitadelState', () => {
 
   it('should handle setCurrentNode action', () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as jest.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
 
     const { result } = renderHook(() => useCitadelState());
 
@@ -109,12 +107,20 @@ describe('useCitadelState', () => {
 
   it('should handle addOutput action', () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as jest.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
 
     const { result } = renderHook(() => useCitadelState());
 
     const output = new OutputItem(['test', 'command']);
-    output.result = new JsonCommandResult({ text: 'success' });
+    output.result = new CommandResult({
+      _status: 'success',
+      timestamp: Date.now(),
+      status: 'success',
+      markSuccess: () => {},
+      markError: () => {},
+      markRunning: () => {},
+      text: 'success'
+    });
 
     act(() => {
       result.current.actions.addOutput(output);
@@ -126,7 +132,7 @@ describe('useCitadelState', () => {
 
   it('should handle setValidation action', () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as jest.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
 
     const { result } = renderHook(() => useCitadelState());
 
@@ -140,7 +146,7 @@ describe('useCitadelState', () => {
 
   it('should handle multiple actions in sequence', () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as jest.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
 
     const { result } = renderHook(() => useCitadelState());
 
@@ -161,7 +167,17 @@ describe('useCitadelState', () => {
     const mockCommand = createMockNode('test', {
       description: 'Test command',
       isLeaf: true,
-      handler: async () => new JsonCommandResult({ text: 'success' })
+      handler: async () => {
+        return {
+          _status: 'success',
+          timestamp: Date.now(),
+          status: 'success',
+          markSuccess: () => {},
+          markError: () => {},
+          markRunning: () => {},
+          text: 'test output'
+        };
+      }
     });
     (mockCommand as any)._fullPath = ['test', 'command'];
 
@@ -172,7 +188,7 @@ describe('useCitadelState', () => {
       }
       return undefined;
     });
-    (useCommandTrie as jest.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
 
     // Mock history commands
     const mockStorage = {
@@ -197,12 +213,12 @@ describe('useCitadelState', () => {
     });
 
     expect(result.current.state.output).toHaveLength(1);
-    expect(result.current.state.output[0].result?.data).toEqual({ text: 'success' });
+    expect(result.current.state.output[0].result?.data).toEqual({ text: 'test output' });
   });
 
   it('should handle invalid history index', async () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as jest.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
 
     // Mock history commands
     const mockStorage = {
@@ -228,7 +244,15 @@ describe('useCitadelState', () => {
 
   it('should execute command from history on Enter', async () => {
     const mockCommandTrie = createMockCommandTrie();
-    const mockHandler = vi.fn().mockResolvedValue(new JsonCommandResult({ text: 'success' }));
+    const mockHandler = vi.fn().mockResolvedValue({
+      _status: 'success',
+      timestamp: Date.now(),
+      status: 'success',
+      markSuccess: () => {},
+      markError: () => {},
+      markRunning: () => {},
+      text: 'test output'
+    });
     const mockCommand = createMockNode('test', {
       description: 'Test command',
       isLeaf: true,
@@ -243,7 +267,7 @@ describe('useCitadelState', () => {
       }
       return undefined;
     });
-    (useCommandTrie as jest.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
 
     // Mock history commands
     const mockStorage = {
@@ -275,25 +299,45 @@ describe('useCitadelState', () => {
     });
 
     expect(mockHandler).toHaveBeenCalledWith([]);
-    expect(result.current.state.output[0].result?.data).toEqual({ text: 'success' });
+    expect(result.current.state.output[0].result?.data).toEqual({ text: 'test output' });
   });
 
   it('should handle keyboard navigation through history', async () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as jest.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
 
     // Create mock command nodes
     const mockCommand1 = createMockNode('test1', {
       description: 'Test command 1',
       isLeaf: true,
-      handler: async () => ({ text: 'test1' })
+      handler: async () => {
+        return {
+          _status: 'success',
+          timestamp: Date.now(),
+          status: 'success',
+          markSuccess: () => {},
+          markError: () => {},
+          markRunning: () => {},
+          text: 'test output 1'
+        };
+      }
     });
     (mockCommand1 as any)._fullPath = ['test', 'command1'];
 
     const mockCommand2 = createMockNode('test2', {
       description: 'Test command 2',
       isLeaf: true,
-      handler: async () => ({ text: 'test2' })
+      handler: async () => {
+        return {
+          _status: 'success',
+          timestamp: Date.now(),
+          status: 'success',
+          markSuccess: () => {},
+          markError: () => {},
+          markRunning: () => {},
+          text: 'test output 2'
+        };
+      }
     });
     (mockCommand2 as any)._fullPath = ['test', 'command2'];
 

@@ -41,4 +41,5 @@ export interface CitadelActions {
   setValidation: (validation: { isValid: boolean; message?: string }) => void;
   executeCommand: (path: string[], args?: string[]) => Promise<void>;
   executeHistoryCommand: (index: number) => Promise<void>;
+  clearHistory: () => Promise<void>;
 }
