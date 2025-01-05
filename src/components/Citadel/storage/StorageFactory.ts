@@ -24,7 +24,7 @@ export class StorageFactory {
   /**
    * Get or create a storage instance based on configuration
    */
-  getStorage(config?: StorageConfig): CommandStorage {
+  getStorage(config: StorageConfig): CommandStorage {
     // If we already have a storage instance and config hasn't changed, return it
     if (this.currentStorage && this.config === config) {
       return this.currentStorage;
@@ -37,11 +37,14 @@ export class StorageFactory {
   /**
    * Create a new storage instance with fallback handling
    */
-  private createStorage(config?: StorageConfig): CommandStorage {
+  private createStorage(config: StorageConfig): CommandStorage {
     const type = config?.type || 'localStorage';
     
     if (type === 'localStorage') {
       try {
+        if (!this.rootNode) {
+          throw new Error('CommandNode root is required for localStorage initialization');
+        }
         // Test localStorage availability
         window.localStorage.setItem('citadel_test', 'test');
         window.localStorage.removeItem('citadel_test');

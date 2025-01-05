@@ -5,6 +5,9 @@ All code must be compatible with React 18+ and TypeScript as configured in the p
 - TypeScript strict mode and type checking
 - Modern React patterns (hooks, functional components)
 
+Method arguments should conform to the types expected by that function. The goal here is to avoid TypeScript errors of the form "Argument of type 'ClassName | undefined' is not assignable to parameter of type 'ClassName'.
+  Type 'undefined' is not assignable to type 'ClassName'." Check the function signature before adding arguments!
+
 Check `package.json` for the specific versions of dependencies if needed.
 
 ## Error Messages

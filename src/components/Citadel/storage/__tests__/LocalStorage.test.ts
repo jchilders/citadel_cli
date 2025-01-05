@@ -113,12 +113,12 @@ describe('LocalStorage', () => {
 
     // Mock getChild to return the appropriate command
     vi.spyOn(testRootNode, 'getChild').mockImplementation((name: string) => {
-      const commandMap = {
+      const commandMap: Record<string, CommandNode> = {
         'test1': mockCommand1,
         'test2': mockCommand2,
         'test3': mockCommand3
       };
-      return commandMap[name];
+      return commandMap[name] || null;
     });
 
     const localStorage = new LocalStorage({ maxCommands: 2 }, testRootNode);
