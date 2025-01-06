@@ -7,7 +7,6 @@ import { TextCommandResult } from '../../types/command-results';
 
 describe('LocalStorage', () => {
   let localStorage: LocalStorage;
-  let mockRootNode: CommandNode;
   let mockChildNode: CommandNode;
 
   beforeEach(() => {
@@ -25,29 +24,12 @@ describe('LocalStorage', () => {
       }
     });
 
-    mockRootNode = createMockNode('root', {
-      description: 'Root node',
-      isLeaf: false
-    });
-
-    // Mock the children map for root node
-    const childrenMap = new Map<string, CommandNode>([['test', mockChildNode]]);
-    vi.spyOn(mockRootNode as any, '_children', 'get').mockReturnValue(childrenMap);
-
-    // Mock the fullPath getter for child node
-    vi.spyOn(mockChildNode as any, 'fullPath', 'get').mockReturnValue(['root', 'test']);
-
-    // Mock the getChild method on root node
-    vi.spyOn(mockRootNode, 'getChild').mockImplementation((name: string) => 
-                                                          name === 'test' ? mockChildNode : undefined
-                                                         );
-
-    localStorage = new LocalStorage({ maxCommands: 2 }, mockRootNode);
+    localStorage = new LocalStorage({ maxCommands: 2 });
   });
 
   it('should store and retrieve commands', async () => {
     const command: StoredCommand = {
-      node: mockChildNode,
+      path: ['test'],
       args: ['arg1'],
       timestamp: Date.now()
     };
@@ -58,7 +40,7 @@ describe('LocalStorage', () => {
     expect(commands).toHaveLength(1);
     expect(commands[0].args).toEqual(command.args);
     expect(commands[0].timestamp).toEqual(command.timestamp);
-    expect(commands[0].node.fullPath).toEqual(command.node.fullPath);
+    expect(commands[0].path).toEqual(command.path);
   });
 
   it('should enforce maxCommands limit', async () => {
@@ -106,11 +88,6 @@ describe('LocalStorage', () => {
     ]);
     vi.spyOn(testRootNode as any, '_children', 'get').mockReturnValue(childrenMap);
 
-    // Mock fullPath getters for each command
-    vi.spyOn(mockCommand1 as any, 'fullPath', 'get').mockReturnValue(['root', 'test1']);
-    vi.spyOn(mockCommand2 as any, 'fullPath', 'get').mockReturnValue(['root', 'test2']);
-    vi.spyOn(mockCommand3 as any, 'fullPath', 'get').mockReturnValue(['root', 'test3']);
-
     // Mock getChild to return the appropriate command
     vi.spyOn(testRootNode, 'getChild').mockImplementation((name: string) => {
       const commandMap: Record<string, CommandNode> = {
@@ -121,22 +98,22 @@ describe('LocalStorage', () => {
       return commandMap[name] || null;
     });
 
-    const localStorage = new LocalStorage({ maxCommands: 2 }, testRootNode);
+    const localStorage = new LocalStorage({ maxCommands: 2 });
 
     const command1: StoredCommand = {
-      node: mockCommand1,
+      path: ['test1'],
       args: ['arg1'],
       timestamp: Date.now()
     };
 
     const command2: StoredCommand = {
-      node: mockCommand2,
+      path: ['test2'],
       args: ['arg2'],
       timestamp: Date.now()
     };
 
     const command3: StoredCommand = {
-      node: mockCommand3,
+      path: ['test3'],
       args: ['arg3'],
       timestamp: Date.now()
     };
@@ -147,66 +124,13 @@ describe('LocalStorage', () => {
 
     const commands = await localStorage.getCommands();
     expect(commands).toHaveLength(2);
-    expect(commands[0].node.fullPath).toEqual(['root', 'test2']);
-    expect(commands[1].node.fullPath).toEqual(['root', 'test3']);
-  });
-
-  it('should handle missing command nodes gracefully', async () => {
-    const mockCommand = createMockNode('test', {
-      description: 'Test command',
-      isLeaf: true,
-      handler: async () => {
-        const result = new TextCommandResult('test output');
-        result.markSuccess();
-        return result;
-      }
-    });
-
-    // Create a root node that doesn't have the command we'll try to deserialize
-    const emptyRootNode = createMockNode('root', {
-      description: 'Root node',
-      isLeaf: false
-    });
-
-    // Mock an empty children map for the root node
-    const emptyChildrenMap = new Map<string, CommandNode>();
-    vi.spyOn(emptyRootNode as any, '_children', 'get').mockReturnValue(emptyChildrenMap);
-
-    // Mock getChild to always return undefined (simulating missing command)
-    vi.spyOn(emptyRootNode, 'getChild').mockReturnValue(undefined);
-
-    // Mock fullPath getter for the command that will be stored
-    vi.spyOn(mockCommand as any, 'fullPath', 'get').mockReturnValue(['root', 'test']);
-
-    const localStorage = new LocalStorage({ maxCommands: 2 }, emptyRootNode);
-
-    // Add a command that won't be found during deserialization
-    const command: StoredCommand = {
-      node: mockCommand,
-      args: ['arg1'],
-      timestamp: Date.now()
-    };
-
-    await localStorage.addCommand(command);
-    const commands = await localStorage.getCommands();
-
-    // Since the command node can't be found in the trie, it should be filtered out
-    expect(commands).toHaveLength(0);
+    expect(commands[0].path).toEqual(['test2']);
+    expect(commands[1].path).toEqual(['test3']);
   });
 
   it('should clear storage', async () => {
-    const mockCommand = createMockNode('test', {
-      description: 'Test command',
-      handler: async () => {
-        const result = new TextCommandResult('test output');
-        result.markSuccess();
-        return result;
-      }
-    });
-
-
     const command: StoredCommand = {
-      node: mockCommand,
+      path: ['test'],
       args: ['arg1'],
       timestamp: Date.now()
     };

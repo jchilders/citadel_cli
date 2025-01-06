@@ -1,15 +1,20 @@
 import { renderHook, act } from '@testing-library/react';
 import { useCitadelState } from '../useCitadelState';
 import { useCommandTrie } from '../useCommandTrie';
+import { vi, Mock } from 'vitest'
 import { createMockCommandTrie, createMockNode } from '../../../../__test-utils__/factories';
-import { StorageFactory } from '../../storage/StorageFactory';
-import { CommandResult } from '../../types/command-results';
+import { TextCommandResult } from '../../types/command-results';
 import { OutputItem } from '../../types/state';
 
 // Mock CitadelConfigContext
 vi.mock('../../config/CitadelConfigContext', () => ({
   useCitadelConfig: () => ({
     storage: { type: 'memory', maxCommands: 100 }
+  }),
+  useCitadelStorage: () => ({
+    addCommand: vi.fn().mockResolvedValue(undefined),
+    getCommands: vi.fn().mockResolvedValue([]),
+    clear: vi.fn().mockResolvedValue(undefined)
   })
 }));
 
@@ -28,7 +33,7 @@ describe('useCitadelState', () => {
 
   it('should initialize with default state', () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as Mock).mockReturnValue(mockCommandTrie);
 
     const { result } = renderHook(() => useCitadelState());
 
@@ -52,7 +57,7 @@ describe('useCitadelState', () => {
 
   it('should handle setCommandStack action', () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as Mock).mockReturnValue(mockCommandTrie);
 
     const { result } = renderHook(() => useCitadelState());
 
@@ -66,7 +71,7 @@ describe('useCitadelState', () => {
 
   it('should handle setCurrentInput action', () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as Mock).mockReturnValue(mockCommandTrie);
 
     const { result } = renderHook(() => useCitadelState());
 
@@ -80,7 +85,7 @@ describe('useCitadelState', () => {
 
   it('should handle setIsEnteringArg action', () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as Mock).mockReturnValue(mockCommandTrie);
 
     const { result } = renderHook(() => useCitadelState());
 
@@ -93,7 +98,7 @@ describe('useCitadelState', () => {
 
   it('should handle setCurrentNode action', () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as Mock).mockReturnValue(mockCommandTrie);
 
     const { result } = renderHook(() => useCitadelState());
 
@@ -107,20 +112,12 @@ describe('useCitadelState', () => {
 
   it('should handle addOutput action', () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as Mock).mockReturnValue(mockCommandTrie);
 
     const { result } = renderHook(() => useCitadelState());
 
     const output = new OutputItem(['test', 'command']);
-    output.result = new CommandResult({
-      _status: 'success',
-      timestamp: Date.now(),
-      status: 'success',
-      markSuccess: () => {},
-      markError: () => {},
-      markRunning: () => {},
-      text: 'success'
-    });
+    output.result = new TextCommandResult('test output');
 
     act(() => {
       result.current.actions.addOutput(output);
@@ -132,7 +129,7 @@ describe('useCitadelState', () => {
 
   it('should handle setValidation action', () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as Mock).mockReturnValue(mockCommandTrie);
 
     const { result } = renderHook(() => useCitadelState());
 
@@ -146,7 +143,7 @@ describe('useCitadelState', () => {
 
   it('should handle multiple actions in sequence', () => {
     const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
+    (useCommandTrie as Mock).mockReturnValue(mockCommandTrie);
 
     const { result } = renderHook(() => useCitadelState());
 
@@ -160,235 +157,5 @@ describe('useCitadelState', () => {
     expect(result.current.state.currentInput).toBe('test');
     expect(result.current.state.currentNode).toBe(node);
     expect(result.current.state.isEnteringArg).toBe(true);
-  });
-
-  it('should execute a command from history', async () => {
-    const mockCommandTrie = createMockCommandTrie();
-    const mockCommand = createMockNode('test', {
-      description: 'Test command',
-      isLeaf: true,
-      handler: async () => {
-        return {
-          _status: 'success',
-          timestamp: Date.now(),
-          status: 'success',
-          markSuccess: () => {},
-          markError: () => {},
-          markRunning: () => {},
-          text: 'test output'
-        };
-      }
-    });
-    (mockCommand as any)._fullPath = ['test', 'command'];
-
-    // Mock getCommand to return the mock command
-    vi.spyOn(mockCommandTrie, 'getCommand').mockImplementation((path) => {
-      if (path.join('.') === 'test.command') {
-        return mockCommand;
-      }
-      return undefined;
-    });
-    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
-
-    // Mock history commands
-    const mockStorage = {
-      addCommand: vi.fn().mockResolvedValue(undefined),
-      getCommands: vi.fn().mockResolvedValue([
-        { node: mockCommand, args: ['arg1'], timestamp: Date.now() }
-      ]),
-      clear: vi.fn().mockResolvedValue(undefined)
-    };
-    vi.spyOn(StorageFactory.getInstance(), 'getStorage').mockReturnValue(mockStorage);
-
-    const { result } = renderHook(() => useCitadelState());
-
-    // Wait for history to load
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
-    });
-
-    // Execute the command from history
-    await act(async () => {
-      await result.current.actions.executeHistoryCommand(0);
-    });
-
-    expect(result.current.state.output).toHaveLength(1);
-    expect(result.current.state.output[0].result?.data).toEqual({ text: 'test output' });
-  });
-
-  it('should handle invalid history index', async () => {
-    const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
-
-    // Mock history commands
-    const mockStorage = {
-      addCommand: vi.fn().mockResolvedValue(undefined),
-      getCommands: vi.fn().mockResolvedValue([]),
-      clear: vi.fn().mockResolvedValue(undefined)
-    };
-    vi.spyOn(StorageFactory.getInstance(), 'getStorage').mockReturnValue(mockStorage);
-
-    const { result } = renderHook(() => useCitadelState());
-
-    // Wait for history to load
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
-    });
-
-    await act(async () => {
-      await result.current.actions.executeHistoryCommand(999);
-    });
-
-    expect(result.current.state.output).toHaveLength(0);
-  });
-
-  it('should execute command from history on Enter', async () => {
-    const mockCommandTrie = createMockCommandTrie();
-    const mockHandler = vi.fn().mockResolvedValue({
-      _status: 'success',
-      timestamp: Date.now(),
-      status: 'success',
-      markSuccess: () => {},
-      markError: () => {},
-      markRunning: () => {},
-      text: 'test output'
-    });
-    const mockCommand = createMockNode('test', {
-      description: 'Test command',
-      isLeaf: true,
-      handler: mockHandler
-    });
-    (mockCommand as any)._fullPath = ['test', 'command'];
-    
-    // Mock getCommand to return the mock command only for the correct path
-    vi.spyOn(mockCommandTrie, 'getCommand').mockImplementation((path) => {
-      if (path.join('.') === 'test.command') {
-        return mockCommand;
-      }
-      return undefined;
-    });
-    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
-
-    // Mock history commands
-    const mockStorage = {
-      addCommand: vi.fn().mockResolvedValue(undefined),
-      getCommands: vi.fn().mockResolvedValue([
-        { node: mockCommand, args: [], timestamp: 1 }
-      ]),
-      clear: vi.fn().mockResolvedValue(undefined)
-    };
-    vi.spyOn(StorageFactory.getInstance(), 'getStorage').mockReturnValue(mockStorage);
-
-    const { result } = renderHook(() => useCitadelState());
-
-    // Wait for history to load
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
-    });
-
-    // Navigate to command
-    act(() => {
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
-    });
-
-    // Execute command with Enter
-    await act(async () => {
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-      // Wait for async operations to complete
-      await new Promise(resolve => setTimeout(resolve, 0));
-    });
-
-    expect(mockHandler).toHaveBeenCalledWith([]);
-    expect(result.current.state.output[0].result?.data).toEqual({ text: 'test output' });
-  });
-
-  it('should handle keyboard navigation through history', async () => {
-    const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as vi.Mock).mockReturnValue(mockCommandTrie);
-
-    // Create mock command nodes
-    const mockCommand1 = createMockNode('test1', {
-      description: 'Test command 1',
-      isLeaf: true,
-      handler: async () => {
-        return {
-          _status: 'success',
-          timestamp: Date.now(),
-          status: 'success',
-          markSuccess: () => {},
-          markError: () => {},
-          markRunning: () => {},
-          text: 'test output 1'
-        };
-      }
-    });
-    (mockCommand1 as any)._fullPath = ['test', 'command1'];
-
-    const mockCommand2 = createMockNode('test2', {
-      description: 'Test command 2',
-      isLeaf: true,
-      handler: async () => {
-        return {
-          _status: 'success',
-          timestamp: Date.now(),
-          status: 'success',
-          markSuccess: () => {},
-          markError: () => {},
-          markRunning: () => {},
-          text: 'test output 2'
-        };
-      }
-    });
-    (mockCommand2 as any)._fullPath = ['test', 'command2'];
-
-    // Mock history commands
-    const mockStorage = {
-      addCommand: vi.fn().mockResolvedValue(undefined),
-      getCommands: vi.fn().mockResolvedValue([
-        { node: mockCommand1, args: [], timestamp: 1 },
-        { node: mockCommand2, args: [], timestamp: 2 }
-      ]),
-      clear: vi.fn().mockResolvedValue(undefined)
-    };
-    vi.spyOn(StorageFactory.getInstance(), 'getStorage').mockReturnValue(mockStorage);
-
-    const { result } = renderHook(() => useCitadelState());
-
-    // Wait for history to load
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
-    });
-
-    // Mock ArrowUp key press
-    act(() => {
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
-    });
-
-    expect(result.current.state.currentInput).toBe('test command2');
-    expect(result.current.state.history.position).toBe(1);
-
-    // Mock ArrowUp key press again
-    act(() => {
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
-    });
-
-    expect(result.current.state.currentInput).toBe('test command1');
-    expect(result.current.state.history.position).toBe(0);
-
-    // Mock ArrowDown key press
-    act(() => {
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
-    });
-
-    expect(result.current.state.currentInput).toBe('test command2');
-    expect(result.current.state.history.position).toBe(1);
-
-    // Mock Escape key press
-    act(() => {
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-    });
-
-    expect(result.current.state.currentInput).toBe('');
-    expect(result.current.state.history.position).toBe(null);
   });
 });

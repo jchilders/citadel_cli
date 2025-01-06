@@ -1,34 +1,21 @@
 import { StorageConfig, StoredCommand } from '../types/storage';
 import { BaseStorage } from './BaseStorage';
-import { CommandNode } from '../types/command-trie';
-
-interface SerializedStoredCommand {
-  nodePath: string[];
-  args: string[];
-  timestamp: number;
-}
 
 /**
  * localStorage-based command history storage
  */
 export class LocalStorage extends BaseStorage {
   private readonly storageKey = 'citadel_command_history';
-  private commandTrie: CommandNode;
 
-  constructor(config: StorageConfig, rootNode: CommandNode) {
+  constructor(config: StorageConfig) {
     super(config);
-    this.commandTrie = rootNode;
   }
 
   async getCommands(): Promise<StoredCommand[]> {
     try {
       const data = window.localStorage.getItem(this.storageKey);
       if (!data) return [];
-      
-      const serializedCommands = JSON.parse(data) as SerializedStoredCommand[];
-      return serializedCommands
-        .map(cmd => this.deserializeCommand(cmd))
-        .filter((cmd): cmd is StoredCommand => cmd !== null);
+      return JSON.parse(data) as StoredCommand[];
     } catch (error) {
       console.warn('Failed to load commands from localStorage:', error);
       return [];
@@ -46,7 +33,7 @@ export class LocalStorage extends BaseStorage {
   protected async saveCommands(commands: StoredCommand[]): Promise<void> {
     try {
       const serializedCommands = commands.map(cmd => ({
-        nodePath: cmd.node.fullPath,
+        path: cmd.path,
         args: [...cmd.args],
         timestamp: cmd.timestamp
       }));
@@ -55,30 +42,5 @@ export class LocalStorage extends BaseStorage {
       console.warn('Failed to save commands to localStorage:', error);
       throw error; // Re-throw to trigger fallback
     }
-  }
-
-  private deserializeCommand(serialized: SerializedStoredCommand): StoredCommand | null {
-    if (!this.commandTrie) return null;
-
-    // Traverse the command trie to find the node
-    let currentNode: CommandNode | undefined = this.commandTrie;
-    for (let i = 1; i < serialized.nodePath.length; i++) {
-      const segment = serialized.nodePath[i];
-      if (!currentNode || !currentNode.getChild) {
-        console.warn(`Could not find command node for path: ${serialized.nodePath.join(' ')}`);
-        return null;
-      }
-      currentNode = currentNode.getChild(segment);
-      if (!currentNode) {
-        console.warn(`Could not find command node for path: ${serialized.nodePath.join(' ')}`);
-        return null;
-      }
-    }
-
-    return {
-      node: currentNode,
-      args: [...serialized.args],
-      timestamp: serialized.timestamp
-    };
   }
 }

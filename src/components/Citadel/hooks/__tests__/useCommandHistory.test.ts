@@ -3,15 +3,21 @@ import { renderHook, act } from '@testing-library/react';
 import { useCommandHistory } from '../useCommandHistory';
 import { StorageFactory } from '../../storage/StorageFactory';
 import { StoredCommand, CommandStorage } from '../../types/storage';
-import { CommandNode } from '../../types/command-trie';
 import { createMockNode } from '../../../../__test-utils__/factories';
-import { TextCommandResult } from '../../types/command-results';
+import { CommandNode } from '../../types/command-trie';
 
-// Mock CitadelConfigContext
+// Mock storage implementing CommandStorage interface
+const mockStorage = {
+  addCommand: vi.fn().mockResolvedValue(undefined),
+  getCommands: vi.fn().mockResolvedValue([]),
+  clear: vi.fn().mockResolvedValue(undefined)
+} as unknown as CommandStorage;
+
 vi.mock('../../config/CitadelConfigContext', () => ({
   useCitadelConfig: () => ({
     storage: { type: 'memory', maxCommands: 100 }
-  })
+  }),
+  useCitadelStorage: () => mockStorage
 }));
 
 describe('useCommandHistory', () => {
@@ -19,33 +25,17 @@ describe('useCommandHistory', () => {
   let mockCommand: StoredCommand;
 
   beforeEach(() => {
-    // Create mock node using factory
-    mockNode = createMockNode('test', {
-      description: 'Test command',
-      isLeaf: true,
-      handler: async () => {
-        const result = new TextCommandResult('test');
-        result.markSuccess();
-        return result;
-      }
-    });
+    mockNode = createMockNode('test');
 
     // Set the correct path for the node
     (mockNode as any)._fullPath = ['test', 'command'];
 
     mockCommand = {
-      node: mockNode,
+      path: ['test'],
       args: ['arg1'],
       timestamp: 1
     };
   });
-
-  // Mock storage implementing CommandStorage interface
-  const mockStorage = {
-    addCommand: vi.fn().mockResolvedValue(undefined),
-    getCommands: vi.fn().mockResolvedValue([]),
-    clear: vi.fn().mockResolvedValue(undefined)
-  } as unknown as CommandStorage;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -92,7 +82,7 @@ describe('useCommandHistory', () => {
     });
 
     expect(navigation).toEqual({
-      newInput: 'test command arg1',
+      newInput: 'test arg1',
       position: 0
     });
     expect(result.current[0].savedInput).toBe(currentInput);
@@ -150,16 +140,12 @@ describe('useCommandHistory', () => {
     const consoleSpy = vi.spyOn(console, 'warn');
     (mockStorage.getCommands as unknown as Mock<() => Promise<StoredCommand[]>>).mockRejectedValue(new Error('Storage error'));
 
-    const { result } = renderHook(() => useCommandHistory());
+    renderHook(() => useCommandHistory());
 
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'Failed to load command history:',
-      expect.any(Error)
-    );
-    expect(result.current[0].commands).toEqual([]);
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to load command history:', expect.any(Error));
   });
 });

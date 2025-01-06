@@ -1,12 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
 import { CitadelState, CitadelActions, OutputItem } from '../types/state';
 import { useCommandTrie } from './useCommandTrie';
-import { useCitadelConfig } from '../config/CitadelConfigContext';
+import { useCitadelConfig, useCitadelStorage } from '../config/CitadelConfigContext';
 import { CommandResult } from '../types/command-results';
 import { ErrorCommandResult } from '../types/command-results';
 import { useCommandHistory } from './useCommandHistory';
 import { initializeHistoryService } from '../services/HistoryService';
-import { StorageFactory } from '../storage/StorageFactory';
 
 export const useCitadelState = () => {
   const commandTrie = useCommandTrie();
@@ -24,10 +23,12 @@ export const useCitadelState = () => {
   });
 
   // Initialize history service
+  const storage = useCitadelStorage();
+
   useEffect(() => {
-    const storage = StorageFactory.getInstance().getStorage(config.storage);
+    if (!storage) return;
     initializeHistoryService(storage);
-  }, [config.storage]);
+  }, [storage]);
 
   // Keep state.history in sync with useCommandHistory
   useEffect(() => {
@@ -80,7 +81,7 @@ export const useCitadelState = () => {
 
       // Save successful command to history
       const storedCommand = {
-        node,
+        path: node.fullPath,
         args: args || [],
         timestamp: Date.now()
       };
@@ -149,7 +150,7 @@ export const useCitadelState = () => {
         event.preventDefault();
         if (state.history.position !== null) {
           const command = state.history.commands[state.history.position];
-          executeCommand(command.node.fullPath, command.args);
+          executeCommand(command.path, command.args);
         }
         break;
 

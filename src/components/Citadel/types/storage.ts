@@ -24,23 +24,11 @@ export interface StorageConfig {
 }
 
 /**
- * Represents a stored command entry
+ * Represents a command entry to be stored in history
  */
 export interface StoredCommand {
-  /**
-   * Reference to the command node that was executed
-   */
-  node: CommandNode;
-  
-  /**
-   * The arguments provided by the user when executing the command.
-   * Will be empty if the command doesn't accept arguments.
-   */
+  path: string[]
   args: string[];
-  
-  /**
-   * Timestamp when the command was executed
-   */
   timestamp: number;
 }
 
