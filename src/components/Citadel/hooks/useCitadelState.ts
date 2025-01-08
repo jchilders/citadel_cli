@@ -219,7 +219,7 @@ export const useCitadelState = () => {
         return;
       }
 
-      await executeCommand(command.node.fullPath, command.args);
+      await executeCommand(command.path, command.args);
     }, [state.history.commands, executeCommand]),
 
     clearHistory: useCallback(async () => {

@@ -14,7 +14,7 @@ export class MemoryStorage extends BaseStorage {
   async getCommands(): Promise<StoredCommand[]> {
     // Return a deep copy to prevent external mutations
     return this.commands.map(cmd => ({
-      node: cmd.node,
+      path: [...cmd.path],
       args: [...cmd.args],
       timestamp: cmd.timestamp
     }));
@@ -27,7 +27,7 @@ export class MemoryStorage extends BaseStorage {
   protected async saveCommands(commands: StoredCommand[]): Promise<void> {
     // Create a deep copy to prevent external mutations
     this.commands = commands.map(cmd => ({
-      node: cmd.node,
+      path: [...cmd.path],
       args: [...cmd.args],
       timestamp: cmd.timestamp
     }));

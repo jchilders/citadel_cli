@@ -1,5 +1,3 @@
-import { CommandNode } from "./command-trie";
-
 /**
  * Supported storage mechanisms for command history
  */

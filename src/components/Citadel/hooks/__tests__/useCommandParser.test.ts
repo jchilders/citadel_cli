@@ -23,7 +23,8 @@ describe('useCommandParser', () => {
       addOutput: vi.fn(),
       setValidation: vi.fn(),
       executeCommand: vi.fn(),
-      executeHistoryCommand: vi.fn()
+      executeHistoryCommand: vi.fn(),
+      clearHistory: vi.fn()
     };
     user = userEvent.setup();
   });

@@ -7,23 +7,10 @@ import { TextCommandResult } from '../../types/command-results';
 
 describe('LocalStorage', () => {
   let localStorage: LocalStorage;
-  let mockChildNode: CommandNode;
 
   beforeEach(() => {
     // Clear localStorage before each test
     window.localStorage.clear();
-
-    // Create mock nodes using factory
-    mockChildNode = createMockNode('test', {
-      description: 'Test command',
-      isLeaf: true,
-      handler: async () => {
-        const result = new TextCommandResult('test output');
-        result.markSuccess();
-        return result;
-      }
-    });
-
     localStorage = new LocalStorage({ maxCommands: 2 });
   });
 
