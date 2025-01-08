@@ -69,9 +69,9 @@ Type in `drap1.2.3`, which expands to:
 - [x] **Keyboard Navigation**: Complete keyboard control with customizable shortcuts
 - [x] **Instant Command Access**: Sub-100ms response time for command suggestions
 - [x] **Context-Aware Commands**: Commands can be configured on a per-page or per-app basis
+- [x] **Command History**: Quick access to recent and frequent commands
 
 Coming soon:
-- [ ] **Command History**: Quick access to recent and frequent commands
 - [ ] **Themeable Interface**: Seamlessly matches your application's design
 - [ ] **Real-Time Updates**: Live command results with WebSocket support
 
