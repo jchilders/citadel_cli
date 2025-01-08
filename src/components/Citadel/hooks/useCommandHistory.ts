@@ -1,15 +1,14 @@
 import { useState, useCallback, useEffect } from 'react';
-import { StorageFactory } from '../storage/StorageFactory';
 import { StoredCommand } from '../types/storage';
-import { useCitadelConfig } from '../config/CitadelConfigContext';
+import { useCitadelStorage } from '../config/CitadelConfigContext';
 
-interface CommandHistory {
+export interface CommandHistory {
   commands: StoredCommand[];
   position: number | null;
   savedInput: string | null;
 }
 
-interface CommandHistoryActions {
+export interface CommandHistoryActions {
   addCommand: (command: StoredCommand) => Promise<void>;
   getCommands: () => StoredCommand[];
   navigateHistory: (direction: 'up' | 'down', currentInput: string) => { newInput: string; position: number | null };
@@ -18,8 +17,7 @@ interface CommandHistoryActions {
 }
 
 export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
-  const config = useCitadelConfig();
-  const storage = StorageFactory.getInstance().getStorage(config.storage);
+  const storage = useCitadelStorage();
 
   const [history, setHistory] = useState<CommandHistory>({
     commands: [],
@@ -29,6 +27,8 @@ export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
 
   // Load command history from storage on mount
   useEffect(() => {
+    if (!storage) return;
+
     const loadHistory = async () => {
       try {
         const commands = await storage.getCommands();
@@ -44,6 +44,8 @@ export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
   }, [storage]);
 
   const addCommand = useCallback(async (command: StoredCommand) => {
+    if (!storage) return;
+
     try {
       await storage.addCommand(command);
       setHistory(prev => ({
@@ -107,8 +109,9 @@ export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
     }
 
     // Otherwise return the historical command
-    const historicalCommand = history.commands[newPosition].command.join(' ');
-    return { newInput: historicalCommand, position: newPosition };
+    const historicalCommand = history.commands[newPosition];
+    const commandText = [...historicalCommand.path, ...historicalCommand.args].join(' ');
+    return { newInput: commandText, position: newPosition };
   }, [history]);
 
   const saveInput = useCallback((input: string) => {
@@ -120,6 +123,8 @@ export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
 
   const clear = useCallback(async () => {
     try {
+      if (!storage) return;
+
       await storage.clear();
       setHistory({
         commands: [],

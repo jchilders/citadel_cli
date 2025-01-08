@@ -12,7 +12,12 @@ export class MemoryStorage extends BaseStorage {
   }
 
   async getCommands(): Promise<StoredCommand[]> {
-    return [...this.commands];
+    // Return a deep copy to prevent external mutations
+    return this.commands.map(cmd => ({
+      path: [...cmd.path],
+      args: [...cmd.args],
+      timestamp: cmd.timestamp
+    }));
   }
 
   async clear(): Promise<void> {
@@ -20,6 +25,11 @@ export class MemoryStorage extends BaseStorage {
   }
 
   protected async saveCommands(commands: StoredCommand[]): Promise<void> {
-    this.commands = [...commands];
+    // Create a deep copy to prevent external mutations
+    this.commands = commands.map(cmd => ({
+      path: [...cmd.path],
+      args: [...cmd.args],
+      timestamp: cmd.timestamp
+    }));
   }
 }

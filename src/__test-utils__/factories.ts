@@ -1,4 +1,3 @@
-import { vi } from 'vitest';
 import { CommandNode, CommandTrie, CommandHandler } from '../components/Citadel/types/command-trie';
 import { TextCommandResult } from '../components/Citadel/types/command-results';
 import { CitadelState, CitadelActions } from '../components/Citadel/types';
@@ -37,15 +36,6 @@ export const createMockNode = (name: string, options: MockNodeOptions = {}): Com
   return node;
 };
 
-export const createMockNodeForTesting = (name: string, options: MockNodeOptions = {}): CommandNode => {
-  return new CommandNode({
-    fullPath: [name],
-    description: options.description || `Mock node for ${name}`,
-    argument: options.argument,
-    handler: options.handler || vi.fn()
-  });
-};
-
 export const createMockCommandTrie = (): CommandTrie => {
   const trie = new CommandTrie();
   const mockNode = createMockNode('test1');
@@ -73,6 +63,32 @@ export const createMockCommandTrie = (): CommandTrie => {
   return trie;
 };
 
+import { StoredCommand } from '../components/Citadel/types/storage';
+export const createMockStoredCommand = (overrides = {}): StoredCommand => ({
+  path: ['command1'],
+  args: [],
+  timestamp: Date.now(),
+  ...overrides
+});
+
+
+import { CommandHistory, CommandHistoryActions } from '../components/Citadel/hooks/useCommandHistory';
+export const createMockCommandHistory = (overrides = {}): CommandHistory => ({
+  commands: [],
+  position: null,
+  savedInput: null,
+  ...overrides
+});
+
+export const createMockCommandHistoryActions = (overrides = {}): CommandHistoryActions => ({
+  addCommand: vi.fn(),
+  getCommands: vi.fn(),
+  navigateHistory: vi.fn(),
+  saveInput: vi.fn(),
+  clear: vi.fn(),
+  ...overrides
+});
+
 export const createMockCitadelState = (overrides = {}): CitadelState => ({
   commandStack: [],
   currentInput: '',
@@ -98,5 +114,6 @@ export const createMockCitadelActions = (overrides = {}): CitadelActions => ({
   setValidation: vi.fn(),
   executeCommand: vi.fn(),
   executeHistoryCommand: vi.fn(),
+  clearHistory: vi.fn(),
   ...overrides
 });

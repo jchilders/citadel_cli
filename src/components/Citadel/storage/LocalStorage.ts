@@ -7,7 +7,7 @@ import { BaseStorage } from './BaseStorage';
 export class LocalStorage extends BaseStorage {
   private readonly storageKey = 'citadel_command_history';
 
-  constructor(config?: StorageConfig) {
+  constructor(config: StorageConfig) {
     super(config);
   }
 
@@ -15,7 +15,6 @@ export class LocalStorage extends BaseStorage {
     try {
       const data = window.localStorage.getItem(this.storageKey);
       if (!data) return [];
-      
       return JSON.parse(data) as StoredCommand[];
     } catch (error) {
       console.warn('Failed to load commands from localStorage:', error);
@@ -33,7 +32,12 @@ export class LocalStorage extends BaseStorage {
 
   protected async saveCommands(commands: StoredCommand[]): Promise<void> {
     try {
-      window.localStorage.setItem(this.storageKey, JSON.stringify(commands));
+      const serializedCommands = commands.map(cmd => ({
+        path: cmd.path,
+        args: [...cmd.args],
+        timestamp: cmd.timestamp
+      }));
+      window.localStorage.setItem(this.storageKey, JSON.stringify(serializedCommands));
     } catch (error) {
       console.warn('Failed to save commands to localStorage:', error);
       throw error; // Re-throw to trigger fallback

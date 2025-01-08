@@ -22,17 +22,11 @@ export interface StorageConfig {
 }
 
 /**
- * Represents a stored command entry
+ * Represents a command entry to be stored in history
  */
 export interface StoredCommand {
-  /**
-   * The command and its arguments as an array of strings
-   */
-  command: string[];
-  
-  /**
-   * Timestamp when the command was executed
-   */
+  path: string[]
+  args: string[];
   timestamp: number;
 }
 
@@ -41,17 +35,17 @@ export interface StoredCommand {
  */
 export interface CommandStorage {
   /**
-   * Add a command to history
+   * Add a command to storage
    */
-  addCommand(command: StoredCommand): Promise<void>;
-  
+  addCommand: (command: StoredCommand) => Promise<void>;
+
   /**
-   * Get all stored commands, ordered by timestamp ascending
+   * Get all stored commands
    */
-  getCommands(): Promise<StoredCommand[]>;
-  
+  getCommands: () => Promise<StoredCommand[]>;
+
   /**
    * Clear all stored commands
    */
-  clear(): Promise<void>;
+  clear: () => Promise<void>;
 }

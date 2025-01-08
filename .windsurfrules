@@ -5,6 +5,9 @@ All code must be compatible with React 18+ and TypeScript as configured in the p
 - TypeScript strict mode and type checking
 - Modern React patterns (hooks, functional components)
 
+Method arguments should conform to the types expected by that function. The goal here is to avoid TypeScript errors of the form "Argument of type 'ClassName | undefined' is not assignable to parameter of type 'ClassName'.
+  Type 'undefined' is not assignable to type 'ClassName'." Check the function signature before adding arguments!
+
 Check `package.json` for the specific versions of dependencies if needed.
 
 ## Error Messages
@@ -21,7 +24,7 @@ All tests use vitest. See `package.json` for details.
 
 To run one or more individual tests use `npx vitest --run <test_file1> <test_file2>`
 
-To run a single test case within a test file use `npx vitest --run <test_file> --testNamePattern '<test_case>'`. For example: if the following test exists in "thing.test.ts":
+To run a single test case within a test file use `npx vitest --run <test_file> --testNamePattern 'individual test name'`. For example: if the following test exists in "thing.test.ts":
 
 ```
 it("does the thing", () => {
