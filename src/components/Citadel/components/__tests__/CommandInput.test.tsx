@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
 import { CommandInput } from '../CommandInput';
@@ -78,7 +78,8 @@ const mockActions = {
   addOutput: vi.fn(),
   setValidation: vi.fn(),
   executeCommand: vi.fn(),
-  executeHistoryCommand: vi.fn()
+  executeHistoryCommand: vi.fn(),
+  clearHistory: vi.fn(),
 };
 
 describe('CommandInput', () => {
