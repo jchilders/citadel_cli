@@ -6,12 +6,12 @@ import { CitadelConfig } from './components/Citadel/config/types';
 import { commands } from '../command_examples/customer-service-commands';
 
 export const config: CitadelConfig = {
-  cursorType: "bbs"
-  // commandTimeoutMs: 10000, // default 10000
-  // includeHelpCommand: false, // default true
-  // resetStateOnHide: true, // default true
-  // showCitadelKey: '.', // default '.'
-  // maxHeight: '80vh', // default '80vh'
+  cursorType: "bbs",
+  commandTimeoutMs: 10000,
+  includeHelpCommand: true,
+  resetStateOnHide: true,
+  showCitadelKey: '.',
+  maxHeight: '80vh'
 };
 
 function App() {
@@ -21,8 +21,7 @@ function App() {
         <p className="text-gray-700">
           Press <code className="px-2 py-1 bg-gray-100 border border-gray-300 rounded">.</code>
         </p>
-        <Citadel config={config} commands={commands} /> 
-        <Citadel commands={commands} />
+        <Citadel config={config} commands={commands} />
       </div>
     </div>
   );
