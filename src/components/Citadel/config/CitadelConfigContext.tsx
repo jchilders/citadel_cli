@@ -28,24 +28,35 @@ function flattenCommands(
     const currentPath = [...prefix, key];
     const currentKey = currentPath.join('.');
 
-    // If this node has command properties, add it as a command
-    if (value.handler || value.argument || value.description) {
+    // Extract command properties if they exist
+    const commandProps = {
+      description: value.description,
+      handler: value.handler,
+      argument: value.argument
+    };
+
+    // If this is a leaf command node or has command properties
+    if (commandProps.handler || commandProps.argument || commandProps.description) {
       result[currentKey] = {
-        description: value.description || `${currentKey} command`,
-        handler: value.handler,
-        argument: value.argument
+        description: commandProps.description || `${currentKey} command`,
+        ...(commandProps.handler && { handler: commandProps.handler }),
+        ...(commandProps.argument && { argument: commandProps.argument })
       };
     }
 
-    // Process nested commands, excluding known command properties
-    const nested = Object.entries(value).reduce((acc, [k, v]) => {
-      if (typeof v === 'object' && v !== null && k !== 'argument') {
-        acc[k] = v;
-      }
-      return acc;
-    }, {} as Record<string, any>);
+    // Recursively process nested commands
+    const nestedKeys = Object.keys(value).filter(k => 
+      typeof value[k] === 'object' && 
+      k !== 'argument' &&
+      !['description', 'handler'].includes(k)
+    );
 
-    if (Object.keys(nested).length > 0) {
+    if (nestedKeys.length > 0) {
+      const nested = nestedKeys.reduce((acc, k) => {
+        acc[k] = value[k];
+        return acc;
+      }, {} as Record<string, any>);
+
       Object.assign(result, flattenCommands(nested, currentPath));
     }
   }
