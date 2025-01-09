@@ -88,7 +88,7 @@ describe('CitadelConfigContext', () => {
     });
 
     it('should preserve handler functionality after flattening', async () => {
-      const mockHandler = jest.fn().mockResolvedValue(new JsonCommandResult({ success: true }));
+      const mockHandler = vi.fn().mockResolvedValue(new JsonCommandResult({ success: true }));
       
       const hierarchicalCommands = {
         test: {
@@ -115,6 +115,11 @@ describe('CitadelConfigContext', () => {
       });
 
       expect(mockHandler).toHaveBeenCalledWith(['test-arg']);
+      expect(flattenedCommands['test.command']).toEqual({
+        description: 'Test command',
+        handler: mockHandler,
+        argument: { name: 'testArg', description: 'Test argument' }
+      });
     });
   });
 });
