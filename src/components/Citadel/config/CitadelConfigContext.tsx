@@ -3,6 +3,53 @@ import { CitadelConfig } from './types';
 import { defaultConfig } from './defaults';
 import { StorageFactory } from '../storage/StorageFactory';
 import { CommandStorage } from '../types/storage';
+import { CommandHandler, CommandArgument } from '../types/command-trie';
+
+interface FlatCommand {
+  description: string;
+  handler?: CommandHandler;
+  argument?: CommandArgument;
+}
+
+interface HierarchicalCommand {
+  description?: string;
+  handler?: CommandHandler;
+  argument?: CommandArgument;
+  [key: string]: any;
+}
+
+function flattenCommands(
+  obj: Record<string, HierarchicalCommand>,
+  prefix: string[] = []
+): Record<string, FlatCommand> {
+  const result: Record<string, FlatCommand> = {};
+
+  for (const [key, value] of Object.entries(obj)) {
+    const currentPath = [...prefix, key];
+    
+    if (value.handler || value.argument || value.description) {
+      result[currentPath.join('.')] = {
+        description: value.description || `${currentPath.join('.')} command`,
+        ...(value.handler && { handler: value.handler }),
+        ...(value.argument && { argument: value.argument })
+      };
+    }
+    
+    // Recursively process nested commands
+    const nested = Object.entries(value).reduce((acc, [k, v]) => {
+      if (k !== 'description' && k !== 'handler' && k !== 'argument') {
+        acc[k] = v;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+
+    if (Object.keys(nested).length > 0) {
+      Object.assign(result, flattenCommands(nested, currentPath));
+    }
+  }
+
+  return result;
+}
 
 interface CitadelContextValue {
   config: CitadelConfig;
@@ -33,9 +80,11 @@ export const CitadelConfigProvider: React.FC<{
     setStorage(StorageFactory.getInstance().getStorage());
   }, []); // Empty deps array since we only want to initialize once
 
+  const flattenedCommands = commands ? flattenCommands(commands) : undefined;
+  
   const contextValue = {
     config: mergedConfig,
-    commands,
+    commands: flattenedCommands,
     storage
   };
 
