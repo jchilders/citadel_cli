@@ -82,6 +82,15 @@ export const CitadelConfigProvider: React.FC<{
   const mergedConfig = {
     ...defaultConfig,
     ...config,
+    // Ensure nested objects are properly merged
+    storage: {
+      ...defaultConfig.storage,
+      ...config.storage
+    },
+    // Ensure explicit values from config take precedence
+    cursorType: config.cursorType ?? defaultConfig.cursorType,
+    cursorColor: config.cursorColor ?? defaultConfig.cursorColor,
+    cursorSpeed: config.cursorSpeed ?? defaultConfig.cursorSpeed,
     showCitadelKey: config.showCitadelKey || '.'
   };
 
