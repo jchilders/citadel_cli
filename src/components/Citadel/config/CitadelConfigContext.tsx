@@ -26,18 +26,20 @@ function flattenCommands(
 
   for (const [key, value] of Object.entries(obj)) {
     const currentPath = [...prefix, key];
-    
+    const currentKey = currentPath.join('.');
+
+    // If this node has command properties, add it as a command
     if (value.handler || value.argument || value.description) {
-      result[currentPath.join('.')] = {
-        description: value.description || `${currentPath.join('.')} command`,
-        ...(value.handler && { handler: value.handler }),
-        ...(value.argument && { argument: value.argument })
+      result[currentKey] = {
+        description: value.description || `${currentKey} command`,
+        handler: value.handler,
+        argument: value.argument
       };
     }
-    
-    // Recursively process nested commands
+
+    // Process nested commands, excluding known command properties
     const nested = Object.entries(value).reduce((acc, [k, v]) => {
-      if (k !== 'description' && k !== 'handler' && k !== 'argument') {
+      if (typeof v === 'object' && v !== null && k !== 'argument') {
         acc[k] = v;
       }
       return acc;
