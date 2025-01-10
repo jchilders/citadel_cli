@@ -1,14 +1,14 @@
 # Citadel
 
-A React component to add a console/CLI to your web applications.
+A React component to add a console/CLI to your web applications, plus some intelligence.
 
 ![Demo](docs/videos/cserv_close_ticket.gif)
 
 ## Purpose
 
-It is frequently the case that 80% of application usage comes from 20% of the features. Citadel helps you to execute that 20% with just a few keystrokes. It is intended for desktop browsers; it does not work on mobile.
+"80% of application usage comes from 20% of the features." Citadel helps to execute that 20% with just a few keystrokes. It is intended for power users using desktop browsers.
 
-## Example Setup
+## Example
 
 Say your organization has a customer service application. You determine that the top most used pages/endpoints are:
 
@@ -19,16 +19,18 @@ Say your organization has a customer service application. You determine that the
 2.1 Customer Info
 2.2 Customer History
 
+The configuration for this would look like 
 
 ```javascript
   ticket: {
     close: {
       description: 'Close ticket',
       handler: async (args: string[]) => {
-        // Here you would do your API call (or whatever); we pause here simply for effect
+        // Here you would do your API call, etc. We pause here simply for effect.
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         // There are different types of results that can be returned. Here we return JSON.
+        // You can also return HTML, raw text, and images.
         return new JsonCommandResult({
           ticketId: args[0],
           status: 'closed',
@@ -36,7 +38,7 @@ Say your organization has a customer service application. You determine that the
           timestamp: new Date().toISOString()
         });
       },
-      // The argument provided by the user, and what will be passed to the `handler` above
+      // The argument provided by the user, and what will be passed to the `handler` above.
       argument: { name: 'ticketId', description: 'Ticket ID' }
     },
 
@@ -58,10 +60,7 @@ Say your organization has a customer service application. You determine that the
 
 ```
 
-The full version of the example command configuration is available [here](https://github.com/jchilders/citadel_react/blob/0e1de7f457cb0d167963b4e6c9dcf7c405c95054/command_examples/customer-service-commands.ts).
-
-## Configuring
-
+The full version of this example command configuration is available [here](https://github.com/jchilders/citadel_react/blob/0e1de7f457cb0d167963b4e6c9dcf7c405c95054/command_examples/customer-service-commands.ts).
 
 ## Installation
 
@@ -358,8 +357,26 @@ We welcome contributions to Citadel! Here's how you can help:
    ```bash
    npm test
    ```
+6. Run the build command to ensure compilation without error:
+   ```bash
+   npm run build
+   ```
 6. Commit your changes with a clear and descriptive commit message
 7. Push to your fork and submit a pull request
+
+If you are building locally and want to use Citadel in a test app, make sure to link/unlink/relink when you make changes.
+
+   ```bash
+   # from citadel directory
+   npm run build
+   npm unlink --global citadel
+   npm link
+
+   # from test webapp directory
+   npm unlink citadel
+   npm link citadel
+
+   ```
 
 ### Pull Request Guidelines
 
@@ -369,14 +386,6 @@ We welcome contributions to Citadel! Here's how you can help:
 - Update documentation as needed
 - Ensure all tests pass
 - Describe your changes in detail in the pull request description
-
-### Code Style
-
-- Follow TypeScript best practices
-- Use meaningful variable and function names
-- Comment complex logic or non-obvious code
-- Keep functions focused and modular
-- Use consistent formatting (the project uses ESLint and Prettier)
 
 ## License
 
