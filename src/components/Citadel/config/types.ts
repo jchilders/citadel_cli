@@ -15,11 +15,11 @@ export interface CitadelConfig {
    */
   resetStateOnHide?: boolean;
   /**
-   * The keyboard key that shows the command interface. Default is '.' (period).
+   * The keyboard key that shows the command interface.
    */
   showCitadelKey?: string;
   /**
-   * The time in milliseconds before a command execution fails with a timeout. Default is 10000 (10 seconds).
+   * The time in milliseconds before a command execution fails with a timeout.
    */
   commandTimeoutMs?: number;
   /**
@@ -33,16 +33,16 @@ export interface CitadelConfig {
    */
   maxHeight?: string;
   /**
-   * The font size for the command output text. Default is 'text-sm'.
+   * The font size for the command output text.
    * Accepts Tailwind text size classes: 'text-xs', 'text-sm', 'text-base', 'text-lg', etc.
    */
   outputFontSize?: string;
   /**
-   * The type of cursor to display. Can be one of 'blink', 'spin', 'solid', or 'bbs'. Default is 'bbs'.
+   * The type of cursor to display. Can be one of 'blink', 'spin', 'solid', or 'bbs'.
    */
   cursorType?: CursorType;
   /**
-   * The color of the cursor. Default is 'var(--cursor-color, #fff)'.
+   * The color of the cursor.
    * Accepts any valid CSS color value.
    */
   cursorColor?: string;

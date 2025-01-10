@@ -30,8 +30,8 @@ export const defaultConfig: CitadelConfig = {
   maxHeight: '80vh',
   outputFontSize: 'text-xs',
   resetStateOnHide: false,
-  showCitadelKey: '.',
-  cursorType: 'bbs',
+  showCitadelKey: '~',
+  cursorType: 'blink',
   cursorColor: 'var(--cursor-color, #fff)',
   cursorSpeed: 530,
   storage: {
