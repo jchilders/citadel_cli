@@ -4,6 +4,7 @@ import { Citadel } from '../Citadel';
 import userEvent from '@testing-library/user-event';
 import type { UserEvent } from '@testing-library/user-event';
 import { StorageType } from '../types/storage';
+import { defaultConfig } from '../config/defaults'
 
 describe('Citadel', () => {
   let user: UserEvent;
@@ -34,7 +35,7 @@ describe('Citadel', () => {
     
     // Activate Citadel
     await act(async () => {
-      await user.keyboard('.');
+      await user.keyboard(defaultConfig.showCitadelKey || '.');
     });
     
     // Now it should be there
@@ -51,7 +52,7 @@ describe('Citadel', () => {
     
     // Default key should not trigger
     await act(async () => {
-      await user.keyboard('.');
+      await user.keyboard(defaultConfig.showCitadelKey || '.');
     });
     expect(document.getElementById('citadel-root')).toBeNull();
     
@@ -97,7 +98,7 @@ describe('Citadel', () => {
     
     // Open Citadel
     await act(async () => {
-      await user.keyboard('.');
+      await user.keyboard(defaultConfig.showCitadelKey || '.');
     });
     
     // Type and execute help command
@@ -123,7 +124,7 @@ describe('Citadel', () => {
     
     // Open Citadel
     await act(async () => {
-      await user.keyboard('.');
+      await user.keyboard(defaultConfig.showCitadelKey || '.');
     });
     
     // Verify command input and available commands are shown
