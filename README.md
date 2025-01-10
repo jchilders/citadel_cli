@@ -1,79 +1,67 @@
 # Citadel
 
-A command-line interface for web applications that empowers power users with keyboard-driven access to functionality.
+A React component to add a console/CLI to your web applications.
+
+![Demo](docs/videos/cserv_close_ticket.gif)
 
 ## Purpose
 
-Citadel transforms web applications by providing a command palette interface similar to VS Code or Sublime Text, enabling power users to execute complex operations without leaving their keyboard. It significantly reduces cognitive load and improves workflow efficiency in complex web applications.
+It is frequently the case that 80% of application usage comes from 20% of the features. Citadel helps you to execute that 20% with just a few keystrokes. It is intended for desktop browsers; it does not work on mobile.
 
-It is intended to serve as an interface for web applications that require users to navigate through multiple UI layers to perform common tasks, and was designed with RESTful API endpoints in mind.
+## Example Setup
 
-## Why Citadel?
+Say your organization has a customer service application. You determine that the top most used pages/endpoints are:
 
-Modern web applications often require users to navigate through multiple UI layers to perform common tasks. Consider these scenarios where Citadel shines:
+1. Tickets
+1.2 Getting ticket status
+1.1 Closing tickets
+2. Customer
+2.1 Customer Info
+2.2 Customer History
 
-## Examples
 
-### Customer Service Portal
-**Without Citadel:**
-```
-1. Click Customer tab
-2. Open search form
-3. Enter customer ID
-4. Click search
-5. Navigate to tickets tab
-6. Click create ticket
-7. Fill form
-```
+```javascript
+  ticket: {
+    close: {
+      description: 'Close ticket',
+      handler: async (args: string[]) => {
+        // Here you would do your API call (or whatever); we pause here simply for effect
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-**With Citadel:**
-Type in `tn1234`, which expands to:
-```
-> ticket new 1234
-```
+        // There are different types of results that can be returned. Here we return JSON.
+        return new JsonCommandResult({
+          ticketId: args[0],
+          status: 'closed',
+          closed_by: 'John C. Agent',
+          timestamp: new Date().toISOString()
+        });
+      },
+      // The argument provided by the user, and what will be passed to the `handler` above
+      argument: { name: 'ticketId', description: 'Ticket ID' }
+    },
 
-### Financial Trading Platform
-**Without Citadel:**
-```
-1. Select trading pair
-2. Open order form
-3. Switch to limit order
-4. Enter price and quantity
-5. Review and submit
-```
+    history: {
+      description: 'View ticket history',
+      handler: async (args: string[]) => {
+        await new Promise(resolve => setTimeout(resolve, 800));
 
-**With Citadel:**
-Type `tlbu5000 0.5`, which expands to:
-```
-> trade limit btc usd 50000 0.5
-```
+        return new HtmlCommandResult({
+          ticketId: args[0],
+          status: 'in_progress',
+          assignedTo: 'John Smith',
+          lastUpdated: new Date().toISOString()
+        });
+      },
+      argument: { name: 'ticketId', description: 'Ticket ID' }
+    },
+  },
 
-### DevOps Dashboard
-**Without Citadel:**
-```
-1. Navigate to deployments
-2. Filter by environment
-3. Select service
-4. Click rollback
-5. Confirm action
 ```
 
-**With Citadel:**
-Type in `drap1.2.3`, which expands to:
-```
-> deploy rollback api-service prod 1.2.3
-```
+The full version of the example command configuration is available [here](https://github.com/jchilders/citadel_react/blob/0e1de7f457cb0d167963b4e6c9dcf7c405c95054/command_examples/customer-service-commands.ts).
 
-## Features
+## Configuring
 
-- [x] **Keyboard Navigation**: Complete keyboard control with customizable shortcuts
-- [x] **Instant Command Access**: Sub-100ms response time for command suggestions
-- [x] **Context-Aware Commands**: Commands can be configured on a per-page or per-app basis
-- [x] **Command History**: Quick access to recent and frequent commands
-
-Coming soon:
-- [ ] **Themeable Interface**: Seamlessly matches your application's design
-- [ ] **Real-Time Updates**: Live command results with WebSocket support
 
 ## Installation
 
