@@ -1,4 +1,32 @@
-:root {
+#!/bin/bash
+
+# Exit on error
+set -e
+
+# Define directories
+STYLES_DIR="src/styles"
+COMPONENTS_DIR="src/components"
+CITADEL_DIR="src/components/Citadel"
+
+# Ensure target directories exist
+mkdir -p "$STYLES_DIR"
+mkdir -p "$CITADEL_DIR"
+mkdir -p "${COMPONENTS_DIR}/CommandInput"
+
+# Create new citadel-base.css
+echo "Creating citadel-base.css..."
+cat > "${STYLES_DIR}/citadel-base.css" << 'EOL'
+.citadel-root {
+  /* Scoped default styles */
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  /* Theme variables */
   --citadel-bg: rgb(17, 24, 39);
   --citadel-text: rgba(255, 255, 255, 0.87);
   --citadel-border: rgb(55, 65, 81);
@@ -8,33 +36,6 @@
   --citadel-default-height: 33vh;
   --citadel-max-height: 80vh;
   --citadel-error: rgb(239, 68, 68);
-}
-
-.citadel-root {
-  /* Base styles */
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-.container {
-  position: fixed;
-  inset: auto 0 0 0;
-  height: var(--citadel-default-height);
-  min-height: var(--citadel-min-height);
-  max-height: var(--citadel-max-height);
-  background-color: var(--citadel-bg);
-  color: var(--citadel-text);
-  overflow: hidden;
-  width: 100%;
-  z-index: 9999;
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 /* Scope all element styles to our component */
@@ -79,13 +80,16 @@
 .citadel-animate-shake {
   animation: citadel-shake 0.15s ease-in-out;
 }
+EOL
 
+# Update Citadel.module.css
+echo "Updating Citadel.module.css..."
+cat > "${CITADEL_DIR}/Citadel.module.css" << 'EOL'
 .container {
   position: fixed;
   inset: auto 0 0 0;
   height: var(--citadel-default-height);
   min-height: var(--citadel-min-height);
-  /* min-height: 200px; */
   max-height: var(--citadel-max-height);
   background-color: var(--citadel-bg);
   color: var(--citadel-text);
@@ -129,20 +133,62 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-@keyframes citadel_slideUp {
+@keyframes citadel-slideUp {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
 
-@keyframes citadel_slideDown {
+@keyframes citadel-slideDown {
   from { transform: translateY(0); }
   to { transform: translateY(100%); }
 }
 
 .slideUp {
-  animation: citadel_slideUp 0.2s ease-out forwards;
+  animation: citadel-slideUp 0.2s ease-out forwards;
 }
 
 .slideDown {
-  animation: citadel_slideDown 0.2s ease-out forwards;
+  animation: citadel-slideDown 0.2s ease-out forwards;
 }
+EOL
+
+# Update CommandInput.module.css
+echo "Updating CommandInput.module.css..."
+cat > "${COMPONENTS_DIR}/CommandInput/CommandInput.module.css" << 'EOL'
+@keyframes citadel-input-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+@keyframes citadel-input-flashBorder {
+  0%, 100% { border-color: transparent; }
+  50% { border-color: var(--citadel-error); }
+}
+
+.invalidInput {
+  animation: citadel-input-shake 0.2s ease-in-out, citadel-input-flashBorder 0.3s ease-in-out;
+  border-width: 1px;
+  border-style: solid;
+}
+EOL
+
+# Update styles.css to keep only Tailwind imports
+echo "Updating styles.css..."
+cat > "${STYLES_DIR}/styles.css" << 'EOL'
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+EOL
+
+echo "Done!"
+echo "Files have been updated in their correct locations:"
+echo "- ${STYLES_DIR}/citadel-base.css"
+echo "- ${CITADEL_DIR}/Citadel.module.css"
+echo "- ${COMPONENTS_DIR}/CommandInput/CommandInput.module.css"
+echo "- ${STYLES_DIR}/styles.css"
+echo ""
+echo "Don't forget to:"
+echo "1. Import citadel-base.css in your main component"
+echo "2. Add the 'citadel-root' class to your root component"
+echo "3. Update any animation class references in your components"

@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useGlobalShortcut } from './hooks/useGlobalShortcut';
 import { useSlideAnimation } from './hooks/useSlideAnimation';
 import { useCitadelConfig } from './config/CitadelConfigContext';
@@ -10,12 +11,13 @@ import { CitadelConfig } from './config/types';
 import { CitadelConfigProvider } from './config/CitadelConfigContext';
 import { defaultConfig } from './config/defaults';
 
-import styles from './Citadel.module.css';
 import '../../../dist/styles.css';
+import styles from './Citadel.module.css';
 
 export interface CitadelProps {
   config?: CitadelConfig;
   commands?: Record<string, any>;
+  containerId?: string;
 }
 
 const CitadelInner: React.FC = () => {
@@ -24,11 +26,36 @@ const CitadelInner: React.FC = () => {
   const [height, setHeight] = useState<number | null>(null);
   const outputRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const portalRoot = useRef<HTMLDivElement | null>(null);
   const isDraggingRef = useRef(false);
   const startYRef = useRef(0);
   const startHeightRef = useRef(0);
   const config = useCitadelConfig();
   const { state, actions, getAvailableCommands } = useCitadelState();
+
+  // Portal management
+  useEffect(() => {
+    const containerId = 'citadel-portal-root';
+    let element = document.getElementById(containerId);
+
+    if (!element) {
+      element = document.createElement('div');
+      element.id = containerId;
+      element.className = 'citadel-root';  // Add this line
+      document.body.appendChild(element);
+    } else {
+      // Ensure class is added even if element exists
+      element.className = 'citadel-root';  // Add this line
+    }
+
+    portalRoot.current = element as HTMLDivElement;
+
+    return () => {
+      if (portalRoot.current && !document.getElementById(containerId)) {
+        document.body.removeChild(portalRoot.current);
+      }
+    };
+  }, []);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (containerRef.current) {
@@ -89,12 +116,12 @@ const CitadelInner: React.FC = () => {
     onAnimationComplete: handleAnimationComplete
   });
 
-  if (!isVisible) return null;
+  if (!isVisible || !portalRoot.current) return null;
 
-  return (
+  const content = (
     <div 
       ref={containerRef}
-      className={`${styles.container} ${isVisible ? styles.slideUp : ''} ${isClosing ? styles.slideDown : ''}`}
+      className={`${styles.container} ${isVisible ? styles.citadel_slideUp : ''} ${isClosing ? styles.citadel_slideDown : ''}`}
       style={{
         ...height ? { height: `${height}px` } : undefined,
         maxHeight: config.maxHeight
@@ -120,9 +147,14 @@ const CitadelInner: React.FC = () => {
       </div>
     </div>
   );
+
+  return createPortal(content, portalRoot.current);
 };
 
-export const Citadel: React.FC<CitadelProps> = ({ config = defaultConfig, commands }) => {
+export const Citadel: React.FC<CitadelProps> = ({
+  config = defaultConfig,
+  commands
+}) => {
   return (
     <CitadelConfigProvider config={config} commands={commands}>
       <CitadelInner />
