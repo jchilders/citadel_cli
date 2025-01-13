@@ -1,3 +1,4 @@
+/* citadel.css */
 :root {
   --citadel-bg: rgb(17, 24, 39);
   --citadel-text: rgba(255, 255, 255, 0.87);
@@ -19,3 +20,43 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Move button and anchor styles here since they're scoped to citadel-root */
+.citadel-root button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+
+.citadel-root button:hover {
+  border-color: var(--citadel-accent);
+}
+
+.citadel-root button:focus,
+.citadel-root button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+.citadel-root a {
+  font-weight: 500;
+  color: var(--citadel-accent);
+  text-decoration: inherit;
+}
+
+.citadel-root a:hover {
+  color: var(--citadel-accent-hover);
+}
+
+/* Scope Tailwind utilities to our root */
+.citadel-root .flex-1 { flex: 1 1 0%; }
+.citadel-root .flex-shrink-0 { flex-shrink: 0; }
+.citadel-root .min-h-0 { min-height: 0px; }
+.citadel-root .pt-3 { padding-top: 0.75rem; }
+.citadel-root .px-4 { padding-left: 1rem; padding-right: 1rem; }
+

@@ -1,3 +1,4 @@
+/* Keep only component-specific styles here */
 .container {
   position: fixed;
   inset: auto 0 0 0;
@@ -12,49 +13,6 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-}
-
-/* Scope all element styles to our component */
-.citadel-root button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-
-.citadel-root button:hover {
-  border-color: var(--citadel-accent);
-}
-
-.citadel-root button:focus,
-.citadel-root button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-.citadel-root a {
-  font-weight: 500;
-  color: var(--citadel-accent);
-  text-decoration: inherit;
-}
-
-.citadel-root a:hover {
-  color: var(--citadel-accent-hover);
-}
-
-/* Animations with namespaced keyframes */
-@keyframes citadel-shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-2px); }
-  75% { transform: translateX(2px); }
-}
-
-.citadel-animate-shake {
-  animation: citadel-shake 0.15s ease-in-out;
 }
 
 .innerContainer {
@@ -99,10 +57,10 @@
   to { transform: translateY(100%); }
 }
 
-.slideUp {
+.citadel_slideUp {
   animation: citadel_slideUp 0.2s ease-out forwards;
 }
 
-.slideDown {
+.citadel_slideDown {
   animation: citadel_slideDown 0.2s ease-out forwards;
 }

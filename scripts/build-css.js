@@ -1,4 +1,3 @@
-// scripts/build-css.js
 import fs from 'fs'
 import postcss from 'postcss'
 import tailwindcss from 'tailwindcss'
@@ -15,12 +14,50 @@ const css = `
 @tailwind utilities;
 `
 
+// Custom PostCSS plugin to scope all selectors
+const scopeSelectors = (scope = '.citadel-root') => {
+  return {
+    postcssPlugin: 'scope-selectors',
+    Once(root) {
+      root.walkRules(rule => {
+        // Skip if rule is already scoped or is a keyframe
+        if (
+          rule.selector.includes(scope) || 
+          rule.parent.type === 'atrule' && 
+          rule.parent.name === 'keyframes'
+        ) {
+          return
+        }
+
+        // Skip root level at-rules
+        if (rule.selector.startsWith('@')) {
+          return
+        }
+
+        // Handle comma-separated selectors
+        const selectors = rule.selector.split(',').map(s => {
+          s = s.trim()
+          // Don't scope html, body, or :root selectors
+          if (['html', 'body', ':root'].includes(s)) {
+            return s
+          }
+          return `${scope} ${s}`
+        })
+
+        rule.selector = selectors.join(',')
+      })
+    }
+  }
+}
+scopeSelectors.postcss = true
+
 async function buildCSS() {
   const startTime = performance.now()
 
   const result = await postcss([
-    tailwindcss,
+    tailwindcss('./tailwind.config.js'),
     autoprefixer,
+    scopeSelectors()
   ]).process(css, {
     from: undefined,
     to: 'dist/styles.css'
@@ -30,7 +67,10 @@ async function buildCSS() {
   fs.writeFileSync('dist/styles.css', result.css)
   
   if (result.map) {
+    console.log(`  Creating styles.css.map`)
     fs.writeFileSync('dist/styles.css.map', result.map.toString())
+  } else {
+    console.log(`  Skipping styles.css.map`)
   }
 
   const executionTime = Math.round(performance.now() - startTime)
