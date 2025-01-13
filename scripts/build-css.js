@@ -1,0 +1,48 @@
+// scripts/build-css.js
+import fs from 'fs'
+import postcss from 'postcss'
+import tailwindcss from 'tailwindcss'
+import autoprefixer from 'autoprefixer'
+
+// ANSI escape codes for colors
+const GREEN = '\x1b[32m'
+const RESET = '\x1b[0m'
+
+// Create a minimal CSS file that imports Tailwind
+const css = `
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+`
+
+async function buildCSS() {
+  const startTime = performance.now()
+
+  const result = await postcss([
+    tailwindcss,
+    autoprefixer,
+  ]).process(css, {
+    from: undefined,
+    to: 'dist/styles.css'
+  })
+
+  fs.mkdirSync('dist', { recursive: true })
+  fs.writeFileSync('dist/styles.css', result.css)
+  
+  if (result.map) {
+    fs.writeFileSync('dist/styles.css.map', result.map.toString())
+  }
+
+  const executionTime = Math.round(performance.now() - startTime)
+  const fileSizeKB = Math.round(result.css.length / 1024)
+  
+  console.log(`${GREEN}✓${RESET} Built dist/styles.css (${fileSizeKB}kb) in ${executionTime}ms`)
+  if (result.map) {
+    console.log(`${GREEN}   • also: dist/styles.css.map${RESET}`)
+  }
+}
+
+buildCSS().catch(err => {
+  console.error('Error building CSS:', err)
+  process.exit(1)
+})

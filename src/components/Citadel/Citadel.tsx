@@ -3,13 +3,15 @@ import { useGlobalShortcut } from './hooks/useGlobalShortcut';
 import { useSlideAnimation } from './hooks/useSlideAnimation';
 import { useCitadelConfig } from './config/CitadelConfigContext';
 import { useCitadelState } from './hooks/useCitadelState';
-import styles from './Citadel.module.css';
 import { CommandInput } from './components/CommandInput';
 import { CommandOutput } from './components/CommandOutput';
 import { AvailableCommands } from './components/AvailableCommands';
 import { CitadelConfig } from './config/types';
 import { CitadelConfigProvider } from './config/CitadelConfigContext';
 import { defaultConfig } from './config/defaults';
+
+import styles from './Citadel.module.css';
+import '../../../dist/styles.css';
 
 export interface CitadelProps {
   config?: CitadelConfig;

@@ -1,11 +1,7 @@
 {
-  "name": "citadel",
-  "description": "A command line for your webapp",
-  "keywords": [
-    "react",
-    "command",
-    "interface"
-  ],
+  "name": "@jchilders/citadel",
+  "description": "A hierarchical command line and console for your webapp",
+  "keywords": [ "react", "command", "cli", "interface", "console" ],
   "author": "James Childers",
   "license": "MIT",
   "repository": {
@@ -14,27 +10,31 @@
   },
   "version": "1.0.0",
   "type": "module",
-  "main": "./dist/citadel.umd.cjs",
-  "module": "./dist/citadel.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/citadel.js",
-      "require": "./dist/citadel.umd.cjs",
-      "types": "./dist/index.d.ts"
-    }
-  },
-  "files": [
-    "dist"
-  ],
   "scripts": {
+    "gen-safelist": "node scripts/extract-classes.js",
+    "build:css": "npm run gen-safelist && node scripts/build-css.js",
+    "build": "npm run build:css && tsc && vite build",
     "dev": "vite",
-    "build": "tsc && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest --run",
     "coverage": "vitest run --coverage"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "style": "./dist/styles.css",
+      "import": "./dist/citadel.es.js",
+      "require": "./dist/citadel.umd.cjs"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "types": "./dist/index.d.ts",
+  "main": "./dist/citadel.umd.cjs",
+  "module": "./dist/citadel.es.js",
+  "files": [
+    "dist"
+  ],
   "dependencies": {
     "lucide-react": "^0.460.0",
     "react": "^18.2.0",
@@ -57,10 +57,11 @@
     "jsdom": "^25.0.1",
     "playwright": "^1.49.0",
     "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.15",
+    "tailwindcss": "^3.4.17",
     "typescript": "^5.4.2",
     "typescript-eslint": "^8.11.0",
     "vite": "^5.1.5",
+    "vite-plugin-dts": "^4.5.0",
     "vitest": "^2.1.6"
   }
 }
