@@ -18,7 +18,6 @@ export default {
   "border-gray-300",
   "border-gray-700",
   "border-t-gray-600",
-  "citadel-root",
   "flex",
   "flex-1",
   "flex-col",

@@ -1,0 +1,21 @@
+:root {
+  --citadel-bg: rgb(17, 24, 39);
+  --citadel-text: rgba(255, 255, 255, 0.87);
+  --citadel-border: rgb(55, 65, 81);
+  --citadel-accent: #646cff;
+  --citadel-accent-hover: #535bf2;
+  --citadel-min-height: 200px;
+  --citadel-default-height: 33vh;
+  --citadel-max-height: 80vh;
+  --citadel-error: rgb(239, 68, 68);
+}
+
+.citadel-root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

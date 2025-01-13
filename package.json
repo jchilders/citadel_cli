@@ -27,7 +27,8 @@
       "import": "./dist/citadel.es.js",
       "require": "./dist/citadel.umd.cjs"
     },
-    "./styles.css": "./dist/styles.css"
+    "./styles.css": "./dist/styles.css",
+    "./citadel.css": "./dist/citadel.css"
   },
   "types": "./dist/index.d.ts",
   "main": "./dist/citadel.umd.cjs",

@@ -11,7 +11,8 @@ import { CitadelConfig } from './config/types';
 import { CitadelConfigProvider } from './config/CitadelConfigContext';
 import { defaultConfig } from './config/defaults';
 
-import '../../../dist/styles.css';
+import '../../styles/citadel.css';
+import '../../styles/styles.css';
 import styles from './Citadel.module.css';
 
 export interface CitadelProps {
