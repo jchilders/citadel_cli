@@ -51,7 +51,6 @@ export const commands = {
     timeout: {
       description: 'This command intentionally times out after 11 seconds',
       handler: async (_args: string[]) => {
-        // Fake a long-running operation to demo the spinner
         await new Promise(resolve => setTimeout(resolve, 11000));
         return new JsonCommandResult({ status: 'done' });
       }
@@ -91,27 +90,27 @@ export const commands = {
           return new ImageCommandResult(data[0].url);
         }
       },
-    }
+    },
   },
 
   cowsay: {
-    description: 'Get a cow to say something using cowsay API',
+    description: 'Make a cow say something',
     handler: async (args: string[]) => {
-      const message = args[0];
-      const response = await fetch('https://cowsay.morecode.org/say', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message,
-          format: 'text'
-        })
-      });
-
-      const data = await response.text();
-      return new TextCommandResult(data);
+      const message = args[0] || 'Moo!';
+      const bubbleWidth = message.length + 2;
+      const bubble = [
+        ` ${'_'.repeat(bubbleWidth)} `,
+        `< ${message} >`,
+        ` ${'-'.repeat(bubbleWidth)} `
+      ].join('\n');
+      const cow = `
+     \\   ^__^
+      \\  (oo)\\_______
+         (__)\\       )\\/\\
+             ||----w |
+             ||     ||`;
+      return new TextCommandResult(bubble + cow);
     },
-    argument: { name: 'message', description: 'Enter the message for the cow to say' }
-  }
+    argument: { name: 'message', description: 'What should the cow say?' }
+  },
 };

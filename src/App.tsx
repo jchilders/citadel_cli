@@ -1,9 +1,9 @@
 import { Citadel } from './components/Citadel';
 import { CitadelConfig } from './components/Citadel/config/types';
 
-// import { commands } from '../command_examples/basic-commands';
+import { commands } from '../command_examples/basic-commands';
 // import { commands } from '../command_examples/devops-commands';
-import { commands } from '../command_examples/customer-service-commands';
+// import { commands } from '../command_examples/customer-service-commands';
 
 export const config: CitadelConfig = {
   cursorType: "bbs",
