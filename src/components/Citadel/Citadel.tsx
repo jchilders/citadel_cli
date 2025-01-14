@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { useGlobalShortcut } from './hooks/useGlobalShortcut';
 import { useSlideAnimation } from './hooks/useSlideAnimation';
 import { useCitadelConfig } from './config/CitadelConfigContext';
@@ -11,8 +11,6 @@ import { CitadelConfig } from './config/types';
 import { CitadelConfigProvider } from './config/CitadelConfigContext';
 import { defaultConfig } from './config/defaults';
 
-import '../../styles/citadel.css';
-import '../../styles/styles.css';
 import styles from './Citadel.module.css';
 
 export interface CitadelProps {
@@ -21,54 +19,73 @@ export interface CitadelProps {
   containerId?: string;
 }
 
-export const Citadel: React.FC<CitadelProps> = ({
-  config = defaultConfig,
-  commands
-}) => {
-  return (
-    <CitadelConfigProvider config={config} commands={commands}>
-      <CitadelInner />
-    </CitadelConfigProvider>
-  );
-};
-
 const CitadelInner: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [height, setHeight] = useState<number | null>(null);
   const outputRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const portalRoot = useRef<HTMLDivElement | null>(null);
+  const shadowRootRef = useRef<ShadowRoot | null>(null);
   const isDraggingRef = useRef(false);
   const startYRef = useRef(0);
   const startHeightRef = useRef(0);
   const config = useCitadelConfig();
   const { state, actions, getAvailableCommands } = useCitadelState();
 
-  // Portal management
+  // Shadow DOM management
   useEffect(() => {
-    const containerId = 'citadel-portal-root';
-    let element = document.getElementById(containerId);
+    const containerId = 'citadel-shadow-root';
+    let hostElement = document.getElementById(containerId);
 
-    if (!element) {
-      element = document.createElement('div');
-      element.id = containerId;
-      element.className = 'citadel-root';
-      document.body.appendChild(element);
-    } else {
-      // Ensure class is added even if element exists
-      element.className = 'citadel-root';
+    if (!hostElement) {
+      hostElement = document.createElement('div');
+      hostElement.id = containerId;
+      document.body.appendChild(hostElement);
     }
 
-    portalRoot.current = element as HTMLDivElement;
+    // Create Shadow DOM if it doesn't exist
+    if (!hostElement.shadowRoot) {
+      shadowRootRef.current = hostElement.attachShadow({ mode: 'open' });
+      
+      // Add styles to Shadow DOM
+      const styleSheet = new CSSStyleSheet();
+      styleSheet.replaceSync(`
+        :host {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 9999;
+          pointer-events: none;
+        }
+        .citadel-container {
+          pointer-events: auto;
+        }
+      `);
+      shadowRootRef.current.adoptedStyleSheets = [styleSheet];
+      
+      // Create root element for React
+      const rootElement = document.createElement('div');
+      shadowRootRef.current.appendChild(rootElement);
+      
+      // Initialize React root
+      const root = createRoot(rootElement);
+      root.render(
+        <div className="citadel-container">
+          {/* Your existing content will be rendered here */}
+        </div>
+      );
+    }
 
     return () => {
-      if (portalRoot.current && !document.getElementById(containerId)) {
-        document.body.removeChild(portalRoot.current);
+      if (hostElement && !document.getElementById(containerId)) {
+        document.body.removeChild(hostElement);
       }
     };
   }, []);
 
+  // Rest of your component logic...
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (containerRef.current) {
       isDraggingRef.current = true;
@@ -128,17 +145,16 @@ const CitadelInner: React.FC = () => {
     onAnimationComplete: handleAnimationComplete
   });
 
-  if (!isVisible || !portalRoot.current) return null;
+  if (!isVisible || !shadowRootRef.current) return null;
 
   const content = (
     <div 
       ref={containerRef}
-      className={`${styles.container} ${isVisible ? styles.citadel_slideUp : ''} ${isClosing ? styles.citadel_slideDown : ''}`}
+      className={`${styles.container} ${isVisible ? styles.slideUp : ''} ${isClosing ? styles.slideDown : ''}`}
       style={{
         ...height ? { height: `${height}px` } : undefined,
         maxHeight: config.maxHeight
       }}
-      id="citadel-root"
     >
       <div className={styles.resizeHandle} onMouseDown={handleMouseDown} />
       <div className={styles.innerContainer}>
@@ -160,6 +176,16 @@ const CitadelInner: React.FC = () => {
     </div>
   );
 
-  return createPortal(content, portalRoot.current);
+  return content;
 };
 
+export const Citadel: React.FC<CitadelProps> = ({ 
+  config = defaultConfig, 
+  commands 
+}) => {
+  return (
+    <CitadelConfigProvider config={config} commands={commands}>
+      <CitadelInner />
+    </CitadelConfigProvider>
+  );
+};
