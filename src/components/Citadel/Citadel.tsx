@@ -21,6 +21,17 @@ export interface CitadelProps {
   containerId?: string;
 }
 
+export const Citadel: React.FC<CitadelProps> = ({
+  config = defaultConfig,
+  commands
+}) => {
+  return (
+    <CitadelConfigProvider config={config} commands={commands}>
+      <CitadelInner />
+    </CitadelConfigProvider>
+  );
+};
+
 const CitadelInner: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -42,11 +53,11 @@ const CitadelInner: React.FC = () => {
     if (!element) {
       element = document.createElement('div');
       element.id = containerId;
-      element.className = 'citadel-root';  // Add this line
+      element.className = 'citadel-root';
       document.body.appendChild(element);
     } else {
       // Ensure class is added even if element exists
-      element.className = 'citadel-root';  // Add this line
+      element.className = 'citadel-root';
     }
 
     portalRoot.current = element as HTMLDivElement;
@@ -152,13 +163,3 @@ const CitadelInner: React.FC = () => {
   return createPortal(content, portalRoot.current);
 };
 
-export const Citadel: React.FC<CitadelProps> = ({
-  config = defaultConfig,
-  commands
-}) => {
-  return (
-    <CitadelConfigProvider config={config} commands={commands}>
-      <CitadelInner />
-    </CitadelConfigProvider>
-  );
-};
