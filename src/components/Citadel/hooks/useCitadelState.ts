@@ -151,6 +151,14 @@ export const useCitadelState = () => {
         if (state.history.position !== null) {
           const command = state.history.commands[state.history.position];
           executeCommand(command.path, command.args);
+          setState(prev => ({
+            ...prev,
+            history: {
+              ...prev.history,
+              position: null,
+              savedInput: null
+            }
+          }));
         }
         break;
 
