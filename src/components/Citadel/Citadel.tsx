@@ -56,7 +56,7 @@ class CitadelElement extends HTMLElement {
       this.shadow.appendChild(styleElement);
     }
 
-    // Create container for React app
+    // Create container for React component
     const container = document.createElement('div');
     container.id = 'citadel-root';
     this.shadow.appendChild(container);
