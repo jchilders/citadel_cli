@@ -16,12 +16,6 @@ import citadelModuleStyles from './Citadel.module.css?raw';
 import mainStyles from '../../styles/styles.css?raw';
 import tailwindStyles from '../../styles/tailwind.css?raw';
 
-// Count and log the number of CSS classes in each stylesheet
-console.log('Citadel styles classes:', citadelStyles.match(/[.:][a-zA-Z][a-zA-Z0-9_-]*\s*{/g)?.length || 0);
-console.log('Citadel module styles classes:', citadelModuleStyles.match(/[.:][a-zA-Z][a-zA-Z0-9_-]*\s*{/g)?.length || 0);
-console.log('Main styles classes:', mainStyles.match(/[.:][a-zA-Z][a-zA-Z0-9_-]*\s*{/g)?.length || 0);
-console.log('Tailwind styles classes:', tailwindStyles.match(/[.:][a-zA-Z][a-zA-Z0-9_-]*\s*{/g)?.length || 0);
-
 export interface CitadelProps {
   config?: CitadelConfig;
   commands?: Record<string, any>;
@@ -32,10 +26,12 @@ export interface CitadelProps {
 class CitadelElement extends HTMLElement {
   private shadow: ShadowRoot;
   private root: ReturnType<typeof createRoot> | null = null;
+  private commands?: Record<string, any>;
   
-  constructor() {
+  constructor(commands?: Record<string, any>) {
     super();
     this.shadow = this.attachShadow({ mode: 'open' });
+    this.commands = commands;
   }
 
   connectedCallback() {
@@ -63,20 +59,28 @@ class CitadelElement extends HTMLElement {
 
     // Initialize React within shadow DOM
     this.root = createRoot(container);
-    this.root.render(<CitadelInner />);
+    this.root.render(
+      <CitadelConfigProvider config={defaultConfig} commands={this.commands}>
+        <CitadelInner commands={this.commands} />
+      </CitadelConfigProvider>
+    );
   }
 
-  // disconnectedCallback() {
-  //   if (this.root) {
-  //     this.root.unmount();
-  //     this.root = null;
-  //   }
-  // }
+  disconnectedCallback() {
+    if (this.root) {
+      this.root.unmount();
+      this.root = null;
+    }
+  }
 }
 
 customElements.define('citadel-element', CitadelElement);
 
-const CitadelInner: React.FC = () => {
+interface CitadelInnerProps {
+  commands?: Record<string, any>;
+}
+
+const CitadelInner: React.FC<CitadelInnerProps> = ({ commands }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [height, setHeight] = useState<number | null>(null);
@@ -181,20 +185,24 @@ const CitadelInner: React.FC = () => {
 
 export const Citadel: React.FC<CitadelProps> = ({ 
   config = defaultConfig, 
-  commands 
+  commands,
+  containerId 
 }) => {
   useEffect(() => {
-    const citadelElement = document.createElement('citadel-element');
-    document.body.appendChild(citadelElement);
+    const citadelElement = new CitadelElement(commands);
+    const container = containerId ? document.getElementById(containerId) : document.body;
+    
+    if (!container) {
+      console.warn(`Container with id "${containerId}" not found, falling back to body`);
+      document.body.appendChild(citadelElement);
+    } else {
+      container.appendChild(citadelElement);
+    }
 
     return () => {
-      document.body.removeChild(citadelElement);
+      citadelElement.parentElement?.removeChild(citadelElement);
     };
-  }, []);
+  }, [commands, containerId]);
 
-  return (
-    <CitadelConfigProvider config={config} commands={commands}>
-      <div id="citadel-wrapper" />
-    </CitadelConfigProvider>
-  );
+  return null;
 };
