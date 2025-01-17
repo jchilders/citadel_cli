@@ -123,6 +123,12 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
       isDraggingRef.current = true;
       startYRef.current = e.clientY;
       startHeightRef.current = containerRef.current.offsetHeight;
+      document.documentElement.style.userSelect = 'none';
+      document.documentElement.style.webkitUserSelect = 'none';
+      // @ts-ignore: Vendor prefixed property
+      document.documentElement.style.mozUserSelect = 'none';
+      // @ts-ignore: Vendor prefixed property
+      document.documentElement.style.msUserSelect = 'none';
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     }
@@ -131,21 +137,31 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDraggingRef.current) return;
     
-    const delta = startYRef.current - e.clientY;
+    const delta = e.clientY - startYRef.current;
     const maxHeightValue = config.maxHeight?.endsWith('vh') 
       ? (window.innerHeight * parseInt(config.maxHeight, 10) / 100)
       : parseInt(config.maxHeight || '80vh', 10);
     
     const newHeight = Math.min(
-      Math.max(startHeightRef.current + delta, 200),
+      Math.max(startHeightRef.current - delta, parseInt(config.minHeight || '200', 10)),
       maxHeightValue
     );
     
-    setHeight(newHeight);
+    if (containerRef.current) {
+      containerRef.current.style.height = `${newHeight}px`;
+      containerRef.current.style.bottom = '0';
+      setHeight(newHeight);
+    }
   }, [config.maxHeight]);
 
   const handleMouseUp = useCallback(() => {
     isDraggingRef.current = false;
+    document.documentElement.style.userSelect = '';
+    document.documentElement.style.webkitUserSelect = '';
+    // @ts-ignore: Vendor prefixed property
+    document.documentElement.style.mozUserSelect = '';
+    // @ts-ignore: Vendor prefixed property
+    document.documentElement.style.msUserSelect = '';
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
   }, []);

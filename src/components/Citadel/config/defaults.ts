@@ -28,6 +28,7 @@ export const defaultConfig: CitadelConfig = {
   commandTimeoutMs: 10000,
   includeHelpCommand: true,
   maxHeight: '80vh',
+  minHeight: '200',
   outputFontSize: 'text-xs',
   resetStateOnHide: false,
   showCitadelKey: '.',

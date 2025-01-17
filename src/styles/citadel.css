@@ -20,7 +20,7 @@
   right: 0;
   overflow: hidden;
 
-  pointer-events: none;
+  pointer-events: auto;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;

@@ -32,6 +32,8 @@ export interface CitadelConfig {
    * ```
    */
   maxHeight?: string;
+
+  minHeight?: string;
   /**
    * The font size for the command output text.
    * Accepts Tailwind text size classes: 'text-xs', 'text-sm', 'text-base', 'text-lg', etc.

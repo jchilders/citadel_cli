@@ -11,6 +11,9 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
 
 .innerContainer {
@@ -35,10 +38,13 @@
   background: transparent;
   cursor: ns-resize;
   position: absolute;
-  inset: 0 0 auto 0;
+  top: -3px;
+  left: 0;
+  right: 0;
   z-index: 10;
   user-select: none;
   -webkit-user-select: none;
+  pointer-events: all;
 }
 
 .resizeHandle:hover {
