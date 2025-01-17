@@ -1,28 +1,33 @@
-/* citadel.css */
-:root {
+:host {
   --citadel-bg: rgb(17, 24, 39);
   --citadel-text: rgba(255, 255, 255, 0.87);
   --citadel-border: rgb(55, 65, 81);
   --citadel-accent: #646cff;
   --citadel-accent-hover: #535bf2;
   --citadel-min-height: 200px;
-  --citadel-default-height: 33vh;
   --citadel-max-height: 80vh;
+  --citadel-default-height: 33vh;
   --citadel-error: rgb(239, 68, 68);
-}
 
-.citadel-root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  height: var(--citadel-default-height);
+  max-height: var(--citadel-max-height);
+  min-height: var(--citadel-min-height);
+  width: 100%;
+
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+
+  pointer-events: none;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Move button and anchor styles here since they're scoped to citadel-root */
-.citadel-root button {
+button {
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
@@ -34,29 +39,51 @@
   transition: border-color 0.25s;
 }
 
-.citadel-root button:hover {
+button:hover {
   border-color: var(--citadel-accent);
 }
 
-.citadel-root button:focus,
-.citadel-root button:focus-visible {
+button:focus,
+button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-.citadel-root a {
+a {
   font-weight: 500;
   color: var(--citadel-accent);
   text-decoration: inherit;
 }
 
-.citadel-root a:hover {
+a:hover {
   color: var(--citadel-accent-hover);
 }
 
-/* Scope Tailwind utilities to our root */
-.citadel-root .flex-1 { flex: 1 1 0%; }
-.citadel-root .flex-shrink-0 { flex-shrink: 0; }
-.citadel-root .min-h-0 { min-height: 0px; }
-.citadel-root .pt-3 { padding-top: 0.75rem; }
-.citadel-root .px-4 { padding-left: 1rem; padding-right: 1rem; }
+.flex-1 { flex: 1 1 0%; }
+.flex-shrink-0 { flex-shrink: 0; }
+.min-h-0 { min-height: 0px; }
+.pt-3 { padding-top: 0.75rem; }
+.px-4 { padding-left: 1rem; padding-right: 1rem; }
+
+.h-full {
+  height: 100%;
+}
+.overflow-y-auto {
+  overflow-y: auto;
+}
+.border {
+  border-width: 1px;
+}
+.border-gray-700 {
+  --tw-border-opacity: 1;
+  border-color: rgb(55 65 81 / var(--tw-border-opacity, 1));
+}
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+.p-3 {
+  padding: 0.75rem;
+}
+.text-left {
+  text-align: left;
+}
 

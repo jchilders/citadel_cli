@@ -1,15 +1,13 @@
 /* Keep only component-specific styles here */
+
 .container {
   position: fixed;
-  inset: auto 0 0 0;
   height: var(--citadel-default-height);
   min-height: var(--citadel-min-height);
   max-height: var(--citadel-max-height);
   background-color: var(--citadel-bg);
-  color: var(--citadel-text);
   overflow: hidden;
   width: 100%;
-  z-index: 9999;
   box-sizing: border-box;
   margin: 0;
   padding: 0;

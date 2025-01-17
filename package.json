@@ -23,7 +23,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "style": "./dist/styles.css",
+      "style": "./dist/citadel.css",
       "import": "./dist/citadel.es.js",
       "require": "./dist/citadel.umd.cjs"
     },

@@ -2,6 +2,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
+import { viteShadowDOM } from './plugins/vite-shadow-dom'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -9,6 +10,10 @@ export default defineConfig({
     react(),
     dts({
       insertTypesEntry: true,
+    }),
+    viteShadowDOM({
+      injectMethod: 'constructable',
+      include: ['src/components/Citadel/**/*.{ts,tsx}']
     })
   ],
   build: {
@@ -30,8 +35,13 @@ export default defineConfig({
       },
     },
     emptyOutDir: false,  // need to preserve the generated stylesheet; without this it gets deleted from dist/
-    cssCodeSplit: false, // bundles all CSS together
-    cssMinify: true,
+    cssCodeSplit: false,
+    sourcemap: process.env.NODE_ENV === 'development',
+    manifest: true,
+    assetsDir: 'dist',
+  },
+  optimizeDeps: {
+    include: ['./src/styles/citadel.css', './src/styles/styles.css']
   },
   test: {
     globals: true,

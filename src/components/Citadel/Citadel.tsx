@@ -11,7 +11,16 @@ import { CitadelConfig } from './config/types';
 import { CitadelConfigProvider } from './config/CitadelConfigContext';
 import { defaultConfig } from './config/defaults';
 
-import styles from './Citadel.module.css';
+import citadelStyles from '../../styles/citadel.css?raw';
+import citadelModuleStyles from './Citadel.module.css?raw';
+import mainStyles from '../../styles/styles.css?raw';
+import tailwindStyles from '../../styles/tailwind.css?raw';
+
+// Count and log the number of CSS classes in each stylesheet
+console.log('Citadel styles classes:', citadelStyles.match(/[.:][a-zA-Z][a-zA-Z0-9_-]*\s*{/g)?.length || 0);
+console.log('Citadel module styles classes:', citadelModuleStyles.match(/[.:][a-zA-Z][a-zA-Z0-9_-]*\s*{/g)?.length || 0);
+console.log('Main styles classes:', mainStyles.match(/[.:][a-zA-Z][a-zA-Z0-9_-]*\s*{/g)?.length || 0);
+console.log('Tailwind styles classes:', tailwindStyles.match(/[.:][a-zA-Z][a-zA-Z0-9_-]*\s*{/g)?.length || 0);
 
 export interface CitadelProps {
   config?: CitadelConfig;
@@ -19,73 +28,66 @@ export interface CitadelProps {
   containerId?: string;
 }
 
+// Create custom element that will host our React app in Shadow DOM
+class CitadelElement extends HTMLElement {
+  private shadow: ShadowRoot;
+  private root: ReturnType<typeof createRoot> | null = null;
+  
+  constructor() {
+    super();
+    this.shadow = this.attachShadow({ mode: 'open' });
+  }
+
+  connectedCallback() {
+    // Create and inject styles
+    try {
+      const sheets = [citadelStyles, citadelModuleStyles, mainStyles, tailwindStyles].map(styles => {
+        const sheet = new CSSStyleSheet();
+        sheet.replaceSync(styles);
+        return sheet;
+      });
+      
+      this.shadow.adoptedStyleSheets = [...sheets];
+    } catch (e) {
+      // Fallback for browsers that don't support constructable stylesheets
+      const combinedStyles = [citadelStyles, citadelModuleStyles, mainStyles].join('\n');
+      const styleElement = document.createElement('style');
+      styleElement.textContent = combinedStyles;
+      this.shadow.appendChild(styleElement);
+    }
+
+    // Create container for React app
+    const container = document.createElement('div');
+    container.id = 'citadel-root';
+    this.shadow.appendChild(container);
+
+    // Initialize React within shadow DOM
+    this.root = createRoot(container);
+    this.root.render(<CitadelInner />);
+  }
+
+  // disconnectedCallback() {
+  //   if (this.root) {
+  //     this.root.unmount();
+  //     this.root = null;
+  //   }
+  // }
+}
+
+customElements.define('citadel-element', CitadelElement);
+
 const CitadelInner: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [height, setHeight] = useState<number | null>(null);
   const outputRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const shadowRootRef = useRef<ShadowRoot | null>(null);
   const isDraggingRef = useRef(false);
   const startYRef = useRef(0);
   const startHeightRef = useRef(0);
   const config = useCitadelConfig();
   const { state, actions, getAvailableCommands } = useCitadelState();
 
-  // Shadow DOM management
-  useEffect(() => {
-    const containerId = 'citadel-shadow-root';
-    let hostElement = document.getElementById(containerId);
-
-    if (!hostElement) {
-      hostElement = document.createElement('div');
-      hostElement.id = containerId;
-      document.body.appendChild(hostElement);
-    }
-
-    // Create Shadow DOM if it doesn't exist
-    if (!hostElement.shadowRoot) {
-      shadowRootRef.current = hostElement.attachShadow({ mode: 'open' });
-      
-      // Add styles to Shadow DOM
-      const styleSheet = new CSSStyleSheet();
-      styleSheet.replaceSync(`
-        :host {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          z-index: 9999;
-          pointer-events: none;
-        }
-        .citadel-container {
-          pointer-events: auto;
-        }
-      `);
-      shadowRootRef.current.adoptedStyleSheets = [styleSheet];
-      
-      // Create root element for React
-      const rootElement = document.createElement('div');
-      shadowRootRef.current.appendChild(rootElement);
-      
-      // Initialize React root
-      const root = createRoot(rootElement);
-      root.render(
-        <div className="citadel-container">
-          {/* Your existing content will be rendered here */}
-        </div>
-      );
-    }
-
-    return () => {
-      if (hostElement && !document.getElementById(containerId)) {
-        document.body.removeChild(hostElement);
-      }
-    };
-  }, []);
-
-  // Rest of your component logic...
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (containerRef.current) {
       isDraggingRef.current = true;
@@ -145,23 +147,23 @@ const CitadelInner: React.FC = () => {
     onAnimationComplete: handleAnimationComplete
   });
 
-  if (!isVisible || !shadowRootRef.current) return null;
+  if (!isVisible) return null;
 
-  const content = (
+  return (
     <div 
       ref={containerRef}
-      className={`${styles.container} ${isVisible ? styles.slideUp : ''} ${isClosing ? styles.slideDown : ''}`}
+      className={`container ${isVisible ? 'citadel_slideUp' : ''} ${isClosing ? 'citadel_slideDown' : ''}`}
       style={{
         ...height ? { height: `${height}px` } : undefined,
         maxHeight: config.maxHeight
       }}
     >
-      <div className={styles.resizeHandle} onMouseDown={handleMouseDown} />
-      <div className={styles.innerContainer}>
+      <div className="resizeHandle" onMouseDown={handleMouseDown} />
+      <div className="innerContainer">
         <div className="flex-1 min-h-0 pt-3 px-4">
           <CommandOutput output={state.output} outputRef={outputRef} />
         </div>
-        <div className="flex-shrink-0">
+        <div>
           <CommandInput
             state={state}
             actions={actions}
@@ -175,17 +177,24 @@ const CitadelInner: React.FC = () => {
       </div>
     </div>
   );
-
-  return content;
 };
 
 export const Citadel: React.FC<CitadelProps> = ({ 
   config = defaultConfig, 
   commands 
 }) => {
+  useEffect(() => {
+    const citadelElement = document.createElement('citadel-element');
+    document.body.appendChild(citadelElement);
+
+    return () => {
+      document.body.removeChild(citadelElement);
+    };
+  }, []);
+
   return (
     <CitadelConfigProvider config={config} commands={commands}>
-      <CitadelInner />
+      <div id="citadel-wrapper" />
     </CitadelConfigProvider>
   );
 };
