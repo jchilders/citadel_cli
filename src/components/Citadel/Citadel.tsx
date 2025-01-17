@@ -184,10 +184,10 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
   );
 };
 
-export const Citadel: React.FC<CitadelProps> = ({ 
+export const Citadel = ({ 
   config = defaultConfig, 
-  commands,
-  containerId 
+  commands = {},
+  containerId = null
 }) => {
   useEffect(() => {
     const citadelElement = new CitadelElement(commands, config);
