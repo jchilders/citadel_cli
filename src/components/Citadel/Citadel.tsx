@@ -28,10 +28,13 @@ class CitadelElement extends HTMLElement {
   private root: ReturnType<typeof createRoot> | null = null;
   private commands?: Record<string, any>;
   
-  constructor(commands?: Record<string, any>) {
+  private config?: CitadelConfig;
+
+  constructor(commands?: Record<string, any>, config?: CitadelConfig) {
     super();
     this.shadow = this.attachShadow({ mode: 'open' });
     this.commands = commands;
+    this.config = config;
   }
 
   connectedCallback() {
@@ -60,8 +63,8 @@ class CitadelElement extends HTMLElement {
     // Initialize React within shadow DOM
     this.root = createRoot(container);
     this.root.render(
-      <CitadelConfigProvider config={defaultConfig} commands={this.commands}>
-        <CitadelInner commands={this.commands} />
+      <CitadelConfigProvider config={this.config || defaultConfig} commands={this.commands}>
+        <CitadelInner />
       </CitadelConfigProvider>
     );
   }
@@ -76,11 +79,9 @@ class CitadelElement extends HTMLElement {
 
 customElements.define('citadel-element', CitadelElement);
 
-interface CitadelInnerProps {
-  commands?: Record<string, any>;
-}
+interface CitadelInnerProps {}
 
-const CitadelInner: React.FC<CitadelInnerProps> = ({ commands }) => {
+const CitadelInner: React.FC<CitadelInnerProps> = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [height, setHeight] = useState<number | null>(null);
@@ -189,7 +190,7 @@ export const Citadel: React.FC<CitadelProps> = ({
   containerId 
 }) => {
   useEffect(() => {
-    const citadelElement = new CitadelElement(commands);
+    const citadelElement = new CitadelElement(commands, config);
     const container = containerId ? document.getElementById(containerId) : document.body;
     
     if (!container) {
