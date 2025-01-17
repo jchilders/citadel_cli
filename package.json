@@ -2,7 +2,7 @@
   "name": "@jchilders/citadel",
   "description": "A hierarchical command line and console for your webapp",
   "keywords": [ "react", "command", "cli", "interface", "console" ],
-  "author": "James Childers",
+  "author": "James Childers <james.childers@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -11,9 +11,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "gen-safelist": "node scripts/extract-classes.js",
-    "build:css": "npm run gen-safelist && node scripts/build-css.js",
-    "build": "npm run build:css && tsc && vite build",
+    "build": "tsc && vite build",
     "dev": "vite",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -23,11 +21,12 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "style": "./dist/styles.css",
+      "style": "./dist/citadel.css",
       "import": "./dist/citadel.es.js",
       "require": "./dist/citadel.umd.cjs"
     },
-    "./styles.css": "./dist/styles.css"
+    "./styles.css": "./dist/styles.css",
+    "./citadel.css": "./dist/citadel.css"
   },
   "types": "./dist/index.d.ts",
   "main": "./dist/citadel.umd.cjs",

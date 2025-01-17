@@ -1,4 +1,3 @@
-// scripts/build-css.js
 import fs from 'fs'
 import postcss from 'postcss'
 import tailwindcss from 'tailwindcss'
@@ -15,28 +14,62 @@ const css = `
 @tailwind utilities;
 `
 
+// Custom PostCSS plugin to scope all selectors
+// const scopeSelectors = (scope = '.citadel-root') => {
+//   return {
+//     postcssPlugin: 'scope-selectors',
+//     Once(root) {
+//       root.walkRules(rule => {
+//         // Skip if rule is already scoped or is a keyframe
+//         if (
+//           rule.selector.includes(scope) || 
+//           rule.parent.type === 'atrule' && 
+//           rule.parent.name === 'keyframes'
+//         ) {
+//           return
+//         }
+//
+//         // Skip root level at-rules
+//         if (rule.selector.startsWith('@')) {
+//           return
+//         }
+//
+//         // Handle comma-separated selectors
+//         const selectors = rule.selector.split(',').map(s => {
+//           s = s.trim()
+//           // Don't scope html, body, or :root selectors
+//           if (['html', 'body', ':root'].includes(s)) {
+//             return s
+//           }
+//           return `${scope} ${s}`
+//         })
+//
+//         rule.selector = selectors.join(',')
+//       })
+//     }
+//   }
+// }
+// scopeSelectors.postcss = true
+
 async function buildCSS() {
   const startTime = performance.now()
 
   const result = await postcss([
-    tailwindcss,
+    tailwindcss('./tailwind.config.js'),
     autoprefixer,
+    // scopeSelectors()
   ]).process(css, {
     from: undefined,
-    to: 'dist/styles.css'
+    to: 'dist/citadel.css'
   })
 
   fs.mkdirSync('dist', { recursive: true })
-  fs.writeFileSync('dist/styles.css', result.css)
-  
-  if (result.map) {
-    fs.writeFileSync('dist/styles.css.map', result.map.toString())
-  }
+  fs.writeFileSync('dist/citadel.css', result.css)
 
   const executionTime = Math.round(performance.now() - startTime)
   const fileSizeKB = Math.round(result.css.length / 1024)
   
-  console.log(`${GREEN}✓${RESET} Built dist/styles.css (${fileSizeKB}kb) in ${executionTime}ms`)
+  console.log(`${GREEN}✓${RESET} Built dist/citadel.css (${fileSizeKB}kb) in ${executionTime}ms`)
   if (result.map) {
     console.log(`${GREEN}   • also: dist/styles.css.map${RESET}`)
   }

@@ -14,6 +14,8 @@ export const config: CitadelConfig = {
   maxHeight: '80vh'
 };
 
+import "./styles/app.css"
+
 function App() {
   return (
     <div className="min-h-screen bg-gray-800 flex items-center justify-center">

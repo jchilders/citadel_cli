@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
 import { useGlobalShortcut } from './hooks/useGlobalShortcut';
 import { useSlideAnimation } from './hooks/useSlideAnimation';
 import { useCitadelConfig } from './config/CitadelConfigContext';
@@ -10,15 +11,102 @@ import { CitadelConfig } from './config/types';
 import { CitadelConfigProvider } from './config/CitadelConfigContext';
 import { defaultConfig } from './config/defaults';
 
-import styles from './Citadel.module.css';
-import '../../../dist/styles.css';
+import citadelStyles from '../../styles/citadel.css?raw';
+import citadelModuleStyles from './Citadel.module.css?raw';
+import mainStyles from '../../styles/styles.css?raw';
+import tailwindStyles from '../../styles/tailwind.css?raw';
 
 export interface CitadelProps {
   config?: CitadelConfig;
   commands?: Record<string, any>;
+  containerId?: string;
 }
 
-const CitadelInner: React.FC = () => {
+export const Citadel = ({ 
+  config = defaultConfig, 
+  commands = {},
+  containerId = null
+}) => {
+  useEffect(() => {
+    const citadelElement = new CitadelElement(commands, config);
+    const container = containerId ? document.getElementById(containerId) : document.body;
+    
+    if (!container) {
+      console.warn(`Container with id "${containerId}" not found, falling back to body`);
+      document.body.appendChild(citadelElement);
+    } else {
+      container.appendChild(citadelElement);
+    }
+
+    return () => {
+      citadelElement.parentElement?.removeChild(citadelElement);
+    };
+  }, [commands, containerId]);
+
+  return null;
+};
+
+// Custom element to host the Citadel component inside shadow DOM. This is done
+// to isolate the styling of the component from its container (and vice versa).
+class CitadelElement extends HTMLElement {
+  private shadow: ShadowRoot;
+  private root: ReturnType<typeof createRoot> | null = null;
+  private commands?: Record<string, any>;
+  
+  private config?: CitadelConfig;
+
+  constructor(commands?: Record<string, any>, config?: CitadelConfig) {
+    super();
+    this.shadow = this.attachShadow({ mode: 'open' });
+    this.commands = commands;
+    this.config = config;
+  }
+
+  connectedCallback() {
+    // Create and inject styles
+    try {
+      const sheets = [citadelStyles, citadelModuleStyles, mainStyles, tailwindStyles].map(styles => {
+        const sheet = new CSSStyleSheet();
+        sheet.replaceSync(styles);
+        return sheet;
+      });
+      
+      this.shadow.adoptedStyleSheets = [...sheets];
+    } catch (e) {
+      // Fallback for browsers that don't support constructable stylesheets
+      const combinedStyles = [citadelStyles, citadelModuleStyles, mainStyles].join('\n');
+      const styleElement = document.createElement('style');
+      styleElement.textContent = combinedStyles;
+      this.shadow.appendChild(styleElement);
+    }
+
+    // Create container for React component
+    const container = document.createElement('div');
+    container.id = 'citadel-root';
+    this.shadow.appendChild(container);
+
+    // Initialize React within shadow DOM
+    this.root = createRoot(container);
+    this.root.render(
+      <CitadelConfigProvider config={this.config || defaultConfig} commands={this.commands}>
+        <CitadelInner />
+      </CitadelConfigProvider>
+    );
+  }
+
+  disconnectedCallback() {
+    if (this.root) {
+      this.root.unmount();
+      this.root = null;
+    }
+  }
+}
+
+customElements.define('citadel-element', CitadelElement);
+
+interface CitadelInnerProps {}
+
+const CitadelInner: React.FC<CitadelInnerProps> = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [height, setHeight] = useState<number | null>(null);
@@ -94,19 +182,18 @@ const CitadelInner: React.FC = () => {
   return (
     <div 
       ref={containerRef}
-      className={`${styles.container} ${isVisible ? styles.slideUp : ''} ${isClosing ? styles.slideDown : ''}`}
+      className={`container ${isVisible ? 'citadel_slideUp' : ''} ${isClosing ? 'citadel_slideDown' : ''}`}
       style={{
         ...height ? { height: `${height}px` } : undefined,
         maxHeight: config.maxHeight
       }}
-      id="citadel-root"
     >
-      <div className={styles.resizeHandle} onMouseDown={handleMouseDown} />
-      <div className={styles.innerContainer}>
+      <div className="resizeHandle" onMouseDown={handleMouseDown} />
+      <div className="innerContainer">
         <div className="flex-1 min-h-0 pt-3 px-4">
           <CommandOutput output={state.output} outputRef={outputRef} />
         </div>
-        <div className="flex-shrink-0">
+        <div>
           <CommandInput
             state={state}
             actions={actions}
@@ -122,10 +209,3 @@ const CitadelInner: React.FC = () => {
   );
 };
 
-export const Citadel: React.FC<CitadelProps> = ({ config = defaultConfig, commands }) => {
-  return (
-    <CitadelConfigProvider config={config} commands={commands}>
-      <CitadelInner />
-    </CitadelConfigProvider>
-  );
-};
