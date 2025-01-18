@@ -458,6 +458,55 @@ export class CommandTrie {
   }
 
   /**
+   * Retrieves a command using its unique signature.
+   * A signature is the minimal sequence of prefixes that uniquely identifies a command.
+   * 
+   * @param signature Array of minimal prefixes that uniquely identify the command
+   * @returns The matching command node or undefined if not found
+   * 
+   * @example
+   * // Will match 'image random cat' command
+   * getCommandBySignature(['i', 'r', 'c'])
+   * // Will match 'user show' command (not ambiguous with 'user status')
+   * getCommandBySignature(['u', 'sh'])
+   */
+  getCommandBySignature(signature: string[]): CommandNode | undefined {
+    // Handle empty signature or root case
+    if (!signature.length) return undefined;
+    
+    let current = this._root;
+    
+    for (const prefix of signature) {
+      if (!prefix) return undefined;
+      
+      // Find all children that match this prefix
+      const matches = Array.from(current.children.entries())
+        .filter(([key]) => key.toLowerCase().startsWith(prefix.toLowerCase()));
+      
+      // If no matches found, the signature is invalid
+      if (matches.length === 0) {
+        return undefined;
+      }
+      
+      // If multiple matches, check if one exactly matches the prefix
+      if (matches.length > 1) {
+        const exactMatch = matches.find(([key]) => 
+          key.toLowerCase() === prefix.toLowerCase()
+        );
+        if (!exactMatch) {
+          return undefined;
+        }
+        current = exactMatch[1];
+      } else {
+        current = matches[0][1];
+      }
+    }
+    
+    // Don't return the root node
+    return current === this._root ? undefined : current;
+  }
+
+  /**
    * Validates the command trie structure for common errors.
    * 
    * Performs the following validations:
