@@ -19,6 +19,10 @@ export interface CommandNodeParams {
   handler?: CommandHandler;
 }
 
+export interface CommandSignature {
+  signature: string[];
+}
+
 /**
  * A no-op handler that does nothing when executed. Used as the default handler
  * for CommandNodes that don't specify a handler.
@@ -470,13 +474,13 @@ export class CommandTrie {
    * // Will match 'user show' command (not ambiguous with 'user status')
    * getCommandBySignature(['u', 'sh'])
    */
-  getCommandBySignature(signature: string[]): CommandNode | undefined {
+  getCommandBySignature(signature: CommandSignature): CommandNode | undefined {
     // Handle empty signature or root case
-    if (!signature.length) return undefined;
+    if (!signature.signature.length) return undefined;
     
     let current = this._root;
     
-    for (const prefix of signature) {
+    for (const prefix of signature.signature) {
       if (!prefix) return undefined;
       
       // Find all children that match this prefix
@@ -520,9 +524,9 @@ export class CommandTrie {
    * // For commands: ['user', 'show'] and ['user', 'status']
    * getSignatureForCommand(showCommand) // returns ['u', 'sh']
    */
-  getSignatureForCommand(command: CommandNode): string[] {
+  getSignatureForCommand(command: CommandNode): CommandSignature {
     if (!command || command === this._root) {
-      return [];
+      return { signature: [] };
     }
 
     const signature: string[] = [];
@@ -575,7 +579,7 @@ export class CommandTrie {
       current = node;
     }
 
-    return signature;
+    return { signature };
   }
 
   /**
