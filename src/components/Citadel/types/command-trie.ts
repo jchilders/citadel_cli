@@ -32,8 +32,9 @@ export const NoopHandler: CommandHandler = async (_args) => {
 };
 
 /**
- * Represents a node in the command tree structure.
- * Each node can have zero or more children. Leaf nodes (nodes with no children) must have a handler and optional arguments.
+ * Represents a node in the command tree structure. Each node can have zero or
+ * more children. Leaf nodes (nodes with no children) must have a handler and
+ * optional arguments.
  */
 export class CommandNode {
   private _fullPath: string[];
@@ -326,7 +327,7 @@ export class CommandTrie {
         if (!isLeaf && existingNode.isLeaf) {
           throw new Error(`Cannot add subcommand to leaf command: ${path.slice(0, i + 1).join(" ")}`);
         }
-        
+
         currentNode = existingNode;
       }
     }
@@ -361,7 +362,7 @@ export class CommandTrie {
    */
   getCompletions(path: string[]): string[] {
     let current = this._root;
-    
+
     // Navigate to the last node in the path
     for (const segment of path.slice(0, -1)) {
       const children = current.children;
@@ -406,7 +407,7 @@ export class CommandTrie {
    */
   async executeCommand(path: string[], args: string[] = []): Promise<CommandResult | undefined> {
     const command = this.getCommand(path);
-    
+
     if (!command) {
       return undefined;
     }
@@ -477,24 +478,24 @@ export class CommandTrie {
   getCommandBySignature(signature: CommandSignature): CommandNode | undefined {
     // Handle empty signature or root case
     if (!signature.signature.length) return undefined;
-    
+
     let current = this._root;
-    
+
     for (const prefix of signature.signature) {
       if (!prefix) return undefined;
-      
+
       // Find all children that match this prefix
       const matches = Array.from(current.children.entries())
         .filter(([key]) => key.toLowerCase().startsWith(prefix.toLowerCase()));
-      
+
       // If no matches found, the signature is invalid
       if (matches.length === 0) {
         return undefined;
       }
-      
+
       // If multiple matches, check if one exactly matches the prefix
       if (matches.length > 1) {
-        const exactMatch = matches.find(([key]) => 
+        const exactMatch = matches.find(([key]) =>
           key.toLowerCase() === prefix.toLowerCase()
         );
         if (!exactMatch) {
@@ -505,7 +506,7 @@ export class CommandTrie {
         current = matches[0][1];
       }
     }
-    
+
     // Don't return the root node
     return current === this._root ? undefined : current;
   }
