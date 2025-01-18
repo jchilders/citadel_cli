@@ -507,6 +507,78 @@ export class CommandTrie {
   }
 
   /**
+   * Generates a minimal unique signature for a command node.
+   * The signature consists of the shortest prefixes that uniquely identify each segment
+   * in the path from root to this node.
+   * 
+   * @param command The command node to generate a signature for
+   * @returns Array of minimal prefixes that uniquely identify the command
+   * 
+   * @example
+   * // For commands: ['image', 'random', 'cat'] and ['image', 'random', 'dog']
+   * getSignatureForCommand(catCommand) // returns ['i', 'r', 'c']
+   * // For commands: ['user', 'show'] and ['user', 'status']
+   * getSignatureForCommand(showCommand) // returns ['u', 'sh']
+   */
+  getSignatureForCommand(command: CommandNode): string[] {
+    if (!command || command === this._root) {
+      return [];
+    }
+
+    const signature: string[] = [];
+    let current: CommandNode | undefined = command;
+    const path: CommandNode[] = [];
+
+    // Build path from node to root
+    while (current && current !== this._root) {
+      path.unshift(current);
+      current = current.parent;
+    }
+
+    // Now build signature going down from root
+    current = this._root;
+    
+    for (const node of path) {
+      const segment = node.name;
+      
+      // Get all siblings at this level
+      const siblings = Array.from(current.children.keys());
+      
+      // Find minimum prefix length needed to uniquely identify this segment
+      let prefixLength = 1;
+      let found = false;
+      
+      while (prefixLength <= segment.length) {
+        const prefix = segment.slice(0, prefixLength);
+        const prefixLower = prefix.toLowerCase();
+        
+        // Count how many siblings match this prefix length
+        const matches = siblings.filter(
+          sib => sib.toLowerCase().startsWith(prefixLower)
+        );
+        
+        // Only consider it a match if it uniquely identifies our target segment
+        if (matches.length === 1 && matches[0].toLowerCase() === segment.toLowerCase()) {
+          signature.push(prefix);
+          found = true;
+          break;
+        }
+        
+        prefixLength++;
+      }
+      
+      // If we haven't found a unique prefix, use the full segment
+      if (!found) {
+        signature.push(segment);
+      }
+
+      current = node;
+    }
+
+    return signature;
+  }
+
+  /**
    * Validates the command trie structure for common errors.
    * 
    * Performs the following validations:
