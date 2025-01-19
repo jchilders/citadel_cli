@@ -170,11 +170,23 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
     isValidCommandInput
   ]);
 
+  const simulateSignature = useCallback((
+    signature: string,
+    state: CitadelState,
+    actions: CitadelActions
+  ) => {
+    // Simulate typing each character
+    for (const char of signature) {
+      handleInputChange(state.currentInput + char, state, actions);
+    }
+  }, [handleInputChange]);
+
   return {
     handleInputChange,
     handleKeyDown,
     executeCommand,
     inputState,
+    simulateSignature,
     // Expose internal functions for testing
     findMatchingCommands,
     getAutocompleteSuggestion,

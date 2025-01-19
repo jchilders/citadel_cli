@@ -228,7 +228,7 @@ describe('CommandTrie', () => {
     });
   });
 
-  describe('getSignatureForCommand', () => {
+  describe('buildSignatureForCommand', () => {
     it('should generate minimal unique signatures', () => {
       trie.addCommand({
         path: ['image', 'random', 'cat'],
@@ -237,7 +237,7 @@ describe('CommandTrie', () => {
 
       const catCommand = trie.getCommand(['image', 'random', 'cat']);
       expect(catCommand).toBeDefined();
-      const signature = trie.getSignatureForCommand(catCommand!);
+      const signature = trie.buildSignatureForCommand(catCommand!);
       expect(signature).toEqual({ signature: ['i', 'r', 'c'] });
     });
 
@@ -250,7 +250,7 @@ describe('CommandTrie', () => {
       });
       const showCommand = trie.getCommand(['user', 'show']);
       expect(showCommand).toBeDefined();
-      const signature = trie.getSignatureForCommand(showCommand!);
+      const signature = trie.buildSignatureForCommand(showCommand!);
       expect(signature).toEqual({ signature: ['u', 'sh'] });
     });
 
@@ -268,7 +268,7 @@ describe('CommandTrie', () => {
       for (const path of testCases) {
         const command = trie.getCommand(path);
         expect(command).toBeDefined();
-        const signature = trie.getSignatureForCommand(command!);
+        const signature = trie.buildSignatureForCommand(command!);
         const foundCommand = trie.getCommandBySignature(signature);
         expect(foundCommand).toBeDefined();
         expect(foundCommand!.fullPath).toEqual(path);
@@ -288,17 +288,17 @@ describe('CommandTrie', () => {
 
       const showCommand = trie.getCommand(['show']);
       expect(showCommand).toBeDefined();
-      const signature = trie.getSignatureForCommand(showCommand!);
+      const signature = trie.buildSignatureForCommand(showCommand!);
       expect(signature).toEqual({ signature: ['show'] });
     });
 
     it('should return empty array for root node', () => {
-      const signature = trie.getSignatureForCommand(trie['_root']);
+      const signature = trie.buildSignatureForCommand(trie['_root']);
       expect(signature).toEqual({ signature: [] });
     });
 
     it('should handle undefined command node', () => {
-      const signature = trie.getSignatureForCommand(undefined as any);
+      const signature = trie.buildSignatureForCommand(undefined as any);
       expect(signature).toEqual({ signature: [] });
     });
   });

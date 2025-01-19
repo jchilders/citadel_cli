@@ -113,4 +113,27 @@ export const commands = {
     },
     argument: { name: 'message', description: 'What should the cow say?' }
   },
+
+  localstorage: {
+    show: {
+      description: 'Show all items in localStorage',
+      handler: async (_args: string[]) => {
+        const storage: Record<string, string> = {};
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key) {
+            storage[key] = localStorage.getItem(key) || '';
+          }
+        }
+        return new JsonCommandResult(storage);
+      }
+    },
+    clear: {
+      description: 'Clear all items from localStorage',
+      handler: async (_args: string[]) => {
+        localStorage.clear();
+        return new TextCommandResult('localStorage cleared');
+      }
+    }
+  }
 };

@@ -20,7 +20,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   availableCommands,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { handleKeyDown, handleInputChange } = useCommandParser();
+  const { handleKeyDown, handleInputChange, simulateSignature } = useCommandParser();
   const [showInvalidAnimation, setShowInvalidAnimation] = useState(false);
   const config = useCitadelConfig();
 
@@ -39,6 +39,12 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       e.key === 'Enter';
 
     // Prevent input for leaf nodes without handlers or arguments
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      simulateSignature('ud', state, actions);
+      return;
+    }
+
     if (!isValidKey && !state.isEnteringArg && !state.currentNode?.hasChildren) {
       if (state.currentNode && !state.currentNode.requiresArgument && !state.currentNode.handler) {
         e.preventDefault();

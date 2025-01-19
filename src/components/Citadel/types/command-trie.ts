@@ -31,11 +31,6 @@ export const NoopHandler: CommandHandler = async (_args) => {
   return new TextCommandResult('');
 };
 
-/**
- * Represents a node in the command tree structure. Each node can have zero or
- * more children. Leaf nodes (nodes with no children) must have a handler and
- * optional arguments.
- */
 export class CommandNode {
   private _fullPath: string[];
   private _description: string;
@@ -43,6 +38,7 @@ export class CommandNode {
   private _argument?: CommandArgument;
   private _handler: CommandHandler;
   private _parent?: CommandNode;
+  private _signature?: string;
 
   /**
    * Creates a new CommandNode representing a command the user can enter. From a
@@ -57,30 +53,6 @@ export class CommandNode {
    * @param params.argument Optional argument definition for the command
    * @throws {Error} If fullPath is empty or undefined
    * 
-   * @example
-   * ```typescript
-   * // Create a leaf command node (service deploy)
-   * const deployNode = new CommandNode({
-   *   fullPath: ['service', 'deploy'],
-   *   description: 'Deploy a microservice to the specified environment',
-   *   argument: {
-   *     name: 'environment',
-   *     description: 'Target environment (dev/staging/prod)'
-   *   },
-   *   handler: async (args, context) => {
-   *     const env = args[0];
-   *     return { 
-   *       text: `Deploying service to ${env}...`
-   *     };
-   *   }
-   * });
-   * 
-   * // Create a parent command node for service operations
-   * const serviceNode = new CommandNode({
-   *   fullPath: ['service'],
-   *   description: 'Manage microservice lifecycle operations (deploy/status/rollback)'
-   * });
-   * ```
    */
   constructor(params: CommandNodeParams) {
     if (!params.fullPath || params.fullPath.length === 0) {
@@ -128,6 +100,22 @@ export class CommandNode {
    */
   get parent(): CommandNode | undefined {
     return this._parent;
+  }
+
+  /**
+   * Gets the command's signature
+   */
+  get signature(): string | undefined {
+    return this._signature;
+  }
+
+  /**
+   * Sets the signature for this command based on the current command trie state
+   * @param trie The command trie to use for signature generation
+   */
+  setSignature(trie: CommandTrie): void {
+    const sig = trie.buildSignatureForCommand(this);
+    this._signature = sig.signature.join('');
   }
 
   /**
@@ -230,67 +218,6 @@ export class CommandTrie {
    * @param params.argument Optional argument definition for the command
    * @throws {Error} If attempting to add a duplicate leaf command or a subcommand to a leaf
    * 
-   * @example
-   * ```typescript
-   * const commandTrie = new CommandTrie();
-   * 
-   * // Add the root service management command
-   * commandTrie.addCommand({
-   *   path: ['service'],
-   *   description: 'Manage microservice operations'
-   * });
-   * 
-   * // Add deployment command with environment argument
-   * commandTrie.addCommand({
-   *   path: ['service', 'deploy'],
-   *   description: 'Deploy a service to the specified environment',
-   *   argument: {
-   *     name: 'environment',
-   *     description: 'Target environment (dev/staging/prod)'
-   *   },
-   *   handler: async (args, context) => {
-   *     const env = args[0];
-   *     return { 
-   *       text: `Starting deployment to ${env}...`,
-   *       json: { operation: 'deploy', environment: env }
-   *     };
-   *   }
-   * });
-   * 
-   * // Add status check command with service name argument
-   * commandTrie.addCommand({
-   *   path: ['service', 'status'],
-   *   description: 'Check service health and metrics',
-   *   argument: {
-   *     name: 'service-name',
-   *     description: 'Name of the service to check'
-   *   },
-   *   handler: async (args, context) => {
-   *     const serviceName = args[0];
-   *     return {
-   *       text: `Fetching status for ${serviceName}...`,
-   *       json: { operation: 'status', service: serviceName }
-   *     };
-   *   }
-   * });
-   * 
-   * // Add rollback command with version argument
-   * commandTrie.addCommand({
-   *   path: ['service', 'rollback'],
-   *   description: 'Rollback service to a previous version',
-   *   argument: {
-   *     name: 'version',
-   *     description: 'Target version to roll back to'
-   *   },
-   *   handler: async (args, context) => {
-   *     const version = args[0];
-   *     return {
-   *       text: `Rolling back to version ${version}...`,
-   *       json: { operation: 'rollback', targetVersion: version }
-   *     };
-   *   }
-   * });
-   * ```
    */
   addCommand(params: Omit<ConstructorParameters<typeof CommandNode>[0], 'fullPath' | 'parent'> & { path: string[] }): void {
     const { path, description, handler, argument } = params;
@@ -319,6 +246,7 @@ export class CommandTrie {
 
         currentNode.addChild(segment, newNode);
         currentNode = newNode;
+        this.setSignatures();
       } else {
         const existingNode = children.get(segment)!;
         if (isLeaf && existingNode.isLeaf) {
@@ -521,11 +449,11 @@ export class CommandTrie {
    * 
    * @example
    * // For commands: ['image', 'random', 'cat'] and ['image', 'random', 'dog']
-   * getSignatureForCommand(catCommand) // returns ['i', 'r', 'c']
+   * buildSignatureForCommand(catCommand) // returns ['i', 'r', 'c']
    * // For commands: ['user', 'show'] and ['user', 'status']
-   * getSignatureForCommand(showCommand) // returns ['u', 'sh']
+   * buildSignatureForCommand(showCommand) // returns ['u', 'sh']
    */
-  getSignatureForCommand(command: CommandNode): CommandSignature {
+  buildSignatureForCommand(command: CommandNode): CommandSignature {
     if (!command || command === this._root) {
       return { signature: [] };
     }
@@ -606,6 +534,20 @@ export class CommandTrie {
    * }
    * ```
    */
+  /**
+   * Updates signatures for all nodes in the trie
+   */
+  setSignatures(): void {
+    const traverse = (node: CommandNode) => {
+      if (node !== this._root) {
+        node.setSignature(this);
+      }
+      node.children.forEach(child => traverse(child));
+    };
+    
+    traverse(this._root);
+  }
+
   validate(): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
     const seen = new Set<string>();
