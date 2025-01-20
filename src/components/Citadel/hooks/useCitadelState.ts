@@ -131,25 +131,17 @@ export const useCitadelState = () => {
     switch (key) {
       case 'ArrowUp':
         event.preventDefault();
-        const upHistoryItem = historyActions.navigateHistory('up', state.currentInput);
-        console.log("upHistoryItem", upHistoryItem);
-        if (upHistoryItem) {
-          const command = state.history.commands[upHistoryItem.position];
-          if (command) {
-            replayCommand(command, state, actions);
-          }
+        const { command: upCommand } = historyActions.navigateHistory('up', state.currentInput);
+        if (upCommand) {
+          replayCommand(upCommand, state, actions);
         }
         break;
 
       case 'ArrowDown':
         event.preventDefault();
-        const downHistoryItem = historyActions.navigateHistory('down', state.currentInput);
-        console.log("downHistoryItem", downHistoryItem);
-        if (downHistoryItem) {
-          const command = state.history.commands[downHistoryItem.position];
-          if (command) {
-            replayCommand(command, state, actions);
-          }
+        const { command: downCommand } = historyActions.navigateHistory('down', state.currentInput);
+        if (downCommand) {
+          replayCommand(downCommand, state, actions);
         }
         break;
 
