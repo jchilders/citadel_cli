@@ -171,20 +171,15 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
     isValidCommandInput
   ]);
 
-  const buildNextSuggestion = (input: string, state: CitadelState): string => {
-    const availableNodes = getAvailableNodes(state.currentNode);
-    const suggestion = getAutocompleteSuggestion(input, availableNodes); 
-
-    return suggestion || '';
-  }
-
-  const simulateSignature = useCallback(async (
+  const replayCommand = useCallback(async (
     command: StoredCommand,
     state: CitadelState,
     actions: CitadelActions
   ) => {
-    let currentStack = [...state.commandStack];
-    let currentNode = state.currentNode;
+    resetInputState(actions);
+    
+    let currentStack: string[] = [];
+    let currentNode = undefined;
 
     for (const char of command.inputs) {
       const nextState = {
@@ -209,12 +204,26 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
     }
   }, [handleInputChange]);
 
+  const resetInputState = useCallback((actions: CitadelActions) => {
+    actions.setCurrentInput('');
+    actions.setCommandStack([]);
+    actions.setCurrentNode(undefined);
+    actions.setIsEnteringArg(false);
+  }, []);
+
+  const buildNextSuggestion = (input: string, state: CitadelState): string => {
+    const availableNodes = getAvailableNodes(state.currentNode);
+    const suggestion = getAutocompleteSuggestion(input, availableNodes); 
+
+    return suggestion || '';
+  }
+
   return {
     handleInputChange,
     handleKeyDown,
     executeCommand,
     inputState,
-    simulateSignature,
+    replayCommand,
     // Expose internal functions for testing
     findMatchingCommands,
     getAutocompleteSuggestion,

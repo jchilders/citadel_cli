@@ -12,7 +12,7 @@ export interface CommandHistoryActions {
   addCommand: (command: StoredCommand) => Promise<void>;
   getCommands: () => StoredCommand[];
   navigateHistory: (direction: 'up' | 'down', currentInput: string) => {
-    command: StoredCommand | null;
+    newInput: string;
     position: number | null;
   };
   saveInput: (input: string) => void;
@@ -101,20 +101,20 @@ export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
       position: newPosition
     }));
   
-    // If we've returned to the original position, return null command
+    // If we've returned to the original position, return saved input
     if (newPosition === null) {
+      const savedInput = history.savedInput || '';
       setHistory(prev => ({
         ...prev,
         savedInput: null
       }));
-      return { command: null, position: null };
+      return { newInput: savedInput, position: null };
     }
   
-    // Otherwise return the historical command
+    // Otherwise return the historical command text
     const historicalCommand = history.commands[newPosition];
-    const result = { command: historicalCommand, position: newPosition };
-    console.log("navigateHistory result", result);
-    return result;
+    const newInput = historicalCommand.inputs.join(' ');
+    return { newInput, position: newPosition };
   }, [history]);
 
   const saveInput = useCallback((input: string) => {

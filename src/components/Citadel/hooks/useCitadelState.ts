@@ -12,7 +12,7 @@ export const useCitadelState = () => {
   const commandTrie = useCommandTrie();
   const config = useCitadelConfig();
   const [history, historyActions] = useCommandHistory();
-  const { simulateSignature } = useCommandParser();
+  const { replayCommand } = useCommandParser();
 
   const [state, setState] = useState<CitadelState>({
     commandStack: [],
@@ -133,8 +133,11 @@ export const useCitadelState = () => {
         event.preventDefault();
         const upHistoryItem = historyActions.navigateHistory('up', state.currentInput);
         console.log("upHistoryItem", upHistoryItem);
-        if (upHistoryItem?.command) {
-          simulateSignature(upHistoryItem.command, state, actions);
+        if (upHistoryItem) {
+          const command = state.history.commands[upHistoryItem.position];
+          if (command) {
+            replayCommand(command, state, actions);
+          }
         }
         break;
 
@@ -142,8 +145,11 @@ export const useCitadelState = () => {
         event.preventDefault();
         const downHistoryItem = historyActions.navigateHistory('down', state.currentInput);
         console.log("downHistoryItem", downHistoryItem);
-        if (downHistoryItem?.command) {
-          simulateSignature(downHistoryItem.command, state, actions);
+        if (downHistoryItem) {
+          const command = state.history.commands[downHistoryItem.position];
+          if (command) {
+            replayCommand(command, state, actions);
+          }
         }
         break;
 
@@ -228,7 +234,7 @@ export const useCitadelState = () => {
         return;
       }
 
-      await simulateSignature(command, state, actions);
+      await replayCommand(command, state, actions);
     }, [state.history.commands, executeCommand]),
 
     clearHistory: useCallback(async () => {
