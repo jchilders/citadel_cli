@@ -16,8 +16,7 @@ describe('LocalStorage', () => {
 
   it('should store and retrieve commands', async () => {
     const command: StoredCommand = {
-      path: ['test'],
-      args: ['arg1'],
+      inputs: ['test', 'arg1'],
       timestamp: Date.now()
     };
 
@@ -25,9 +24,8 @@ describe('LocalStorage', () => {
     const commands = await localStorage.getCommands();
 
     expect(commands).toHaveLength(1);
-    expect(commands[0].args).toEqual(command.args);
+    expect(commands[0].inputs).toEqual(command.inputs);
     expect(commands[0].timestamp).toEqual(command.timestamp);
-    expect(commands[0].path).toEqual(command.path);
   });
 
   it('should enforce maxCommands limit', async () => {
@@ -88,20 +86,17 @@ describe('LocalStorage', () => {
     const localStorage = new LocalStorage({ maxCommands: 2 });
 
     const command1: StoredCommand = {
-      path: ['test1'],
-      args: ['arg1'],
+      inputs: ['test1', 'arg1'],
       timestamp: Date.now()
     };
 
     const command2: StoredCommand = {
-      path: ['test2'],
-      args: ['arg2'],
+      inputs: ['test2', 'arg2'],
       timestamp: Date.now()
     };
 
     const command3: StoredCommand = {
-      path: ['test3'],
-      args: ['arg3'],
+      inputs: ['test3', 'arg3'],
       timestamp: Date.now()
     };
 
@@ -111,14 +106,13 @@ describe('LocalStorage', () => {
 
     const commands = await localStorage.getCommands();
     expect(commands).toHaveLength(2);
-    expect(commands[0].path).toEqual(['test2']);
-    expect(commands[1].path).toEqual(['test3']);
+    expect(commands[0].inputs).toEqual(['test2', 'arg2']);
+    expect(commands[1].inputs).toEqual(['test3', 'arg3']);
   });
 
   it('should clear storage', async () => {
     const command: StoredCommand = {
-      path: ['test'],
-      args: ['arg1'],
+      inputs: ['test', 'arg1'],
       timestamp: Date.now()
     };
 

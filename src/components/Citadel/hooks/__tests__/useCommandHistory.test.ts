@@ -31,8 +31,7 @@ describe('useCommandHistory', () => {
     (mockNode as any)._fullPath = ['test', 'command'];
 
     mockCommand = {
-      path: ['test'],
-      args: ['arg1'],
+      inputs: ['test', 'arg1'],
       timestamp: 1
     };
   });
@@ -82,7 +81,7 @@ describe('useCommandHistory', () => {
     });
 
     expect(navigation).toEqual({
-      newInput: 'test arg1',
+      command: mockCommand,
       position: 0
     });
     expect(result.current[0].savedInput).toBe(currentInput);
@@ -109,7 +108,7 @@ describe('useCommandHistory', () => {
     });
 
     expect(navigation).toEqual({
-      newInput: 'current input',
+      command: { inputs: ['current', 'input'], timestamp: expect.any(Number) },
       position: null
     });
     expect(result.current[0].savedInput).toBeNull();

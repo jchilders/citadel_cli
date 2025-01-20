@@ -25,8 +25,7 @@ export interface StorageConfig {
  * Represents a command entry to be stored in history
  */
 export interface StoredCommand {
-  path: string[]
-  args: string[];
+  inputs: string[];
   timestamp: number;
 }
 

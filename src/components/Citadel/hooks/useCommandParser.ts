@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { CommandNode, CommandTrie } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
 import { useCommandTrie } from './useCommandTrie';
+import { StoredCommand } from '../types/storage';
 
 type InputState = 'idle' | 'entering_command' | 'entering_argument';
 
@@ -66,11 +67,11 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
       const suggestion = getAutocompleteSuggestion(newValue, availableNodes);
       
       if (suggestion && suggestion !== newValue) {
-        const newStack = [...state.commandStack, suggestion];
+        const newStack = [...state.commandStack, suggestion]; // [ "user" ]
         const nextNode = commandTrie.getCommand(newStack);
         
         if (nextNode) {
-          actions.setCommandStack(newStack);
+          actions.setCommandStack(newStack); // ["user", "deactivate"]
           actions.setCurrentInput('');
           actions.setCurrentNode(nextNode);
           
@@ -170,11 +171,59 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
     isValidCommandInput
   ]);
 
+  const replayCommand = useCallback(async (
+    command: StoredCommand,
+    state: CitadelState,
+    actions: CitadelActions
+  ) => {
+    resetInputState(actions);
+    
+    let currentStack: string[] = [];
+    let currentNode = undefined;
+
+    for (const char of command.inputs) {
+      const nextState = {
+        ...state,
+        commandStack: currentStack,
+        currentNode: currentNode
+      };
+
+      if (currentNode?.argument) {
+        actions.setIsEnteringArg(true);
+        actions.setCurrentInput(char);
+      } else {
+        const suggestion = buildNextSuggestion(char, nextState);
+        if (suggestion) {
+          currentStack = [...currentStack, suggestion];
+          actions.setCommandStack(currentStack);
+
+          currentNode = commandTrie.getCommand(currentStack);
+          actions.setCurrentNode(currentNode);
+        }
+      }
+    }
+  }, [handleInputChange]);
+
+  const resetInputState = useCallback((actions: CitadelActions) => {
+    actions.setCurrentInput('');
+    actions.setCommandStack([]);
+    actions.setCurrentNode(undefined);
+    actions.setIsEnteringArg(false);
+  }, []);
+
+  const buildNextSuggestion = (input: string, state: CitadelState): string => {
+    const availableNodes = getAvailableNodes(state.currentNode);
+    const suggestion = getAutocompleteSuggestion(input, availableNodes); 
+
+    return suggestion || '';
+  }
+
   return {
     handleInputChange,
     handleKeyDown,
     executeCommand,
     inputState,
+    replayCommand,
     // Expose internal functions for testing
     findMatchingCommands,
     getAutocompleteSuggestion,

@@ -19,18 +19,18 @@ export interface CommandNodeParams {
   handler?: CommandHandler;
 }
 
+export interface CommandSignature {
+  signature: string[];
+}
+
 /**
- * A no-op handler that does nothing when executed. Used as the default handler
+ * A no-op handler that returns an empty string. Used as the default handler
  * for CommandNodes that don't specify a handler.
  */
 export const NoopHandler: CommandHandler = async (_args) => {
   return new TextCommandResult('');
 };
 
-/**
- * Represents a node in the command tree structure.
- * Each node can have zero or more children. Leaf nodes (nodes with no children) must have a handler and optional arguments.
- */
 export class CommandNode {
   private _fullPath: string[];
   private _description: string;
@@ -38,6 +38,7 @@ export class CommandNode {
   private _argument?: CommandArgument;
   private _handler: CommandHandler;
   private _parent?: CommandNode;
+  private _signature?: string;
 
   /**
    * Creates a new CommandNode representing a command the user can enter. From a
@@ -52,30 +53,6 @@ export class CommandNode {
    * @param params.argument Optional argument definition for the command
    * @throws {Error} If fullPath is empty or undefined
    * 
-   * @example
-   * ```typescript
-   * // Create a leaf command node (service deploy)
-   * const deployNode = new CommandNode({
-   *   fullPath: ['service', 'deploy'],
-   *   description: 'Deploy a microservice to the specified environment',
-   *   argument: {
-   *     name: 'environment',
-   *     description: 'Target environment (dev/staging/prod)'
-   *   },
-   *   handler: async (args, context) => {
-   *     const env = args[0];
-   *     return { 
-   *       text: `Deploying service to ${env}...`
-   *     };
-   *   }
-   * });
-   * 
-   * // Create a parent command node for service operations
-   * const serviceNode = new CommandNode({
-   *   fullPath: ['service'],
-   *   description: 'Manage microservice lifecycle operations (deploy/status/rollback)'
-   * });
-   * ```
    */
   constructor(params: CommandNodeParams) {
     if (!params.fullPath || params.fullPath.length === 0) {
@@ -123,6 +100,22 @@ export class CommandNode {
    */
   get parent(): CommandNode | undefined {
     return this._parent;
+  }
+
+  /**
+   * Gets the command's signature
+   */
+  get signature(): string | undefined {
+    return this._signature;
+  }
+
+  /**
+   * Sets the signature for this command based on the current command trie state
+   * @param trie The command trie to use for signature generation
+   */
+  setSignature(trie: CommandTrie): void {
+    const sig = trie.buildSignatureForCommand(this);
+    this._signature = sig.signature.join('');
   }
 
   /**
@@ -225,67 +218,6 @@ export class CommandTrie {
    * @param params.argument Optional argument definition for the command
    * @throws {Error} If attempting to add a duplicate leaf command or a subcommand to a leaf
    * 
-   * @example
-   * ```typescript
-   * const commandTrie = new CommandTrie();
-   * 
-   * // Add the root service management command
-   * commandTrie.addCommand({
-   *   path: ['service'],
-   *   description: 'Manage microservice operations'
-   * });
-   * 
-   * // Add deployment command with environment argument
-   * commandTrie.addCommand({
-   *   path: ['service', 'deploy'],
-   *   description: 'Deploy a service to the specified environment',
-   *   argument: {
-   *     name: 'environment',
-   *     description: 'Target environment (dev/staging/prod)'
-   *   },
-   *   handler: async (args, context) => {
-   *     const env = args[0];
-   *     return { 
-   *       text: `Starting deployment to ${env}...`,
-   *       json: { operation: 'deploy', environment: env }
-   *     };
-   *   }
-   * });
-   * 
-   * // Add status check command with service name argument
-   * commandTrie.addCommand({
-   *   path: ['service', 'status'],
-   *   description: 'Check service health and metrics',
-   *   argument: {
-   *     name: 'service-name',
-   *     description: 'Name of the service to check'
-   *   },
-   *   handler: async (args, context) => {
-   *     const serviceName = args[0];
-   *     return {
-   *       text: `Fetching status for ${serviceName}...`,
-   *       json: { operation: 'status', service: serviceName }
-   *     };
-   *   }
-   * });
-   * 
-   * // Add rollback command with version argument
-   * commandTrie.addCommand({
-   *   path: ['service', 'rollback'],
-   *   description: 'Rollback service to a previous version',
-   *   argument: {
-   *     name: 'version',
-   *     description: 'Target version to roll back to'
-   *   },
-   *   handler: async (args, context) => {
-   *     const version = args[0];
-   *     return {
-   *       text: `Rolling back to version ${version}...`,
-   *       json: { operation: 'rollback', targetVersion: version }
-   *     };
-   *   }
-   * });
-   * ```
    */
   addCommand(params: Omit<ConstructorParameters<typeof CommandNode>[0], 'fullPath' | 'parent'> & { path: string[] }): void {
     const { path, description, handler, argument } = params;
@@ -314,6 +246,7 @@ export class CommandTrie {
 
         currentNode.addChild(segment, newNode);
         currentNode = newNode;
+        this.setSignatures();
       } else {
         const existingNode = children.get(segment)!;
         if (isLeaf && existingNode.isLeaf) {
@@ -322,7 +255,7 @@ export class CommandTrie {
         if (!isLeaf && existingNode.isLeaf) {
           throw new Error(`Cannot add subcommand to leaf command: ${path.slice(0, i + 1).join(" ")}`);
         }
-        
+
         currentNode = existingNode;
       }
     }
@@ -357,7 +290,7 @@ export class CommandTrie {
    */
   getCompletions(path: string[]): string[] {
     let current = this._root;
-    
+
     // Navigate to the last node in the path
     for (const segment of path.slice(0, -1)) {
       const children = current.children;
@@ -402,7 +335,7 @@ export class CommandTrie {
    */
   async executeCommand(path: string[], args: string[] = []): Promise<CommandResult | undefined> {
     const command = this.getCommand(path);
-    
+
     if (!command) {
       return undefined;
     }
@@ -458,6 +391,127 @@ export class CommandTrie {
   }
 
   /**
+   * Retrieves a command using its unique signature.
+   * A signature is the minimal sequence of prefixes that uniquely identifies a command.
+   * 
+   * @param signature Array of minimal prefixes that uniquely identify the command
+   * @returns The matching command node or undefined if not found
+   * 
+   * @example
+   * // Will match 'image random cat' command
+   * getCommandBySignature(['i', 'r', 'c'])
+   * // Will match 'user show' command (not ambiguous with 'user status')
+   * getCommandBySignature(['u', 'sh'])
+   */
+  getCommandBySignature(signature: CommandSignature): CommandNode | undefined {
+    // Handle empty signature or root case
+    if (!signature.signature.length) return undefined;
+
+    let current = this._root;
+
+    for (const prefix of signature.signature) {
+      if (!prefix) return undefined;
+
+      // Find all children that match this prefix
+      const matches = Array.from(current.children.entries())
+        .filter(([key]) => key.toLowerCase().startsWith(prefix.toLowerCase()));
+
+      // If no matches found, the signature is invalid
+      if (matches.length === 0) {
+        return undefined;
+      }
+
+      // If multiple matches, check if one exactly matches the prefix
+      if (matches.length > 1) {
+        const exactMatch = matches.find(([key]) =>
+          key.toLowerCase() === prefix.toLowerCase()
+        );
+        if (!exactMatch) {
+          return undefined;
+        }
+        current = exactMatch[1];
+      } else {
+        current = matches[0][1];
+      }
+    }
+
+    // Don't return the root node
+    return current === this._root ? undefined : current;
+  }
+
+  /**
+   * Generates a minimal unique signature for a command node.
+   * The signature consists of the shortest prefixes that uniquely identify each segment
+   * in the path from root to this node.
+   * 
+   * @param command The command node to generate a signature for
+   * @returns Array of minimal prefixes that uniquely identify the command
+   * 
+   * @example
+   * // For commands: ['image', 'random', 'cat'] and ['image', 'random', 'dog']
+   * buildSignatureForCommand(catCommand) // returns ['i', 'r', 'c']
+   * // For commands: ['user', 'show'] and ['user', 'status']
+   * buildSignatureForCommand(showCommand) // returns ['u', 'sh']
+   */
+  buildSignatureForCommand(command: CommandNode): CommandSignature {
+    if (!command || command === this._root) {
+      return { signature: [] };
+    }
+
+    const signature: string[] = [];
+    let current: CommandNode | undefined = command;
+    const path: CommandNode[] = [];
+
+    // Build path from node to root
+    while (current && current !== this._root) {
+      path.unshift(current);
+      current = current.parent;
+    }
+
+    // Now build signature going down from root
+    current = this._root;
+    
+    for (const node of path) {
+      const segment = node.name;
+      
+      // Get all siblings at this level
+      const siblings = Array.from(current.children.keys());
+      
+      // Find minimum prefix length needed to uniquely identify this segment
+      let prefixLength = 1;
+      let found = false;
+      
+      while (prefixLength <= segment.length) {
+        const prefix = segment.slice(0, prefixLength);
+        const prefixLower = prefix.toLowerCase();
+        
+        // Count how many siblings match this prefix length
+        const matches = siblings.filter(
+          sib => sib.toLowerCase().startsWith(prefixLower)
+        );
+        
+        // Only consider it a match if it uniquely identifies our target segment
+        if (matches.length === 1 && matches[0].toLowerCase() === segment.toLowerCase()) {
+          signature.push(prefix);
+          found = true;
+          break;
+        }
+        
+        prefixLength++;
+      }
+      
+      // If we haven't found a unique prefix, use the full segment
+      if (!found) {
+        signature.push(segment);
+      }
+
+      current = node;
+    }
+
+    return { signature };
+  }
+
+  /**
    * Validates the command trie structure for common errors.
    * 
    * Performs the following validations:
@@ -480,6 +534,20 @@ export class CommandTrie {
    * }
    * ```
    */
+  /**
+   * Updates signatures for all nodes in the trie
+   */
+  setSignatures(): void {
+    const traverse = (node: CommandNode) => {
+      if (node !== this._root) {
+        node.setSignature(this);
+      }
+      node.children.forEach(child => traverse(child));
+    };
+    
+    traverse(this._root);
+  }
+
   validate(): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
     const seen = new Set<string>();

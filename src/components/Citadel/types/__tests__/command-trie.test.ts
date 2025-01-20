@@ -172,4 +172,134 @@ describe('CommandTrie', () => {
       expect(completions).toEqual([]);
     });
   });
+
+  describe('getCommandBySignature', () => {
+    beforeEach(() => {
+      // Add some test commands
+      trie.addCommand({
+        path: ['image', 'random', 'cat'],
+        description: 'Get a random cat image'
+      });
+      trie.addCommand({
+        path: ['image', 'random', 'dog'],
+        description: 'Get a random dog image'
+      });
+      trie.addCommand({
+        path: ['user', 'show'],
+        description: 'Show user details'
+      });
+      trie.addCommand({
+        path: ['user', 'status'],
+        description: 'Get user status'
+      });
+    });
+
+    it('should find command with exact signatures', () => {
+      const cmd = trie.getCommandBySignature({ signature: ['image', 'random', 'cat'] });
+      expect(cmd?.fullPath).toEqual(['image', 'random', 'cat']);
+    });
+
+    it('should find command with minimal unique prefixes', () => {
+      const cmd = trie.getCommandBySignature({ signature: ['i', 'r', 'c'] });
+      expect(cmd?.fullPath).toEqual(['image', 'random', 'cat']);
+    });
+
+    it('should handle ambiguous prefixes', () => {
+      // 'u' is unique for 'user', but 's' is ambiguous (show/status)
+      const cmd = trie.getCommandBySignature({ signature: ['u', 's'] });
+      expect(cmd).toBeUndefined();
+    });
+
+    it('should require longer prefix to disambiguate commands', () => {
+      // 'sh' uniquely identifies 'show' vs 'status'
+      const cmd = trie.getCommandBySignature({ signature: ['u', 'sh'] });
+      expect(cmd?.fullPath).toEqual(['user', 'show']);
+    });
+
+    it('should return undefined for invalid signatures', () => {
+      expect(trie.getCommandBySignature({ signature: ['x', 'y', 'z'] })).toBeUndefined();
+      expect(trie.getCommandBySignature({ signature: [] })).toBeUndefined();
+      expect(trie.getCommandBySignature({ signature: [''] })).toBeUndefined();
+    });
+
+    it('should handle case insensitive matching', () => {
+      const cmd = trie.getCommandBySignature({ signature: ['I', 'R', 'C'] });
+      expect(cmd?.fullPath).toEqual(['image', 'random', 'cat']);
+    });
+  });
+
+  describe('buildSignatureForCommand', () => {
+    it('should generate minimal unique signatures', () => {
+      trie.addCommand({
+        path: ['image', 'random', 'cat'],
+        description: 'random cat pic'
+      });
+
+      const catCommand = trie.getCommand(['image', 'random', 'cat']);
+      expect(catCommand).toBeDefined();
+      const signature = trie.buildSignatureForCommand(catCommand!);
+      expect(signature).toEqual({ signature: ['i', 'r', 'c'] });
+    });
+
+    it('should use longer prefixes when needed for uniqueness', () => {
+      trie.addCommand({
+        path: ['user', 'show'], description: 'show user'
+      });
+      trie.addCommand({
+        path: ['user', 'status'], description: 'user status'
+      });
+      const showCommand = trie.getCommand(['user', 'show']);
+      expect(showCommand).toBeDefined();
+      const signature = trie.buildSignatureForCommand(showCommand!);
+      expect(signature).toEqual({ signature: ['u', 'sh'] });
+    });
+
+    it('should generate signatures that work with getCommandBySignature', () => {
+      const testCases = [
+        ['image', 'random', 'cat'],
+        ['image', 'random', 'dog'],
+        ['user', 'show'],
+        ['user', 'status']
+      ];
+      for (const path of testCases) {
+        trie.addCommand({path: path, description: path.join(' ')});
+      }
+
+      for (const path of testCases) {
+        const command = trie.getCommand(path);
+        expect(command).toBeDefined();
+        const signature = trie.buildSignatureForCommand(command!);
+        const foundCommand = trie.getCommandBySignature(signature);
+        expect(foundCommand).toBeDefined();
+        expect(foundCommand!.fullPath).toEqual(path);
+      }
+    });
+
+    it('should handle full segments when no shorter unique prefix exists', () => {
+      // Add commands that would require full segment names
+      trie.addCommand({
+        path: ['show'],
+        description: 'Show command'
+      });
+      trie.addCommand({
+        path: ['shop'],
+        description: 'Shop command'
+      });
+
+      const showCommand = trie.getCommand(['show']);
+      expect(showCommand).toBeDefined();
+      const signature = trie.buildSignatureForCommand(showCommand!);
+      expect(signature).toEqual({ signature: ['show'] });
+    });
+
+    it('should return empty array for root node', () => {
+      const signature = trie.buildSignatureForCommand(trie['_root']);
+      expect(signature).toEqual({ signature: [] });
+    });
+
+    it('should handle undefined command node', () => {
+      const signature = trie.buildSignatureForCommand(undefined as any);
+      expect(signature).toEqual({ signature: [] });
+    });
+  });
 });
