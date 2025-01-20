@@ -84,7 +84,12 @@ describe('useCommandHistory', () => {
       command: mockCommand,
       position: 0
     });
-    expect(result.current[0].savedInput).toBe(currentInput);
+    const savedInput = result.current[0].savedInput;
+    expect(savedInput).not.toBeNull();
+    expect(savedInput).toEqual({
+      inputs: ['current', 'input'],
+      timestamp: expect.any(Number)
+    });
   });
 
   it('should navigate history downward', async () => {

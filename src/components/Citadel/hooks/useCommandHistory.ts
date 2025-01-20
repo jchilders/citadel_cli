@@ -5,7 +5,7 @@ import { useCitadelStorage } from '../config/CitadelConfigContext';
 export interface CommandHistory {
   commands: StoredCommand[];
   position: number | null;
-  savedInput: string | null;
+  savedInput: StoredCommand | null;
 }
 
 export interface CommandHistoryActions {
@@ -73,13 +73,13 @@ export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
 
     // Save current input when starting history navigation
     if (history.position === null && direction === 'up') {
-      const currentCommand: StoredCommand = {
+      const savedCommand: StoredCommand = {
         inputs: currentInput.split(' ').filter(Boolean),
         timestamp: Date.now()
       };
       setHistory(prev => ({
         ...prev,
-        savedInput: JSON.stringify(currentCommand)
+        savedInput: savedCommand
       }));
     }
 
@@ -107,12 +107,11 @@ export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
 
     // If we've returned to the original position, return saved input command
     if (newPosition === null && history.savedInput) {
-      const savedCommand: StoredCommand = JSON.parse(history.savedInput);
       setHistory(prev => ({
         ...prev,
         savedInput: null
       }));
-      return { command: savedCommand, position: null };
+      return { command: history.savedInput, position: null };
     }
 
     // Otherwise return the historical command
