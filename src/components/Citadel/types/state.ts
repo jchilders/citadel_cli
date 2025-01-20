@@ -27,7 +27,7 @@ export interface CitadelState {
   history: {
     commands: StoredCommand[];
     position: number | null;
-    savedInput: string | null;
+    savedInput: StoredCommand | null;
     storage?: CommandStorage;
   };
 }

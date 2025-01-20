@@ -1,5 +1,5 @@
 {
-  "name": "@jchilders/citadel",
+  "name": "citadel_cli",
   "description": "A hierarchical command line and console for your webapp",
   "keywords": [
     "react",

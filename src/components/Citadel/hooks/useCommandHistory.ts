@@ -122,9 +122,13 @@ export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
   }, [history]);
 
   const saveInput = useCallback((input: string) => {
+    const savedCommand: StoredCommand = {
+      inputs: input.split(' ').filter(Boolean),
+      timestamp: Date.now()
+    };
     setHistory(prev => ({
       ...prev,
-      savedInput: input
+      savedInput: savedCommand
     }));
   }, []);
 

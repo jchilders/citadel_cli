@@ -109,10 +109,11 @@ export const useCitadelState = () => {
         }));
       }
     } catch (error) {
+      console.warn('Command failed:', error);
       const result = new ErrorCommandResult(
         error instanceof Error ? error.message : 'Unknown error'
       );
-      result.markSuccess();
+      result.markFailure();
 
       setState(prev => ({
         ...prev,
@@ -167,7 +168,7 @@ export const useCitadelState = () => {
           const savedInput = state.history.savedInput || '';
           setState(prev => ({
             ...prev,
-            currentInput: savedInput,
+            currentInput: typeof savedInput === 'string' ? savedInput : savedInput?.inputs.join(' ') ?? '',
             history: {
               ...prev.history,
               position: null,
