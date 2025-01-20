@@ -41,7 +41,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     // Prevent input for leaf nodes without handlers or arguments
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
-      simulateSignature('ud', state, actions);
+      void simulateSignature('ud', state, actions);
       return;
     }
 

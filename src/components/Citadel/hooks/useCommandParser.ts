@@ -58,19 +58,24 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
     state: CitadelState,
     actions: CitadelActions
   ) => {
+    console.log("handleInputChange. newValue: ", newValue); // "u"
+    console.log(" -> state.currentNode ", state.currentNode); // undefined
     actions.setCurrentInput(newValue);
 
     // Only auto-complete if we're not entering an argument
     if (!state.isEnteringArg) {
       const availableNodes = getAvailableNodes(state.currentNode);
       const suggestion = getAutocompleteSuggestion(newValue, availableNodes);
+      console.log("suggestion", suggestion);
       
       if (suggestion && suggestion !== newValue) {
-        const newStack = [...state.commandStack, suggestion];
+        const newStack = [...state.commandStack, suggestion]; // [ "user" ]
+        console.log("newStack:", newStack);
         const nextNode = commandTrie.getCommand(newStack);
+        console.log("nextNode:", nextNode);
         
         if (nextNode) {
-          actions.setCommandStack(newStack);
+          actions.setCommandStack(newStack); // ["user", "deactivate"]
           actions.setCurrentInput('');
           actions.setCurrentNode(nextNode);
           
@@ -170,15 +175,100 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
     isValidCommandInput
   ]);
 
-  const simulateSignature = useCallback((
+  const simulateSignature = useCallback(async (
     signature: string,
     state: CitadelState,
     actions: CitadelActions
   ) => {
-    // Simulate typing each character
-    for (const char of signature) {
-      handleInputChange(state.currentInput + char, state, actions);
+    console.log("signature: ", signature);
+    actions.setCurrentInput('u');
+    console.log(" -> state.currentNode", state.currentNode); // undefined
+    const availableNodes = getAvailableNodes(state.currentNode); // [CommandNode, CommandNode...] (6)
+    const suggestion = getAutocompleteSuggestion('u', availableNodes);  // "user"
+    if (suggestion) {
+      console.log(" -> suggestion", suggestion);
+      const newStack = [...state.commandStack, suggestion];  // ["user"]
+      console.log(" -> newStack", newStack);
+      actions.setCurrentInput('');
+      actions.setCommandStack(newStack);
+      const nextNode = commandTrie.getCommand(newStack); // { "show" => CommandNode{...}, "deactivate" => CommandNode{...} }
+      actions.setCurrentNode(nextNode);
+      console.log(" -> nextNode", nextNode);
+      if (nextNode) {
+        const nextAvailableNodes = getAvailableNodes(nextNode); // [CommandNode, CommandNode...] (3)
+        console.log(" --> nextAvailableNodes", nextAvailableNodes);
+        const nextSuggestion = getAutocompleteSuggestion('d', nextAvailableNodes); 
+        console.log(" --> nextSuggestion", nextSuggestion); // "deactivate"
+        if (nextSuggestion) {
+          // const newNewStack = [...state.commandStack, nextSuggestion];  // want: ["user", "deactivate"]?
+          const newNewStack = [ "user", "deactivate" ];  // want: ["user", "deactivate"]?
+          console.log(" --> newNewStack", newNewStack); 
+          actions.setCurrentInput('');
+          actions.setCommandStack(newNewStack);
+          const nextNode = commandTrie.getCommand(newStack); // { "show" => CommandNode{...}, "deactivate" => CommandNode{...} }
+          actions.setCurrentNode(nextNode);
+        }
+      }
     }
+
+    // for (const newValue of signature) {
+      // console.log(" -> newValue: ", newValue);
+      // console.log(" -> state.currentNode ", state.currentNode);
+      // actions.setCurrentInput(newValue);
+      // const availableNodes = getAvailableNodes(state.currentNode);
+      // const suggestion = getAutocompleteSuggestion(newValue, availableNodes);
+      // console.log(" -> suggestion: ", suggestion);
+      // if (suggestion && suggestion !== newValue) {
+      //   console.log(" -> here 1");
+      //   const newStack = [...state.commandStack, suggestion];
+      //   actions.setCommandStack(newStack);
+      //   const nextNode = commandTrie.getCommand(newStack);
+      //   actions.setCurrentNode(nextNode);
+      // }
+
+      // Only auto-complete if we're not entering an argument
+      // if (!state.isEnteringArg) {
+      //   console.log(" -> state.currentNode: ", state.currentNode);
+      //   const availableNodes = getAvailableNodes(state.currentNode);
+      //   console.log(" -> availableNodes: ", availableNodes);
+      //   const suggestion = getAutocompleteSuggestion(newValue, availableNodes);
+      //   console.log(" -> suggestion: ", suggestion);
+      //
+      //   if (suggestion && suggestion !== newValue) {
+      //     console.log(" -> here 1");
+      //     const newStack = [...state.commandStack, suggestion];
+      //     const nextNode = commandTrie.getCommand(newStack);
+      //     console.log(" -> here 1 nextNode: ", nextNode);
+      //
+      //     if (nextNode) {
+      //       console.log(" -> here 1.1");
+      //       actions.setCommandStack(newStack);
+      //       actions.setCurrentInput('');
+      //       actions.setCurrentNode(nextNode);
+      //
+      //       // If this is a leaf node with an argument, enter argument mode
+      //       // if (!nextNode.hasChildren && nextNode.argument) {
+      //       //   console.log(" -> here 1.1.1");
+      //       //   actions.setIsEnteringArg(true);
+      //       //   setInputState('entering_argument');
+      //       // } else {
+      //       //   console.log(" -> here 1.1.2");
+      //       //   actions.setIsEnteringArg(false);
+      //       //   setInputState('idle');
+      //       // }
+      //     }
+      //   }
+      // }
+    // }
+    // Process each character sequentially
+    // for (const char of signature) {
+    //   // Wait for state to update before processing next character
+    //   await new Promise<void>(resolve => {
+    //     handleInputChange(state.currentInput + char, state, actions);
+    //     // Give React time to process the state update
+    //     setTimeout(resolve, 500);
+    //   });
+    // }
   }, [handleInputChange]);
 
   return {
