@@ -81,7 +81,7 @@ describe('useCommandHistory', () => {
     });
 
     expect(navigation).toEqual({
-      newInput: 'test arg1',
+      command: mockCommand,
       position: 0
     });
     expect(result.current[0].savedInput).toBe(currentInput);
@@ -108,7 +108,7 @@ describe('useCommandHistory', () => {
     });
 
     expect(navigation).toEqual({
-      newInput: 'current input',
+      command: { inputs: ['current', 'input'], timestamp: expect.any(Number) },
       position: null
     });
     expect(result.current[0].savedInput).toBeNull();
