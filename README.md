@@ -1,187 +1,56 @@
 # Citadel
 
-A command-line interface for web applications that empowers power users with keyboard-driven access to functionality.
+A hierarchical command-line interface (CLI) for web applications.
 
-## Purpose
+# Installation
 
-Citadel transforms web applications by providing a command palette interface similar to VS Code or Sublime Text, enabling power users to execute complex operations without leaving their keyboard. It significantly reduces cognitive load and improves workflow efficiency in complex web applications.
-
-It is intended to serve as an interface for web applications that require users to navigate through multiple UI layers to perform common tasks, and was designed with RESTful API endpoints in mind.
-
-## Why Citadel?
-
-Modern web applications often require users to navigate through multiple UI layers to perform common tasks. Consider these scenarios where Citadel shines:
-
-## Examples
-
-### Customer Service Portal
-**Without Citadel:**
-```
-1. Click Customer tab
-2. Open search form
-3. Enter customer ID
-4. Click search
-5. Navigate to tickets tab
-6. Click create ticket
-7. Fill form
-```
-
-**With Citadel:**
-Type in `tn1234`, which expands to:
-```
-> ticket new 1234
-```
-
-### Financial Trading Platform
-**Without Citadel:**
-```
-1. Select trading pair
-2. Open order form
-3. Switch to limit order
-4. Enter price and quantity
-5. Review and submit
-```
-
-**With Citadel:**
-Type `tlbu5000 0.5`, which expands to:
-```
-> trade limit btc usd 50000 0.5
-```
-
-### DevOps Dashboard
-**Without Citadel:**
-```
-1. Navigate to deployments
-2. Filter by environment
-3. Select service
-4. Click rollback
-5. Confirm action
-```
-
-**With Citadel:**
-Type in `drap1.2.3`, which expands to:
-```
-> deploy rollback api-service prod 1.2.3
-```
-
-## Features
-
-- [x] **Keyboard Navigation**: Complete keyboard control with customizable shortcuts
-- [x] **Instant Command Access**: Sub-100ms response time for command suggestions
-- [x] **Context-Aware Commands**: Commands can be configured on a per-page or per-app basis
-- [x] **Command History**: Quick access to recent and frequent commands
-
-Coming soon:
-- [ ] **Themeable Interface**: Seamlessly matches your application's design
-- [ ] **Real-Time Updates**: Live command results with WebSocket support
-
-## Installation
-
-1. Clone the repository:
 ```bash
-git clone https://github.com/jchilders/citadel.git
-cd citadel
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Build the package:
-```bash
-npm run build
-```
-
-4. Link for local development (optional):
-```bash
-npm link
+npm install citadel_cli
 ```
 
 ## Quick Start
 
+In your application:
+
 ```typescript
-import { Citadel, CommandTrie } from 'citadel';
+const commands = {
+  user: {
+    show: {
+      description: 'Show user details',
+      argument: { name: 'userId', description: 'Enter user ID' },
+      handler: async (args: string[]) => {
+        // Pause to simulate a long request
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
-// Initialize command system
-const commands = new CommandTrie();
+        return new JsonCommandResult({
+          id: args[0],
+          name: "John Doe",
+          email: "john@example.com",
+          status: "active"
+        });
+      },
+    },
+  }
+};
 
-// Register commands
-commands.addCommand(
-  ['customer', 'search'],
-  'Search for customer records',
-  async (args) => ({
-    json: await customerService.search(args.query)
-  }),
-  { name: 'query', description: 'Customer name or ID' }
-);
-
-// Mount in your React app
 function App() {
   return (
-    <div>
+    <>
       <Citadel commands={commands} />
-      {/* Your app content */}
-    </div>
+    </>
   );
 }
 ```
 
-## Command Usage
-
-Citadel commands composed of one or more words followed by zero or one arguments. For example:
-```
-> ticket new customer 1234
-```
-Where the user typed "tnc1234" to achieve the above result.
+Press <kbd>.</kbd> (period) to activate Citadel. The above configuration you would render the following:
 
 
-### Quick Execution
+Note that the exact keys pressed to perform the command were <kbd>us123</kbd>. You only have to press the first letter of each word to advance to the next. 
 
-Commands can be typed using abbreviated forms. For example:
-```
-ticket new   →  tn
-deploy status  →  ds
-customer history  →  ch
-```
-
-Simply type the first letter of each word in the command and press Enter. 
-
-### Arguments
-
-Commands can have zero or more arguments.
-
-```bash
-> ticket new customer 1234 
-```
-
-### JavaScript Integration
-
-Commands can execute any JavaScript code, making them powerful automation tools:
-
-```typescript
-commands.addCommand(
-  ['refresh', 'cache'],
-  'Refresh application cache',
-  async () => {
-    // Clear local storage
-    localStorage.clear();
-    // Reset Redux store
-    store.dispatch(resetState());
-    // Reload application
-    window.location.reload();
-    return { json: { status: 'Cache cleared' } };
-  }
-);
-```
-
-### Dynamic Results
-
-Commands can return different types of results:
-- JSON data for structured information
-- React components for rich visualizations
-- Plain text for simple outputs
-- Promises for async operations
+Each command is composed of:
+1. `description`. Required.
+2. `argument` Optional. One or more arguments, each with a `name` and a `description`
+3. A `handler`. Required. The `handler` is what gets executed when you hit Enter, and can be any valid JavaScript. The only requirement is that it must return a `CommandResult` class. At the time of this writing they are `JsonCommandResult`, `TextCommandResult`, `ImageCommandResult`, and `ErrorCommandResult`.
 
 ```typescript
 commands.addCommand(
@@ -342,7 +211,34 @@ citadel/
 
 ### Contributing
 
-We welcome contributions to Citadel! Here's how you can help:
+Contributions are welcome.
+
+1. Clone the repository:
+```bash
+git clone https://github.com/jchilders/citadel_react.git
+cd citadel_react
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Build the package:
+```bash
+npm run build
+```
+
+4. (Optional but recommended) Link citadel so you can import it into a parallel project
+```bash
+npm link
+```
+
+5. (Optional) From the directory of the project you want to import Citadel into:
+```bash
+npm link @jchilders/citadel_cli
+# ... your normal build/run steps ...
+```
 
 ### Bug Reports and Feature Requests
 
