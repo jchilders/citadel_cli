@@ -4,6 +4,7 @@ export const commands = {
   user: {
     show: {
       description: 'Show user details',
+      argument: { name: 'userId', description: 'Enter user ID' },
       handler: async (args: string[]) => {
         await new Promise(resolve => setTimeout(resolve, 2000));
         return new JsonCommandResult({
@@ -13,36 +14,35 @@ export const commands = {
           status: "active"
         });
       },
-      argument: { name: 'userId', description: 'Enter user ID' }
     },
     deactivate: {
       description: 'Deactivate user account',
+      argument: { name: 'userId', description: 'Enter user ID' },
       handler: async (args: string[]) => new JsonCommandResult({
         id: args[0],
         status: "deactivated"
       }),
-      argument: { name: 'userId', description: 'Enter user ID' }
     },
     query: {
       firstname: {
         description: 'Search by first name',
+        argument: { name: 'firstName', description: 'Enter first name' },
         handler: async (args: string[]) => new JsonCommandResult({
           users: [
             { id: 1, name: `${args[0]} Smith` },
             { id: 2, name: `${args[0]} Jones` }
           ]
         }),
-        argument: { name: 'firstName', description: 'Enter first name' }
       },
       lastname: {
         description: 'Search by last name',
+        argument: { name: 'lastName', description: 'Enter last name' },
         handler: async (args: string[]) => new JsonCommandResult({
           users: [
             { id: 1, name: `John ${args[0]}` },
             { id: 2, name: `Jane ${args[0]}` }
           ]
         }),
-        argument: { name: 'lastName', description: 'Enter last name' }
       },
     }
   },
@@ -95,6 +95,7 @@ export const commands = {
 
   cowsay: {
     description: 'Make a cow say something',
+    argument: { name: 'message', description: 'What should the cow say?' },
     handler: async (args: string[]) => {
       const message = args[0] || 'Moo!';
       const bubbleWidth = message.length + 2;
@@ -111,7 +112,6 @@ export const commands = {
              ||     ||`;
       return new TextCommandResult(bubble + cow);
     },
-    argument: { name: 'message', description: 'What should the cow say?' }
   },
 
   localstorage: {
