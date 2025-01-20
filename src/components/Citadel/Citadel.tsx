@@ -94,12 +94,12 @@ class CitadelElement extends HTMLElement {
     );
   }
 
-  disconnectedCallback() {
-    if (this.root) {
-      this.root.unmount();
-      this.root = null;
-    }
-  }
+  // disconnectedCallback() {
+  //   if (this.root) {
+  //     this.root.unmount();
+  //     this.root = null;
+  //   }
+  // }
 }
 
 customElements.define('citadel-element', CitadelElement);

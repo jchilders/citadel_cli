@@ -41,7 +41,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     // Prevent input for leaf nodes without handlers or arguments
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
-      void simulateSignature('ud', state, actions);
+      simulateSignature(state, actions);
       return;
     }
 
@@ -96,6 +96,11 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     if (inputRef.current) {
       inputRef.current.focus();
     }
+  }, [state.commandStack]);
+
+  // Debug logging for command stack changes
+  useEffect(() => {
+    console.log("Command stack changed:", state.commandStack);
   }, [state.commandStack]);
 
   return (

@@ -176,36 +176,27 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
   ]);
 
   const simulateSignature = useCallback(async (
-    signature: string,
     state: CitadelState,
     actions: CitadelActions
   ) => {
-    console.log("signature: ", signature);
-    actions.setCurrentInput('u');
-    console.log(" -> state.currentNode", state.currentNode); // undefined
     const availableNodes = getAvailableNodes(state.currentNode); // [CommandNode, CommandNode...] (6)
     const suggestion = getAutocompleteSuggestion('u', availableNodes);  // "user"
     if (suggestion) {
-      console.log(" -> suggestion", suggestion);
       const newStack = [...state.commandStack, suggestion];  // ["user"]
-      console.log(" -> newStack", newStack);
       actions.setCurrentInput('');
       actions.setCommandStack(newStack);
       const nextNode = commandTrie.getCommand(newStack); // { "show" => CommandNode{...}, "deactivate" => CommandNode{...} }
       actions.setCurrentNode(nextNode);
-      console.log(" -> nextNode", nextNode);
       if (nextNode) {
         const nextAvailableNodes = getAvailableNodes(nextNode); // [CommandNode, CommandNode...] (3)
-        console.log(" --> nextAvailableNodes", nextAvailableNodes);
         const nextSuggestion = getAutocompleteSuggestion('d', nextAvailableNodes); 
-        console.log(" --> nextSuggestion", nextSuggestion); // "deactivate"
         if (nextSuggestion) {
+          console.log(" -=> state.commandStack", state.commandStack);
           // const newNewStack = [...state.commandStack, nextSuggestion];  // want: ["user", "deactivate"]?
           const newNewStack = [ "user", "deactivate" ];  // want: ["user", "deactivate"]?
-          console.log(" --> newNewStack", newNewStack); 
           actions.setCurrentInput('');
           actions.setCommandStack(newNewStack);
-          const nextNode = commandTrie.getCommand(newStack); // { "show" => CommandNode{...}, "deactivate" => CommandNode{...} }
+          const nextNode = commandTrie.getCommand(newNewStack); // { "show" => CommandNode{...}, "deactivate" => CommandNode{...} }
           actions.setCurrentNode(nextNode);
         }
       }
