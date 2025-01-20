@@ -31,8 +31,7 @@ describe('useCommandHistory', () => {
     (mockNode as any)._fullPath = ['test', 'command'];
 
     mockCommand = {
-      path: ['test'],
-      args: ['arg1'],
+      inputs: ['test', 'arg1'],
       timestamp: 1
     };
   });

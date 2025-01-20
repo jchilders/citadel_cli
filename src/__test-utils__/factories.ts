@@ -65,8 +65,7 @@ export const createMockCommandTrie = (): CommandTrie => {
 
 import { StoredCommand } from '../components/Citadel/types/storage';
 export const createMockStoredCommand = (overrides = {}): StoredCommand => ({
-  path: ['command1'],
-  args: [],
+  inputs: ['command1'],
   timestamp: Date.now(),
   ...overrides
 });

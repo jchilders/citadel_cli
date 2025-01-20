@@ -11,7 +11,10 @@ export interface CommandHistory {
 export interface CommandHistoryActions {
   addCommand: (command: StoredCommand) => Promise<void>;
   getCommands: () => StoredCommand[];
-  navigateHistory: (direction: 'up' | 'down', currentInput: string) => { newInput: string; position: number | null };
+  navigateHistory: (direction: 'up' | 'down', currentInput: string) => {
+    command: StoredCommand | null;
+    position: number | null;
+  };
   saveInput: (input: string) => void;
   clear: () => Promise<void>;
 }
@@ -63,11 +66,11 @@ export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
     return history.commands;
   }, [history.commands]);
 
-  const navigateHistory = useCallback((direction: 'up' | 'down', currentInput: string): { newInput: string; position: number | null } => {
+  const navigateHistory = useCallback((direction: 'up' | 'down', currentInput: string): { command: StoredCommand | null; position: number | null } => {
     if (history.commands.length === 0) {
-      return { newInput: currentInput, position: null };
+      return { command: null, position: null };
     }
-
+  
     // Save current input when starting history navigation
     if (history.position === null && direction === 'up') {
       setHistory(prev => ({
@@ -75,7 +78,7 @@ export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
         savedInput: currentInput
       }));
     }
-
+  
     let newPosition: number | null = null;
     if (direction === 'up') {
       if (history.position === null) {
@@ -92,26 +95,26 @@ export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
         newPosition = history.position + 1;
       }
     }
-
+  
     setHistory(prev => ({
       ...prev,
       position: newPosition
     }));
-
-    // If we've returned to the original position, restore the saved input
+  
+    // If we've returned to the original position, return null command
     if (newPosition === null) {
-      const savedInput = history.savedInput || '';
       setHistory(prev => ({
         ...prev,
         savedInput: null
       }));
-      return { newInput: savedInput, position: null };
+      return { command: null, position: null };
     }
-
+  
     // Otherwise return the historical command
     const historicalCommand = history.commands[newPosition];
-    const commandText = [...historicalCommand.path, ...historicalCommand.args].join(' ');
-    return { newInput: commandText, position: newPosition };
+    const result = { command: historicalCommand, position: newPosition };
+    console.log("navigateHistory result", result);
+    return result;
   }, [history]);
 
   const saveInput = useCallback((input: string) => {

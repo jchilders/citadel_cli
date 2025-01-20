@@ -5,12 +5,14 @@ import { useCitadelConfig, useCitadelStorage } from '../config/CitadelConfigCont
 import { CommandResult } from '../types/command-results';
 import { ErrorCommandResult } from '../types/command-results';
 import { useCommandHistory } from './useCommandHistory';
+import { useCommandParser } from './useCommandParser';
 import { initializeHistoryService } from '../services/HistoryService';
 
 export const useCitadelState = () => {
   const commandTrie = useCommandTrie();
   const config = useCitadelConfig();
   const [history, historyActions] = useCommandHistory();
+  const { simulateSignature } = useCommandParser();
 
   const [state, setState] = useState<CitadelState>({
     commandStack: [],
@@ -81,8 +83,7 @@ export const useCitadelState = () => {
 
       // Save successful command to history
       const storedCommand = {
-        path: node.fullPath,
-        args: args || [],
+        inputs: [...node.fullPath, ...(args || [])],
         timestamp: Date.now()
       };
 
@@ -130,27 +131,27 @@ export const useCitadelState = () => {
     switch (key) {
       case 'ArrowUp':
         event.preventDefault();
-        const upResult = historyActions.navigateHistory('up', state.currentInput);
-        setState(prev => ({
-          ...prev,
-          currentInput: upResult.newInput
-        }));
+        const upHistoryItem = historyActions.navigateHistory('up', state.currentInput);
+        console.log("upHistoryItem", upHistoryItem);
+        if (upHistoryItem?.command) {
+          simulateSignature(upHistoryItem.command, state, actions);
+        }
         break;
 
       case 'ArrowDown':
         event.preventDefault();
-        const downResult = historyActions.navigateHistory('down', state.currentInput);
-        setState(prev => ({
-          ...prev,
-          currentInput: downResult.newInput
-        }));
+        const downHistoryItem = historyActions.navigateHistory('down', state.currentInput);
+        console.log("downHistoryItem", downHistoryItem);
+        if (downHistoryItem?.command) {
+          simulateSignature(downHistoryItem.command, state, actions);
+        }
         break;
 
       case 'Enter':
         event.preventDefault();
         if (state.history.position !== null) {
           const command = state.history.commands[state.history.position];
-          executeCommand(command.path, command.args);
+          executeCommand([...command.inputs]);
           setState(prev => ({
             ...prev,
             history: {
@@ -227,7 +228,7 @@ export const useCitadelState = () => {
         return;
       }
 
-      await executeCommand(command.path, command.args);
+      await simulateSignature(command, state, actions);
     }, [state.history.commands, executeCommand]),
 
     clearHistory: useCallback(async () => {

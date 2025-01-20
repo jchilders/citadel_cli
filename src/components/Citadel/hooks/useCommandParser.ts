@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { CommandNode, CommandTrie } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
 import { useCommandTrie } from './useCommandTrie';
+import { StoredCommand } from '../types/storage';
 
 type InputState = 'idle' | 'entering_command' | 'entering_argument';
 
@@ -58,21 +59,16 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
     state: CitadelState,
     actions: CitadelActions
   ) => {
-    console.log("handleInputChange. newValue: ", newValue); // "u"
-    console.log(" -> state.currentNode ", state.currentNode); // undefined
     actions.setCurrentInput(newValue);
 
     // Only auto-complete if we're not entering an argument
     if (!state.isEnteringArg) {
       const availableNodes = getAvailableNodes(state.currentNode);
       const suggestion = getAutocompleteSuggestion(newValue, availableNodes);
-      console.log("suggestion", suggestion);
       
       if (suggestion && suggestion !== newValue) {
         const newStack = [...state.commandStack, suggestion]; // [ "user" ]
-        console.log("newStack:", newStack);
         const nextNode = commandTrie.getCommand(newStack);
-        console.log("nextNode:", nextNode);
         
         if (nextNode) {
           actions.setCommandStack(newStack); // ["user", "deactivate"]
@@ -176,21 +172,21 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
   ]);
 
   const buildNextSuggestion = (input: string, state: CitadelState): string => {
-    const availableNodes = getAvailableNodes(state.currentNode); // [CommandNode, CommandNode...] (6)
-    const suggestion = getAutocompleteSuggestion(input, availableNodes);  // "user"
+    const availableNodes = getAvailableNodes(state.currentNode);
+    const suggestion = getAutocompleteSuggestion(input, availableNodes); 
 
     return suggestion || '';
   }
 
   const simulateSignature = useCallback(async (
+    command: StoredCommand,
     state: CitadelState,
     actions: CitadelActions
   ) => {
-    const chars = ['u', 'd', '1234'];
     let currentStack = [...state.commandStack];
     let currentNode = state.currentNode;
 
-    for (const char of chars) {
+    for (const char of command.inputs) {
       const nextState = {
         ...state,
         commandStack: currentStack,
@@ -200,7 +196,6 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
       if (currentNode?.argument) {
         actions.setIsEnteringArg(true);
         actions.setCurrentInput(char);
-        console.log(`Entering argument: ${char}`);
       } else {
         const suggestion = buildNextSuggestion(char, nextState);
         if (suggestion) {
@@ -209,8 +204,6 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
 
           currentNode = commandTrie.getCommand(currentStack);
           actions.setCurrentNode(currentNode);
-
-          console.log(`After processing '${char}':`, currentStack);
         }
       }
     }

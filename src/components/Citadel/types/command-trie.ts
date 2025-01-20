@@ -24,7 +24,7 @@ export interface CommandSignature {
 }
 
 /**
- * A no-op handler that does nothing when executed. Used as the default handler
+ * A no-op handler that returns an empty string. Used as the default handler
  * for CommandNodes that don't specify a handler.
  */
 export const NoopHandler: CommandHandler = async (_args) => {

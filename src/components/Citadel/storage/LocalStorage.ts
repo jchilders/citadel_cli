@@ -33,8 +33,7 @@ export class LocalStorage extends BaseStorage {
   protected async saveCommands(commands: StoredCommand[]): Promise<void> {
     try {
       const serializedCommands = commands.map(cmd => ({
-        path: cmd.path,
-        args: [...cmd.args],
+        inputs: Array.isArray(cmd.inputs) ? [...cmd.inputs] : [],
         timestamp: cmd.timestamp
       }));
       window.localStorage.setItem(this.storageKey, JSON.stringify(serializedCommands));
