@@ -1,6 +1,8 @@
 # Citadel
 
-A hierarchical command-line interface (CLI) for web applications.
+A hierarchical command-line interface (CLI) for web applications. It is intended to be an addition to existing web applications for power users to access common functionality quickly, although it is flexible enough to be used as a primary interface.
+
+A demo is available on [Codesandbox](https://codesandbox.io/p/sandbox/m32qkc).
 
 # Installation
 
@@ -13,6 +15,12 @@ npm install citadel_cli
 In your application:
 
 ```typescript
+
+import {
+  Citadel,
+  JsonCommandResult,
+} from "citadel_cli";
+
 const commands = {
   user: {
     show: {
@@ -42,174 +50,46 @@ function App() {
 }
 ```
 
-Press <kbd>.</kbd> (period) to activate Citadel. The above configuration you would render the following:
+Press <kbd>.</kbd> (period) to activate Citadel. The command as defined would render the following:
 
+![Demo of Citadel CLI](https://github.com/user-attachments/assets/b64da0f7-a4a0-4f76-bc03-c0e40c0e14e5)
 
-Note that the exact keys pressed to perform the command were <kbd>us123</kbd>. You only have to press the first letter of each word to advance to the next. 
+Note that the exact keys pressed to perform the above were <kbd>us123</kbd>: you only have to press the first letter of each word to advance to the next. 
 
 Each command is composed of:
 1. `description`. Required.
 2. `argument` Optional. One or more arguments, each with a `name` and a `description`
 3. A `handler`. Required. The `handler` is what gets executed when you hit Enter, and can be any valid JavaScript. The only requirement is that it must return a `CommandResult` class. At the time of this writing they are `JsonCommandResult`, `TextCommandResult`, `ImageCommandResult`, and `ErrorCommandResult`.
 
-```typescript
-commands.addCommand(
-  ['user', 'activity'],
-  'Show user activity',
-  async (args) => ({
-    // Return both data and visualization
-    json: await getUserActivity(args.userId),
-    component: <ActivityGraph userId={args.userId} />
-  })
-);
+## Configuration
+
+Certain configuration options can be passed to the Citadel component. These are given below along with their default values.
+
 ```
-
-## Real-World Examples
-
-### Customer Service Application
-
-```typescript
-// Customer service command configuration
-commands.addCommand(
-  ['ticket', 'new'],
-  'Create support ticket',
-  async (args) => {
-    const ticket = await ticketService.create({
-      customerId: args.customer,
-      priority: args.priority,
-      description: args.description
-    });
-    return { json: { ticketId: ticket.id, status: 'created' } };
-  },
-  [
-    { name: 'customer', description: 'Customer ID' },
-    { name: 'priority', description: 'Ticket priority (high|medium|low)' },
-    { name: 'description', description: 'Issue description' }
-  ]
-);
-
-commands.addCommand(
-  ['customer', 'history'],
-  'View customer interaction history',
-  async (args) => ({
-    json: await customerService.getHistory(args.id, {
-      last: args.days || 30
-    })
-  }),
-  [
-    { name: 'id', description: 'Customer ID' },
-    { name: 'days', description: 'Number of days (default: 30)' }
-  ]
-);
-```
-
-### Trading Platform Integration
-
-```typescript
-// Trading command configuration
-commands.addCommand(
-  ['trade', 'limit'],
-  'Place limit order',
-  async (args) => {
-    const order = await tradingService.placeLimitOrder({
-      pair: args.pair,
-      price: args.price,
-      quantity: args.quantity,
-      side: args.side || 'buy'
-    });
-    return { json: { orderId: order.id, status: order.status } };
-  },
-  [
-    { name: 'pair', description: 'Trading pair (e.g., btc-usd)' },
-    { name: 'price', description: 'Limit price' },
-    { name: 'quantity', description: 'Order quantity' },
-    { name: 'side', description: 'Order side (buy|sell)' }
-  ]
-);
-```
-
-### DevOps Dashboard Commands
-
-```typescript
-// Deployment command configuration
-commands.addCommand(
-  ['deploy', 'status'],
-  'Check deployment status',
-  async (args) => ({
-    json: await deploymentService.getStatus(args.service, args.environment)
-  }),
-  [
-    { name: 'service', description: 'Service name' },
-    { name: 'environment', description: 'Environment (dev|staging|prod)' }
-  ]
-);
-
-commands.addCommand(
-  ['metrics', 'alert'],
-  'Configure service alerts',
-  async (args) => ({
-    json: await metricsService.setAlert(args.service, {
-      metric: args.metric,
-      threshold: args.threshold,
-      duration: args.duration
-    })
-  }),
-  [
-    { name: 'service', description: 'Service name' },
-    { name: 'metric', description: 'Metric name (cpu|memory|latency)' },
-    { name: 'threshold', description: 'Alert threshold' },
-    { name: 'duration', description: 'Duration in minutes' }
-  ]
-);
-```
-
-## Advanced Configuration
-
-### Custom Command Rendering
-
-Citadel supports custom rendering of command results:
-
-```typescript
-commands.addCommand(
-  ['dashboard', 'metrics'],
-  'Show service metrics',
-  async (args) => ({
-    component: <MetricsVisualization serviceId={args.service} />,
-    json: await metricsService.get(args.service)
-  }),
-  { name: 'service', description: 'Service ID' }
-);
-```
-
-### Authentication Integration
-
-```typescript
-const citadelConfig = {
-  commandFilter: (command) => {
-    const userPermissions = getUserPermissions();
-    return command.requiredPermissions.every(
-      (perm) => userPermissions.includes(perm)
-    );
-  },
-  // ... other config
+const config = {
+  commandTimeoutMs: 10000,
+  includeHelpCommand: true,
+  maxHeight: '80vh',
+  minHeight: '200',
+  outputFontSize: 'text-xs',
+  resetStateOnHide: false,
+  showCitadelKey: '.',
+  cursorType: 'bbs', // 'blink', 'spin', 'solid', or 'bbs'
+  cursorSpeed: 530,
+  storage: {
+    type: 'localStorage',
+    maxCommands: 100
+  }
 };
 ```
 
-## Development
+Then when you render the component:
 
-### Project Structure
 ```
-citadel/
-├── src/
-│   ├── components/    # React components
-│   ├── styles/        # CSS and theme files
-│   ├── types/         # TypeScript definitions
-│   └── utils/         # Utility functions
-├── public/            # Static assets
-└── vite.config.ts     # Vite configuration
+<Citadel commands={commands} config={config} />
 ```
 
-### Contributing
+## Contributing
 
 Contributions are welcome.
 
@@ -239,6 +119,8 @@ npm link
 npm link @jchilders/citadel_cli
 # ... your normal build/run steps ...
 ```
+
+Load your appliation and press <kbd>.</kbd>
 
 ### Bug Reports and Feature Requests
 
