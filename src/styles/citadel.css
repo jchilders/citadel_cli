@@ -6,7 +6,7 @@
   --citadel-accent-hover: #535bf2;
   --citadel-min-height: 200px;
   --citadel-max-height: 80vh;
-  --citadel-default-height: 33vh;
+  --citadel-default-height: 35vh;
   --citadel-error: rgb(239, 68, 68);
 
   height: var(--citadel-default-height);

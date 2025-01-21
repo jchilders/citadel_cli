@@ -1,6 +1,6 @@
 {
   "name": "citadel_cli",
-  "description": "A hierarchical command line and console for your webapp",
+  "description": "A hierarchical command line (CLI) for your webapp",
   "keywords": [
     "react",
     "command",
