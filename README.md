@@ -1,6 +1,6 @@
 # Citadel
 
-A hierarchical command-line interface (CLI) for web applications. It is intended to be an addition to existing web applications for power users to access common functionality quickly, although it is flexible enough to be used as a primary interface.
+A hierarchical command-line interface (CLI) for web applications. It is intended to be an drop-in addition to existing web applications, intended for power users to quickly access frequently used application functionality.
 
 A demo is available on [Codesandbox](https://codesandbox.io/p/sandbox/m32qkc).
 
@@ -18,7 +18,7 @@ In your application:
 
 import {
   Citadel,
-  JsonCommandResult,
+  JsonCommandResult, // See below for supported result types
 } from "citadel_cli";
 
 const commands = {
@@ -57,7 +57,7 @@ Press <kbd>.</kbd> (period) to activate Citadel. The command as defined would re
 Note that the exact keys pressed to perform the above were <kbd>us123</kbd>: you only have to press the first letter of each word to advance to the next. 
 
 Each command is composed of:
-1. `description`. Required.
+1. `description`
 2. `argument` Optional. One or more arguments, each with a `name` and a `description`
 3. A `handler`. Required. The `handler` is what gets executed when you hit Enter, and can be any valid JavaScript. The only requirement is that it must return a `CommandResult` class. At the time of this writing they are `JsonCommandResult`, `TextCommandResult`, `ImageCommandResult`, and `ErrorCommandResult`.
 
@@ -70,8 +70,9 @@ const config = {
   commandTimeoutMs: 10000,
   includeHelpCommand: true,
   maxHeight: '80vh',
+  initialHeight: '40vh',
   minHeight: '200',
-  outputFontSize: 'text-xs',
+  outputFontSize: '0.875rem',
   resetStateOnHide: false,
   showCitadelKey: '.',
   cursorType: 'bbs', // 'blink', 'spin', 'solid', or 'bbs'

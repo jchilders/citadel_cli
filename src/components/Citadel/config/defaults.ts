@@ -9,6 +9,8 @@ import { CitadelConfig } from './types';
  *                               When false, no help command is included in the command trie. Default: true.
  * 
  * @property maxHeight - The maximum CSS height of the interface. Default: '80vh'.
+ *
+ * @property initialHeight - The initial CSS height of the interface. Default: '40vh'.
  * 
  * @property outputFontSize - The TailwindCSS class for the font size of the output text. Default: 'text-sm'.
  * 
@@ -28,8 +30,9 @@ export const defaultConfig: CitadelConfig = {
   commandTimeoutMs: 10000,
   includeHelpCommand: true,
   maxHeight: '80vh',
+  initialHeight: '40vh',
   minHeight: '200',
-  outputFontSize: 'text-xs',
+  outputFontSize: '0.875rem',
   resetStateOnHide: false,
   showCitadelKey: '.',
   cursorType: 'bbs',

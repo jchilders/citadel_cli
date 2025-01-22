@@ -33,6 +33,13 @@ export interface CitadelConfig {
    */
   maxHeight?: string;
 
+  /**
+   * The initial height of the command interface.
+   * Accepts any valid CSS height value.
+   * Example: '400px' or '50vh'
+   */
+  initialHeight?: string;
+
   minHeight?: string;
   /**
    * The font size for the command output text.

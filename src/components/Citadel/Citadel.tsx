@@ -109,13 +109,15 @@ interface CitadelInnerProps {}
 const CitadelInner: React.FC<CitadelInnerProps> = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [height, setHeight] = useState<number | null>(null);
+  const config = useCitadelConfig();
+  const [height, setHeight] = useState<string | null>(() => {
+    return config.initialHeight || null;
+  });
   const outputRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
   const startYRef = useRef(0);
   const startHeightRef = useRef(0);
-  const config = useCitadelConfig();
   const { state, actions, getAvailableCommands } = useCitadelState();
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -200,7 +202,7 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
       ref={containerRef}
       className={`container ${isVisible ? 'citadel_slideUp' : ''} ${isClosing ? 'citadel_slideDown' : ''}`}
       style={{
-        ...height ? { height: `${height}px` } : undefined,
+        ...height ? { height } : undefined,
         maxHeight: config.maxHeight
       }}
     >
