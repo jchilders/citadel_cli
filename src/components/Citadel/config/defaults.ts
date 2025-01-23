@@ -35,7 +35,7 @@ export const defaultConfig: CitadelConfig = {
   outputFontSize: '0.875rem',
   resetStateOnHide: false,
   showCitadelKey: '.',
-  cursorType: 'bbs',
+  cursorType: 'blink',
   cursorColor: 'var(--cursor-color, #fff)',
   cursorSpeed: 530,
   storage: {

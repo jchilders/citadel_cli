@@ -4,6 +4,14 @@ import { CommandResult, TextCommandResult } from './command-results';
 export type CommandHandler = (args: string[]) => Promise<CommandResult>;
 
 /**
+ * A no-op handler that returns an empty string. Used as the default handler
+ * for CommandNodes that don't specify a handler.
+ */
+export const NoopHandler: CommandHandler = async (_args) => {
+  return new TextCommandResult('');
+};
+
+/**
  * Represents an argument that can be passed to a command
  */
 export interface CommandArgument {
@@ -11,7 +19,7 @@ export interface CommandArgument {
   description: string;
 }
 
-export interface CommandNodeParams {
+export interface CommandDefinition {
   fullPath: string[];
   description: string;
   parent?: CommandNode;
@@ -22,14 +30,6 @@ export interface CommandNodeParams {
 export interface CommandSignature {
   signature: string[];
 }
-
-/**
- * A no-op handler that returns an empty string. Used as the default handler
- * for CommandNodes that don't specify a handler.
- */
-export const NoopHandler: CommandHandler = async (_args) => {
-  return new TextCommandResult('');
-};
 
 export class CommandNode {
   private _fullPath: string[];
@@ -45,7 +45,7 @@ export class CommandNode {
    * high level, a command is one or more words followed by an optional
    * argument, and with an optional handler.
    * 
-   * @param params Configuration parameters for the node
+   * @param commandDefinition The 
    * @param params.fullPath Complete path from root to this node (e.g., ['service', 'deploy'])
    * @param params.description Human-readable description of the command
    * @param params.parent Optional parent node in the command hierarchy
@@ -54,17 +54,17 @@ export class CommandNode {
    * @throws {Error} If fullPath is empty or undefined
    * 
    */
-  constructor(params: CommandNodeParams) {
-    if (!params.fullPath || params.fullPath.length === 0) {
+  constructor(commandDefinition: CommandDefinition) {
+    if (!commandDefinition.fullPath || commandDefinition.fullPath.length === 0) {
       throw new Error('Command path cannot be empty');
     }
 
-    this._fullPath = params.fullPath;
-    this._description = params.description;
+    this._fullPath = commandDefinition.fullPath;
+    this._description = commandDefinition.description;
     this._children = new Map<string, CommandNode>();
-    this._argument = params.argument;
-    this._handler = params.handler || NoopHandler;
-    this._parent = params.parent;
+    this._argument = commandDefinition.argument;
+    this._handler = commandDefinition.handler || NoopHandler;
+    this._parent = commandDefinition.parent;
   }
 
   /**
