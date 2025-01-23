@@ -23,9 +23,19 @@ export const useCommandTrie = () => {
     // Add provided commands if any
     if (commands) {
       Object.entries(commands).forEach(([path, command]) => {
+        const segments = path.split('.').map(segment => ({
+          type: 'word' as const,
+          value: segment
+        }));
+        
         trie.addCommand({
-          path: path.split('.'),
-          ...command
+          path: segments,
+          description: command.description,
+          handler: command.handler,
+          arguments: command.arguments ? command.arguments.map(arg => ({
+            type: 'argument' as const,
+            ...arg
+          })) : undefined
         });
       });
     }

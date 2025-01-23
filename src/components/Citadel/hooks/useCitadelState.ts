@@ -217,7 +217,52 @@ export const useCitadelState = () => {
       setState(prev => ({ ...prev, validation }));
     }, []),
 
-    executeCommand,
+    executeCommand: useCallback(async (path: string[], args?: string[]) => {
+      const node = commandTrie.getCommand(path);
+      if (!node || !node.isLeaf) return;
+
+      const outputItem = new OutputItem([...path, ...(args || [])]);
+      setState(prev => ({
+        ...prev,
+        output: [...prev.output, outputItem]
+      }));
+
+      try {
+        const result = await Promise.race([
+          node.handler(args || []),
+          new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error('Command timed out')), config.commandTimeoutMs);
+          })
+        ]);
+
+        result.markSuccess();
+        
+        // Save successful command to history
+        await historyActions.addCommand({
+          inputs: [...path, ...(args || [])],
+          timestamp: Date.now()
+        });
+
+        setState(prev => ({
+          ...prev,
+          output: prev.output.map(item => 
+            item.timestamp === outputItem.timestamp ? { ...item, result } : item
+          )
+        }));
+      } catch (error) {
+        const result = new ErrorCommandResult(
+          error instanceof Error ? error.message : 'Unknown error'
+        );
+        result.markFailure();
+
+        setState(prev => ({
+          ...prev,
+          output: prev.output.map(item => 
+            item.timestamp === outputItem.timestamp ? { ...item, result } : item
+          )
+        }));
+      }
+    }, [commandTrie, config.commandTimeoutMs, historyActions]),
 
     executeHistoryCommand: useCallback(async (index: number) => {
       const commands = state.history.commands;

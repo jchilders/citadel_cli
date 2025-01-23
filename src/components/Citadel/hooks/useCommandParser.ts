@@ -63,20 +63,22 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
 
     // Only auto-complete if we're not entering an argument
     if (!state.isEnteringArg) {
+      const words = newValue.trim().split(/\s+/);
+      const currentWord = words[words.length - 1] || '';
       const availableNodes = getAvailableNodes(state.currentNode);
-      const suggestion = getAutocompleteSuggestion(newValue, availableNodes);
+      const suggestion = getAutocompleteSuggestion(currentWord, availableNodes);
       
-      if (suggestion && suggestion !== newValue) {
-        const newStack = [...state.commandStack, suggestion]; // [ "user" ]
+      if (suggestion && suggestion !== currentWord) {
+        const newStack = [...state.commandStack, suggestion];
         const nextNode = commandTrie.getCommand(newStack);
         
         if (nextNode) {
-          actions.setCommandStack(newStack); // ["user", "deactivate"]
-          actions.setCurrentInput('');
+          actions.setCommandStack(newStack);
+          actions.setCurrentInput(words.slice(0, -1).join(' ') + (words.length > 1 ? ' ' : '') + suggestion);
           actions.setCurrentNode(nextNode);
           
-          // If this is a leaf node with an argument, enter argument mode
-          if (!nextNode.hasChildren && nextNode.argument) {
+          // If this is a leaf node with arguments, enter argument mode
+          if (!nextNode.hasChildren && nextNode.arguments.length > 0) {
             actions.setIsEnteringArg(true);
             setInputState('entering_argument');
           } else {

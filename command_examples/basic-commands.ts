@@ -4,7 +4,12 @@ export const commands = {
   user: {
     show: {
       description: 'Show user details',
-      argument: { name: 'userId', description: 'Enter user ID' },
+      arguments: [{ 
+        type: 'argument',
+        name: 'userId', 
+        description: 'Enter user ID',
+        required: true
+      }],
       handler: async (args: string[]) => {
         await new Promise(resolve => setTimeout(resolve, 2000));
         return new JsonCommandResult({
@@ -17,7 +22,12 @@ export const commands = {
     },
     deactivate: {
       description: 'Deactivate user account',
-      argument: { name: 'userId', description: 'Enter user ID' },
+      arguments: [{ 
+        type: 'argument',
+        name: 'userId', 
+        description: 'Enter user ID',
+        required: true
+      }],
       handler: async (args: string[]) => new JsonCommandResult({
         id: args[0],
         status: "deactivated"
@@ -26,7 +36,12 @@ export const commands = {
     query: {
       firstname: {
         description: 'Search by first name',
-        argument: { name: 'firstName', description: 'Enter first name' },
+        arguments: [{ 
+          type: 'argument',
+          name: 'firstName', 
+          description: 'Enter first name',
+          required: true
+        }],
         handler: async (args: string[]) => new JsonCommandResult({
           users: [
             { id: 1, name: `${args[0]} Smith` },
@@ -36,7 +51,12 @@ export const commands = {
       },
       lastname: {
         description: 'Search by last name',
-        argument: { name: 'lastName', description: 'Enter last name' },
+        arguments: [{ 
+          type: 'argument',
+          name: 'lastName', 
+          description: 'Enter last name',
+          required: true
+        }],
         handler: async (args: string[]) => new JsonCommandResult({
           users: [
             { id: 1, name: `John ${args[0]}` },
@@ -95,7 +115,12 @@ export const commands = {
 
   cowsay: {
     description: 'Make a cow say something',
-    argument: { name: 'message', description: 'What should the cow say?' },
+    arguments: [{ 
+      type: 'argument',
+      name: 'message', 
+      description: 'What should the cow say?',
+      required: true
+    }],
     handler: async (args: string[]) => {
       const message = args[0] || 'Moo!';
       const bubbleWidth = message.length + 2;

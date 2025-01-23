@@ -14,8 +14,12 @@ export const createHelpCommand = (trie: CommandTrie, config: CitadelConfig): [st
     const commands = trie.getLeafCommands()
       .filter((cmd: CommandNode) => cmd.name !== 'help')
       .map((cmd: CommandNode) => {
-        const cmdStr = cmd.fullPath.join(' ') + (cmd.requiresArgument ? ` <${cmd.argument?.name}>` : '');
-        return `${cmdStr} - ${cmd.description}`;
+        const cmdPath = cmd.fullPath.join(' ');
+        const args = cmd.arguments.map(arg => 
+          `<${arg.name}${arg.required ? '' : '?'}>`
+        ).join(' ');
+        const usage = [cmdPath, args].filter(Boolean).join(' ');
+        return `${usage} - ${cmd.description}`;
       })
       .sort();
 
@@ -32,7 +36,7 @@ export const createHelpCommand = (trie: CommandTrie, config: CitadelConfig): [st
   };
 
   return ['help', new CommandNode({
-    fullPath: ['help'],
+    path: [{ type: 'word', name: 'help' }],
     description: 'Show available commands',
     handler
   })];

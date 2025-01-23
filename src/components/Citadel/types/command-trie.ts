@@ -11,67 +11,76 @@ export const NoopHandler: CommandHandler = async (_args) => {
   return new TextCommandResult('');
 };
 
-/**
- * Represents an argument that can be passed to a command
- */
-export interface CommandArgument {
+/** Base interface for command segments */
+export interface BaseCommandSegment {
+  type: 'word' | 'argument';
   name: string;
-  description: string;
+  description?: string;
 }
 
+/** Represents a segment in a command path - either a word or argument */
+export type CommandSegment = CommandWord | CommandArgument;
+
+/** Represents a literal word in a command path */
+export interface CommandWord extends BaseCommandSegment {
+  type: 'word';
+}
+
+/** Represents an argument that can be passed to a command */
+export interface CommandArgument extends BaseCommandSegment {
+  type: 'argument';
+  required?: boolean;
+  value?: any,
+  valid?: ( ) => boolean;
+}
+
+/** Defines a complete command with its path and behavior */
 export interface CommandDefinition {
-  fullPath: string[];
-  description: string;
-  parent?: CommandNode;
-  argument?: CommandArgument;
+  path: CommandSegment[];
+  description?: string;
   handler?: CommandHandler;
 }
 
+/** Represents a command's unique signature for quick lookup */
 export interface CommandSignature {
   signature: string[];
+  node: CommandNode;
 }
 
 export class CommandNode {
-  private _fullPath: string[];
-  private _description: string;
+  private _segment: CommandSegment; // CommandWord or CommandArgument
+  private _description
   private _children: Map<string, CommandNode>;
-  private _argument?: CommandArgument;
-  private _handler: CommandHandler;
+  private _handler?: CommandHandler;
   private _parent?: CommandNode;
   private _signature?: string;
+  private _arguments: CommandArgument[];
 
-  /**
-   * Creates a new CommandNode representing a command the user can enter. From a
-   * high level, a command is one or more words followed by an optional
-   * argument, and with an optional handler.
-   * 
-   * @param commandDefinition The 
-   * @param params.fullPath Complete path from root to this node (e.g., ['service', 'deploy'])
-   * @param params.description Human-readable description of the command
-   * @param params.parent Optional parent node in the command hierarchy
-   * @param params.handler Optional async function to execute when command is invoked
-   * @param params.argument Optional argument definition for the command
-   * @throws {Error} If fullPath is empty or undefined
-   * 
-   */
-  constructor(commandDefinition: CommandDefinition) {
-    if (!commandDefinition.fullPath || commandDefinition.fullPath.length === 0) {
-      throw new Error('Command path cannot be empty');
-    }
-
-    this._fullPath = commandDefinition.fullPath;
-    this._description = commandDefinition.description;
-    this._children = new Map<string, CommandNode>();
-    this._argument = commandDefinition.argument;
-    this._handler = commandDefinition.handler || NoopHandler;
-    this._parent = commandDefinition.parent;
+  constructor(definition: CommandDefinition, parent?: CommandNode) {
+    const [segment, ...remainingPath] = definition.path;
+    this._segment = segment;
+    this._description = definition.description || '';
+    this._children = new Map();
+    this._handler = remainingPath.length === 0 ? definition.handler : undefined;
+    this._parent = parent;
+    this._arguments = definition.path
+      .filter((segment): segment is CommandArgument => segment.type === 'argument') || [];
   }
 
-  /**
-   * Gets the name of this command (last segment of the path)
-   */
+  get segment(): CommandSegment {
+    return this._segment;
+  }
+
+  get arguments(): CommandArgument[] {
+    return this._arguments;
+  }
+
+  get isArgument(): boolean {
+    return this._segment.type === 'argument';
+  }
+
   get name(): string {
-    return this._fullPath[this._fullPath.length - 1];
+    return this._segment.name;
   }
 
   /**
@@ -81,32 +90,35 @@ export class CommandNode {
     return this._children.size === 0;
   }
 
-  /**
-   * Whether this command has a handler
-   */
   get hasHandler(): boolean {
     return this._handler !== undefined;
   }
 
-  /**
-   * Whether this command requires an argument
-   */
   get requiresArgument(): boolean {
-    return this._argument !== undefined;
+    return this._arguments.length > 0;
   }
 
-  /**
-   * Gets the parent node if it exists
-   */
   get parent(): CommandNode | undefined {
     return this._parent;
   }
 
-  /**
-   * Gets the command's signature
-   */
   get signature(): string | undefined {
     return this._signature;
+  }
+
+  get fullPath(): string[] {
+    const path: string[] = [];
+    let current: CommandNode | undefined = this;
+    
+    while (current && current._segment) {
+      // Skip the ROOT node
+      if (current.name !== 'ROOT') {
+        path.unshift(current.name);
+      }
+      current = current._parent;
+    }
+    
+    return path;
   }
 
   /**
@@ -146,12 +158,6 @@ export class CommandNode {
     return this._children.get(name);
   }
 
-  /**
-   * Gets the full path from root to this command
-   */
-  get fullPath(): string[] {
-    return this._fullPath;
-  }
 
   /**
    * Gets the command's description
@@ -160,25 +166,12 @@ export class CommandNode {
     return this._description;
   }
 
-  /**
-   * Gets the command's argument definition if it exists
-   */
-  get argument(): CommandArgument | undefined {
-    return this._argument;
-  }
-
-  /**
-   * Sets the command's argument definition
-   */
-  set argument(value: CommandArgument | undefined) {
-    this._argument = value;
-  }
 
   /**
    * Gets the command's handler
    */
   get handler(): CommandHandler {
-    return this._handler;
+    return this._handler || NoopHandler;
   }
 
   /**
@@ -195,23 +188,31 @@ export class CommandNode {
  * and getting command completions.
  */
 export class CommandTrie {
+  private static readonly ROOT_NODE: CommandNode = new CommandNode({
+    path: [{ type: 'word', name: 'ROOT' }],
+    description: 'Root command node'
+  });
+
   private readonly _root: CommandNode;
 
   /**
    * Creates a new CommandTrie instance.
    */
   constructor() {
-    // Create a root node with a special path
-    this._root = new CommandNode({
-      fullPath: ['ROOT'],
-      description: 'Root command node'
-    });
+    this._root = CommandTrie.ROOT_NODE;
+  }
+
+  /**
+   * Gets the root node of the command trie
+   */
+  static get root(): CommandNode {
+    return CommandTrie.ROOT_NODE;
   }
 
   /**
    * Adds a new command to the trie.
    * 
-   * @param params Parameters for the command.
+   * @param commandDefinition Parameters for the command.
    * @param params.path The path segments for the command (e.g., ['service', 'deploy'])
    * @param params.description Description of what the command does
    * @param params.handler Optional function to execute when command is invoked
@@ -219,8 +220,8 @@ export class CommandTrie {
    * @throws {Error} If attempting to add a duplicate leaf command or a subcommand to a leaf
    * 
    */
-  addCommand(params: Omit<ConstructorParameters<typeof CommandNode>[0], 'fullPath' | 'parent'> & { path: string[] }): void {
-    const { path, description, handler, argument } = params;
+  addCommand(commandDefinition: CommandDefinition): void {
+    const { path, description, handler } = commandDefinition;
     
     if (!path?.length) {
       throw new Error("Command path cannot be empty");
@@ -230,30 +231,27 @@ export class CommandTrie {
     const lastIndex = path.length - 1;
 
     for (let i = 0; i < path.length; i++) {
-      const segment = path[i];
+      const segment = path[i]; // CommandWord or CommandArgument
       const isLeaf = i === lastIndex;
-      const fullPath = path.slice(0, i + 1);
       const children = currentNode.children;
 
-      if (!children.has(segment)) {
+      if (!children.has(segment.name)) {
         const newNode = new CommandNode({
-          description: isLeaf ? description : `${segment} commands`,
-          fullPath,
-          parent: currentNode,
-          handler: isLeaf ? handler : undefined,
-          argument: isLeaf ? argument : undefined,
-        });
+          path: [segment],
+          description: description,
+          handler: isLeaf ? handler : NoopHandler
+        }, currentNode);
 
-        currentNode.addChild(segment, newNode);
+        currentNode.addChild(segment.name, newNode);
         currentNode = newNode;
-        this.setSignatures();
+        // this.setSignatures();
       } else {
-        const existingNode = children.get(segment)!;
+        const existingNode = children.get(segment.name)!;
         if (isLeaf && existingNode.isLeaf) {
-          throw new Error(`Duplicate command: ${path.join(" ")}`);
+          throw new Error(`Duplicate command: ${path.map(s => s.name).join(" ")}`);
         }
         if (!isLeaf && existingNode.isLeaf) {
-          throw new Error(`Cannot add subcommand to leaf command: ${path.slice(0, i + 1).join(" ")}`);
+          throw new Error(`Cannot add subcommand to leaf command: ${path.slice(0, i + 1).map(s => s.name).join(" ")}`);
         }
 
         currentNode = existingNode;
@@ -342,10 +340,6 @@ export class CommandTrie {
 
     if (!command.hasHandler) {
       throw new Error(`Command '${path.join(' ')}' is not executable`);
-    }
-
-    if (command.requiresArgument && args.length === 0) {
-      throw new Error(`Command '${path.join(' ')}' requires argument: ${command.argument?.name}`);
     }
 
     const handler = command.handler;
@@ -453,62 +447,65 @@ export class CommandTrie {
    * // For commands: ['user', 'show'] and ['user', 'status']
    * buildSignatureForCommand(showCommand) // returns ['u', 'sh']
    */
-  buildSignatureForCommand(command: CommandNode): CommandSignature {
-    if (!command || command === this._root) {
-      return { signature: [] };
-    }
-
-    const signature: string[] = [];
-    let current: CommandNode | undefined = command;
-    const path: CommandNode[] = [];
-
-    // Build path from node to root
-    while (current && current !== this._root) {
-      path.unshift(current);
-      current = current.parent;
-    }
-
-    // Now build signature going down from root
-    current = this._root;
-    
-    for (const node of path) {
-      const segment = node.name;
-      
-      // Get all siblings at this level
-      const siblings = Array.from(current.children.keys());
-      
-      // Find minimum prefix length needed to uniquely identify this segment
-      let prefixLength = 1;
-      let found = false;
-      
-      while (prefixLength <= segment.length) {
-        const prefix = segment.slice(0, prefixLength);
-        const prefixLower = prefix.toLowerCase();
-        
-        // Count how many siblings match this prefix length
-        const matches = siblings.filter(
-          sib => sib.toLowerCase().startsWith(prefixLower)
-        );
-        
-        // Only consider it a match if it uniquely identifies our target segment
-        if (matches.length === 1 && matches[0].toLowerCase() === segment.toLowerCase()) {
-          signature.push(prefix);
-          found = true;
-          break;
-        }
-        
-        prefixLength++;
-      }
-      
-      // If we haven't found a unique prefix, use the full segment
-      if (!found) {
-        signature.push(segment);
-      }
-
-      current = node;
-    }
-
-    return { signature };
+  buildSignatureForCommand(_command: CommandNode): CommandSignature {
+    throw new Error(
+      'No implemented yet'
+    );
+    // if (!command || command === this._root) {
+    //   return { signature: [] };
+    // }
+    //
+    // const signature: string[] = [];
+    // let current: CommandNode | undefined = command;
+    // const path: CommandNode[] = [];
+    //
+    // // Build path from node to root
+    // while (current && current !== this._root) {
+    //   path.unshift(current);
+    //   current = current.parent;
+    // }
+    //
+    // // Now build signature going down from root
+    // current = this._root;
+    // 
+    // for (const node of path) {
+    //   const segment = node.name;
+    //   
+    //   // Get all siblings at this level
+    //   const siblings = Array.from(current.children.keys());
+    //   
+    //   // Find minimum prefix length needed to uniquely identify this segment
+    //   let prefixLength = 1;
+    //   let found = false;
+    //   
+    //   while (prefixLength <= segment.length) {
+    //     const prefix = segment.slice(0, prefixLength);
+    //     const prefixLower = prefix.toLowerCase();
+    //     
+    //     // Count how many siblings match this prefix length
+    //     const matches = siblings.filter(
+    //       sib => sib.toLowerCase().startsWith(prefixLower)
+    //     );
+    //     
+    //     // Only consider it a match if it uniquely identifies our target segment
+    //     if (matches.length === 1 && matches[0].toLowerCase() === segment.toLowerCase()) {
+    //       signature.push(prefix);
+    //       found = true;
+    //       break;
+    //     }
+    //     
+    //     prefixLength++;
+    //   }
+    //   
+    //   // If we haven't found a unique prefix, use the full segment
+    //   if (!found) {
+    //     signature.push(segment);
+    //   }
+    //
+    //   current = node;
+    // }
+    //
+    // return { signature };
   }
 
   /**
@@ -537,16 +534,16 @@ export class CommandTrie {
   /**
    * Updates signatures for all nodes in the trie
    */
-  setSignatures(): void {
-    const traverse = (node: CommandNode) => {
-      if (node !== this._root) {
-        node.setSignature(this);
-      }
-      node.children.forEach(child => traverse(child));
-    };
-    
-    traverse(this._root);
-  }
+  // setSignatures(): void {
+  //   const traverse = (node: CommandNode) => {
+  //     if (node !== this._root) {
+  //       node.setSignature(this);
+  //     }
+  //     node.children.forEach(child => traverse(child));
+  //   };
+  //   
+  //   traverse(this._root);
+  // }
 
   validate(): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
@@ -575,9 +572,9 @@ export class CommandTrie {
         if (node.handler !== NoopHandler) {
           errors.push(`Non-leaf command should use NoopHandler: ${pathStr}`);
         }
-        if (node.argument) {
-          errors.push(`Non-leaf command cannot have argument: ${pathStr}`);
-        }
+        // if (node.argument) {
+        //   errors.push(`Non-leaf command cannot have argument: ${pathStr}`);
+        // }
 
         children.forEach((child) => {
           traverse(child);
