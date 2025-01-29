@@ -2,11 +2,69 @@ import { renderHook, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useCommandParser } from '../useCommandParser';
-import { CommandTrie } from '../../types/command-trie';
-import { CitadelState, CitadelActions } from '../../types';
+import { CommandNode, CommandTrie } from '../../types/command-trie';
+import { CitadelState, CitadelActions, TextCommandResult } from '../../types';
 import { createMockNode, createMockCommandTrie, createMockCitadelState } from '../../../../__test-utils__/factories';
 
+import { parseInput } from '../useCommandParser';
+
 describe('useCommandParser', () => {
+  describe('parseInput', () => {
+    it('should parse unquoted input correctly', () => {
+      const result = parseInput('user comment 1234 test');
+      expect(result).toEqual({
+        words: ['user', 'comment', '1234'],
+        currentWord: 'test',
+        isQuoted: false,
+        quoteChar: undefined,
+        isComplete: false
+      });
+    });
+
+    it('should parse double-quoted input correctly', () => {
+      const result = parseInput('user comment 1234 "A test comment"');
+      expect(result).toEqual({
+        words: ['user', 'comment', '1234', 'A test comment'],
+        currentWord: '',
+        isQuoted: false,
+        quoteChar: undefined,
+        isComplete: true
+      });
+    });
+
+    it('should parse single-quoted input correctly', () => {
+      const result = parseInput("user comment 1234 'A test comment'");
+      expect(result).toEqual({
+        words: ['user', 'comment', '1234', 'A test comment'],
+        currentWord: '',
+        isQuoted: false,
+        quoteChar: undefined,
+        isComplete: true
+      });
+    });
+
+    it('should handle unclosed quotes', () => {
+      const result = parseInput('user comment 1234 "unclosed quote');
+      expect(result).toEqual({
+        words: ['user', 'comment', '1234'],
+        currentWord: 'unclosed quote',
+        isQuoted: true,
+        quoteChar: '"',
+        isComplete: false
+      });
+    });
+
+    it('should handle mixed quotes', () => {
+      const result = parseInput('user comment "1234" \'test comment\'');
+      expect(result).toEqual({
+        words: ['user', 'comment', '1234', 'test comment'],
+        currentWord: '',
+        isQuoted: false,
+        quoteChar: undefined,
+        isComplete: true
+      });
+    });
+  });
   let mockCommandTrie: CommandTrie;
   let mockState: CitadelState;
   let mockActions: CitadelActions;
@@ -14,6 +72,33 @@ describe('useCommandParser', () => {
 
   beforeEach(() => {
     mockCommandTrie = createMockCommandTrie();
+    
+    // Set up mock commands for testing
+    const mockCommands = [
+      new CommandNode(
+        [
+          { type: 'word', name: 'user' },
+          { type: 'word', name: 'comment' },
+          { type: 'argument', name: 'userId', description: 'User ID' },
+          { type: 'argument', name: 'comment', description: 'Comment text' }
+        ],
+        'Add a comment to a user',
+        async () => new TextCommandResult('Comment added')
+      ),
+      new CommandNode(
+        [{ type: 'word', name: 'help' }],
+        'Show help',
+        async () => new TextCommandResult('Help text')
+      )
+    ];
+
+    vi.spyOn(mockCommandTrie, 'commands', 'get').mockReturnValue(mockCommands);
+    vi.spyOn(mockCommandTrie, 'getCompletions').mockImplementation((path) => {
+      if (path.length === 0) return ['user', 'help'];
+      if (path[0] === 'user') return ['comment'];
+      return [];
+    });
+
     mockState = createMockCitadelState();
     mockActions = {
       setCommandStack: vi.fn(),
@@ -30,6 +115,133 @@ describe('useCommandParser', () => {
   });
 
   describe('handleKeyDown', () => {
+    it('should handle multiple quoted arguments', async () => {
+      const mockNode = new CommandNode(
+        [
+          { type: 'word', name: 'user' },
+          { type: 'word', name: 'comment' },
+          { type: 'argument', name: 'userId', description: 'User ID' },
+          { type: 'argument', name: 'comment', description: 'Comment text' }
+        ],
+        'Add a comment'
+      );
+
+      vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockNode);
+
+      const stateWithArgs = {
+        ...mockState,
+        currentNode: mockNode,
+        currentInput: '"1234" "This is a comment"',
+        isEnteringArg: true,
+        commandStack: ['user', 'comment'],
+      };
+
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
+      
+      const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
+      
+      await act(async () => {
+        result.current.handleKeyDown(mockEvent, stateWithArgs, mockActions);
+      });
+
+      expect(mockActions.executeCommand).toHaveBeenCalledWith(
+        ['user', 'comment'],
+        ['1234', 'This is a comment']
+      );
+    });
+
+    it('should handle mixed quote types', async () => {
+      const mockNode = new CommandNode(
+        [
+          { type: 'word', name: 'user' },
+          { type: 'word', name: 'comment' },
+          { type: 'argument', name: 'userId', description: 'User ID' },
+          { type: 'argument', name: 'comment', description: 'Comment text' }
+        ],
+        'Add a comment'
+      );
+
+      vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockNode);
+
+      const stateWithArgs = {
+        ...mockState,
+        currentNode: mockNode,
+        currentInput: '\'1234\' "This is a comment"',
+        isEnteringArg: true,
+        commandStack: ['user', 'comment'],
+      };
+
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
+      
+      const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
+      
+      await act(async () => {
+        result.current.handleKeyDown(mockEvent, stateWithArgs, mockActions);
+      });
+
+      expect(mockActions.executeCommand).toHaveBeenCalledWith(
+        ['user', 'comment'],
+        ['1234', 'This is a comment']
+      );
+    });
+    it('should handle quoted arguments', async () => {
+      const mockNode = createMockNode('test1', {
+        argument: {
+          name: 'arg1',
+          description: 'Test argument'
+        }
+      });
+
+      vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockNode);
+
+      const stateWithArg = {
+        ...mockState,
+        currentNode: mockNode,
+        currentInput: '"test argument with spaces"',
+        isEnteringArg: true,
+        commandStack: ['test1'],
+      };
+
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
+      
+      const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
+      
+      await act(async () => {
+        result.current.handleKeyDown(mockEvent, stateWithArg, mockActions);
+      });
+
+      expect(mockActions.executeCommand).toHaveBeenCalledWith(['test1'], ['test argument with spaces']);
+    });
+
+    it('should not complete command while quote is unclosed', async () => {
+      const mockNode = createMockNode('test1', {
+        argument: {
+          name: 'arg1',
+          description: 'Test argument'
+        }
+      });
+
+      vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockNode);
+
+      const stateWithArg = {
+        ...mockState,
+        currentNode: mockNode,
+        currentInput: '"unclosed quote',
+        isEnteringArg: true,
+        commandStack: ['test1'],
+      };
+
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
+      
+      const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
+      
+      await act(async () => {
+        result.current.handleKeyDown(mockEvent, stateWithArg, mockActions);
+      });
+
+      expect(mockActions.executeCommand).not.toHaveBeenCalled();
+    });
+
     it('should handle Enter for argument submission', async () => {
       const mockNode = createMockNode('test1', {
         argument: {
@@ -109,24 +321,46 @@ describe('useCommandParser', () => {
     });
 
     it('should prevent invalid command input', async () => {
-      vi.spyOn(mockCommandTrie, 'getCompletions').mockReturnValue(['test1', 'test2']);
-
       const stateWithInput = {
         ...mockState,
-        currentInput: 'x',
+        currentInput: 'x',  // 'x' is not a valid command prefix
       };
 
       const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
       
-      const mockEvent = new KeyboardEvent('keydown');
-      vi.spyOn(mockEvent, 'preventDefault');
+      const mockEvent = new KeyboardEvent('keydown', { key: 'x' });
+      let preventDefaultCalled = false;
+      Object.defineProperty(mockEvent, 'preventDefault', {
+        value: () => { preventDefaultCalled = true; }
+      });
       
       await act(async () => {
-        await user.keyboard('x');
         result.current.handleKeyDown(mockEvent, stateWithInput, mockActions);
       });
 
-      expect(mockEvent.preventDefault).toHaveBeenCalled();
+      expect(preventDefaultCalled).toBe(true);
+      expect(mockActions.setCurrentInput).not.toHaveBeenCalled();
+    });
+
+    it('should allow valid command prefixes', async () => {
+      const stateWithInput = {
+        ...mockState,
+        currentInput: 'u',  // Valid prefix for 'user' command
+      };
+
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
+      
+      const mockEvent = new KeyboardEvent('keydown', { key: 's' });
+      let preventDefaultCalled = false;
+      Object.defineProperty(mockEvent, 'preventDefault', {
+        value: () => { preventDefaultCalled = true; }
+      });
+      
+      await act(async () => {
+        result.current.handleKeyDown(mockEvent, stateWithInput, mockActions);
+      });
+
+      expect(preventDefaultCalled).toBe(false);
     });
 
     it('should allow any input when entering arguments', async () => {

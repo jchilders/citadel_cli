@@ -1,9 +1,67 @@
 import { useCallback, useState } from 'react';
-import { CommandNode, CommandTrie } from '../types/command-trie';
+import { CommandNode, CommandTrie, CommandSegment } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
 import { StoredCommand } from '../types/storage';
 
 type InputState = 'idle' | 'entering_command' | 'entering_argument';
+
+export interface ParsedInput {
+  words: string[];
+  currentWord: string;
+  isQuoted: boolean;
+  quoteChar?: "'" | '"';
+  isComplete: boolean;
+}
+
+export function parseInput(input: string): ParsedInput {
+  const words: string[] = [];
+  let currentWord = '';
+  let isQuoted = false;
+  let quoteChar: "'" | '"' | undefined;
+
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i];
+
+    if ((char === '"' || char === "'") && (!isQuoted || char === quoteChar)) {
+      if (isQuoted) {
+        // End quote
+        words.push(currentWord);
+        currentWord = '';
+        isQuoted = false;
+        quoteChar = undefined;
+      } else {
+        // Start quote
+        if (currentWord) {
+          words.push(currentWord);
+          currentWord = '';
+        }
+        isQuoted = true;
+        quoteChar = char;
+      }
+    } else if (!isQuoted && char === ' ') {
+      if (currentWord) {
+        words.push(currentWord);
+        currentWord = '';
+      }
+    } else {
+      currentWord += char;
+    }
+  }
+
+  return {
+    words,
+    currentWord,
+    isQuoted,
+    quoteChar,
+    isComplete: !isQuoted && !currentWord
+  };
+}
+
+function getNextExpectedSegment(node: CommandNode | undefined, path: string[]): CommandSegment | undefined {
+  if (!node) return undefined;
+  const currentDepth = path.length;
+  return node.segments[currentDepth];
+}
 
 interface UseCommandParserProps {
   commands: CommandTrie;
@@ -14,28 +72,56 @@ export function useCommandParser({ commands: commands }: UseCommandParserProps) 
 
   const findMatchingCommands = useCallback((input: string, availableNodes: CommandNode[]): CommandNode[] => {
     if (!input) return availableNodes;
-    return availableNodes.filter(node => node.name.toLowerCase().startsWith(input.toLowerCase()));
+    return availableNodes.filter(node => {
+      const nextSegment = getNextExpectedSegment(node, node.fullPath);
+      if (!nextSegment) return false;
+      return nextSegment.type === 'word' && 
+             nextSegment.name.toLowerCase().startsWith(input.toLowerCase());
+    });
   }, []);
 
   const getAutocompleteSuggestion = useCallback((input: string, availableNodes: CommandNode[]): string | null => {
     const matches = findMatchingCommands(input, availableNodes);
     if (matches.length === 1) {
-      return matches[0].name;
+      const nextSegment = getNextExpectedSegment(matches[0], matches[0].fullPath);
+      return nextSegment?.type === 'word' ? nextSegment.name : null;
     }
     return null;
   }, [findMatchingCommands]);
 
   const getAvailableNodes = useCallback((currentNode?: CommandNode): CommandNode[] => {
-    if (currentNode?.hasChildren) {
-      return Array.from(currentNode.children.values());
+    if (!currentNode) {
+      return commands.commands;
     }
-    return commands.getRootCommands();
+    const nextSegments = commands.getCompletions(currentNode.fullPath);
+    return nextSegments
+      .map(segment => commands.getCommand([...currentNode.fullPath, segment]))
+      .filter((cmd): cmd is CommandNode => cmd !== undefined);
   }, [commands]);
 
-  const isValidCommandInput = useCallback((input: string, availableNodes: CommandNode[]): boolean => {
-    const matches = findMatchingCommands(input, availableNodes);
-    return matches.length > 0;
-  }, [findMatchingCommands]);
+  const isValidCommandInput = useCallback((
+    input: ParsedInput, 
+    currentNode?: CommandNode
+  ): boolean => {
+    if (!input.currentWord && !input.isQuoted) return true;
+    
+    if (currentNode) {
+      const nextSegment = getNextExpectedSegment(currentNode, input.words);
+      if (!nextSegment) return false;
+
+      if (nextSegment.type === 'argument') {
+        return true; // Arguments can be any value
+      }
+
+      // For word segments, check if it's a valid prefix
+      return nextSegment.name.toLowerCase().startsWith(input.currentWord.toLowerCase());
+    }
+
+    // At root level, check if input matches any command prefix
+    return commands.commands.some(cmd => 
+      cmd.segments[0].name.toLowerCase().startsWith(input.currentWord.toLowerCase())
+    );
+  }, [commands]);
 
   const executeCommand = useCallback((
     commandStack: string[],
@@ -57,25 +143,43 @@ export function useCommandParser({ commands: commands }: UseCommandParserProps) 
     actions: CitadelActions
   ) => {
     actions.setCurrentInput(newValue);
+    const parsedInput = parseInput(newValue);
 
-    // Only auto-complete if we're not entering an argument
-    if (!state.isEnteringArg) {
-      const words = newValue.trim().split(/\s+/);
-      const currentWord = words[words.length - 1] || '';
+    // Handle quoted input differently
+    if (parsedInput.isQuoted) {
+      actions.setIsEnteringArg(true);
+      setInputState('entering_argument');
+      return;
+    }
+
+    const nextSegment = getNextExpectedSegment(state.currentNode, parsedInput.words);
+    if (!nextSegment) return;
+
+    if (nextSegment.type === 'argument') {
+      actions.setIsEnteringArg(true);
+      setInputState('entering_argument');
+      return;
+    }
+
+    // Only auto-complete for word segments
+    if (nextSegment.type === 'word' && !parsedInput.isQuoted) {
       const availableNodes = getAvailableNodes(state.currentNode);
-      const suggestion = getAutocompleteSuggestion(currentWord, availableNodes);
+      const suggestion = getAutocompleteSuggestion(parsedInput.currentWord, availableNodes);
       
-      if (suggestion && suggestion !== currentWord) {
+      if (suggestion && suggestion !== parsedInput.currentWord) {
         const newStack = [...state.commandStack, suggestion];
         const nextNode = commands.getCommand(newStack);
         
         if (nextNode) {
           actions.setCommandStack(newStack);
-          actions.setCurrentInput(words.slice(0, -1).join(' ') + (words.length > 1 ? ' ' : '') + suggestion);
+          const newInput = parsedInput.words.join(' ') + 
+                          (parsedInput.words.length > 0 ? ' ' : '') + 
+                          suggestion;
+          actions.setCurrentInput(newInput);
           actions.setCurrentNode(nextNode);
           
-          // If this is a leaf node with arguments, enter argument mode
-          if (!nextNode.hasChildren && nextNode.arguments.length > 0) {
+          const nextNextSegment = getNextExpectedSegment(nextNode, newStack);
+          if (nextNextSegment?.type === 'argument') {
             actions.setIsEnteringArg(true);
             setInputState('entering_argument');
           } else {
@@ -93,16 +197,20 @@ export function useCommandParser({ commands: commands }: UseCommandParserProps) 
     actions: CitadelActions
   ) => {
     const { commandStack, currentInput, isEnteringArg, currentNode } = state;
+    const parsedInput = parseInput(currentInput);
 
     // Handle special keys first
     switch (e.key) {
       case 'Tab':
         e.preventDefault();
-        if (!isEnteringArg && currentInput) {
+        if (!isEnteringArg && !parsedInput.isQuoted && parsedInput.currentWord) {
           const availableNodes = getAvailableNodes(currentNode);
-          const suggestion = getAutocompleteSuggestion(currentInput, availableNodes);
+          const suggestion = getAutocompleteSuggestion(parsedInput.currentWord, availableNodes);
           if (suggestion) {
-            actions.setCurrentInput(suggestion);
+            const newInput = parsedInput.words.join(' ') + 
+                           (parsedInput.words.length > 0 ? ' ' : '') + 
+                           suggestion;
+            actions.setCurrentInput(newInput);
           }
         }
         return;
@@ -124,19 +232,28 @@ export function useCommandParser({ commands: commands }: UseCommandParserProps) 
 
       case 'Enter':
         e.preventDefault();
+        if (parsedInput.isQuoted) {
+          // Don't execute if quotes aren't closed
+          return;
+        }
+
         if (isEnteringArg && currentNode?.handler) {
-          if (currentInput.trim()) {
-            executeCommand(commandStack, actions, [currentInput.trim()]);
+          // Handle argument submission
+          const args = [...parsedInput.words];
+          if (parsedInput.currentWord) {
+            args.push(parsedInput.currentWord);
           }
-        } else if (!isEnteringArg && currentInput) {
+          executeCommand(commandStack, actions, args);
+        } else if (!isEnteringArg && parsedInput.currentWord) {
+          // Try to match and execute a command
           const availableNodes = getAvailableNodes(currentNode);
-          const matches = findMatchingCommands(currentInput, availableNodes);
+          const matches = findMatchingCommands(parsedInput.currentWord, availableNodes);
           
           if (matches.length === 1) {
             const matchedNode = matches[0];
-            const newStack = [...commandStack, matchedNode.name];
+            const newStack = [...commandStack, matchedNode.segments[0].name];
             
-            if (matchedNode.argument) {
+            if (matchedNode.hasArguments) {
               actions.setCommandStack(newStack);
               actions.setCurrentNode(matchedNode);
               actions.setCurrentInput('');
@@ -146,7 +263,7 @@ export function useCommandParser({ commands: commands }: UseCommandParserProps) 
               executeCommand(newStack, actions, undefined);
             }
           }
-        } else if (currentNode && !currentNode.argument) {
+        } else if (currentNode && !currentNode.hasArguments) {
           // Execute handler for current node if it doesn't need args
           executeCommand(commandStack, actions, undefined);
         }
@@ -154,9 +271,9 @@ export function useCommandParser({ commands: commands }: UseCommandParserProps) 
     }
 
     // Handle regular input
-    if (!isEnteringArg && !currentNode?.argument) {
-      const availableNodes = getAvailableNodes(currentNode);
-      if (!isValidCommandInput(currentInput + e.key, availableNodes)) {
+    if (!isEnteringArg) {
+      const nextInput = parseInput(currentInput + e.key);
+      if (!isValidCommandInput(nextInput, currentNode)) {
         e.preventDefault();
         return;
       }
