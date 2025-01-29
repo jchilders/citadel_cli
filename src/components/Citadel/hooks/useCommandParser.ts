@@ -1,19 +1,16 @@
 import { useCallback, useState } from 'react';
 import { CommandNode, CommandTrie } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
-import { useCommandTrie } from './useCommandTrie';
 import { StoredCommand } from '../types/storage';
 
 type InputState = 'idle' | 'entering_command' | 'entering_argument';
 
 interface UseCommandParserProps {
-  commandTrie?: CommandTrie;
+  commands: CommandTrie;
 }
 
-export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserProps = {}) {
+export function useCommandParser({ commands: commands }: UseCommandParserProps) {
   const [inputState, setInputState] = useState<InputState>('idle');
-  const defaultTrie = useCommandTrie();
-  const commandTrie = propsTrie || defaultTrie;
 
   const findMatchingCommands = useCallback((input: string, availableNodes: CommandNode[]): CommandNode[] => {
     if (!input) return availableNodes;
@@ -32,8 +29,8 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
     if (currentNode?.hasChildren) {
       return Array.from(currentNode.children.values());
     }
-    return commandTrie.getRootCommands();
-  }, [commandTrie]);
+    return commands.getRootCommands();
+  }, [commands]);
 
   const isValidCommandInput = useCallback((input: string, availableNodes: CommandNode[]): boolean => {
     const matches = findMatchingCommands(input, availableNodes);
@@ -45,14 +42,14 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
     actions: CitadelActions,
     args?: string[]
   ) => {
-    const node = commandTrie.getCommand(commandStack);
+    const node = commands.getCommand(commandStack);
     if (node) {
       actions.executeCommand(commandStack, args || undefined);
       actions.setCurrentInput('');
       actions.setIsEnteringArg(false);
       setInputState('idle');
     }
-  }, [commandTrie]);
+  }, [commands]);
 
   const handleInputChange = useCallback((
     newValue: string,
@@ -70,7 +67,7 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
       
       if (suggestion && suggestion !== currentWord) {
         const newStack = [...state.commandStack, suggestion];
-        const nextNode = commandTrie.getCommand(newStack);
+        const nextNode = commands.getCommand(newStack);
         
         if (nextNode) {
           actions.setCommandStack(newStack);
@@ -88,7 +85,7 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
         }
       }
     }
-  }, [getAvailableNodes, getAutocompleteSuggestion, commandTrie]);
+  }, [getAvailableNodes, getAutocompleteSuggestion, commands]);
 
   const handleKeyDown = useCallback((
     e: KeyboardEvent,
@@ -115,7 +112,7 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
           e.preventDefault();
           if (commandStack.length > 0) {
             const newStack = commandStack.slice(0, -1);
-            const prevNode = newStack.length > 0 ? commandTrie.getCommand(newStack) : undefined;
+            const prevNode = newStack.length > 0 ? commands.getCommand(newStack) : undefined;
             
             actions.setCommandStack(newStack);
             actions.setCurrentNode(prevNode);
@@ -169,7 +166,7 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
     getAutocompleteSuggestion,
     findMatchingCommands,
     executeCommand,
-    commandTrie,
+    commands,
     isValidCommandInput
   ]);
 
@@ -199,7 +196,7 @@ export function useCommandParser({ commandTrie: propsTrie }: UseCommandParserPro
           currentStack = [...currentStack, suggestion];
           actions.setCommandStack(currentStack);
 
-          currentNode = commandTrie.getCommand(currentStack);
+          currentNode = commands.getCommand(currentStack);
           actions.setCurrentNode(currentNode);
         }
       }

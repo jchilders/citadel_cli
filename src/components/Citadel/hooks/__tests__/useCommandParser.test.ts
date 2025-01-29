@@ -48,7 +48,7 @@ describe('useCommandParser', () => {
         commandStack: ['test1'],
       };
 
-      const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
       
       const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
       
@@ -72,7 +72,7 @@ describe('useCommandParser', () => {
         commandStack: ['test1'],
       };
 
-      const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
       
       const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
       
@@ -88,7 +88,6 @@ describe('useCommandParser', () => {
       const mockNode = createMockNode('test1');
 
       vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockNode);
-      vi.spyOn(mockCommandTrie, 'getRootCommands').mockReturnValue([mockNode]);
 
       const stateWithCommand = {
         ...mockState,
@@ -97,7 +96,7 @@ describe('useCommandParser', () => {
         commandStack: ['test1'],
       };
 
-      const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
       
       const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
       
@@ -117,7 +116,7 @@ describe('useCommandParser', () => {
         currentInput: 'x',
       };
 
-      const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
       
       const mockEvent = new KeyboardEvent('keydown');
       vi.spyOn(mockEvent, 'preventDefault');
@@ -146,7 +145,7 @@ describe('useCommandParser', () => {
         isEnteringArg: true,
       };
 
-      const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
 
       let preventDefaultCalled = false;
       await act(async () => {
@@ -166,7 +165,7 @@ describe('useCommandParser', () => {
       const mockNode = createMockNode('test1');
 
       // Mock findMatchingCommands to return no matches
-      const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
       
       let preventDefaultCalled = false;
       const mockEvent = new KeyboardEvent('keydown');
@@ -195,7 +194,7 @@ describe('useCommandParser', () => {
 
       vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockNode);
 
-      const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
       
       await act(async () => {
         await user.keyboard('{enter}');
@@ -217,7 +216,7 @@ describe('useCommandParser', () => {
 
       vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockNode);
 
-      const { result } = renderHook(() => useCommandParser({ commandTrie: mockCommandTrie }));
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
       
       await act(async () => {
         await user.keyboard('{enter}');
