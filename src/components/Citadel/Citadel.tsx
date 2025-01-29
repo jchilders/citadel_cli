@@ -9,6 +9,7 @@ import { CommandOutput } from './components/CommandOutput';
 import { AvailableCommands } from './components/AvailableCommands';
 import { CitadelConfig } from './config/types';
 import { CitadelConfigProvider } from './config/CitadelConfigContext';
+import { CommandTrie } from './types/command-trie';
 import { defaultConfig } from './config/defaults';
 
 import citadelStyles from '../../styles/citadel.css?raw';
@@ -16,19 +17,13 @@ import citadelModuleStyles from './Citadel.module.css?raw';
 import mainStyles from '../../styles/styles.css?raw';
 import tailwindStyles from '../../styles/tailwind.css?raw';
 
-export interface CitadelProps {
-  config?: CitadelConfig;
-  commands?: Record<string, any>;
-  containerId?: string;
-}
-
 export const Citadel = ({ 
   config = defaultConfig, 
-  commands = {},
+  commandTrie = new CommandTrie(),
   containerId = null
 }) => {
   useEffect(() => {
-    const citadelElement = new CitadelElement(commands, config);
+    const citadelElement = new CitadelElement(commandTrie, config);
     const container = containerId ? document.getElementById(containerId) : document.body;
     
     if (!container) {
@@ -41,7 +36,7 @@ export const Citadel = ({
     return () => {
       citadelElement.parentElement?.removeChild(citadelElement);
     };
-  }, [commands, containerId]);
+  }, [commandTrie, containerId]);
 
   return null;
 };
@@ -51,14 +46,14 @@ export const Citadel = ({
 class CitadelElement extends HTMLElement {
   private shadow: ShadowRoot;
   private root: ReturnType<typeof createRoot> | null = null;
-  private commands?: Record<string, any>;
+  private commands?: CommandTrie;
   
   private config?: CitadelConfig;
 
-  constructor(commands?: Record<string, any>, config?: CitadelConfig) {
+  constructor(commandTrie: CommandTrie, config?: CitadelConfig) {
     super();
     this.shadow = this.attachShadow({ mode: 'open' });
-    this.commands = commands;
+    this.commands = commandTrie;
     this.config = config;
   }
 
@@ -110,7 +105,8 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const config = useCitadelConfig();
-  const [height, setHeight] = useState<string | null>(() => {
+  // const [height, setHeight] = useState<string | null>(() => {
+  const [height, _] = useState<string | null>(() => {
     return config.initialHeight || null;
   });
   const outputRef = useRef<HTMLDivElement>(null);
@@ -131,30 +127,30 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
       document.documentElement.style.mozUserSelect = 'none';
       // @ts-ignore: Vendor prefixed property
       document.documentElement.style.msUserSelect = 'none';
-      document.addEventListener('mousemove', handleMouseMove);
+      // document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     }
   }, []);
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDraggingRef.current) return;
-    
-    const delta = e.clientY - startYRef.current;
-    const maxHeightValue = config.maxHeight?.endsWith('vh') 
-      ? (window.innerHeight * parseInt(config.maxHeight, 10) / 100)
-      : parseInt(config.maxHeight || '80vh', 10);
-    
-    const newHeight = Math.min(
-      Math.max(startHeightRef.current - delta, parseInt(config.minHeight || '200', 10)),
-      maxHeightValue
-    );
-    
-    if (containerRef.current) {
-      containerRef.current.style.height = `${newHeight}px`;
-      containerRef.current.style.bottom = '0';
-      setHeight(newHeight);
-    }
-  }, [config.maxHeight]);
+  // const handleMouseMove = useCallback((e: MouseEvent) => {
+  //   if (!isDraggingRef.current) return;
+  //   
+  //   const delta = e.clientY - startYRef.current;
+  //   const maxHeightValue = config.maxHeight?.endsWith('vh') 
+  //     ? (window.innerHeight * parseInt(config.maxHeight, 10) / 100)
+  //     : parseInt(config.maxHeight || '80vh', 10);
+  //
+  //   const newHeight = Math.min(
+  //     Math.max(startHeightRef.current - delta, parseInt(config.minHeight || '200', 10)),
+  //     maxHeightValue
+  //   );
+  //   
+  //   if (containerRef.current) {
+  //     containerRef.current.style.height = `${newHeight}px`;
+  //     containerRef.current.style.bottom = '0';
+  //     setHeight(newHeight);
+  //   }
+  // }, [config.maxHeight]);
 
   const handleMouseUp = useCallback(() => {
     isDraggingRef.current = false;
@@ -164,16 +160,17 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
     document.documentElement.style.mozUserSelect = '';
     // @ts-ignore: Vendor prefixed property
     document.documentElement.style.msUserSelect = '';
-    document.removeEventListener('mousemove', handleMouseMove);
+    // document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
   }, []);
 
   useEffect(() => {
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
+      // document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [handleMouseMove, handleMouseUp]);
+  // }, [handleMouseMove, handleMouseUp]);
+  }, [handleMouseUp]);
 
   useGlobalShortcut({
     onOpen: () => setIsVisible(true),

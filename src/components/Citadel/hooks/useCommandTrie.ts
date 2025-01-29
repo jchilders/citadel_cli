@@ -12,12 +12,11 @@ export const useCommandTrie = () => {
     
     if (config.includeHelpCommand) {
       const [helpCommandName, helpCommandNode] = createHelpCommand(trie, config);
-      trie.addCommand({
-        segments: [helpCommandName],
-        description: helpCommandNode.description,
-        handler: helpCommandNode.handler,
-        argument: helpCommandNode.argument,
-      });
+      trie.addCommand(
+        [helpCommandName],
+        helpCommandNode.description,
+        helpCommandNode.handler
+      );
     }
 
     // Add provided commands if any

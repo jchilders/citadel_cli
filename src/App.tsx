@@ -1,9 +1,11 @@
 import { Citadel } from './components/Citadel';
 import { CitadelConfig } from './components/Citadel/config/types';
 
-import { commands } from '../command_examples/basic-commands';
+import { registerBasicCommands } from '../command_examples/basic-commands';
 // import { commands } from '../command_examples/devops-commands';
 // import { commands } from '../command_examples/customer-service-commands';
+
+registerBasicCommands();
 
 export const config: CitadelConfig = {
   commandTimeoutMs: 10000,
@@ -22,7 +24,7 @@ function App() {
         <p className="text-center text-gray-700">
           Press <code className="px-2 border border-gray-300 rounded">.</code> to<br />activate Citadel
         </p>
-        <Citadel config={config} commands={commands} />
+        <Citadel config={config} />
       </div>
     </div>
   );

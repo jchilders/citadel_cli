@@ -1,127 +1,151 @@
+import { CommandTrie } from '../src/components/Citadel/types/command-trie';
 import { JsonCommandResult, ImageCommandResult, TextCommandResult } from '../src/components/Citadel/types/command-results';
 
-export const commands = {
-  user: {
-    show: {
-      description: 'Show user details',
-      arguments: [{ 
-        type: 'argument',
-        name: 'userId', 
-        description: 'Enter user ID',
-        required: true
-      }],
-      handler: async (args: string[]) => {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        return new JsonCommandResult({
-          id: args[0],
-          name: "John Doe",
-          email: "john@example.com",
-          status: "active"
-        });
-      },
-    },
-    deactivate: {
-      description: 'Deactivate user account',
-      arguments: [{ 
-        type: 'argument',
-        name: 'userId', 
-        description: 'Enter user ID',
-        required: true
-      }],
-      handler: async (args: string[]) => new JsonCommandResult({
+export function registerBasicCommands() {
+  const trie = new CommandTrie();
+
+  // User commands
+  trie.addCommand(
+    [
+      { type: 'word', name: 'user' },
+      { type: 'word', name: 'show' },
+      { type: 'argument', name: 'userId', description: 'Enter user ID', required: true }
+    ],
+    'Show user details',
+    async (args: string[]) => {
+      // Simulate a slow API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      return new JsonCommandResult({
         id: args[0],
-        status: "deactivated"
-      }),
-    },
-    query: {
-      firstname: {
-        description: 'Search by first name',
-        arguments: [{ 
-          type: 'argument',
-          name: 'firstName', 
-          description: 'Enter first name',
-          required: true
-        }],
-        handler: async (args: string[]) => new JsonCommandResult({
-          users: [
-            { id: 1, name: `${args[0]} Smith` },
-            { id: 2, name: `${args[0]} Jones` }
-          ]
-        }),
-      },
-      lastname: {
-        description: 'Search by last name',
-        arguments: [{ 
-          type: 'argument',
-          name: 'lastName', 
-          description: 'Enter last name',
-          required: true
-        }],
-        handler: async (args: string[]) => new JsonCommandResult({
-          users: [
-            { id: 1, name: `John ${args[0]}` },
-            { id: 2, name: `Jane ${args[0]}` }
-          ]
-        }),
-      },
+        name: "John Doe",
+        email: "john@example.com",
+        status: "active"
+      });
     }
-  },
+  );
 
-  error: {
-    timeout: {
-      description: 'This command intentionally times out after 11 seconds',
-      handler: async (_args: string[]) => {
-        await new Promise(resolve => setTimeout(resolve, 11000));
-        return new JsonCommandResult({ status: 'done' });
-      }
-    },
-    raise: {
-      description: 'This command intentionally raises an error',
-      handler: async (_args: string[]) => {
-        throw new Error('This is an intentional error');
-      }
-    },
-  },
+  trie.addCommand(
+    [
+      { type: 'word', name: 'user' },
+      { type: 'word', name: 'deactivate' },
+      { type: 'argument', name: 'userId', description: 'Enter user ID', required: true }
+    ],
+    'Deactivate user account',
+    async (args: string[]) => new JsonCommandResult({
+      id: args[0],
+      status: "deactivated"
+    })
+  );
 
-  image: {
-    random: {
-      picsum: {
-        description: 'Get a random image from Picsum Photos',
-        handler: async (_args: string[]) => {
-          const width = 400;
-          const height = 300;
-          const url = `https://picsum.photos/${width}/${height}`;
-            return new ImageCommandResult(url);
-        }
-      },
-      dog: {
-        description: 'Get a random dog image',
-        handler: async (_args: string[]) => {
-          const response = await fetch('https://dog.ceo/api/breeds/image/random');
-          const data = await response.json();
-          return new ImageCommandResult(data.message);
-        }
-      },
-      cat: {
-        description: 'Get a random cat image',
-        handler: async (_args: string[]) => {
-          const response = await fetch('https://api.thecatapi.com/v1/images/search');
-          const data = await response.json();
-          return new ImageCommandResult(data[0].url);
-        }
-      },
-    },
-  },
+  trie.addCommand(
+    [
+      { type: 'word', name: 'user' },
+      { type: 'word', name: 'query' },
+      { type: 'word', name: 'firstname' },
+      { type: 'argument', name: 'firstName', description: 'Enter first name', required: true }
+    ],
+    'Search by first name',
+    async (args: string[]) => new JsonCommandResult({
+      users: [
+        { id: 1, name: `${args[0]} Smith` },
+        { id: 2, name: `${args[0]} Jones` }
+      ]
+    })
+  );
 
-  cowsay: {
-    description: 'Make a cow say something',
-    arguments: [{ 
-      type: 'argument',
-      name: 'message', 
-      description: 'What should the cow say?',
-      required: true
-    }],
-    handler: async (args: string[]) => {
+  trie.addCommand(
+    [
+      { type: 'word', name: 'user' },
+      { type: 'word', name: 'query' },
+      { type: 'word', name: 'lastname' },
+      { type: 'argument', name: 'lastName', description: 'Enter last name', required: true }
+    ],
+    'Search by last name',
+    async (args: string[]) => new JsonCommandResult({
+      users: [
+        { id: 1, name: `John ${args[0]}` },
+        { id: 2, name: `Jane ${args[0]}` }
+      ]
+    })
+  );
+
+  // Error commands
+  trie.addCommand(
+    [
+      { type: 'word', name: 'error' },
+      { type: 'word', name: 'timeout' }
+    ],
+    'This command intentionally times out after 11 seconds',
+    async (_args: string[]) => {
+      await new Promise(resolve => setTimeout(resolve, 11000));
+      return new JsonCommandResult({ status: 'done' });
+    }
+  );
+
+  trie.addCommand(
+    [
+      { type: 'word', name: 'error' },
+      { type: 'word', name: 'raise' }
+    ],
+    'This command intentionally raises an error',
+    async (_args: string[]) => {
+      throw new Error('This is an intentional error');
+    }
+  );
+
+  // Image commands
+  trie.addCommand(
+    [
+      { type: 'word', name: 'image' },
+      { type: 'word', name: 'random' },
+      { type: 'word', name: 'picsum' }
+    ],
+    'Get a random image from Picsum Photos',
+    async (_args: string[]) => {
+      const width = 400;
+      const height = 300;
+      const url = `https://picsum.photos/${width}/${height}`;
+      return new ImageCommandResult(url);
+    }
+  );
+
+  trie.addCommand(
+    [
+      { type: 'word', name: 'image' },
+      { type: 'word', name: 'random' },
+      { type: 'word', name: 'dog' }
+    ],
+    'Get a random dog image',
+    async (_args: string[]) => {
+      const response = await fetch('https://dog.ceo/api/breeds/image/random');
+      const data = await response.json();
+      return new ImageCommandResult(data.message);
+    }
+  );
+
+  trie.addCommand(
+    [
+      { type: 'word', name: 'image' },
+      { type: 'word', name: 'random' },
+      { type: 'word', name: 'cat' }
+    ],
+    'Get a random cat image',
+    async (_args: string[]) => {
+      const response = await fetch('https://api.thecatapi.com/v1/images/search');
+      const data = await response.json();
+      return new ImageCommandResult(data[0].url);
+    }
+  );
+
+  // Cowsay command
+  trie.addCommand(
+    [
+      { type: 'word', name: 'cowsay' },
+      { type: 'argument', name: 'message', description: 'What should the cow say?', required: true }
+    ],
+    'Make a cow say something',
+    async (args: string[]) => {
       const message = args[0] || 'Moo!';
       const bubbleWidth = message.length + 2;
       const bubble = [
@@ -136,29 +160,37 @@ export const commands = {
              ||----w |
              ||     ||`;
       return new TextCommandResult(bubble + cow);
-    },
-  },
-
-  localstorage: {
-    show: {
-      description: 'Show all items in localStorage',
-      handler: async (_args: string[]) => {
-        const storage: Record<string, string> = {};
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key) {
-            storage[key] = localStorage.getItem(key) || '';
-          }
-        }
-        return new JsonCommandResult(storage);
-      }
-    },
-    clear: {
-      description: 'Clear all items from localStorage',
-      handler: async (_args: string[]) => {
-        localStorage.clear();
-        return new TextCommandResult('localStorage cleared');
-      }
     }
-  }
-};
+  );
+
+  // LocalStorage commands
+  trie.addCommand(
+    [
+      { type: 'word', name: 'localstorage' },
+      { type: 'word', name: 'show' }
+    ],
+    'Show all items in localStorage',
+    async (_args: string[]) => {
+      const storage: Record<string, string> = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key) {
+          storage[key] = localStorage.getItem(key) || '';
+        }
+      }
+      return new JsonCommandResult(storage);
+    }
+  );
+
+  trie.addCommand(
+    [
+      { type: 'word', name: 'localstorage' },
+      { type: 'word', name: 'clear' }
+    ],
+    'Clear all items from localStorage',
+    async (_args: string[]) => {
+      localStorage.clear();
+      return new TextCommandResult('localStorage cleared');
+    }
+  );
+}
