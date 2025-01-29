@@ -142,24 +142,32 @@ export class CommandTrie {
     this._commands.forEach(command => {
       const segments = command.segments;
       
-      // Only look at commands that are long enough and match the path so far
-      if (segments.length > pathDepth - 1) {
-        let matches = true;
-        
-        // Check if all segments up to pathDepth-1 match
-        for (let i = 0; i < pathDepth - 1; i++) {
-          if (segments[i].name !== path[i] && path[i] !== '*') {
-            matches = false;
-            break;
-          }
-        }
+      // Skip if command isn't long enough to have completions at this depth
+      if (segments.length <= pathDepth - 1) {
+        return;
+      }
 
-        if (matches) {
-          // Add the next segment name as a completion
-          if (segments[pathDepth - 1]) {
-            completions.add(segments[pathDepth - 1].name);
-          }
+      // Check if all segments up to current depth match
+      let matches = true;
+      for (let i = 0; i < pathDepth; i++) {
+        const pathSegment = path[i];
+        const cmdSegment = segments[i];
+        
+        // Handle argument segments (marked with '*' in path)
+        if (pathSegment === '*' && cmdSegment.type === 'argument') {
+          continue;
         }
+        
+        // Handle word segments
+        if (pathSegment !== cmdSegment.name) {
+          matches = false;
+          break;
+        }
+      }
+
+      if (matches && segments.length > pathDepth) {
+        // Add the next segment name as a completion
+        completions.add(segments[pathDepth].name);
       }
     });
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { CommandTrie, NoopHandler, CommandHandler, CommandNode } from '../command-trie';
+import { CommandTrie, NoopHandler, CommandHandler } from '../command-trie';
 import { TextCommandResult } from '../command-results';
 
 describe('CommandTrie', () => {
@@ -12,10 +12,10 @@ describe('CommandTrie', () => {
 
   describe('addCommand', () => {
     it('should add leaf command successfully', () => {
-      trie.addCommand({
-        segments: [{ type: 'word', name: 'test' }],
-        description: 'Test command'
-      });
+      trie.addCommand(
+        [{ type: 'word', name: 'test' }],
+        'Test command'
+      );
 
       const node = trie.getCommand(['test']);
       expect(node?.fullPath).toEqual(['test']);
@@ -126,33 +126,36 @@ describe('CommandTrie', () => {
   describe('CommandNode', () => {
     describe('fullPath', () => {
       it('should return correct path for single-level command', () => {
-        trie.addCommand({
-          segments: [{ type: 'word', name: 'test' }]
-        });
+        trie.addCommand(
+          [{ type: 'word', name: 'test' }],
+          'word test'
+        );
         const node = trie.getCommand(['test']);
         expect(node?.fullPath).toEqual(['test']);
       });
 
       it('should return correct path for nested command', () => {
-        trie.addCommand({
-          segments: [
+        trie.addCommand(
+          [
             { type: 'word', name: 'parent' },
             { type: 'word', name: 'child' },
             { type: 'word', name: 'grandchild' }
-          ]
-        });
+          ],
+          'description'
+        );
         const node = trie.getCommand(['parent', 'child', 'grandchild']);
         expect(node?.fullPath).toEqual(['parent', 'child', 'grandchild']);
       });
 
       it('should return correct path for command with arguments', () => {
-        trie.addCommand({
-          segments: [
+        trie.addCommand(
+          [
             { type: 'word', name: 'command' },
             { type: 'argument', name: 'arg1' },
             { type: 'word', name: 'subcommand' }
-          ]
-        });
+          ],
+          'description'
+        );
         const node = trie.getCommand(['command', '*', 'subcommand']);
         expect(node?.fullPath).toEqual(['command', '*', 'subcommand']);
       });
