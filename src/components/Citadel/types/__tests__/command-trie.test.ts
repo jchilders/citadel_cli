@@ -55,7 +55,7 @@ describe('CommandTrie', () => {
       expect(() => trie.addCommand(
         [{ type: 'word', name: 'test' }],
         'Duplicate test'
-      )).toThrow('Duplicate command: test');
+      )).toThrow("Duplicate commands: 'test' and 'test'");
     });
 
     it('should throw on duplicate commands with an argument', () => {
@@ -72,7 +72,7 @@ describe('CommandTrie', () => {
           { type: 'argument', name: 'arg2' }
         ],
         'word arg2'
-      )).toThrow('Duplicate command: test *');
+      )).toThrow("Duplicate commands: 'test arg1' and 'test arg2'");
     });
   });
 
@@ -156,8 +156,8 @@ describe('CommandTrie', () => {
           ],
           'description'
         );
-        const node = trie.getCommand(['command', '*', 'subcommand']);
-        expect(node?.fullPath).toEqual(['command', '*', 'subcommand']);
+        const node = trie.getCommand(['command', 'arg1', 'subcommand']);
+        expect(node?.fullPath).toEqual(['command', 'arg1', 'subcommand']);
       });
     });
   });

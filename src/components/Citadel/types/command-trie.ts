@@ -36,9 +36,9 @@ export interface CommandArgument extends BaseCommandSegment {
 
 /** Defines a complete command with its path and behavior */
 export class CommandNode {
-  private _segments: CommandSegment[];
-  private _description?: string;   // For `Help` command
-  private _handler: CommandHandler;
+  private readonly _segments: CommandSegment[];
+  private readonly _description?: string;   // Used by `Help` command, etc.
+  private readonly _handler: CommandHandler;
 
   constructor(segments: CommandSegment[], description?: string, handler: CommandHandler = NoopHandler) {
     this._segments = segments;
@@ -58,22 +58,16 @@ export class CommandNode {
     return this._handler;
   }
 
-  get arguments(): CommandArgument[] {
-    return this.segments.filter((segment): segment is CommandArgument => segment.type === 'argument') || [];
-  }
-
   get hasArguments(): boolean {
-    return this.arguments.length > 0;
+    return this.segments.some(segment => segment.type === 'argument');
   }
 
   get fullPath(): string[] {
-    const path: string[] = [];
-    
-    for (const segment of this.segments) {
-      path.push(segment.type === 'word' ? segment.name : '*');
-    }
-    
-    return path;
+    return this.segments.map(segment => segment.name);
+  }
+
+  get fullPath_s(): string {
+    return this.fullPath.join(' ');
   }
 
   equals(other: CommandNode): boolean {
@@ -89,6 +83,10 @@ export class CommandNode {
 export class CommandTrie {
   private _commands: CommandNode[] = [];
 
+  get commands(): CommandNode[] {
+    return this._commands;
+  }
+
   /**
    * Adds a new command to the trie.
    * 
@@ -102,8 +100,20 @@ export class CommandTrie {
     }
 
     const newCommandNode = new CommandNode(segments, description, handler);
-    if (this.commandExistsForPath(newCommandNode.fullPath)) {
-      throw new Error(`Duplicate command: ${newCommandNode.fullPath.join(' ')}`);
+    const existingCommand = this._commands.find(cmd => {
+      const cmdPattern = cmd.segments.map(segment => 
+        segment.type === 'argument' ? '*' : segment.name
+      ).join(' ');
+      
+      const newPattern = segments.map(segment => 
+        segment.type === 'argument' ? '*' : segment.name
+      ).join(' ');
+      
+      return cmdPattern === newPattern;
+    });
+
+    if (existingCommand) {
+      throw new Error(`Duplicate commands: '${existingCommand.fullPath_s}' and '${newCommandNode.fullPath_s}'`);
     }
 
     this._commands.push(newCommandNode);
@@ -116,11 +126,30 @@ export class CommandTrie {
    * @returns The command node or undefined if not found.
    */
   getCommand(path: string[]): CommandNode | undefined {
-    return this._commands.find((command) => command.fullPath.join(' ') === path.join(' '));
+    return this._commands.find((command) => {
+      const fullPath = command.fullPath.join(' ');
+      const searchPath = path.join(' ');
+      return fullPath === searchPath;
+    });
   }
 
   commandExistsForPath(path: string[]): boolean {
-    return this.getCommand(path) !== undefined;
+    // Convert the path to a pattern where arguments are represented by '*'
+    const pathPattern = this._commands.map(cmd => 
+      cmd.segments.map(segment => 
+        segment.type === 'argument' ? '*' : segment.name
+      ).join(' ')
+    );
+
+    // Convert the new path to a pattern
+    const newPathPattern = path.map((segment, index) => {
+      const isArgument = this._commands.some(cmd => 
+        cmd.segments[index]?.type === 'argument'
+      );
+      return isArgument ? '*' : segment;
+    }).join(' ');
+
+    return pathPattern.includes(newPathPattern);
   }
 
   /**

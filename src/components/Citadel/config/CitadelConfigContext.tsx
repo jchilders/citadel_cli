@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect } from 'react';
+import { createHelpHandler } from '../types/help-command';
 import { CitadelConfig } from './types';
 import { defaultConfig } from './defaults';
 import { StorageFactory } from '../storage/StorageFactory';
@@ -43,6 +44,18 @@ export const CitadelConfigProvider: React.FC<{
     );
     setStorage(StorageFactory.getInstance().getStorage());
   }, []); // Empty deps array since we only want to initialize once
+
+  // Add help command if enabled
+  useEffect(() => {
+    if (commands && mergedConfig.includeHelpCommand) {
+      const helpHandler = createHelpHandler(commands);
+      commands.addCommand(
+        [{ type: 'word', name: 'help' }],
+        'Show available commands',
+        helpHandler
+      );
+    }
+  }, [commands, mergedConfig.includeHelpCommand]);
 
   const contextValue = {
     config: mergedConfig,

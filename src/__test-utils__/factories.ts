@@ -19,7 +19,6 @@ export const createMockNode = (name: string, options: MockNodeOptions = {}): Com
     return result;
   };
 
-  // Create a mock handler that will be used in tests
   const mockHandler = options.handler || vi.fn(defaultHandler);
 
   const node = new CommandNode(
