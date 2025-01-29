@@ -3,6 +3,7 @@ import { CitadelConfigProvider, useCitadelCommands, useCitadelConfig, useCitadel
 import { CommandTrie } from '../../types/command-trie';
 import { StorageFactory } from '../../storage/StorageFactory';
 import { defaultConfig } from '../defaults';
+import { CitadelElement } from '../../Citadel';
 
 describe('CitadelConfigContext', () => {
   describe('command handling', () => {
@@ -22,16 +23,65 @@ describe('CitadelConfigContext', () => {
       expect(commandsElement.textContent).toBe('');
     });
 
-    it('should provide commands when passed', () => {
+    it('should provide and persist commands when passed', () => {
       const testTrie = new CommandTrie();
-      const { getByTestId } = render(
+      testTrie.addCommand(
+        [{ type: 'word', name: 'test-command' }],
+        'Test command'
+      );
+
+      const { getByTestId, rerender } = render(
         <CitadelConfigProvider commands={testTrie}>
           <TestComponent />
         </CitadelConfigProvider>
       );
 
-      const commandsElement = getByTestId('commands');
-      expect(commandsElement.textContent).not.toBe('');
+      const initialCommandsText = getByTestId('commands').textContent;
+      expect(initialCommandsText).toContain('test-command');
+
+      // Modify the trie
+      testTrie.addCommand(
+        [{ type: 'word', name: 'another-command' }],
+        'Another command'
+      );
+
+      // Rerender with same trie
+      rerender(
+        <CitadelConfigProvider commands={testTrie}>
+          <TestComponent />
+        </CitadelConfigProvider>
+      );
+
+      const updatedCommandsText = getByTestId('commands').textContent;
+      expect(updatedCommandsText).toContain('another-command');
+    });
+
+    describe('command persistence in shadow DOM', () => {
+      it('should maintain command trie across shadow DOM renders', () => {
+        // Mock CSS modules
+        vi.mock('../../../Citadel.module.css', () => ({
+          default: {
+            container: 'container',
+            innerContainer: 'innerContainer',
+            resizeHandle: 'resizeHandle'
+          }
+        }));
+
+        const testTrie = new CommandTrie();
+        testTrie.addCommand(
+          [{ type: 'word', name: 'test' }],
+          'Test command'
+        );
+
+        // Create CitadelElement with mocked styles
+        const citadelElement = new CitadelElement(testTrie);
+        
+        // Verify the command trie is maintained
+        expect(citadelElement['commands']).toBe(testTrie);
+        
+        // Clean up
+        vi.resetModules();
+      });
     });
   });
 

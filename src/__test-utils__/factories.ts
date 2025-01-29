@@ -22,16 +22,11 @@ export const createMockNode = (name: string, options: MockNodeOptions = {}): Com
   // Create a mock handler that will be used in tests
   const mockHandler = options.handler || vi.fn(defaultHandler);
 
-  const node = new CommandNode({
-    fullPath: [name],
-    description: options.description || 'Test command',
-    argument: options.argument,
-    handler: mockHandler
-  });
-
-  // Mock the children map - use Map as ReadonlyMap since ReadonlyMap can't be instantiated directly
-  const childrenMap: ReadonlyMap<string, CommandNode> = new Map<string, CommandNode>();
-  vi.spyOn(node as any, '_children', 'get').mockReturnValue(options.isLeaf ? new Map() : childrenMap);
+  const node = new CommandNode(
+    [{type: 'word', name: name}],
+    options.description || 'Test command',
+    mockHandler
+  );
 
   return node;
 };
@@ -40,25 +35,11 @@ export const createMockCommandTrie = (): CommandTrie => {
   const trie = new CommandTrie();
   const mockNode = createMockNode('test1');
   
-  // Mock the root node's children
-  const rootNode = new CommandNode({
-    fullPath: ['ROOT'],
-    description: 'Root command node'
-  });
-  const rootChildrenMap: ReadonlyMap<string, CommandNode> = new Map<string, CommandNode>([['test1', mockNode]]);
-  vi.spyOn(rootNode as any, '_children', 'get').mockReturnValue(rootChildrenMap);
-  
-  // Mock the trie's private root property
-  vi.spyOn(trie as any, '_root', 'get').mockReturnValue(rootNode);
-  
   // Mock the public methods
   vi.spyOn(trie, 'getCommand').mockReturnValue(mockNode);
   vi.spyOn(trie, 'addCommand').mockImplementation(() => {});
   vi.spyOn(trie, 'getCompletions').mockReturnValue([]);
   vi.spyOn(trie, 'executeCommand').mockResolvedValue(undefined);
-  vi.spyOn(trie, 'getLeafCommands').mockReturnValue([]);
-  vi.spyOn(trie, 'validate').mockReturnValue({ isValid: true, errors: [] });
-  vi.spyOn(trie, 'getRootCommands').mockReturnValue([]);
 
   return trie;
 };

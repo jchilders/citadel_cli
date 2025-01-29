@@ -43,7 +43,7 @@ export const Citadel = ({
 
 // Custom element to host the Citadel component inside shadow DOM. This is done
 // to isolate the styling of the component from its container (and vice versa).
-class CitadelElement extends HTMLElement {
+export class CitadelElement extends HTMLElement {
   private shadow: ShadowRoot;
   private root: ReturnType<typeof createRoot> | null = null;
   private commands?: CommandTrie;
