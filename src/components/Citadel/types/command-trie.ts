@@ -90,20 +90,22 @@ export class CommandTrie {
   private _commands: CommandNode[] = [];
 
   /**
-   * Gets the root node of the command trie
-   */
-  static get root(): CommandNode {
-    return this.root;
-  }
-
-  /**
    * Adds a new command to the trie.
    * 
    * @param newCommandNode The new command to add
    * @throws {Error} If attempting to add a duplicate leaf command or a subcommand to a leaf
    * 
    */
-  addCommand(newCommandNode: CommandNode): void {
+  addCommand(segments: CommandSegment[], description: string, handler: CommandHandler = NoopHandler) {
+    if (segments === undefined || segments.length === 0) {
+      throw new Error('Command path cannot be empty');
+    }
+
+    const newCommandNode = new CommandNode(segments, description, handler);
+    if (this.commandExistsForPath(newCommandNode.fullPath)) {
+      throw new Error(`Duplicate command: ${newCommandNode.fullPath.join(' ')}`);
+    }
+
     this._commands.push(newCommandNode);
   }
 
@@ -117,6 +119,10 @@ export class CommandTrie {
     return this._commands.find((command) => command.fullPath.join(' ') === path.join(' '));
   }
 
+  commandExistsForPath(path: string[]): boolean {
+    return this.getCommand(path) !== undefined;
+  }
+
   /**
    * Gets command completions for a given path.
    * 
@@ -124,6 +130,40 @@ export class CommandTrie {
    * @returns An array of completion strings.
    */
   getCompletions(path: string[]): string[] {
+    // If no path provided, get all top-level commands
+    if (!path.length) {
+      return [...new Set(this._commands.map(cmd => cmd.segments[0].name))];
+    }
+
+    const completions = new Set<string>();
+    const pathDepth = path.length;
+
+    // Find all commands that match the current path prefix
+    this._commands.forEach(command => {
+      const segments = command.segments;
+      
+      // Only look at commands that are long enough and match the path so far
+      if (segments.length > pathDepth - 1) {
+        let matches = true;
+        
+        // Check if all segments up to pathDepth-1 match
+        for (let i = 0; i < pathDepth - 1; i++) {
+          if (segments[i].name !== path[i] && path[i] !== '*') {
+            matches = false;
+            break;
+          }
+        }
+
+        if (matches) {
+          // Add the next segment name as a completion
+          if (segments[pathDepth - 1]) {
+            completions.add(segments[pathDepth - 1].name);
+          }
+        }
+      }
+    });
+
+    return Array.from(completions);
   }
 
   /**
@@ -137,18 +177,9 @@ export class CommandTrie {
     const command = this.getCommand(path);
 
     if (!command) {
-      return undefined;
+      throw new Error(`Command '${path.join(' ')}' not found`);
     }
 
-    if (!command.hasHandler) {
-      throw new Error(`Command '${path.join(' ')}' is not executable`);
-    }
-
-    const handler = command.handler;
-    if (!handler) {
-      throw new Error(`Command '${path.join(' ')}' has no handler`);
-    }
-
-    return await handler(args);
+    return await command.handler(args);
   }
 }
