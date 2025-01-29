@@ -1,18 +1,18 @@
 import { useState, useCallback, useEffect } from 'react';
 import { CitadelState, CitadelActions, OutputItem } from '../types/state';
-import { useCommandTrie } from './useCommandTrie';
-import { useCitadelConfig, useCitadelStorage } from '../config/CitadelConfigContext';
+import { useCitadelConfig, useCitadelCommands, useCitadelStorage } from '../config/CitadelConfigContext';
 import { CommandResult } from '../types/command-results';
 import { ErrorCommandResult } from '../types/command-results';
 import { useCommandHistory } from './useCommandHistory';
 import { useCommandParser } from './useCommandParser';
 import { initializeHistoryService } from '../services/HistoryService';
+import { CommandNode } from '../types/command-trie';
 
 export const useCitadelState = () => {
-  const commandTrie = useCommandTrie();
   const config = useCitadelConfig();
+  const commandTrie = useCitadelCommands();
   const [history, historyActions] = useCommandHistory();
-  const { replayCommand } = useCommandParser();
+  const { replayCommand } = useCommandParser({ commands: commandTrie });
 
   const [state, setState] = useState<CitadelState>({
     commandStack: [],
@@ -42,7 +42,10 @@ export const useCitadelState = () => {
 
   const executeCommand = useCallback(async (path: string[], args?: string[]) => {
     const node = commandTrie.getCommand(path);
-    if (!node || !node.isLeaf) return;
+
+    if (!node) {
+      throw new Error(`Command not found: ${path.join(' ')}`);
+    }
 
     const outputItem = new OutputItem([...path, ...(args || [])]);
     setState(prev => ({
@@ -219,7 +222,7 @@ export const useCitadelState = () => {
 
     executeCommand: useCallback(async (path: string[], args?: string[]) => {
       const node = commandTrie.getCommand(path);
-      if (!node || !node.isLeaf) return;
+      if (!node) return;
 
       const outputItem = new OutputItem([...path, ...(args || [])]);
       setState(prev => ({
@@ -285,11 +288,13 @@ export const useCitadelState = () => {
   };
 
   const getAvailableCommands = useCallback(() => {
-    if (state.currentNode && state.currentNode.children) {
-      return Array.from(state.currentNode.children.values());
+    if (state.commandStack.length === 0) {
+      return commandTrie.commands;
     }
-    return commandTrie.getRootCommands();
-  }, [state.currentNode, commandTrie]);
+    return commandTrie.getCompletions(state.commandStack)
+      .map(completion => commandTrie.getCommand([...state.commandStack, completion]))
+      .filter((cmd): cmd is CommandNode => cmd !== undefined);
+  }, [state.commandStack, commandTrie]);
 
   return { state, actions, getAvailableCommands };
 };

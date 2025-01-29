@@ -9,11 +9,14 @@ import { CommandTrie } from '../types/command-trie';
 
 interface CitadelContextValue {
   config: CitadelConfig;
-  commands?: CommandTrie;
+  commands: CommandTrie;
   storage?: CommandStorage;
 }
 
-const CitadelConfigContext = createContext<CitadelContextValue>({ config: defaultConfig });
+const CitadelConfigContext = createContext<CitadelContextValue>({
+  config: defaultConfig,
+  commands: new CommandTrie()
+});
 
 export const CitadelConfigProvider: React.FC<{
   config?: CitadelConfig;

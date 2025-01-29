@@ -204,11 +204,12 @@ export class CommandTrie {
   }
 
   /**
-   * Executes a command with the given path and arguments.
+   * Executes a command for the given path and arguments.
+   *
    * @param path The command path
    * @param args Arguments to pass to the command handler
-   * @returns The command result or undefined if command not found
-   * @throws Error if command validation fails
+   * @returns The `CommandResult`
+   * @throws Error if command cannot be found
    */
   async executeCommand(path: string[], args: string[] = []): Promise<CommandResult | undefined> {
     const command = this.getCommand(path);

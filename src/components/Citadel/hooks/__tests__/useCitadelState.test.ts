@@ -1,6 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
 import { useCitadelState } from '../useCitadelState';
-import { useCommandTrie } from '../useCommandTrie';
 import { vi, Mock } from 'vitest'
 import { createMockCommandHistory, createMockCommandHistoryActions, createMockCommandTrie, createMockNode } from '../../../../__test-utils__/factories';
 import { TextCommandResult } from '../../types/command-results';
@@ -10,20 +9,17 @@ import { useCommandHistory } from '../useCommandHistory';
 // Mock CitadelConfigContext
 vi.mock('../../config/CitadelConfigContext', () => ({
   useCitadelConfig: () => ({
-    storage: { type: 'memory', maxCommands: 100 }
+    storage: { type: 'memory', maxCommands: 100 },
+    commandTimeoutMs: 5000
   }),
   useCitadelStorage: () => ({
     addCommand: vi.fn().mockReturnValue(undefined),
     getCommands: vi.fn().mockReturnValue([]),
     clear: vi.fn().mockReturnValue(undefined)
-  })
+  }),
+  useCitadelCommands: () => createMockCommandTrie()
 }));
 
-vi.mock('../../config/CitadelCommandsContext', () => ({
-  useCitadelCommands: () => ({})
-}));
-
-vi.mock('../useCommandTrie');
 vi.mock('../useCommandHistory');
 
 describe('useCitadelState', () => {
@@ -32,9 +28,6 @@ describe('useCitadelState', () => {
   });
 
   it('should initialize with default state', async () => {
-    const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as Mock).mockReturnValue(mockCommandTrie);
-
     const mockCommandHistory = createMockCommandHistory();
     const mockCommandHistoryActions = createMockCommandHistoryActions();
     (useCommandHistory as Mock).mockReturnValue([mockCommandHistory, mockCommandHistoryActions]);
@@ -60,9 +53,6 @@ describe('useCitadelState', () => {
   });
 
   it('should handle setCommandStack action', () => {
-    const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as Mock).mockReturnValue(mockCommandTrie);
-
     const { result } = renderHook(() => useCitadelState());
 
     const stack = ['test', 'command'];
@@ -74,9 +64,6 @@ describe('useCitadelState', () => {
   });
 
   it('should handle setCurrentInput action', () => {
-    const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as Mock).mockReturnValue(mockCommandTrie);
-
     const { result } = renderHook(() => useCitadelState());
 
     const input = 'test input';
@@ -88,9 +75,6 @@ describe('useCitadelState', () => {
   });
 
   it('should handle setIsEnteringArg action', () => {
-    const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as Mock).mockReturnValue(mockCommandTrie);
-
     const { result } = renderHook(() => useCitadelState());
 
     act(() => {
@@ -101,9 +85,6 @@ describe('useCitadelState', () => {
   });
 
   it('should handle setCurrentNode action', () => {
-    const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as Mock).mockReturnValue(mockCommandTrie);
-
     const { result } = renderHook(() => useCitadelState());
 
     const node = createMockNode('test');
@@ -115,9 +96,6 @@ describe('useCitadelState', () => {
   });
 
   it('should handle addOutput action', () => {
-    const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as Mock).mockReturnValue(mockCommandTrie);
-
     const { result } = renderHook(() => useCitadelState());
 
     const output = new OutputItem(['test', 'command']);
@@ -132,9 +110,6 @@ describe('useCitadelState', () => {
   });
 
   it('should handle setValidation action', () => {
-    const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as Mock).mockReturnValue(mockCommandTrie);
-
     const { result } = renderHook(() => useCitadelState());
 
     const validation = { isValid: false, message: 'Invalid input' };
@@ -146,9 +121,6 @@ describe('useCitadelState', () => {
   });
 
   it('should handle multiple actions in sequence', () => {
-    const mockCommandTrie = createMockCommandTrie();
-    (useCommandTrie as Mock).mockReturnValue(mockCommandTrie);
-
     const { result } = renderHook(() => useCitadelState());
 
     const node = createMockNode('test');
