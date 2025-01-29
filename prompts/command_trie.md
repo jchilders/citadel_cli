@@ -16,7 +16,8 @@ For now, just create the class for this trie. Do not make any other modification
 
 Possible new command definition format:
 
-Say wanted a command like this: `user 1234 deduct 123.50`:
+Say we wanted a command such as this: `user 1234 deduct 123.50`:
+
 ```
 commandTrie.addCommand({
    path: [

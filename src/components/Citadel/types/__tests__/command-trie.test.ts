@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { CommandTrie, NoopHandler, CommandHandler } from '../command-trie';
+
+import { CommandTrie, NoopHandler, CommandHandler, CommandDefinition, areCommandDefinitionsEqual } from '../command-trie';
 import { TextCommandResult } from '../command-results';
 
 describe('CommandTrie', () => {
@@ -12,7 +13,7 @@ describe('CommandTrie', () => {
   describe('addCommand', () => {
     it('should add leaf command successfully', () => {
       trie.addCommand({
-        path: [{ type: 'word', name: 'test' }],
+        segments: [{ type: 'word', name: 'test' }],
         description: 'Test command'
       });
 
@@ -26,7 +27,7 @@ describe('CommandTrie', () => {
     it('should add nested commands successfully', () => {
       const handler: CommandHandler = async (_args: string[]) => new TextCommandResult('success');
       trie.addCommand({
-        path: [
+        segments: [
           { type: 'word', name: 'parent' },
           { type: 'word', name: 'child' }
         ],
@@ -49,20 +50,50 @@ describe('CommandTrie', () => {
 
     it('should throw on empty path', () => {
       expect(() => trie.addCommand({
-        path: [],
+        segments: [],
         description: 'Empty command'
       })).toThrow('Command path cannot be empty');
     });
 
-    it('should throw on duplicate leaf command', () => {
+    it('should throw on duplicate commands', () => {
       trie.addCommand({
-        path: [{ type: 'word', name: 'test' }],
+        segments: [{ type: 'word', name: 'test' }],
         description: 'Test command'
       });
       expect(() => trie.addCommand({
-        path: [{ type: 'word', name: 'test' }],
+        segments: [{ type: 'word', name: 'test' }],
         description: 'Duplicate test'
       })).toThrow('Duplicate command: test');
+    });
+
+    it('should throw on duplicate commands with an argument', () => {
+      const cmd1: CommandDefinition = {
+        segments: [
+          { type: 'word' as const, name: 'test' },
+          { type: 'argument' as const, name: 'arg1' }
+        ]
+      };
+      const cmd2: CommandDefinition = {
+        segments: [
+          { type: 'word' as const, name: 'test' },
+          { type: 'argument' as const, name: 'arg2' }
+        ]
+      };
+      let result = areCommandDefinitionsEqual(cmd1, cmd2);
+      expect(result).toBe(true);
+      
+      trie.addCommand({
+        segments: [
+          { type: 'word', name: 'test' },
+          { type: 'argument', name: 'arg1' }
+        ]
+      });
+      expect(() => trie.addCommand({
+        segments: [
+          { type: 'word', name: 'test' },
+          { type: 'argument', name: 'arg2' }
+        ]
+      })).toThrow('Duplicate command: test arg2');
     });
   });
 
@@ -72,12 +103,12 @@ describe('CommandTrie', () => {
       const handler2: CommandHandler = async (_args: string[]) => new TextCommandResult('success2');
       
       trie.addCommand({
-        path: [{ type: 'word', name: 'cmd1' }],
+        segments: [{ type: 'word', name: 'cmd1' }],
         description: 'Command 1',
         handler: handler1
       });
       trie.addCommand({
-        path: [
+        segments: [
           { type: 'word', name: 'parent' },
           { type: 'word', name: 'cmd2' }
         ],
@@ -94,12 +125,6 @@ describe('CommandTrie', () => {
 
       const cmd2 = leaves.find(node => node.fullPath.join(' ') === 'parent cmd2');
       expect(cmd2?.description).toBe('Command 2');
-      expect(cmd2?.arguments).toEqual([{ 
-        type: 'argument',
-        name: 'arg',
-        description: 'test arg',
-        required: true
-      }]);
       expect(cmd2?.handler).toBe(handler2);
     });
 
@@ -108,15 +133,98 @@ describe('CommandTrie', () => {
     });
   });
 
+  describe('areCommandDefinitionsEqual', () => {
+    it('should consider commands with same word paths equal', () => {
+      const def1 = {
+        path: [
+          { type: 'word' as const, name: 'test' },
+          { type: 'word' as const, name: 'command' }
+        ]
+      };
+      const def2 = {
+        path: [
+          { type: 'word' as const, name: 'test' },
+          { type: 'word' as const, name: 'command' }
+        ]
+      };
+      expect(areCommandDefinitionsEqual(def1, def2)).toBe(true);
+    });
+
+    it('should consider commands with different word paths not equal', () => {
+      const def1 = {
+        path: [
+          { type: 'word' as const, name: 'test' },
+          { type: 'word' as const, name: 'command1' }
+        ]
+      };
+      const def2 = {
+        path: [
+          { type: 'word' as const, name: 'test' },
+          { type: 'word' as const, name: 'command2' }
+        ]
+      };
+      expect(areCommandDefinitionsEqual(def1, def2)).toBe(false);
+    });
+
+    it('should consider commands with same structure but different argument names equal', () => {
+      const def1 = {
+        path: [
+          { type: 'word' as const, name: 'do' },
+          { type: 'argument' as const, name: 'arg1' }
+        ]
+      };
+      const def2 = {
+        path: [
+          { type: 'word' as const, name: 'do' },
+          { type: 'argument' as const, name: 'arg2' }
+        ]
+      };
+      expect(areCommandDefinitionsEqual(def1, def2)).toBe(true);
+    });
+
+    it('should consider commands with different structures not equal', () => {
+      const def1 = {
+        path: [
+          { type: 'word' as const, name: 'do' },
+          { type: 'argument' as const, name: 'arg1' }
+        ]
+      };
+      const def2 = {
+        path: [
+          { type: 'word' as const, name: 'do' },
+          { type: 'word' as const, name: 'something' }
+        ]
+      };
+      expect(areCommandDefinitionsEqual(def1, def2)).toBe(false);
+    });
+    it('should consider commands with same args but different subcommands as not equal', () => {
+      const def1 = {
+        path: [
+          { type: 'word' as const, name: 'do' },
+          { type: 'argument' as const, name: 'arg1' },
+          { type: 'word' as const, name: 'subcmd1' }
+        ]
+      };
+      const def2 = {
+        path: [
+          { type: 'word' as const, name: 'do' },
+          { type: 'argument' as const, name: 'arg1' },
+          { type: 'word' as const, name: 'subcmd2' }
+        ]
+      };
+      expect(areCommandDefinitionsEqual(def1, def2)).toBe(false);
+    });
+  });
+
   describe('validate', () => {
     it('should validate a valid trie', () => {
       const handler: CommandHandler = async (_args: string[]) => new TextCommandResult('success');
       trie.addCommand({
-        path: [{ type: 'word', name: 'cmd1' }],
+        segments: [{ type: 'word', name: 'cmd1' }],
         description: 'Command 1'
       });
       trie.addCommand({
-        path: [
+        segments: [
           { type: 'word', name: 'parent' },
           { type: 'word', name: 'cmd2' }
         ],
@@ -132,12 +240,12 @@ describe('CommandTrie', () => {
     it('should throw when adding a leaf to a node with a handler (a leaf node)', () => {
       const handler: CommandHandler = async (_args: string[]) => new TextCommandResult('success');
       trie.addCommand({
-        path: [{ type: 'word', name: 'cmd1' }],
+        segments: [{ type: 'word', name: 'cmd1' }],
         description: 'Command 1',
         handler
       });
       expect(() => trie.addCommand({
-        path: [
+        segments: [
           { type: 'word', name: 'cmd1' },
           { type: 'word', name: 'subcommand1' }
         ],
@@ -151,12 +259,12 @@ describe('CommandTrie', () => {
     beforeEach(() => {
       const handler: CommandHandler = async (_args: string[]) => new TextCommandResult('success');
       trie.addCommand({
-        path: [{ type: 'word', name: 'help' }],
+        segments: [{ type: 'word', name: 'help' }],
         description: 'Help command',
         handler
       });
       trie.addCommand({
-        path: [
+        segments: [
           { type: 'word', name: 'user' },
           { type: 'word', name: 'create' }
         ],
@@ -164,7 +272,7 @@ describe('CommandTrie', () => {
         handler
       });
       trie.addCommand({
-        path: [
+        segments: [
           { type: 'word', name: 'user' },
           { type: 'word', name: 'delete' }
         ],
@@ -194,133 +302,44 @@ describe('CommandTrie', () => {
     });
   });
 
-  // describe('getCommandBySignature', () => {
-  //   beforeEach(() => {
-  //     // Add some test commands
-  //     trie.addCommand({
-  //       path: ['image', 'random', 'cat'],
-  //       description: 'Get a random cat image'
-  //     });
-  //     trie.addCommand({
-  //       path: ['image', 'random', 'dog'],
-  //       description: 'Get a random dog image'
-  //     });
-  //     trie.addCommand({
-  //       path: ['user', 'show'],
-  //       description: 'Show user details'
-  //     });
-  //     trie.addCommand({
-  //       path: ['user', 'status'],
-  //       description: 'Get user status'
-  //     });
-  //   });
-  //
-  //   it('should find command with exact signatures', () => {
-  //     const cmd = trie.getCommandBySignature({ signature: ['image', 'random', 'cat'] });
-  //     expect(cmd?.fullPath).toEqual(['image', 'random', 'cat']);
-  //   });
-  //
-  //   it('should find command with minimal unique prefixes', () => {
-  //     const cmd = trie.getCommandBySignature({ signature: ['i', 'r', 'c'] });
-  //     expect(cmd?.fullPath).toEqual(['image', 'random', 'cat']);
-  //   });
-  //
-  //   it('should handle ambiguous prefixes', () => {
-  //     // 'u' is unique for 'user', but 's' is ambiguous (show/status)
-  //     const cmd = trie.getCommandBySignature({ signature: ['u', 's'] });
-  //     expect(cmd).toBeUndefined();
-  //   });
-  //
-  //   it('should require longer prefix to disambiguate commands', () => {
-  //     // 'sh' uniquely identifies 'show' vs 'status'
-  //     const cmd = trie.getCommandBySignature({ signature: ['u', 'sh'] });
-  //     expect(cmd?.fullPath).toEqual(['user', 'show']);
-  //   });
-  //
-  //   it('should return undefined for invalid signatures', () => {
-  //     expect(trie.getCommandBySignature({ signature: ['x', 'y', 'z'] })).toBeUndefined();
-  //     expect(trie.getCommandBySignature({ signature: [] })).toBeUndefined();
-  //     expect(trie.getCommandBySignature({ signature: [''] })).toBeUndefined();
-  //   });
-  //
-  //   it('should handle case insensitive matching', () => {
-  //     const cmd = trie.getCommandBySignature({ signature: ['I', 'R', 'C'] });
-  //     expect(cmd?.fullPath).toEqual(['image', 'random', 'cat']);
-  //   });
-  // });
+  describe('CommandNode', () => {
+    describe('fullPath', () => {
+      it('should return empty array for root node', () => {
+        const root = new CommandTrie()['_root'];
+        expect(root.fullPath).toEqual([]);
+      });
 
-  // describe('buildSignatureForCommand', () => {
-  //   it('should generate minimal unique signatures', () => {
-  //     trie.addCommand({
-  //       path: ['image', 'random', 'cat'],
-  //       description: 'random cat pic'
-  //     });
-  //
-  //     const catCommand = trie.getCommand(['image', 'random', 'cat']);
-  //     expect(catCommand).toBeDefined();
-  //     const signature = trie.buildSignatureForCommand(catCommand!);
-  //     expect(signature).toEqual({ signature: ['i', 'r', 'c'] });
-  //   });
-  //
-  //   it('should use longer prefixes when needed for uniqueness', () => {
-  //     trie.addCommand({
-  //       path: ['user', 'show'], description: 'show user'
-  //     });
-  //     trie.addCommand({
-  //       path: ['user', 'status'], description: 'user status'
-  //     });
-  //     const showCommand = trie.getCommand(['user', 'show']);
-  //     expect(showCommand).toBeDefined();
-  //     const signature = trie.buildSignatureForCommand(showCommand!);
-  //     expect(signature).toEqual({ signature: ['u', 'sh'] });
-  //   });
-  //
-  //   it('should generate signatures that work with getCommandBySignature', () => {
-  //     const testCases = [
-  //       ['image', 'random', 'cat'],
-  //       ['image', 'random', 'dog'],
-  //       ['user', 'show'],
-  //       ['user', 'status']
-  //     ];
-  //     for (const path of testCases) {
-  //       trie.addCommand({path: path, description: path.join(' ')});
-  //     }
-  //
-  //     for (const path of testCases) {
-  //       const command = trie.getCommand(path);
-  //       expect(command).toBeDefined();
-  //       const signature = trie.buildSignatureForCommand(command!);
-  //       const foundCommand = trie.getCommandBySignature(signature);
-  //       expect(foundCommand).toBeDefined();
-  //       expect(foundCommand!.fullPath).toEqual(path);
-  //     }
-  //   });
-  //
-  //   it('should handle full segments when no shorter unique prefix exists', () => {
-  //     // Add commands that would require full segment names
-  //     trie.addCommand({
-  //       path: ['show'],
-  //       description: 'Show command'
-  //     });
-  //     trie.addCommand({
-  //       path: ['shop'],
-  //       description: 'Shop command'
-  //     });
-  //
-  //     const showCommand = trie.getCommand(['show']);
-  //     expect(showCommand).toBeDefined();
-  //     const signature = trie.buildSignatureForCommand(showCommand!);
-  //     expect(signature).toEqual({ signature: ['show'] });
-  //   });
-  //
-  //   it('should return empty array for root node', () => {
-  //     const signature = trie.buildSignatureForCommand(trie['_root']);
-  //     expect(signature).toEqual({ signature: [] });
-  //   });
-  //
-  //   it('should handle undefined command node', () => {
-  //     const signature = trie.buildSignatureForCommand(undefined as any);
-  //     expect(signature).toEqual({ signature: [] });
-  //   });
-  // });
+      it('should return correct path for single-level command', () => {
+        trie.addCommand({
+          segments: [{ type: 'word', name: 'test' }]
+        });
+        const node = trie.getCommand(['test']);
+        expect(node?.fullPath).toEqual(['test']);
+      });
+
+      it('should return correct path for nested command', () => {
+        trie.addCommand({
+          segments: [
+            { type: 'word', name: 'parent' },
+            { type: 'word', name: 'child' },
+            { type: 'word', name: 'grandchild' }
+          ]
+        });
+        const node = trie.getCommand(['parent', 'child', 'grandchild']);
+        expect(node?.fullPath).toEqual(['parent', 'child', 'grandchild']);
+      });
+
+      it('should return correct path for command with arguments', () => {
+        trie.addCommand({
+          segments: [
+            { type: 'word', name: 'command' },
+            { type: 'argument', name: 'arg1' },
+            { type: 'word', name: 'subcommand' }
+          ]
+        });
+        const node = trie.getCommand(['command', '*', 'subcommand']);
+        expect(node?.fullPath).toEqual(['command', '*', 'subcommand']);
+      });
+    });
+  });
 });

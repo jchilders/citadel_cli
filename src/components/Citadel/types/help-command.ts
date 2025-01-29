@@ -36,7 +36,7 @@ export const createHelpCommand = (trie: CommandTrie, config: CitadelConfig): [st
   };
 
   return ['help', new CommandNode({
-    path: [{ type: 'word', name: 'help' }],
+    segments: [{ type: 'word', name: 'help' }],
     description: 'Show available commands',
     handler
   })];

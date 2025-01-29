@@ -51,7 +51,7 @@ describe('useCommandTrie', () => {
 
     // Add a test command to verify it appears in help output
     trie.addCommand({
-      path: ['test'],
+      segments: ['test'],
       description: 'Test command',
       handler: async () => new TextCommandResult('test')
     });

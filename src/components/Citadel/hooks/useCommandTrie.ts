@@ -13,7 +13,7 @@ export const useCommandTrie = () => {
     if (config.includeHelpCommand) {
       const [helpCommandName, helpCommandNode] = createHelpCommand(trie, config);
       trie.addCommand({
-        path: [helpCommandName],
+        segments: [helpCommandName],
         description: helpCommandNode.description,
         handler: helpCommandNode.handler,
         argument: helpCommandNode.argument,
@@ -29,7 +29,7 @@ export const useCommandTrie = () => {
         }));
         
         trie.addCommand({
-          path: segments,
+          segments: segments,
           description: command.description,
           handler: command.handler,
           arguments: command.arguments ? command.arguments.map(arg => ({
