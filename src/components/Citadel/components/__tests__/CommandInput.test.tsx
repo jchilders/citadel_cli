@@ -5,14 +5,14 @@ import { CommandInput } from '../CommandInput';
 import { CommandNode } from '../../types/command-trie';
 import { CitadelState } from '../../types/state';
 import { TextCommandResult } from '../../types/command-results';
-import { createMockCitadelState } from '../../../../__test-utils__/factories';
+import { createMockCitadelState, createMockNode } from '../../../../__test-utils__/factories';
 
 // Mock useCommandParser hook
 vi.mock('../../hooks/useCommandParser', () => ({
   useCommandParser: () => ({
     handleKeyDown: vi.fn((e: KeyboardEvent, state: CitadelState, actions: any) => {
       // Simulate Enter key behavior for help command
-      if (e.key === 'Enter' && state.currentNode?.name === 'help') {
+      if (e.key === 'Enter' && state.currentNode?.fullPath_s === 'help') {
         state.currentNode.handler([]);
         actions.executeCommand(['help']);
         return;
@@ -45,29 +45,27 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 // Mock commands for testing
 const mockCommands: CommandNode[] = [
-  new CommandNode({
+  createMockNode('help', {
     description: 'Show help information',
-    fullPath: ['help'],
     handler: async () => new TextCommandResult('Help info')
   }),
-  new CommandNode({
-    description: 'User management',
-    fullPath: ['user']
+  createMockNode('user', {
+    description: 'User management'
   }),
-  new CommandNode({
+  createMockNode('検索', {
     description: '検索機能',
-    fullPath: ['検索'],
     handler: async () => new TextCommandResult('検索結果')
   })
 ];
 
 // Create a child command for user management
-const userShowCommand = new CommandNode({
+const userShowCommand = createMockNode('show', {
   description: 'Show user details',
-  fullPath: ['user', 'show'],
-  argument: { name: 'userId', description: 'Enter user ID' }
+  argument: {
+    name: 'userId',
+    description: 'Enter user ID'
+  }
 });
-mockCommands[1].addChild('show', userShowCommand);
 
 // Mock actions
 const mockActions = {
@@ -126,9 +124,9 @@ describe('CommandInput', () => {
   });
 
   it('prevents input at leaf nodes without handlers or arguments', () => {
-    const leafNode = new CommandNode({
+    const leafNode = createMockNode('leaf', {
       description: 'Leaf node',
-      fullPath: ['leaf']
+      handler: undefined
     });
     
     const state = createMockCitadelState({
@@ -153,9 +151,8 @@ describe('CommandInput', () => {
   });
 
   it('allows input for nodes with handlers', () => {
-    const handlerNode = new CommandNode({
+    const handlerNode = createMockNode('handler', {
       description: 'Node with handler',
-      fullPath: ['handler'],
       handler: async () => new TextCommandResult('test')
     });
     
