@@ -42,7 +42,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     // Get the next expected segment
     const nextSegment = state.currentNode?.segments[state.commandStack.length];
 
-    // Allow any input when entering arguments or when the next segment is an argument
+    // Allow any input when entering arguments
     if (state.isEnteringArg || nextSegment?.type === 'argument') {
       handleKeyDown(e.nativeEvent, state, actions);
       return;
@@ -52,12 +52,12 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     if (!isValidKey) {
       const parsedInput = parseInput(state.currentInput + e.key);
       const currentCommands = availableCommands;
-      
+
       // Check if the new input would be valid
       const isValid = currentCommands.some(node => {
         const segment = node.segments[state.commandStack.length];
-        return segment?.type === 'word' && 
-               segment.name.toLowerCase().startsWith(parsedInput.currentWord.toLowerCase());
+        return segment?.type === 'word' &&
+          segment.name.toLowerCase().startsWith(parsedInput.currentWord.toLowerCase());
       });
 
       if (!isValid) {
@@ -66,6 +66,9 @@ export const CommandInput: React.FC<CommandInputProps> = ({
         e.preventDefault();
         return;
       }
+
+      // If valid, update the input
+      actions.setCurrentInput(state.currentInput + e.key);
     }
 
     handleKeyDown(e.nativeEvent, state, actions);
