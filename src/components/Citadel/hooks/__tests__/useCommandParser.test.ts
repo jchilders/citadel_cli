@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useCommandParser } from '../useCommandParser';
-import { CommandNode, CommandTrie } from '../../types/command-trie';
+import { ArgumentSegment, CommandNode, CommandTrie } from '../../types/command-trie';
 import { CitadelState, CitadelActions, TextCommandResult } from '../../types';
 import { createMockNode, createMockCommandTrie, createMockCitadelState } from '../../../../__test-utils__/factories';
 
@@ -443,11 +443,12 @@ describe('useCommandParser', () => {
     });
 
     it('should execute command with arguments', async () => {
+      const mockArg = {
+        name: 'arg1',
+        description: 'Test argument'
+      } 
       const mockNode = createMockNode('test1', {
-        argument: {
-          name: 'arg1',
-          description: 'Test argument'
-        }
+        argument: mockArg
       });
 
       vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockNode);
@@ -456,7 +457,7 @@ describe('useCommandParser', () => {
       
       await act(async () => {
         await user.keyboard('{enter}');
-        result.current.executeCommand(['test1'], mockActions, ['arg1']);
+        result.current.executeCommand(['test1'], mockActions, [mockArg]);
       });
 
       expect(mockActions.executeCommand).toHaveBeenCalledWith(['test1'], ['arg1']);

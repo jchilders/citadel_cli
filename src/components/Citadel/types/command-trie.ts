@@ -1,7 +1,7 @@
 import { CommandResult, TextCommandResult } from './command-results';
 
 /** Function type for handling command execution */
-export type CommandHandler = (args: string[]) => Promise<CommandResult>;
+export type CommandHandler = (args: ArgumentSegment[]) => Promise<CommandResult>;
 
 /**
  * A no-op handler that returns an empty string. Used as the default handler
@@ -19,15 +19,15 @@ export interface BaseCommandSegment {
 }
 
 /** Represents a segment in a command path - either a word or argument */
-export type CommandSegment = CommandWord | CommandArgument;
+export type CommandSegment = WordSegment | ArgumentSegment;
 
 /** Represents a literal word in a command path */
-export interface CommandWord extends BaseCommandSegment {
+export interface WordSegment extends BaseCommandSegment {
   type: 'word';
 }
 
 /** Represents an argument that can be passed to a command */
-export interface CommandArgument extends BaseCommandSegment {
+export interface ArgumentSegment extends BaseCommandSegment {
   type: 'argument';
   required?: boolean;
   value?: any,
@@ -211,7 +211,7 @@ export class CommandTrie {
    * @returns The `CommandResult`
    * @throws Error if command cannot be found
    */
-  async executeCommand(path: string[], args: string[] = []): Promise<CommandResult | undefined> {
+  async executeCommand(path: string[], args: ArgumentSegment[] = []): Promise<CommandResult | undefined> {
     const command = this.getCommand(path);
 
     if (!command) {

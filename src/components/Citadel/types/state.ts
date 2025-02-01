@@ -1,4 +1,4 @@
-import { CommandNode } from './command-trie';
+import { CommandNode, ArgumentSegment } from './command-trie';
 import { CommandResult, PendingCommandResult } from './command-results';
 import { CommandStorage, StoredCommand } from './storage';
 
@@ -40,7 +40,7 @@ export interface CitadelActions {
   setCurrentNode: (node: CommandNode | undefined) => void;
   addOutput: (output: OutputItem) => void;
   setValidation: (validation: { isValid: boolean; message?: string }) => void;
-  executeCommand: (path: string[], args?: string[]) => Promise<void>;
+  executeCommand: (path: string[], args?: ArgumentSegment[]) => Promise<void>;
   executeHistoryCommand: (index: number) => Promise<void>;
   clearHistory: () => Promise<void>;
   setCurrentSegmentIndex: (index: number) => void;

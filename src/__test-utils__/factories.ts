@@ -1,4 +1,4 @@
-import { CommandNode, CommandTrie, CommandHandler } from '../components/Citadel/types/command-trie';
+import { CommandNode, CommandTrie, ArgumentSegment, CommandHandler } from '../components/Citadel/types/command-trie';
 import { TextCommandResult } from '../components/Citadel/types/command-results';
 import { CitadelState, CitadelActions } from '../components/Citadel/types';
 
@@ -13,7 +13,7 @@ interface MockNodeOptions {
 }
 
 export const createMockNode = (name: string, options: MockNodeOptions = {}): CommandNode => {
-  const defaultHandler: CommandHandler = async (_args: string[]) => {
+  const defaultHandler: CommandHandler = async (_args: ArgumentSegment[]) => {
     const result = new TextCommandResult('Success');
     result.markSuccess();
     return result;

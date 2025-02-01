@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { CommandNode, CommandTrie, CommandSegment } from '../types/command-trie';
+import { CommandNode, CommandTrie, CommandSegment, ArgumentSegment } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
 import { StoredCommand } from '../types/storage';
 
@@ -163,11 +163,11 @@ export function useCommandParser({ commands: commands }: UseCommandParserProps) 
   const executeCommand = useCallback((
     commandStack: string[],
     actions: CitadelActions,
-    args?: string[]
+    args?: ArgumentSegment[]
   ) => {
     const node = commands.getCommand(commandStack);
     if (node) {
-      actions.executeCommand(commandStack, args || undefined);
+      actions.executeCommand(commandStack, args);
       actions.setCurrentInput('');
       actions.setIsEnteringArg(false);
       setInputState('idle');
