@@ -1,10 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { CommandNode } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
-import { useCommandParser } from '../hooks/useCommandParser';
+import { useCommandParser, parseInput } from '../hooks/useCommandParser';
 import { Cursor } from '../Cursor';
 import { defaultConfig } from '../config/defaults';
-import { useCitadelConfig } from '../config/CitadelConfigContext';
+import { useCitadelConfig, useCitadelCommands } from '../config/CitadelConfigContext';
 import styles from './CommandInput.module.css';
 import { CursorType } from '../types/cursor';
 
@@ -20,7 +20,8 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   availableCommands,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { handleKeyDown, handleInputChange } = useCommandParser();
+  const commands = useCitadelCommands();
+  const { handleKeyDown, handleInputChange } = useCommandParser({ commands });
   const [showInvalidAnimation, setShowInvalidAnimation] = useState(false);
   const config = useCitadelConfig();
 
@@ -38,24 +39,26 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       e.key === 'ArrowDown' ||
       e.key === 'Enter';
 
-    // Prevent input for leaf nodes without handlers or arguments
-    if (!isValidKey && !state.isEnteringArg && !state.currentNode?.hasChildren) {
-      if (state.currentNode && !state.currentNode.requiresArgument && !state.currentNode.handler) {
-        e.preventDefault();
-        return;
-      }
+    // Get the next expected segment
+    const nextSegment = state.currentNode?.segments[state.commandStack.length];
+
+    // Allow any input when entering arguments or when the next segment is an argument
+    if (state.isEnteringArg || nextSegment?.type === 'argument') {
+      handleKeyDown(e.nativeEvent, state, actions);
+      return;
     }
 
-    // Show animation for invalid input - only for command names, not arguments
-    if (!isValidKey && !state.isEnteringArg && !state.currentNode?.requiresArgument) {
-      const currentCommands = state.currentNode ? 
-        Array.from(state.currentNode.children.values()) : 
-        availableCommands;
+    // For non-special keys, validate the input
+    if (!isValidKey) {
+      const parsedInput = parseInput(state.currentInput + e.key);
+      const currentCommands = availableCommands;
       
-      const newInput = (state.currentInput + e.key).toLowerCase();
-      const isValid = currentCommands.some(node => 
-        node.name.toLowerCase().startsWith(newInput)
-      );
+      // Check if the new input would be valid
+      const isValid = currentCommands.some(node => {
+        const segment = node.segments[state.commandStack.length];
+        return segment?.type === 'word' && 
+               segment.name.toLowerCase().startsWith(parsedInput.currentWord.toLowerCase());
+      });
 
       if (!isValid) {
         setShowInvalidAnimation(true);
@@ -114,7 +117,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
               className={`w-full bg-transparent outline-none text-gray-200 caret-transparent ${showInvalidAnimation ? styles.invalidInput : ''}`}
               spellCheck={false}
               autoComplete="off"
-              placeholder={state.isEnteringArg ? state.currentNode?.argument?.name : ''}
+              placeholder={state.isEnteringArg ? (state.currentNode?.segments[state.commandStack.length]?.name ?? '') : ''}
             />
             <div 
               className="absolute top-0 pointer-events-none"

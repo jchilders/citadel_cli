@@ -13,6 +13,43 @@ export interface ParsedInput {
   isComplete: boolean;
 }
 
+/*
+ * Parses command input into words, handling quoted strings and spaces.
+ * Returns parsed words, current word being typed, and quote state.
+ *
+ * Example 1: Simple command with spaces
+ *   const example1 = parseInput('git commit -m "initial commit"');
+ * Returns:
+ *   {
+ *     words: ['git', 'commit', '-m'],
+ *     currentWord: 'initial commit',
+ *     isQuoted: true,
+ *     quoteChar: '"',
+ *     isComplete: false
+ *   }
+ *
+ * Example 2: Unfinished quoted string
+ *   const example2 = parseInput('echo "hello world');
+ * Returns:
+ *   {
+ *     words: ['echo'],
+ *     currentWord: 'hello world',
+ *     isQuoted: true,
+ *     quoteChar: '"',
+ *     isComplete: false
+ *   }
+ *
+ * Example 3: Complete command with multiple words
+ *   const example3 = parseInput('docker build -t my-image .');
+ * Returns:
+ *   {
+ *     words: ['docker', 'build', '-t', 'my-image', '.'],
+ *     currentWord: '',
+ *     isQuoted: false,
+ *     quoteChar: undefined,
+ *     isComplete: true
+ *   }
+ */
 export function parseInput(input: string): ParsedInput {
   const words: string[] = [];
   let currentWord = '';
@@ -140,10 +177,12 @@ export function useCommandParser({ commands: commands }: UseCommandParserProps) 
   const handleInputChange = useCallback((
     newValue: string,
     state: CitadelState,
-    actions: CitadelActions
+    actions: CitadelActions,
   ) => {
-    actions.setCurrentInput(newValue);
     const parsedInput = parseInput(newValue);
+    const currentIndex = state.commandStack.length + (parsedInput.currentWord ? 1 : 0);
+    actions.setCurrentInput(newValue);
+    actions.setCurrentSegmentIndex(currentIndex);
 
     // Handle quoted input differently
     if (parsedInput.isQuoted) {
@@ -188,6 +227,7 @@ export function useCommandParser({ commands: commands }: UseCommandParserProps) 
           }
         }
       }
+      actions.setCurrentSegmentIndex(parsedInput.words.length);
     }
   }, [getAvailableNodes, getAutocompleteSuggestion, commands]);
 
@@ -270,7 +310,7 @@ export function useCommandParser({ commands: commands }: UseCommandParserProps) 
         return;
     }
 
-    // Handle regular input
+    // Handle character input
     if (!isEnteringArg) {
       const nextInput = parseInput(currentInput + e.key);
       if (!isValidCommandInput(nextInput, currentNode)) {

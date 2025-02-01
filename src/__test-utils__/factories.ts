@@ -75,6 +75,7 @@ export const createMockCitadelState = (overrides = {}): CitadelState => ({
   currentNode: undefined,
   output: [],
   validation: { isValid: true },
+  segmentIndex: 0,
   history: {
     commands: [],
     position: null,
@@ -94,5 +95,6 @@ export const createMockCitadelActions = (overrides = {}): CitadelActions => ({
   executeCommand: vi.fn(),
   executeHistoryCommand: vi.fn(),
   clearHistory: vi.fn(),
+  setCurrentSegmentIndex: vi.fn(),
   ...overrides
 });

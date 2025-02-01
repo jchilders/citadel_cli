@@ -24,6 +24,7 @@ export interface CitadelState {
     isValid: boolean;
     message?: string;
   };
+  segmentIndex: number;
   history: {
     commands: StoredCommand[];
     position: number | null;
@@ -42,4 +43,5 @@ export interface CitadelActions {
   executeCommand: (path: string[], args?: string[]) => Promise<void>;
   executeHistoryCommand: (index: number) => Promise<void>;
   clearHistory: () => Promise<void>;
+  setCurrentSegmentIndex: (index: number) => void;
 }

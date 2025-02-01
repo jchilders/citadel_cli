@@ -65,6 +65,7 @@ describe('useCommandParser', () => {
       });
     });
   });
+
   let mockCommandTrie: CommandTrie;
   let mockState: CitadelState;
   let mockActions: CitadelActions;
@@ -109,7 +110,8 @@ describe('useCommandParser', () => {
       setValidation: vi.fn(),
       executeCommand: vi.fn(),
       executeHistoryCommand: vi.fn(),
-      clearHistory: vi.fn()
+      clearHistory: vi.fn(),
+      setCurrentSegmentIndex: vi.fn(),
     };
     user = userEvent.setup();
   });

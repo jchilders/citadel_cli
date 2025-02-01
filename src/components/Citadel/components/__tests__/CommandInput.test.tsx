@@ -3,36 +3,8 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
 import { CommandInput } from '../CommandInput';
 import { CommandNode } from '../../types/command-trie';
-import { CitadelState } from '../../types/state';
 import { TextCommandResult } from '../../types/command-results';
 import { createMockCitadelState, createMockNode } from '../../../../__test-utils__/factories';
-
-// Mock useCommandParser hook
-vi.mock('../../hooks/useCommandParser', () => ({
-  useCommandParser: () => ({
-    handleKeyDown: vi.fn((e: KeyboardEvent, state: CitadelState, actions: any) => {
-      // Simulate Enter key behavior for help command
-      if (e.key === 'Enter' && state.currentNode?.fullPath_s === 'help') {
-        state.currentNode.handler([]);
-        actions.executeCommand(['help']);
-        return;
-      }
-
-      // If not entering an argument and key is 'x', prevent default
-      if (e.key === 'x' && !state.isEnteringArg && !state.currentNode) {
-        e.preventDefault();
-        return;
-      }
-      
-      // For all other cases, allow the input
-      actions.setCurrentInput(state.currentInput + e.key);
-    }),
-    handleInputChange: vi.fn((value: string, _state: CitadelState, actions: any) => {
-      actions.setCurrentInput(value);
-    }),
-    inputState: 'idle'
-  }),
-}));
 
 // Create test wrapper
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -67,18 +39,7 @@ const userShowCommand = createMockNode('show', {
   }
 });
 
-// Mock actions
-const mockActions = {
-  setCommandStack: vi.fn(),
-  setCurrentInput: vi.fn(),
-  setIsEnteringArg: vi.fn(),
-  setCurrentNode: vi.fn(),
-  addOutput: vi.fn(),
-  setValidation: vi.fn(),
-  executeCommand: vi.fn(),
-  executeHistoryCommand: vi.fn(),
-  clearHistory: vi.fn(),
-};
+import { createMockCitadelActions } from '../../../../__test-utils__/factories';
 
 describe('CommandInput', () => {
   const defaultState = createMockCitadelState();
@@ -88,6 +49,7 @@ describe('CommandInput', () => {
   });
 
   it('prevents invalid input at root level', () => {
+    const mockActions = createMockCitadelActions();
     const { container } = render(
       <TestWrapper>
         <CommandInput
@@ -106,6 +68,7 @@ describe('CommandInput', () => {
   });
 
   it('allows valid command prefixes', () => {
+    const mockActions = createMockCitadelActions();
     const { container } = render(
       <TestWrapper>
         <CommandInput
@@ -137,7 +100,7 @@ describe('CommandInput', () => {
       <TestWrapper>
         <CommandInput
           state={state}
-          actions={mockActions}
+          actions={createMockCitadelActions()}
           availableCommands={mockCommands}
         />
       </TestWrapper>
@@ -147,7 +110,7 @@ describe('CommandInput', () => {
     if (!input) throw new Error('Input element not found');
     
     fireEvent.keyDown(input, { key: 'a' });
-    expect(mockActions.setCurrentInput).not.toHaveBeenCalled();
+    expect(createMockCitadelActions().setCurrentInput).not.toHaveBeenCalled();
   });
 
   it('allows input for nodes with handlers', () => {
@@ -165,7 +128,7 @@ describe('CommandInput', () => {
       <TestWrapper>
         <CommandInput
           state={state}
-          actions={mockActions}
+          actions={createMockCitadelActions()}
           availableCommands={[handlerNode]}  // Pass the handler node as available command
         />
       </TestWrapper>
@@ -175,7 +138,7 @@ describe('CommandInput', () => {
     if (!input) throw new Error('Input element not found');
     
     fireEvent.keyDown(input, { key: 'Enter' });  // Use Enter key instead of 'a'
-    expect(mockActions.setCurrentInput).toHaveBeenCalled();
+    expect(createMockCitadelActions().setCurrentInput).toHaveBeenCalled();
   });
 
   it('prevents input for leaf commands without arguments', () => {
@@ -188,7 +151,7 @@ describe('CommandInput', () => {
       <TestWrapper>
         <CommandInput
           state={leafState}
-          actions={mockActions}
+          actions={createMockCitadelActions()}
           availableCommands={mockCommands}
         />
       </TestWrapper>
@@ -198,7 +161,7 @@ describe('CommandInput', () => {
     if (!input) throw new Error('Input element not found');
     fireEvent.keyDown(input, { key: 'x' });
 
-    expect(mockActions.setCurrentInput).not.toHaveBeenCalled();
+    expect(createMockCitadelActions().setCurrentInput).not.toHaveBeenCalled();
   });
 
   it('allows subcommand input', () => {
@@ -211,7 +174,7 @@ describe('CommandInput', () => {
       <TestWrapper>
         <CommandInput
           state={subcommandState}
-          actions={mockActions}
+          actions={createMockCitadelActions()}
           availableCommands={mockCommands}
         />
       </TestWrapper>
@@ -221,7 +184,7 @@ describe('CommandInput', () => {
     if (!input) throw new Error('Input element not found');
     fireEvent.keyDown(input, { key: 's' }); // Valid prefix for 'show'
 
-    expect(mockActions.setCurrentInput).toHaveBeenCalled();
+    expect(createMockCitadelActions().setCurrentInput).toHaveBeenCalled();
   });
 
   it('allows special keys', () => {
@@ -229,7 +192,7 @@ describe('CommandInput', () => {
       <TestWrapper>
         <CommandInput
           state={defaultState}
-          actions={mockActions}
+          actions={createMockCitadelActions()}
           availableCommands={mockCommands}
         />
       </TestWrapper>
@@ -241,7 +204,7 @@ describe('CommandInput', () => {
 
     specialKeys.forEach(key => {
       fireEvent.keyDown(input, { key });
-      expect(mockActions.setCurrentInput).toHaveBeenCalled();
+      expect(createMockCitadelActions().setCurrentInput).toHaveBeenCalled();
     });
   });
 
@@ -256,7 +219,7 @@ describe('CommandInput', () => {
       <TestWrapper>
         <CommandInput
           state={argState}
-          actions={mockActions}
+          actions={createMockCitadelActions()}
           availableCommands={mockCommands}
         />
       </TestWrapper>
@@ -266,7 +229,7 @@ describe('CommandInput', () => {
     if (!input) throw new Error('Input element not found');
     fireEvent.keyDown(input, { key: '1' }); // Valid argument input
 
-    expect(mockActions.setCurrentInput).toHaveBeenCalled();
+    expect(createMockCitadelActions().setCurrentInput).toHaveBeenCalled();
   });
 
   it('allows Unicode character input for commands', () => {
@@ -274,7 +237,7 @@ describe('CommandInput', () => {
       <TestWrapper>
         <CommandInput
           state={defaultState}
-          actions={mockActions}
+          actions={createMockCitadelActions()}
           availableCommands={mockCommands}
         />
       </TestWrapper>
@@ -283,13 +246,13 @@ describe('CommandInput', () => {
     const input = container.querySelector('input');
     if (!input) throw new Error('Input element not found');
     
-    fireEvent.change(input, { target: { value: '検' } });
-    expect(mockActions.setCurrentInput).toHaveBeenCalledWith('検');
+    fireEvent.change(input, { target: { value: '要塞' } });
+    expect(createMockCitadelActions().setCurrentInput).toHaveBeenCalledWith('要塞');
     
     vi.clearAllMocks();
     
-    fireEvent.change(input, { target: { value: '検索' } });
-    expect(mockActions.setCurrentInput).toHaveBeenCalledWith('検索');
+    fireEvent.change(input, { target: { value: '正义' } });
+    expect(createMockCitadelActions().setCurrentInput).toHaveBeenCalledWith('正义');
   });
 
   it('executes help command when Enter is pressed', () => {
@@ -303,7 +266,7 @@ describe('CommandInput', () => {
       <TestWrapper>
         <CommandInput
           state={state}
-          actions={mockActions}
+          actions={createMockCitadelActions()}
           availableCommands={mockCommands}
         />
       </TestWrapper>
@@ -313,7 +276,7 @@ describe('CommandInput', () => {
     if (!input) throw new Error('Input element not found');
     
     fireEvent.keyDown(input, { key: 'Enter' });
-    expect(mockActions.executeCommand).toHaveBeenCalledWith(['help']);
+    expect(createMockCitadelActions().executeCommand).toHaveBeenCalledWith(['help']);
   });
 
   it('handles input state transitions correctly', () => {
@@ -324,7 +287,7 @@ describe('CommandInput', () => {
             isEnteringArg: true,
             currentNode: userShowCommand
           })}
-          actions={mockActions}
+          actions={createMockCitadelActions()}
           availableCommands={mockCommands}
         />
       </TestWrapper>
@@ -339,7 +302,7 @@ describe('CommandInput', () => {
       <TestWrapper>
         <CommandInput
           state={defaultState}
-          actions={mockActions}
+          actions={createMockCitadelActions()}
           availableCommands={mockCommands}
         />
       </TestWrapper>
@@ -358,7 +321,7 @@ describe('CommandInput', () => {
       <TestWrapper>
         <CommandInput
           state={newState}
-          actions={mockActions}
+          actions={createMockCitadelActions()}
           availableCommands={mockCommands}
         />
       </TestWrapper>

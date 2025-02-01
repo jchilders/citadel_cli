@@ -24,8 +24,8 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
   const sortedCommands = React.useMemo(() => {
     if (!state.commandStack.length && config.includeHelpCommand) {
       // At root level, ensure help command is last
-      const nonHelpCommands = availableCommands.filter(cmd => cmd.name !== 'help');
-      const helpCommand = availableCommands.find(cmd => cmd.name === 'help');
+      const nonHelpCommands = availableCommands.filter(cmd => cmd.fullPath_s !== 'help');
+      const helpCommand = availableCommands.find(cmd => cmd.fullPath_s === 'help');
       return [...nonHelpCommands, ...(helpCommand ? [helpCommand] : [])];
     }
     return availableCommands;
@@ -37,7 +37,7 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
         <div className={contentClasses}>
           {state.currentNode ? (
             <>
-              <span className="text-blue-400">{state.currentNode.name}</span>
+              <span className="text-blue-400">{state.currentNode.fullPath_s}</span>
               <span className="text-gray-400 ml-2">- {state.currentNode.description}</span>
             </>
           ) : null}
@@ -47,12 +47,12 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
           <div className="flex flex-wrap gap-2">
             {sortedCommands.map((cmd) => {
               const boldLength = sortedCommands.reduce((length, other) => {
-                if (other.name === cmd.name) return length;
+                if (other.fullPath_s === cmd.fullPath_s) return length;
                 let commonPrefix = 0;
                 while (
-                  commonPrefix < cmd.name.length &&
-                  commonPrefix < other.name.length &&
-                  cmd.name[commonPrefix].toLowerCase() === other.name[commonPrefix].toLowerCase()
+                  commonPrefix < cmd.fullPath_s.length &&
+                  commonPrefix < other.fullPath_s.length &&
+                  cmd.fullPath_s[commonPrefix].toLowerCase() === other.fullPath_s[commonPrefix].toLowerCase()
                 ) {
                   commonPrefix++;
                 }
@@ -65,8 +65,8 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
                   className="px-2 py-1 rounded bg-gray-800 mr-2 last:mr-0"
                 >
                   <span className="font-mono text-white">
-                    <strong className="underline">{cmd.name.slice(0, boldLength)}</strong>
-                    {cmd.name.slice(boldLength)}
+                    <strong className="underline">{cmd.fullPath_s.slice(0, boldLength)}</strong>
+                    {cmd.fullPath_s.slice(boldLength)}
                   </span>
                 </div>
               );

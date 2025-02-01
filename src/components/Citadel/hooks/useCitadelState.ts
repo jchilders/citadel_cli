@@ -19,6 +19,7 @@ export const useCitadelState = () => {
     currentInput: '',
     isEnteringArg: false,
     currentNode: undefined,
+    currentSegmentIndex: 0,
     output: [],
     validation: { isValid: true },
     history
@@ -203,6 +204,10 @@ export const useCitadelState = () => {
 
     setIsEnteringArg: useCallback((isEntering: boolean) => {
       setState(prev => ({ ...prev, isEnteringArg: isEntering }));
+    }, []),
+
+    setCurrentSegmentIndex: useCallback((segmentIndex: number) => {
+      setState(prev => ({ ...prev, currentSegmentIndex: segmentIndex }));
     }, []),
 
     setCurrentNode: useCallback((node) => {
