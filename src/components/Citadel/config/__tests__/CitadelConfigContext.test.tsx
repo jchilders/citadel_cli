@@ -4,6 +4,7 @@ import { CommandTrie } from '../../types/command-trie';
 import { StorageFactory } from '../../storage/StorageFactory';
 import { defaultConfig } from '../defaults';
 import { CitadelElement } from '../../Citadel';
+import { createHelpHandler } from '../../types/help-command';
 
 describe('CitadelConfigContext', () => {
   describe('command handling', () => {
@@ -15,7 +16,7 @@ describe('CitadelConfigContext', () => {
     it('should never return undefined commands', () => {
       const { getByTestId } = render(
         <CitadelConfigProvider>
-          <TestComponent />
+        <TestComponent />
         </CitadelConfigProvider>
       );
 
@@ -27,7 +28,7 @@ describe('CitadelConfigContext', () => {
     it('should handle undefined commands', () => {
       const { getByTestId } = render(
         <CitadelConfigProvider>
-          <TestComponent />
+        <TestComponent />
         </CitadelConfigProvider>
       );
 
@@ -45,7 +46,7 @@ describe('CitadelConfigContext', () => {
 
       const { getByTestId, rerender } = render(
         <CitadelConfigProvider commands={testTrie}>
-          <TestComponent />
+        <TestComponent />
         </CitadelConfigProvider>
       );
 
@@ -61,7 +62,7 @@ describe('CitadelConfigContext', () => {
       // Rerender with same trie
       rerender(
         <CitadelConfigProvider commands={testTrie}>
-          <TestComponent />
+        <TestComponent />
         </CitadelConfigProvider>
       );
 
@@ -88,10 +89,10 @@ describe('CitadelConfigContext', () => {
 
         // Create CitadelElement with mocked styles
         const citadelElement = new CitadelElement(testTrie);
-        
+
         // Verify the command trie is maintained
         expect(citadelElement['commands']).toBe(testTrie);
-        
+
         // Clean up
         vi.resetModules();
       });
@@ -107,7 +108,7 @@ describe('CitadelConfigContext', () => {
     it('should use default config when none provided', () => {
       const { getByTestId } = render(
         <CitadelConfigProvider>
-          <ConfigTestComponent />
+        <ConfigTestComponent />
         </CitadelConfigProvider>
       );
 
@@ -124,7 +125,7 @@ describe('CitadelConfigContext', () => {
 
       const { getByTestId } = render(
         <CitadelConfigProvider config={customConfig}>
-          <ConfigTestComponent />
+        <ConfigTestComponent />
         </CitadelConfigProvider>
       );
 
@@ -133,6 +134,43 @@ describe('CitadelConfigContext', () => {
       expect(parsedConfig.cursorType).toBe('blink');
       expect(parsedConfig.cursorColor).toBe('#ff0000');
       expect(parsedConfig.storage).toBeDefined();
+    });
+
+    it('should not add help command twice when includeHelpCommand is true', () => {
+      const testTrie = new CommandTrie();
+      const helpHandler = createHelpHandler(testTrie);
+
+      // Add help command manually first
+      testTrie.addCommand(
+        [{ type: 'word', name: 'help' }],
+        'Show available commands',
+        helpHandler
+      );
+
+      const { rerender } = render(
+        <CitadelConfigProvider
+        config={{ includeHelpCommand: true }}
+        commands={testTrie}
+        >
+        <div>Test</div>
+        </CitadelConfigProvider>
+      );
+
+      // Force re-render to trigger useEffect
+      rerender(
+        <CitadelConfigProvider
+        config={{ includeHelpCommand: true }}
+        commands={testTrie}
+        >
+        <div>Test</div>
+        </CitadelConfigProvider>
+      );
+
+      // Verify help command exists exactly once
+      const commands = testTrie.commands.filter(cmd => 
+                                                cmd.segments[0].name === 'help'
+                                               );
+                                               expect(commands).toHaveLength(1);
     });
   });
 
@@ -150,7 +188,7 @@ describe('CitadelConfigContext', () => {
     it('should initialize storage', async () => {
       const { getByTestId } = render(
         <CitadelConfigProvider>
-          <StorageTestComponent />
+        <StorageTestComponent />
         </CitadelConfigProvider>
       );
 
@@ -173,7 +211,7 @@ describe('CitadelConfigContext', () => {
 
       const { getByTestId } = render(
         <CitadelConfigProvider config={customConfig}>
-          <StorageTestComponent />
+        <StorageTestComponent />
         </CitadelConfigProvider>
       );
 

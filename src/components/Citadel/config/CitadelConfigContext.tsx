@@ -52,12 +52,14 @@ export const CitadelConfigProvider: React.FC<{
   // Add help command if enabled
   useEffect(() => {
     if (commands && mergedConfig.includeHelpCommand) {
-      const helpHandler = createHelpHandler(commands);
-      commands.addCommand(
-        [{ type: 'word', name: 'help' }],
-        'Show available commands',
-        helpHandler
-      );
+      if (!commands.commandExistsForPath(['help'])) {
+        const helpHandler = createHelpHandler(commands);
+        commands.addCommand(
+          [{ type: 'word', name: 'help' }],
+          'Show available commands',
+          helpHandler
+        );
+      }
     }
   }, [commands, mergedConfig.includeHelpCommand]);
 
