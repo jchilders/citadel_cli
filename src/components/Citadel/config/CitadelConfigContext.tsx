@@ -6,17 +6,18 @@ import { StorageFactory } from '../storage/StorageFactory';
 import { CommandStorage } from '../types/storage';
 import { CommandTrie } from '../types/command-trie';
 
-
 interface CitadelContextValue {
   config: CitadelConfig;
   commands: CommandTrie;
   storage?: CommandStorage;
 }
 
-const CitadelConfigContext = createContext<CitadelContextValue>({
+const defaultContextValue: CitadelContextValue = {
   config: defaultConfig,
   commands: new CommandTrie()
-});
+};
+
+const CitadelConfigContext = createContext<CitadelContextValue>(defaultContextValue);
 
 export const CitadelConfigProvider: React.FC<{
   config?: CitadelConfig;
@@ -60,9 +61,9 @@ export const CitadelConfigProvider: React.FC<{
     }
   }, [commands, mergedConfig.includeHelpCommand]);
 
-  const contextValue = {
+  const contextValue: CitadelContextValue = {
     config: mergedConfig,
-    commands: commands,
+    commands: commands || new CommandTrie(),
     storage
   };
 

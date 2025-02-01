@@ -12,6 +12,18 @@ describe('CitadelConfigContext', () => {
       return <div data-testid="commands">{JSON.stringify(commands)}</div>;
     };
 
+    it('should never return undefined commands', () => {
+      const { getByTestId } = render(
+        <CitadelConfigProvider>
+          <TestComponent />
+        </CitadelConfigProvider>
+      );
+
+      const commandsElement = getByTestId('commands');
+      expect(commandsElement.textContent).not.toBe('');
+      expect(JSON.parse(commandsElement.textContent || '{}')).toEqual(expect.any(Object));
+    });
+
     it('should handle undefined commands', () => {
       const { getByTestId } = render(
         <CitadelConfigProvider>
@@ -20,7 +32,8 @@ describe('CitadelConfigContext', () => {
       );
 
       const commandsElement = getByTestId('commands');
-      expect(commandsElement.textContent).toBe('');
+      const parsedCommands = JSON.parse(commandsElement.textContent || '{}');
+      expect(parsedCommands).toEqual({ _commands: [] });
     });
 
     it('should provide and persist commands when passed', () => {
