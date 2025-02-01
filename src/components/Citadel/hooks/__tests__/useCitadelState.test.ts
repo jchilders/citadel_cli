@@ -25,12 +25,12 @@ vi.mock('../useCommandHistory');
 describe('useCitadelState', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    const mockHistory = createMockCommandHistory();
+    const mockActions = createMockCommandHistoryActions();
+    (useCommandHistory as Mock).mockReturnValue([mockHistory, mockActions]);
   });
 
   it('should initialize with default state', async () => {
-    const mockCommandHistory = createMockCommandHistory();
-    const mockCommandHistoryActions = createMockCommandHistoryActions();
-    (useCommandHistory as Mock).mockReturnValue([mockCommandHistory, mockCommandHistoryActions]);
 
     const { result } = renderHook(() => useCitadelState());
 
@@ -39,6 +39,7 @@ describe('useCitadelState', () => {
       currentInput: '',
       isEnteringArg: false,
       currentNode: undefined,
+      currentSegmentIndex: 0,
       output: [],
       validation: { isValid: true },
       history: {
