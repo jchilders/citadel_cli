@@ -6,7 +6,7 @@ import { ErrorCommandResult } from '../types/command-results';
 import { useCommandHistory } from './useCommandHistory';
 import { useCommandParser } from './useCommandParser';
 import { initializeHistoryService } from '../services/HistoryService';
-import { ArgumentSegment, CommandNode } from '../types/command-trie';
+import { ArgumentSegment } from '../types/command-trie';
 import { Logger } from '../utils/logger';
 
 export const useCitadelState = () => {
@@ -303,12 +303,10 @@ export const useCitadelState = () => {
   };
 
   const getAvailableCommands = useCallback(() => {
-    if (state.commandStack.length === 0) {
-      return commandTrie.commands;
-    }
-    return commandTrie.getCompletions(state.commandStack)
-      .map(completion => commandTrie.getCommand([...state.commandStack, completion]))
-      .filter((cmd): cmd is CommandNode => cmd !== undefined);
+    Logger.debug("state.commandStack", state.commandStack);
+    const completions = commandTrie.getCompletions(state.commandStack);
+    Logger.debug("getAvailableCommands completions: ", completions);
+    return completions;
   }, [state.commandStack, commandTrie]);
 
   return { state, actions, getAvailableCommands };

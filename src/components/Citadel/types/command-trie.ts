@@ -12,7 +12,7 @@ export const NoopHandler: CommandHandler = async (_args) => {
 };
 
 /** Base interface for command segments */
- export abstract class BaseCommandSegment {
+ export abstract class BaseSegment {
    constructor(
      public readonly type: 'word' | 'argument',
      public readonly name: string,
@@ -26,7 +26,7 @@ export const NoopHandler: CommandHandler = async (_args) => {
 export type CommandSegment = WordSegment | ArgumentSegment;
 
 /** Represents a literal word in a command path */
-export class WordSegment extends BaseCommandSegment {
+export class WordSegment extends BaseSegment {
    constructor(
      name: string,
      description?: string
@@ -38,8 +38,9 @@ export class WordSegment extends BaseCommandSegment {
      return this.name;
    }
  }
+
 /** Represents an argument that can be passed to a command */
-export class ArgumentSegment extends BaseCommandSegment {
+export class ArgumentSegment extends BaseSegment {
    constructor(
      name: string,
      public readonly required: boolean = false,

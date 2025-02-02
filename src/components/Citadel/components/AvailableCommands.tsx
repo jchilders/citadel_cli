@@ -1,7 +1,8 @@
 import React from 'react';
-import { CommandNode, NoopHandler } from '../types/command-trie';
+import { CommandNode } from '../types/command-trie';
 import { CitadelState } from '../types/state';
 import { useCitadelConfig } from '../config/CitadelConfigContext';
+import { Logger } from '../utils/logger';
 
 interface AvailableCommandsProps {
   state: CitadelState;
@@ -12,13 +13,16 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
   state,
   availableCommands
 }) => {
+  Logger.debug("[AAAvailableCommands] state: ", state);
+  Logger.debug("[AAAvailableCommands] availableCommands: ", availableCommands);
   const config = useCitadelConfig();
   const showCommands = !state.isEnteringArg && availableCommands.length > 0;
   const containerClasses = "h-12 mt-2 border-t border-gray-700 px-4";
   const contentClasses = "text-gray-300 pt-2";
 
-  // Show description for leaf nodes without handlers or arguments
-  const isLeafNode = state.currentNode?.isLeaf && state.currentNode.handler === NoopHandler && !state.currentNode.requiresArgument;
+  // Show description for nodes at their last segment
+  const isLastSegment = state.currentNode && 
+    state.commandStack.length === state.currentNode.segments.length;
 
   // Sort commands and handle help command placement
   const sortedCommands = React.useMemo(() => {
@@ -30,14 +34,17 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
     }
     return availableCommands;
   }, [availableCommands, state.commandStack, config.includeHelpCommand]);
+  Logger.debug("[AAAvailableCommands] sortedCommands: ", sortedCommands);
 
   return (
     <div className={containerClasses} data-testid="available-commands">
-      {isLeafNode ? (
+      {isLastSegment ? (
         <div className={contentClasses}>
           {state.currentNode ? (
             <>
-              <span className="text-blue-400">{state.currentNode.fullPath_s}</span>
+              <span className="text-blue-400">
+                {state.currentNode.segments.map(seg => seg.toString()).join(' ')}
+              </span>
               <span className="text-gray-400 ml-2">- {state.currentNode.description}</span>
             </>
           ) : null}
@@ -47,12 +54,12 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
           <div className="flex flex-wrap gap-2">
             {sortedCommands.map((cmd) => {
               const boldLength = sortedCommands.reduce((length, other) => {
-                if (other.fullPath_s === cmd.fullPath_s) return length;
+                if (other === cmd) return length;
                 let commonPrefix = 0;
                 while (
-                  commonPrefix < cmd.fullPath_s.length &&
-                  commonPrefix < other.fullPath_s.length &&
-                  cmd.fullPath_s[commonPrefix].toLowerCase() === other.fullPath_s[commonPrefix].toLowerCase()
+                  commonPrefix < cmd.length &&
+                  commonPrefix < other.length &&
+                  cmd[commonPrefix].toLowerCase() === other[commonPrefix].toLowerCase()
                 ) {
                   commonPrefix++;
                 }
@@ -61,12 +68,12 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
 
               return (
                 <div
-                  key={cmd.fullPath.join('.')}
+                  key={cmd}
                   className="px-2 py-1 rounded bg-gray-800 mr-2 last:mr-0"
                 >
                   <span className="font-mono text-white">
-                    <strong className="underline">{cmd.fullPath_s.slice(0, boldLength)}</strong>
-                    {cmd.fullPath_s.slice(boldLength)}
+                    <strong className="underline">{cmd.slice(0, boldLength)}</strong>
+                    {cmd.slice(boldLength)}
                   </span>
                 </div>
               );
