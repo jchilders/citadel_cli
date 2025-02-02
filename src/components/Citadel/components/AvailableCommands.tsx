@@ -1,20 +1,19 @@
 import React from 'react';
-import { CommandNode } from '../types/command-trie';
 import { CitadelState } from '../types/state';
 import { useCitadelConfig } from '../config/CitadelConfigContext';
 import { Logger } from '../utils/logger';
 
 interface AvailableCommandsProps {
   state: CitadelState;
-  availableCommands: CommandNode[];
+  availableCommands: string[];
 }
 
 export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
   state,
   availableCommands
 }) => {
-  Logger.debug("[AAAvailableCommands] state: ", state);
-  Logger.debug("[AAAvailableCommands] availableCommands: ", availableCommands);
+  Logger.debug("[AvailableCommands] state: ", state);
+  Logger.debug("[AvailableCommands] availableCommands: ", availableCommands);
   const config = useCitadelConfig();
   const showCommands = !state.isEnteringArg && availableCommands.length > 0;
   const containerClasses = "h-12 mt-2 border-t border-gray-700 px-4";
@@ -28,13 +27,13 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
   const sortedCommands = React.useMemo(() => {
     if (!state.commandStack.length && config.includeHelpCommand) {
       // At root level, ensure help command is last
-      const nonHelpCommands = availableCommands.filter(cmd => cmd.fullPath_s !== 'help');
-      const helpCommand = availableCommands.find(cmd => cmd.fullPath_s === 'help');
+      const nonHelpCommands = availableCommands.filter(cmd => cmd !== 'help');
+      const helpCommand = availableCommands.find(cmd => cmd === 'help');
       return [...nonHelpCommands, ...(helpCommand ? [helpCommand] : [])];
     }
     return availableCommands;
   }, [availableCommands, state.commandStack, config.includeHelpCommand]);
-  Logger.debug("[AAAvailableCommands] sortedCommands: ", sortedCommands);
+  Logger.debug("[AvailableCommands] sortedCommands: ", sortedCommands);
 
   return (
     <div className={containerClasses} data-testid="available-commands">

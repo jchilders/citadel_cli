@@ -248,6 +248,6 @@ export class CommandTrie {
       throw new Error(`Command '${path.join(' ')}' not found`);
     }
 
-    return await command.handler(args);
+    return await command.handler(args.map(arg => arg.value));
   }
 }

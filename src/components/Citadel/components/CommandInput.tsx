@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { ArgumentSegment, CommandNode } from '../types/command-trie';
+import { ArgumentSegment } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
 import { useCommandParser } from '../hooks/useCommandParser';
 import { Cursor } from '../Cursor';
@@ -11,7 +11,7 @@ import { CursorType } from '../types/cursor';
 interface CommandInputProps {
   state: CitadelState;
   actions: CitadelActions;
-  availableCommands: CommandNode[];
+  availableCommands: string[];
 }
 
 export const CommandInput: React.FC<CommandInputProps> = ({
