@@ -183,54 +183,76 @@ export class CommandTrie {
   }
 
   /**
-   * Gets command completions for a given path.
+   * Gets command completions for a given path as a `string[]`.
    * 
    * @param path The path to get completions for.
    * @returns An array of completion strings.
    */
+  // used by AvailableCommands
   getCompletions_s(path: string[]): string[] {
-    // If no path provided, get all top-level commands
+    return this.getCompletions(path).map(segment => segment.name);
+  }
+
+  /**
+   * Gets command completions for a given path as a `CommandSegment[]`.
+   * 
+   * @param path The path to get completions for.
+   * @returns An array of completion strings.
+   */
+  getCompletions(path: string[]): CommandSegment[] {
+    // If no path provided, get all top-level segments
     if (!path.length) {
-      return [...new Set(this._commands.map(cmd => cmd.segments[0].name))];
+      const firstSegments = this._commands.map(cmd => cmd.segments[0]);
+      const isEqual = (a: CommandSegment, b: CommandSegment): boolean => 
+        a.type === b.type && a.name === b.name;
+      
+      const uniqueObjects = firstSegments.filter((seg, index, self) =>
+        index === self.findIndex(o => isEqual(o, seg))
+      );
+      return uniqueObjects;
     }
 
-    const completions = new Set<string>();
+    const completions = new Set<CommandSegment>();
     const pathDepth = path.length;
 
     // Find all commands that match the current path prefix
-    this._commands.forEach(command => {
-      const segments = command.segments;
-      
-      // Skip if command isn't long enough to have completions at this depth
-      if (segments.length <= pathDepth - 1) {
-        return;
-      }
-
-      // Check if all segments up to current depth match
-      let matches = true;
-      for (let i = 0; i < pathDepth; i++) {
-        const pathSegment = path[i];
-        const cmdSegment = segments[i];
+    const matchingSegments = this._commands
+      .filter(command => {
+        const segments = command.segments;
         
-        // Handle argument segments (marked with '*' in path)
-        if (pathSegment === '*' && cmdSegment.type === 'argument') {
-          continue;
+        // Skip if command isn't long enough to have completions at this depth
+        if (segments.length <= pathDepth - 1) {
+          return false;
         }
-        
-        // Handle word segments
-        if (pathSegment !== cmdSegment.name) {
-          matches = false;
-          break;
+
+        // Check if all segments up to current depth match
+        for (let i = 0; i < pathDepth; i++) {
+          const pathSegment = path[i];
+          const cmdSegment = segments[i];
+          
+          // Handle argument segments (marked with '*' in path)
+          if (pathSegment === '*' && cmdSegment.type === 'argument') {
+            continue;
+          }
+          
+          // Handle word segments
+          if (pathSegment !== cmdSegment.name) {
+            return false;
+          }
         }
-      }
+        return true;
+      })
+      .filter(command => command.segments.length > pathDepth)
+      .map(command => command.segments[pathDepth]);
 
-      if (matches && segments.length > pathDepth) {
-        // Add the next segment name as a completion
-        completions.add(segments[pathDepth].name);
-      }
-    });
+    // Deduplicate segments based on type and name
+    const uniqueSegments = matchingSegments.filter((segment, index, self) =>
+      index === self.findIndex(s => 
+        s.type === segment.type && s.name === segment.name
+      )
+    );
 
-    return Array.from(completions);
+    return uniqueSegments;
   }
 
   /**

@@ -77,6 +77,67 @@ describe('CommandTrie', () => {
     });
   });
 
+  describe('getCompletions', () => {
+    describe('no arguments', () => {
+      beforeEach(() => {
+        trie.addCommand(
+          [{ type: 'word', name: 'help' }],
+          'Help command',
+          successHandler
+        );
+        trie.addCommand(
+          [
+            { type: 'word', name: 'user' },
+            { type: 'word', name: 'create' }
+          ],
+          'Create user',
+          successHandler
+        );
+        trie.addCommand(
+          [
+            { type: 'word', name: 'user' },
+            { type: 'word', name: 'delete' }
+          ],
+          'Delete user',
+          successHandler
+        );
+      });
+
+      it('should return root level segment completions', () => {
+        const completions = trie.getCompletions([]);
+        expect(completions).toEqual([
+          { type: 'word', name: 'help' },
+          { type: 'word', name: 'user' }]);
+      });
+
+      it('should deduplicate first-level segments', () => {
+        // Add more commands that start with 'user' to test deduplication
+        trie.addCommand(
+          [
+            { type: 'word', name: 'user' },
+            { type: 'word', name: 'list' }
+          ],
+          'List users',
+          successHandler
+        );
+        trie.addCommand(
+          [
+            { type: 'word', name: 'user' },
+            { type: 'word', name: 'search' }
+          ],
+          'Search users',
+          successHandler
+        );
+
+        const completions = trie.getCompletions([]);
+        expect(completions).toEqual([
+          { type: 'word', name: 'help' },
+          { type: 'word', name: 'user' }
+        ]);
+      });
+    });
+  });
+
   describe('getCompletions_s', () => {
     describe('no arguments', () => {
       beforeEach(() => {
@@ -103,7 +164,7 @@ describe('CommandTrie', () => {
         );
       });
 
-      it('should return root level completions', () => {
+      it('should return root level string completions', () => {
         const completions = trie.getCompletions_s([]);
         expect(completions).toEqual(['help', 'user']);
       });

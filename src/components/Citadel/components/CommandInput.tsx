@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { ArgumentSegment } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
+import { Logger } from '../utils/logger';
 import { useCommandParser } from '../hooks/useCommandParser';
 import { Cursor } from '../Cursor';
 import { defaultConfig } from '../config/defaults';
@@ -26,6 +27,8 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   const config = useCitadelConfig();
 
   const onKeyDown = (e: React.KeyboardEvent) => {
+    Logger.debug('[CommandInput] onKeyDown', { key: e.key, state });
+
     // Handle special keys first
     switch (e.key) {
       case 'Alt':
@@ -33,20 +36,46 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       case 'ArrowLeft':
       case 'ArrowRight':
       case 'ArrowUp':
-      case 'Backspace':
-      case 'Escape':
       case 'Meta':
       case 'Shift':
       case 'Tab':
         handleKeyDown(e.nativeEvent, state, actions);
         return;
-      
+
+      case 'Escape':
+        handleKeyDown(e.nativeEvent, state, actions);
+        if (state.isEnteringArg) {
+          actions.setIsEnteringArg(false);
+          actions.setCurrentInput('');
+        }
+        return;
+
+      case 'Backspace':
+        e.preventDefault();
+        if (state.currentInput === '') {
+          // Remove last item from command stack
+          if (state.commandStack.length > 0) {
+            const newStack = state.commandStack.slice(0, -1);
+            actions.setCommandStack(newStack);
+            actions.setCurrentNode(commands.getCommand(newStack));
+            actions.setIsEnteringArg(false);
+          }
+        } else {
+          // Remove last character from current input
+          actions.setCurrentInput(state.currentInput.slice(0, -1));
+        }
+        return;
+
       case 'Enter':
-        // Only allow Enter if all segments are filled
-        const currentNode = state.currentNode;
-        if (currentNode && state.commandStack.length === currentNode.segments.length) {
+        e.preventDefault();
+        if (state.currentNode && state.commandStack.length === state.currentNode.segments.length) {
+          // All segments are filled, execute command
+          const args = state.currentNode.segments
+            .filter((seg): seg is ArgumentSegment => seg instanceof ArgumentSegment)
+            .map(arg => arg.value);
+          
           handleKeyDown(e.nativeEvent, state, actions);
-          // Reset state after executing command
+          actions.executeCommand(state.commandStack, args);
           actions.setCommandStack([]);
           actions.setCurrentInput('');
           actions.setCurrentNode(undefined);
@@ -55,120 +84,109 @@ export const CommandInput: React.FC<CommandInputProps> = ({
         return;
 
       case ' ':
-        // Space handling depends on argument state
+        e.preventDefault();
         if (state.isEnteringArg) {
           const currentInput = state.currentInput;
           if (currentInput.startsWith('"') || currentInput.startsWith("'")) {
-            // In quoted argument - allow space
-            actions.setCurrentInput(state.currentInput + e.key);
+            // Allow spaces in quoted arguments
+            actions.setCurrentInput(currentInput + e.key);
           } else {
-            // Unquoted argument - complete it
+            // Complete unquoted argument
             const currentSegment = state.currentNode?.segments[state.commandStack.length - 1];
-            if (currentSegment?.type === 'argument' && currentSegment instanceof ArgumentSegment) {
-              currentSegment.value = state.currentInput;
+            if (currentSegment instanceof ArgumentSegment) {
+              currentSegment.value = currentInput;
               actions.setIsEnteringArg(false);
               actions.setCurrentInput('');
             }
           }
         }
-        e.preventDefault();
         return;
     }
 
-    // Get current segment we're working with
-    const currentSegmentIndex = state.commandStack.length;
-    const currentNode = state.currentNode;
-    const currentSegment = currentNode?.segments[currentSegmentIndex];
-
+    e.preventDefault();
+    
     // Handle argument input
     if (state.isEnteringArg) {
+      Logger.debug('[CommandInput] Handling argument input');
       const currentInput = state.currentInput;
       
-      // Check for quote completion
+      // Handle quote completion
       if ((e.key === '"' && currentInput.startsWith('"')) || 
           (e.key === "'" && currentInput.startsWith("'"))) {
-        // Complete quoted argument
         const argValue = currentInput.substring(1); // Remove opening quote
-        const currentSegment = state.currentNode?.segments[state.commandStack.length - 1];
-        if (currentSegment?.type === 'argument' && currentSegment instanceof ArgumentSegment) {
+        const currentSegment = state.currentNode?.segments[state.commandStack.length];
+        if (currentSegment instanceof ArgumentSegment) {
           currentSegment.value = argValue;
           actions.setIsEnteringArg(false);
           actions.setCurrentInput('');
+          
+          // If there are more segments, prepare for next one
+          if (state.currentNode && state.commandStack.length < state.currentNode.segments.length - 1) {
+            const nextSegment = state.currentNode.segments[state.commandStack.length + 1];
+            if (nextSegment instanceof ArgumentSegment) {
+              actions.setIsEnteringArg(true);
+            }
+          }
         }
-        e.preventDefault();
+        return;
+      }
+
+      // Handle space for unquoted arguments
+      if (e.key === ' ' && !currentInput.startsWith('"') && !currentInput.startsWith("'")) {
+        const currentSegment = state.currentNode?.segments[state.commandStack.length];
+        if (currentSegment instanceof ArgumentSegment) {
+          currentSegment.value = currentInput;
+          actions.setIsEnteringArg(false);
+          actions.setCurrentInput('');
+          
+          // If there are more segments, prepare for next one
+          if (state.currentNode && state.commandStack.length < state.currentNode.segments.length - 1) {
+            const nextSegment = state.currentNode.segments[state.commandStack.length + 1];
+            if (nextSegment instanceof ArgumentSegment) {
+              actions.setIsEnteringArg(true);
+            }
+          }
+        }
         return;
       }
 
       // Allow any character in argument mode
       actions.setCurrentInput(currentInput + e.key);
-      e.preventDefault();
       return;
     }
 
     // Handle command word input
-    if (!currentSegment) {
-      // At root level, check available commands
-      const completions = availableCommands
-        .filter(cmd => cmd.segments[0].type === 'word' &&
-                      cmd.segments[0].name.toLowerCase()
-                        .startsWith((state.currentInput + e.key).toLowerCase()))
-        .map(cmd => cmd.segments[0].name);
+    Logger.debug('[CommandInput] Handling command word input');
+    const nextInput = state.currentInput + e.key;
+    const completions = availableCommands.filter(cmd => 
+      cmd.toLowerCase().startsWith(nextInput.toLowerCase())
+    );
 
-      if (completions.length > 0) {
-        // If single completion, autocomplete it
-        if (completions.length === 1) {
-          const completion = completions[0];
-          actions.setCommandStack([completion]);
-          actions.setCurrentInput('');
-          
-          // Set current node
-          const newNode = availableCommands.find(cmd => cmd.segments[0].name === completion);
-          if (newNode) {
-            actions.setCurrentNode(newNode);
-          }
-        } else {
-          // Multiple possibilities - just add the character
-          actions.setCurrentInput(state.currentInput + e.key);
-        }
-      }
-      e.preventDefault();
-      return;
-    } else if (currentSegment.type === 'word') {
-      // Handle subcommand completions
-      const completions = availableCommands
-        .filter(cmd => cmd.segments[currentSegmentIndex]?.type === 'word' &&
-                      cmd.segments[currentSegmentIndex].name.toLowerCase()
-                        .startsWith((state.currentInput + e.key).toLowerCase()))
-        .map(cmd => cmd.segments[currentSegmentIndex].name);
+    Logger.debug('[CommandInput] completions', { nextInput, completions });
 
-      if (completions.length > 0) {
-        // If single completion, autocomplete it
-        if (completions.length === 1) {
-          const completion = completions[0];
-          actions.setCommandStack([...state.commandStack, completion]);
-          actions.setCurrentInput('');
-          
-          // Check if next segment is argument
-          const nextSegment = currentNode?.segments[currentSegmentIndex + 1];
-          if (nextSegment?.type === 'argument') {
+    if (completions.length > 0) {
+      if (completions.length === 1) {
+        // Single completion - autocomplete it
+        const completion = completions[0];
+        const newStack = [...state.commandStack, completion];
+        actions.setCommandStack(newStack);
+        actions.setCurrentInput('');
+
+        // Get the new node and check if next segment is an argument
+        const newNode = commands.getCommand(newStack);
+        actions.setCurrentNode(newNode);
+        
+        if (newNode) {
+          const nextSegment = newNode.segments[newStack.length];
+          if (nextSegment instanceof ArgumentSegment) {
             actions.setIsEnteringArg(true);
           }
-        } else {
-          // Multiple possibilities - just add the character
-          actions.setCurrentInput(state.currentInput + e.key);
         }
-      }
-    } else if (currentSegment.type === 'argument') {
-      // Starting a new argument
-      actions.setIsEnteringArg(true);
-      if (e.key === '"' || e.key === "'") {
-        actions.setCurrentInput(e.key);
       } else {
-        actions.setCurrentInput(e.key);
+        // Multiple possibilities - just add the character
+        actions.setCurrentInput(nextInput);
       }
     }
-
-    e.preventDefault();
   };
 
   const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
