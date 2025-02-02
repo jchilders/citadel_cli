@@ -130,9 +130,9 @@ export function useCommandParser({ commands: commands }: UseCommandParserProps) 
     if (!currentNode) {
       return commands.commands;
     }
-    const nextSegments = commands.getCompletions(currentNode.fullPath);
-    return nextSegments
-      .map(segment => commands.getCommand([...currentNode.fullPath, segment]))
+    const nextSegmentNames = commands.getCompletions_s(currentNode.fullPath);
+    return nextSegmentNames
+      .map(segmentName => commands.getCommand([...currentNode.fullPath, segmentName]))
       .filter((cmd): cmd is CommandNode => cmd !== undefined);
   }, [commands]);
 

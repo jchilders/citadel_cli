@@ -94,7 +94,7 @@ describe('useCommandParser', () => {
     ];
 
     vi.spyOn(mockCommandTrie, 'commands', 'get').mockReturnValue(mockCommands);
-    vi.spyOn(mockCommandTrie, 'getCompletions').mockImplementation((path) => {
+    vi.spyOn(mockCommandTrie, 'getCompletions_s').mockImplementation((path) => {
       if (path.length === 0) return ['user', 'help'];
       if (path[0] === 'user') return ['comment'];
       return [];

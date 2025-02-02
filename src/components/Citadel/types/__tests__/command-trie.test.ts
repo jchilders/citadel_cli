@@ -77,7 +77,7 @@ describe('CommandTrie', () => {
     });
   });
 
-  describe('getCompletions', () => {
+  describe('getCompletions_s', () => {
     describe('no arguments', () => {
       beforeEach(() => {
         trie.addCommand(
@@ -104,22 +104,22 @@ describe('CommandTrie', () => {
       });
 
       it('should return root level completions', () => {
-        const completions = trie.getCompletions([]);
+        const completions = trie.getCompletions_s([]);
         expect(completions).toEqual(['help', 'user']);
       });
 
       it('should return nested completions', () => {
-        const completions = trie.getCompletions(['user']);
+        const completions = trie.getCompletions_s(['user']);
         expect(completions).toEqual(['create', 'delete']);
       });
 
       it('should return empty array for invalid path', () => {
-        const completions = trie.getCompletions(['invalid', 'path']);
+        const completions = trie.getCompletions_s(['invalid', 'path']);
         expect(completions).toEqual([]);
       });
 
       it('should return empty array for leaf command', () => {
-        const completions = trie.getCompletions(['help']);
+        const completions = trie.getCompletions_s(['help']);
         expect(completions).toEqual([]);
       });
     });
@@ -152,16 +152,12 @@ describe('CommandTrie', () => {
       });
 
       it('should return argument name for word segment', () => {
-        const completions = trie.getCompletions(['user'])
+        const completions = trie.getCompletions_s(['user'])
         expect(completions).toEqual(['userId']);
       });
 
       it('should return children node names for word and argument segments', () => {
-        const commands = trie.commands;
-        commands.forEach(cmd => {
-          console.log("cmd: " , cmd);
-        });
-        const completions = trie.getCompletions(['user', 'userId'])
+        const completions = trie.getCompletions_s(['user', 'userId'])
         expect(completions).toEqual(['deactivate', 'delete']);
       });
 

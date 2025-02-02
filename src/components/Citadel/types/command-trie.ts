@@ -188,7 +188,7 @@ export class CommandTrie {
    * @param path The path to get completions for.
    * @returns An array of completion strings.
    */
-  getCompletions(path: string[]): string[] {
+  getCompletions_s(path: string[]): string[] {
     // If no path provided, get all top-level commands
     if (!path.length) {
       return [...new Set(this._commands.map(cmd => cmd.segments[0].name))];

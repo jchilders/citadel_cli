@@ -304,7 +304,7 @@ export const useCitadelState = () => {
 
   const getAvailableCommands = useCallback(() => {
     Logger.debug("state.commandStack", state.commandStack);
-    const completions = commandTrie.getCompletions(state.commandStack);
+    const completions = commandTrie.getCompletions_s(state.commandStack);
     Logger.debug("getAvailableCommands completions: ", completions);
     return completions;
   }, [state.commandStack, commandTrie]);

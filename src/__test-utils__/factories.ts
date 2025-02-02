@@ -37,7 +37,7 @@ export const createMockCommandTrie = (): CommandTrie => {
   // Mock the public methods
   vi.spyOn(trie, 'getCommand').mockReturnValue(mockNode);
   vi.spyOn(trie, 'addCommand').mockImplementation(() => {});
-  vi.spyOn(trie, 'getCompletions').mockReturnValue([]);
+  vi.spyOn(trie, 'getCompletions_s').mockReturnValue([]);
   vi.spyOn(trie, 'executeCommand').mockResolvedValue(undefined);
 
   return trie;
