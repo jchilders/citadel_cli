@@ -5,8 +5,6 @@ import { registerBasicCommands } from '../command_examples/basic-commands';
 // import { commands } from '../command_examples/devops-commands';
 // import { commands } from '../command_examples/customer-service-commands';
 
-registerBasicCommands();
-
 export const config: CitadelConfig = {
   commandTimeoutMs: 10000,
   includeHelpCommand: true,
@@ -24,7 +22,7 @@ function App() {
         <p className="text-center text-gray-700">
           Press <code className="px-2 border border-gray-300 rounded">.</code> to<br />activate Citadel
         </p>
-        <Citadel config={config} />
+        <Citadel config={config} commandTrie={registerBasicCommands()}/>
       </div>
     </div>
   );

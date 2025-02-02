@@ -1,4 +1,4 @@
-import { CommandNode, ArgumentSegment } from './command-trie';
+import { CommandNode, ArgumentSegment, CommandSegment } from './command-trie';
 import { CommandResult, PendingCommandResult } from './command-results';
 import { CommandStorage, StoredCommand } from './storage';
 
@@ -7,8 +7,10 @@ export class OutputItem {
   readonly command: string[];
   result: CommandResult;
 
-  constructor(command: string[], result?: CommandResult) {
-    this.command = command;
+  constructor(command: string[] | CommandSegment[], result?: CommandResult) {
+    this.command = command.map(segment => 
+      typeof segment === 'string' ? segment : segment.toString()
+    );
     this.timestamp = Date.now();
     this.result = result ?? new PendingCommandResult();
   }
@@ -24,7 +26,7 @@ export interface CitadelState {
     isValid: boolean;
     message?: string;
   };
-  segmentIndex: number;
+  currentSegmentIndex: number;
   history: {
     commands: StoredCommand[];
     position: number | null;

@@ -75,7 +75,7 @@ export const createMockCitadelState = (overrides = {}): CitadelState => ({
   currentNode: undefined,
   output: [],
   validation: { isValid: true },
-  segmentIndex: 0,
+  currentSegmentIndex: 0,
   history: {
     commands: [],
     position: null,

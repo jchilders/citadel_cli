@@ -1,13 +1,15 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { CommandTrie, NoopHandler, CommandHandler } from '../command-trie';
+import { CommandTrie, NoopHandler, CommandHandler, ArgumentSegment } from '../command-trie';
 import { TextCommandResult } from '../command-results';
 
 describe('CommandTrie', () => {
   let trie: CommandTrie;
+  let successHandler: CommandHandler;
 
   beforeEach(() => {
     trie = new CommandTrie();
+    successHandler = async (_args: ArgumentSegment[]) => new TextCommandResult('success');
   });
 
   describe('addCommand', () => {
@@ -24,19 +26,18 @@ describe('CommandTrie', () => {
     });
 
     it('should add nested commands successfully', () => {
-      const handler: CommandHandler = async (_args: string[]) => new TextCommandResult('success');
       trie.addCommand([
           { type: 'word', name: 'parent' },
           { type: 'word', name: 'child' }
         ],
         'Child command',
-        handler
+        successHandler
       );
 
       
       const childNode = trie.getCommand(['parent', 'child']);
       expect(childNode?.description).toBe('Child command');
-      expect(childNode?.handler).toBe(handler);
+      expect(childNode?.handler).toBe(successHandler);
       expect(childNode?.fullPath).toEqual(['parent', 'child']);
     });
 
@@ -77,49 +78,93 @@ describe('CommandTrie', () => {
   });
 
   describe('getCompletions', () => {
-    beforeEach(() => {
-      const handler: CommandHandler = async (_args: string[]) => new TextCommandResult('success');
-      trie.addCommand(
-        [{ type: 'word', name: 'help' }],
-        'Help command',
-        handler
-      );
-      trie.addCommand(
-        [
-          { type: 'word', name: 'user' },
-          { type: 'word', name: 'create' }
-        ],
-        'Create user',
-        handler
-      );
-      trie.addCommand(
-        [
-          { type: 'word', name: 'user' },
-          { type: 'word', name: 'delete' }
-        ],
-        'Delete user',
-        handler
-      );
+    describe('no arguments', () => {
+      beforeEach(() => {
+        trie.addCommand(
+          [{ type: 'word', name: 'help' }],
+          'Help command',
+          successHandler
+        );
+        trie.addCommand(
+          [
+            { type: 'word', name: 'user' },
+            { type: 'word', name: 'create' }
+          ],
+          'Create user',
+          successHandler
+        );
+        trie.addCommand(
+          [
+            { type: 'word', name: 'user' },
+            { type: 'word', name: 'delete' }
+          ],
+          'Delete user',
+          successHandler
+        );
+      });
+
+      it('should return root level completions', () => {
+        const completions = trie.getCompletions([]);
+        expect(completions).toEqual(['help', 'user']);
+      });
+
+      it('should return nested completions', () => {
+        const completions = trie.getCompletions(['user']);
+        expect(completions).toEqual(['create', 'delete']);
+      });
+
+      it('should return empty array for invalid path', () => {
+        const completions = trie.getCompletions(['invalid', 'path']);
+        expect(completions).toEqual([]);
+      });
+
+      it('should return empty array for leaf command', () => {
+        const completions = trie.getCompletions(['help']);
+        expect(completions).toEqual([]);
+      });
     });
 
-    it('should return root level completions', () => {
-      const completions = trie.getCompletions([]);
-      expect(completions).toEqual(['help', 'user']);
-    });
+    describe('for commands with arguments', () => {
+      beforeEach(() => {
+        trie.addCommand(
+          [{ type: 'word', name: 'help' }],
+          'Help command',
+          successHandler
+        );
+        trie.addCommand(
+          [
+            { type: 'word', name: 'user' },
+            { type: 'argument', name: 'userId' },
+            { type: 'word', name: 'deactivate' }
+          ],
+          'Deactivate user',
+          successHandler
+        );
+        trie.addCommand(
+          [
+            { type: 'word', name: 'user' },
+            { type: 'argument', name: 'userId' },
+            { type: 'word', name: 'delete' }
+          ],
+          'Delete user',
+          successHandler
+        );
+      });
 
-    it('should return nested completions', () => {
-      const completions = trie.getCompletions(['user']);
-      expect(completions).toEqual(['create', 'delete']);
-    });
+      it('should return argument name for word segment', () => {
+        const completions = trie.getCompletions(['user'])
+        expect(completions).toEqual(['userId']);
+      });
 
-    it('should return empty array for invalid path', () => {
-      const completions = trie.getCompletions(['invalid', 'path']);
-      expect(completions).toEqual([]);
-    });
+      it('should return children node names for word and argument segments', () => {
+        const commands = trie.commands;
+        commands.forEach(cmd => {
+          console.log("cmd: " , cmd);
+        });
+        const completions = trie.getCompletions(['user', 'userId'])
+        expect(completions).toEqual(['deactivate', 'delete']);
+      });
 
-    it('should return empty array for leaf command', () => {
-      const completions = trie.getCompletions(['help']);
-      expect(completions).toEqual([]);
     });
   });
 

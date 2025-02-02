@@ -12,27 +12,56 @@ export const NoopHandler: CommandHandler = async (_args) => {
 };
 
 /** Base interface for command segments */
-export interface BaseCommandSegment {
-  type: 'word' | 'argument';
-  name: string;
-  description?: string;
-}
+ export abstract class BaseCommandSegment {
+   constructor(
+     public readonly type: 'word' | 'argument',
+     public readonly name: string,
+     public readonly description?: string
+   ) {}
+
+   abstract toString(): string;
+ }
 
 /** Represents a segment in a command path - either a word or argument */
 export type CommandSegment = WordSegment | ArgumentSegment;
 
 /** Represents a literal word in a command path */
-export interface WordSegment extends BaseCommandSegment {
-  type: 'word';
-}
+export class WordSegment extends BaseCommandSegment {
+   constructor(
+     name: string,
+     description?: string
+   ) {
+     super('word', name, description);
+   }
 
+   toString(): string {
+     return this.name;
+   }
+ }
 /** Represents an argument that can be passed to a command */
-export interface ArgumentSegment extends BaseCommandSegment {
-  type: 'argument';
-  required?: boolean;
-  value?: any,
-  valid?: ( ) => boolean;
-}
+export class ArgumentSegment extends BaseCommandSegment {
+   constructor(
+     name: string,
+     public readonly required: boolean = false,
+     description?: string,
+     private _value?: any,
+     public readonly valid?: () => boolean
+   ) {
+     super('argument', name, description);
+   }
+
+   get value(): any {
+     return this._value;
+   }
+
+   set value(newValue: any) {
+     this._value = newValue;
+   }
+
+   toString(): string {
+     return this._value?.toString() ?? this.name;
+   }
+ }
 
 /** Defines a complete command with its path and behavior */
 export class CommandNode {

@@ -6,7 +6,7 @@ import { ErrorCommandResult } from '../types/command-results';
 import { useCommandHistory } from './useCommandHistory';
 import { useCommandParser } from './useCommandParser';
 import { initializeHistoryService } from '../services/HistoryService';
-import { CommandNode } from '../types/command-trie';
+import { ArgumentSegment, CommandNode } from '../types/command-trie';
 
 export const useCitadelState = () => {
   const config = useCitadelConfig();
@@ -225,7 +225,7 @@ export const useCitadelState = () => {
       setState(prev => ({ ...prev, validation }));
     }, []),
 
-    executeCommand: useCallback(async (path: string[], args?: string[]) => {
+    executeCommand: useCallback(async (path: string[], args?: ArgumentSegment[]) => {
       const node = commandTrie.getCommand(path);
       if (!node) return;
 

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { CommandNode } from '../types/command-trie';
+import { ArgumentSegment, CommandNode } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
-import { useCommandParser, parseInput } from '../hooks/useCommandParser';
+import { useCommandParser } from '../hooks/useCommandParser';
 import { Cursor } from '../Cursor';
 import { defaultConfig } from '../config/defaults';
 import { useCitadelConfig, useCitadelCommands } from '../config/CitadelConfigContext';
@@ -22,56 +22,153 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const commands = useCitadelCommands();
   const { handleKeyDown, handleInputChange } = useCommandParser({ commands });
-  const [showInvalidAnimation, setShowInvalidAnimation] = useState(false);
+  const [showInvalidAnimation ] = useState(false);
   const config = useCitadelConfig();
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    const isValidKey = e.key === 'Backspace' || 
-      e.key === 'Escape' ||
-      e.key === 'Tab' ||
-      e.key === 'Shift' ||
-      e.key === 'Control' ||
-      e.key === 'Alt' ||
-      e.key === 'Meta' ||
-      e.key === 'ArrowLeft' ||
-      e.key === 'ArrowRight' ||
-      e.key === 'ArrowUp' ||
-      e.key === 'ArrowDown' ||
-      e.key === 'Enter';
+    // Handle special keys first
+    switch (e.key) {
+      case 'Alt':
+      case 'ArrowDown':
+      case 'ArrowLeft':
+      case 'ArrowRight':
+      case 'ArrowUp':
+      case 'Backspace':
+      case 'Escape':
+      case 'Meta':
+      case 'Shift':
+      case 'Tab':
+        handleKeyDown(e.nativeEvent, state, actions);
+        return;
+      
+      case 'Enter':
+        // Only allow Enter if all segments are filled
+        const currentNode = state.currentNode;
+        if (currentNode && state.commandStack.length === currentNode.segments.length) {
+          handleKeyDown(e.nativeEvent, state, actions);
+          // Reset state after executing command
+          actions.setCommandStack([]);
+          actions.setCurrentInput('');
+          actions.setCurrentNode(undefined);
+          actions.setIsEnteringArg(false);
+        }
+        return;
 
-    // Get the next expected segment
-    const nextSegment = state.currentNode?.segments[state.commandStack.length];
-
-    // Allow any input when entering arguments
-    if (state.isEnteringArg || nextSegment?.type === 'argument') {
-      handleKeyDown(e.nativeEvent, state, actions);
-      return;
+      case ' ':
+        // Space handling depends on argument state
+        if (state.isEnteringArg) {
+          const currentInput = state.currentInput;
+          if (currentInput.startsWith('"') || currentInput.startsWith("'")) {
+            // In quoted argument - allow space
+            actions.setCurrentInput(state.currentInput + e.key);
+          } else {
+            // Unquoted argument - complete it
+            const currentSegment = state.currentNode?.segments[state.commandStack.length - 1];
+            if (currentSegment?.type === 'argument' && currentSegment instanceof ArgumentSegment) {
+              currentSegment.value = state.currentInput;
+              actions.setIsEnteringArg(false);
+              actions.setCurrentInput('');
+            }
+          }
+        }
+        e.preventDefault();
+        return;
     }
 
-    // For non-special keys, validate the input
-    if (!isValidKey) {
-      const parsedInput = parseInput(state.currentInput + e.key);
-      const currentCommands = availableCommands;
+    // Get current segment we're working with
+    const currentSegmentIndex = state.commandStack.length;
+    const currentNode = state.currentNode;
+    const currentSegment = currentNode?.segments[currentSegmentIndex];
 
-      // Check if the new input would be valid
-      const isValid = currentCommands.some(node => {
-        const segment = node.segments[state.commandStack.length];
-        return segment?.type === 'word' &&
-          segment.name.toLowerCase().startsWith(parsedInput.currentWord.toLowerCase());
-      });
-
-      if (!isValid) {
-        setShowInvalidAnimation(true);
-        setTimeout(() => setShowInvalidAnimation(false), 300);
+    // Handle argument input
+    if (state.isEnteringArg) {
+      const currentInput = state.currentInput;
+      
+      // Check for quote completion
+      if ((e.key === '"' && currentInput.startsWith('"')) || 
+          (e.key === "'" && currentInput.startsWith("'"))) {
+        // Complete quoted argument
+        const argValue = currentInput.substring(1); // Remove opening quote
+        const currentSegment = state.currentNode?.segments[state.commandStack.length - 1];
+        if (currentSegment?.type === 'argument' && currentSegment instanceof ArgumentSegment) {
+          currentSegment.value = argValue;
+          actions.setIsEnteringArg(false);
+          actions.setCurrentInput('');
+        }
         e.preventDefault();
         return;
       }
 
-      // If valid, update the input
-      actions.setCurrentInput(state.currentInput + e.key);
+      // Allow any character in argument mode
+      actions.setCurrentInput(currentInput + e.key);
+      e.preventDefault();
+      return;
     }
 
-    handleKeyDown(e.nativeEvent, state, actions);
+    // Handle command word input
+    if (!currentSegment) {
+      // At root level, check available commands
+      const completions = availableCommands
+        .filter(cmd => cmd.segments[0].type === 'word' &&
+                      cmd.segments[0].name.toLowerCase()
+                        .startsWith((state.currentInput + e.key).toLowerCase()))
+        .map(cmd => cmd.segments[0].name);
+
+      if (completions.length > 0) {
+        // If single completion, autocomplete it
+        if (completions.length === 1) {
+          const completion = completions[0];
+          actions.setCommandStack([completion]);
+          actions.setCurrentInput('');
+          
+          // Set current node
+          const newNode = availableCommands.find(cmd => cmd.segments[0].name === completion);
+          if (newNode) {
+            actions.setCurrentNode(newNode);
+          }
+        } else {
+          // Multiple possibilities - just add the character
+          actions.setCurrentInput(state.currentInput + e.key);
+        }
+      }
+      e.preventDefault();
+      return;
+    } else if (currentSegment.type === 'word') {
+      // Handle subcommand completions
+      const completions = availableCommands
+        .filter(cmd => cmd.segments[currentSegmentIndex]?.type === 'word' &&
+                      cmd.segments[currentSegmentIndex].name.toLowerCase()
+                        .startsWith((state.currentInput + e.key).toLowerCase()))
+        .map(cmd => cmd.segments[currentSegmentIndex].name);
+
+      if (completions.length > 0) {
+        // If single completion, autocomplete it
+        if (completions.length === 1) {
+          const completion = completions[0];
+          actions.setCommandStack([...state.commandStack, completion]);
+          actions.setCurrentInput('');
+          
+          // Check if next segment is argument
+          const nextSegment = currentNode?.segments[currentSegmentIndex + 1];
+          if (nextSegment?.type === 'argument') {
+            actions.setIsEnteringArg(true);
+          }
+        } else {
+          // Multiple possibilities - just add the character
+          actions.setCurrentInput(state.currentInput + e.key);
+        }
+      }
+    } else if (currentSegment.type === 'argument') {
+      // Starting a new argument
+      actions.setIsEnteringArg(true);
+      if (e.key === '"' || e.key === "'") {
+        actions.setCurrentInput(e.key);
+      } else {
+        actions.setCurrentInput(e.key);
+      }
+    }
+
+    e.preventDefault();
   };
 
   const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
