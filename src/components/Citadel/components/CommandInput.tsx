@@ -156,7 +156,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     }
 
     // Handle command word input
-    Logger.debug('[CommandInput] Handling command word input');
+    Logger.debug('[CommandInput] -> Handling command word input');
 
     const nextInput = state.currentInput + e.key;
     Logger.debug('[CommandInput] nextInput',  nextInput );
@@ -166,7 +166,6 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     );
     Logger.debug('[CommandInput] availCommandSegments',  availCommandSegments );
 
-
     if (availCommandSegments.length > 0) {
       if (availCommandSegments.length === 1) {
         // Single completion - autocomplete it
@@ -175,25 +174,15 @@ export const CommandInput: React.FC<CommandInputProps> = ({
         actions.setCommandStack(newStack);
         actions.setCurrentInput(''); // Set it to empty in preparation for next entry
 
-        // Get the new node and check if next segment is an argument
-        const newNode = commands.getCommand(newStack);
-        actions.setCurrentNode(newNode);
-        
-        Logger.debug('[CommandInput] Checking next segment', { 
-          newStack, 
-          nextSegmentIndex: newStack.length,
-          nextSegment: newNode?.segments[newStack.length] 
-        });
-
-        if (newNode) {
-          const nextSegment = newNode.segments[newStack.length];
-          if (nextSegment instanceof ArgumentSegment) {
-            Logger.debug('[CommandInput] Next segment is argument, entering arg mode');
-            actions.setIsEnteringArg(true);
-          } else {
-            actions.setIsEnteringArg(false);
-          }
-        }
+        // Get the avail command segments for the newStack
+        console.log('[CommandInput] newStack', newStack);
+        const newAvailableCommandSegments = commands.getCompletions(newStack);
+        console.log('[CommandInput] newAvailableCommandSegments: ', newAvailableCommandSegments);
+        const hasArgumentSegment = newAvailableCommandSegments.some(
+          segment => segment instanceof ArgumentSegment
+        );
+        Logger.debug('[CommandInput] hasArgumentSegment', hasArgumentSegment);
+        actions.setIsEnteringArg(hasArgumentSegment);
       } else {
         // Multiple possibilities - just add the character
         actions.setCurrentInput(nextInput);

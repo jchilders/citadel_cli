@@ -242,7 +242,18 @@ export class CommandTrie {
         return true;
       })
       .filter(command => command.segments.length > pathDepth)
-      .map(command => command.segments[pathDepth]);
+      .map(command => {
+        const segment = command.segments[pathDepth];
+        // Ensure segments are proper class instances
+        if (segment.type === 'argument') {
+          return new ArgumentSegment(
+            segment.name,
+            segment.required,
+            segment.description
+          );
+        }
+        return segment;
+      });
 
     // Deduplicate segments based on type and name
     const uniqueSegments = matchingSegments.filter((segment, index, self) =>
