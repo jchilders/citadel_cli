@@ -55,7 +55,7 @@ describe('CommandInput', () => {
         <CommandInput
           state={defaultState}
           actions={mockActions}
-          availableCommands={mockCommands}
+          availableCommandSegments={mockCommands}
         />
       </TestWrapper>
     );
@@ -74,7 +74,7 @@ describe('CommandInput', () => {
         <CommandInput
           state={defaultState}
           actions={mockActions}
-          availableCommands={mockCommands}
+          availableCommandSegments={mockCommands}
         />
       </TestWrapper>
     );
@@ -101,7 +101,7 @@ describe('CommandInput', () => {
         <CommandInput
           state={state}
           actions={createMockCitadelActions()}
-          availableCommands={mockCommands}
+          availableCommandSegments={mockCommands}
         />
       </TestWrapper>
     );
@@ -129,7 +129,7 @@ describe('CommandInput', () => {
         <CommandInput
           state={state}
           actions={createMockCitadelActions()}
-          availableCommands={[handlerNode]}  // Pass the handler node as available command
+          availableCommandSegments={[handlerNode]}  // Pass the handler node as available command
         />
       </TestWrapper>
     );
@@ -152,7 +152,7 @@ describe('CommandInput', () => {
         <CommandInput
           state={leafState}
           actions={createMockCitadelActions()}
-          availableCommands={mockCommands}
+          availableCommandSegments={mockCommands}
         />
       </TestWrapper>
     );
@@ -175,7 +175,7 @@ describe('CommandInput', () => {
         <CommandInput
           state={subcommandState}
           actions={createMockCitadelActions()}
-          availableCommands={mockCommands}
+          availableCommandSegments={mockCommands}
         />
       </TestWrapper>
     );
@@ -193,7 +193,7 @@ describe('CommandInput', () => {
         <CommandInput
           state={defaultState}
           actions={createMockCitadelActions()}
-          availableCommands={mockCommands}
+          availableCommandSegments={mockCommands}
         />
       </TestWrapper>
     );
@@ -220,7 +220,7 @@ describe('CommandInput', () => {
         <CommandInput
           state={argState}
           actions={createMockCitadelActions()}
-          availableCommands={mockCommands}
+          availableCommandSegments={mockCommands}
         />
       </TestWrapper>
     );
@@ -238,7 +238,7 @@ describe('CommandInput', () => {
         <CommandInput
           state={defaultState}
           actions={createMockCitadelActions()}
-          availableCommands={mockCommands}
+          availableCommandSegments={mockCommands}
         />
       </TestWrapper>
     );
@@ -267,7 +267,7 @@ describe('CommandInput', () => {
         <CommandInput
           state={state}
           actions={createMockCitadelActions()}
-          availableCommands={mockCommands}
+          availableCommandSegments={mockCommands}
         />
       </TestWrapper>
     );
@@ -288,7 +288,7 @@ describe('CommandInput', () => {
             currentNode: userShowCommand
           })}
           actions={createMockCitadelActions()}
-          availableCommands={mockCommands}
+          availableCommandSegments={mockCommands}
         />
       </TestWrapper>
     );
@@ -303,7 +303,7 @@ describe('CommandInput', () => {
         <CommandInput
           state={defaultState}
           actions={createMockCitadelActions()}
-          availableCommands={mockCommands}
+          availableCommandSegments={mockCommands}
         />
       </TestWrapper>
     );
@@ -322,7 +322,7 @@ describe('CommandInput', () => {
         <CommandInput
           state={newState}
           actions={createMockCitadelActions()}
-          availableCommands={mockCommands}
+          availableCommandSegments={mockCommands}
         />
       </TestWrapper>
     );

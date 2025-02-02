@@ -212,7 +212,6 @@ export class CommandTrie {
       return uniqueObjects;
     }
 
-    const completions = new Set<CommandSegment>();
     const pathDepth = path.length;
 
     // Find all commands that match the current path prefix

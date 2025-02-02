@@ -3,7 +3,8 @@ export enum LogLevel {
   ERROR = 1,
   WARN = 2,
   INFO = 3,
-  DEBUG = 4
+  DEBUG = 4,
+  TRACE = 5
 }
 
 export class Logger {
@@ -13,6 +14,12 @@ export class Logger {
   static configure(config: { level: LogLevel; prefix?: string }) {
     this.level = config.level;
     this.prefix = config.prefix || '[Citadel]';
+  }
+
+  static trace(...args: any[]) {
+    if (this.level >= LogLevel.TRACE && process.env.NODE_ENV !== 'production') {
+      console.trace(this.prefix, ...args);
+    }
   }
 
   static debug(...args: any[]) {

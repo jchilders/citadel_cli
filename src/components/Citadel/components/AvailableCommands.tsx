@@ -48,6 +48,10 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
             </>
           ) : null}
         </div>
+      ) : state.isEnteringArg ? (
+        <div className={contentClasses}>
+          {state.currentNode?.segments[state.commandStack.length]?.description || ''}
+        </div>
       ) : showCommands ? (
         <div className={contentClasses}>
           <div className="flex flex-wrap gap-2">

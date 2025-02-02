@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { ArgumentSegment } from '../types/command-trie';
+import { ArgumentSegment, CommandSegment } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
 import { Logger } from '../utils/logger';
 import { useCommandParser } from '../hooks/useCommandParser';
@@ -12,13 +12,13 @@ import { CursorType } from '../types/cursor';
 interface CommandInputProps {
   state: CitadelState;
   actions: CitadelActions;
-  availableCommands: string[];
+  availableCommandSegments: CommandSegment[];
 }
 
 export const CommandInput: React.FC<CommandInputProps> = ({
   state,
   actions,
-  availableCommands,
+  availableCommandSegments,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const commands = useCitadelCommands();
@@ -157,29 +157,41 @@ export const CommandInput: React.FC<CommandInputProps> = ({
 
     // Handle command word input
     Logger.debug('[CommandInput] Handling command word input');
+
     const nextInput = state.currentInput + e.key;
-    const completions = availableCommands.filter(cmd => 
-      cmd.toLowerCase().startsWith(nextInput.toLowerCase())
+    Logger.debug('[CommandInput] nextInput',  nextInput );
+
+    const availCommandSegments = availableCommandSegments.filter(cmd => 
+      cmd.name.toLowerCase().startsWith(nextInput.toLowerCase())
     );
+    Logger.debug('[CommandInput] availCommandSegments',  availCommandSegments );
 
-    Logger.debug('[CommandInput] completions', { nextInput, completions });
 
-    if (completions.length > 0) {
-      if (completions.length === 1) {
+    if (availCommandSegments.length > 0) {
+      if (availCommandSegments.length === 1) {
         // Single completion - autocomplete it
-        const completion = completions[0];
-        const newStack = [...state.commandStack, completion];
+        const commandSegment = availCommandSegments[0];
+        const newStack = [...state.commandStack, commandSegment.name];
         actions.setCommandStack(newStack);
-        actions.setCurrentInput('');
+        actions.setCurrentInput(''); // Set it to empty in preparation for next entry
 
         // Get the new node and check if next segment is an argument
         const newNode = commands.getCommand(newStack);
         actions.setCurrentNode(newNode);
         
+        Logger.debug('[CommandInput] Checking next segment', { 
+          newStack, 
+          nextSegmentIndex: newStack.length,
+          nextSegment: newNode?.segments[newStack.length] 
+        });
+
         if (newNode) {
           const nextSegment = newNode.segments[newStack.length];
           if (nextSegment instanceof ArgumentSegment) {
+            Logger.debug('[CommandInput] Next segment is argument, entering arg mode');
             actions.setIsEnteringArg(true);
+          } else {
+            actions.setIsEnteringArg(false);
           }
         }
       } else {

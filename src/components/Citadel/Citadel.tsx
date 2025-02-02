@@ -119,7 +119,7 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
   const isDraggingRef = useRef(false);
   const startYRef = useRef(0);
   const startHeightRef = useRef(0);
-  const { state, actions, getAvailableCommands } = useCitadelState();
+  const { state, actions, getAvailableCommands_s, getAvailableCommandSegments } = useCitadelState();
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (containerRef.current) {
@@ -217,11 +217,11 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
           <CommandInput
             state={state}
             actions={actions}
-            availableCommands={getAvailableCommands()}
+            availableCommandSegments={getAvailableCommandSegments()}
           />
           <AvailableCommands
             state={state}
-            availableCommands={getAvailableCommands()}
+            availableCommands={getAvailableCommands_s()}
           />
         </div>
       </div>

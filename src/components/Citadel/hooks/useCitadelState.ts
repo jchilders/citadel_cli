@@ -302,12 +302,17 @@ export const useCitadelState = () => {
     }, [historyActions])
   };
 
-  const getAvailableCommands = useCallback(() => {
-    Logger.debug("state.commandStack", state.commandStack);
+  const getAvailableCommands_s = useCallback(() => {
     const completions = commandTrie.getCompletions_s(state.commandStack);
-    Logger.debug("getAvailableCommands completions: ", completions);
+    Logger.debug("[getAvailableCommands_s] completions: ", completions);
     return completions;
   }, [state.commandStack, commandTrie]);
 
-  return { state, actions, getAvailableCommands };
+  const getAvailableCommandSegments = useCallback(() => {
+    const completions = commandTrie.getCompletions(state.commandStack);
+    Logger.debug("[getAvailableCommandSegments] completions: ", completions);
+    return completions;
+  }, [state.commandStack, commandTrie]);
+
+  return { state, actions, getAvailableCommands_s, getAvailableCommandSegments };
 };
