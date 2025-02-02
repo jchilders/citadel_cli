@@ -7,6 +7,7 @@ import { useCommandHistory } from './useCommandHistory';
 import { useCommandParser } from './useCommandParser';
 import { initializeHistoryService } from '../services/HistoryService';
 import { ArgumentSegment, CommandNode } from '../types/command-trie';
+import { Logger } from '../utils/logger';
 
 export const useCitadelState = () => {
   const config = useCitadelConfig();
@@ -191,6 +192,8 @@ export const useCitadelState = () => {
 
   const actions: CitadelActions = {
     setCommandStack: useCallback((stack: string[]) => {
+      Logger.debug("setCommandStack: ", stack);
+
       setState(prev => ({ 
         ...prev, 
         commandStack: stack,
@@ -199,22 +202,27 @@ export const useCitadelState = () => {
     }, [commandTrie]),
 
     setCurrentInput: useCallback((input: string) => {
+      Logger.debug("setCurrentInput: ", input);
       setState(prev => ({ ...prev, currentInput: input }));
     }, []),
 
     setIsEnteringArg: useCallback((isEntering: boolean) => {
+      Logger.debug("setIsEnteringArg: ", isEntering);
       setState(prev => ({ ...prev, isEnteringArg: isEntering }));
     }, []),
 
     setCurrentSegmentIndex: useCallback((segmentIndex: number) => {
+      Logger.debug("setCurrentSegmentIndex: ", segmentIndex);
       setState(prev => ({ ...prev, currentSegmentIndex: segmentIndex }));
     }, []),
 
     setCurrentNode: useCallback((node) => {
+      Logger.debug("setCurrentNode: ", node);
       setState(prev => ({ ...prev, currentNode: node }));
     }, []),
 
     addOutput: useCallback((output: OutputItem) => {
+      Logger.debug("addOutput: ", output);
       setState(prev => ({ 
         ...prev, 
         output: [...prev.output, output] 
@@ -236,8 +244,10 @@ export const useCitadelState = () => {
       }));
 
       try {
+        const stringArgs = args?.map(arg => arg.toString()) || [];
+        
         const result = await Promise.race([
-          node.handler(args || []),
+          node.handler(stringArgs),
           new Promise<never>((_, reject) => {
             setTimeout(() => reject(new Error('Command timed out')), config.commandTimeoutMs);
           })

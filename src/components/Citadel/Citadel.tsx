@@ -11,6 +11,7 @@ import { CitadelConfig } from './config/types';
 import { CitadelConfigProvider } from './config/CitadelConfigContext';
 import { CommandTrie } from './types/command-trie';
 import { defaultConfig } from './config/defaults';
+import { Logger } from './utils/logger';
 
 import citadelStyles from '../../styles/citadel.css?raw';
 import citadelModuleStyles from './Citadel.module.css?raw';
@@ -23,6 +24,10 @@ export const Citadel = ({
   containerId = null
 }) => {
   useEffect(() => {
+    Logger.configure({
+      level: config.logLevel || defaultConfig.logLevel,
+      prefix: '[Citadel]'
+    });
     const citadelElement = new CitadelElement(commandTrie, config);
     const container = containerId ? document.getElementById(containerId) : document.body;
     

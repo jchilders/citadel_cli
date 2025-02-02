@@ -1,7 +1,7 @@
 import { CommandResult, TextCommandResult } from './command-results';
 
 /** Function type for handling command execution */
-export type CommandHandler = (args: ArgumentSegment[]) => Promise<CommandResult>;
+export type CommandHandler = (args: string[]) => Promise<CommandResult>;
 
 /**
  * A no-op handler that returns an empty string. Used as the default handler

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { CommandTrie, NoopHandler, CommandHandler, ArgumentSegment } from '../command-trie';
+import { CommandTrie, NoopHandler, CommandHandler } from '../command-trie';
 import { TextCommandResult } from '../command-results';
 
 describe('CommandTrie', () => {
@@ -9,7 +9,7 @@ describe('CommandTrie', () => {
 
   beforeEach(() => {
     trie = new CommandTrie();
-    successHandler = async (_args: ArgumentSegment[]) => new TextCommandResult('success');
+    successHandler = async (_args: string[]) => new TextCommandResult('success');
   });
 
   describe('addCommand', () => {
