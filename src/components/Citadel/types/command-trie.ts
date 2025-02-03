@@ -12,15 +12,24 @@ export const NoopHandler: CommandHandler = async (_args) => {
 };
 
 /** Base interface for command segments */
- export abstract class BaseSegment {
-   constructor(
-     public readonly type: 'word' | 'argument',
-     public readonly name: string,
-     public readonly description?: string
-   ) {}
+export abstract class BaseSegment {
+  constructor(
+    public readonly type: 'word' | 'argument' | 'null',
+    public readonly name: string,
+    public readonly description?: string
+  ) {}
 
-   abstract toString(): string;
- }
+  toString(): string {
+    return this.name;
+  }
+}
+
+/** Represents a null segment for empty stack operations */
+export class NullSegment extends BaseSegment {
+  constructor() {
+    super('null', '>null<', 'Empty segment');
+  }
+}
 
 /** Represents a segment in a command path - either a word or argument */
 export type CommandSegment = WordSegment | ArgumentSegment;
@@ -33,17 +42,12 @@ export class WordSegment extends BaseSegment {
    ) {
      super('word', name, description);
    }
-
-   toString(): string {
-     return this.name;
-   }
  }
 
 /** Represents an argument that can be passed to a command */
 export class ArgumentSegment extends BaseSegment {
    constructor(
      name: string,
-     public readonly required: boolean = false,
      description?: string,
      private _value?: any,
      public readonly valid?: () => boolean
@@ -57,10 +61,6 @@ export class ArgumentSegment extends BaseSegment {
 
    set value(newValue: any) {
      this._value = newValue;
-   }
-
-   toString(): string {
-     return this._value?.toString() ?? this.name;
    }
  }
 
@@ -248,7 +248,6 @@ export class CommandTrie {
         if (segment.type === 'argument') {
           return new ArgumentSegment(
             segment.name,
-            segment.required,
             segment.description
           );
         }

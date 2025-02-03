@@ -166,10 +166,13 @@ export function useCommandParser({ commands: commands }: UseCommandParserProps) 
     args?: ArgumentSegment[]
   ) => {
     const node = commands.getCommand(commandStack);
-    if (node) {
+    if (node?.handler) {
       actions.executeCommand(commandStack, args);
+      // Reset state after execution
       actions.setCurrentInput('');
       actions.setIsEnteringArg(false);
+      actions.setCommandStack([]);
+      actions.setCurrentNode(undefined);
       setInputState('idle');
     }
   }, [commands]);
@@ -232,12 +235,34 @@ export function useCommandParser({ commands: commands }: UseCommandParserProps) 
   }, [getAvailableNodes, getAutocompleteSuggestion, commands]);
 
   const handleKeyDown = useCallback((
-    e: KeyboardEvent,
+    e: KeyboardEvent | React.KeyboardEvent,
     state: CitadelState,
     actions: CitadelActions
   ) => {
+    // Prevent default for most keys we handle
+    if (e.key !== 'Alt' && e.key !== 'Control' && e.key !== 'Meta' && e.key !== 'Shift') {
+      e.preventDefault();
+    }
     const { commandStack, currentInput, isEnteringArg, currentNode } = state;
     const parsedInput = parseInput(currentInput);
+
+    // Validate key input first
+    const isValidKey = e.key === 'Backspace' || 
+                      e.key === 'Enter' ||
+                      e.key === 'Tab' ||
+                      e.key === 'ArrowUp' ||
+                      e.key === 'ArrowDown' ||
+                      e.key === 'ArrowLeft' ||
+                      e.key === 'ArrowRight' ||
+                      e.key === 'Escape' ||
+                      e.key === 'Delete' ||
+                      e.key === 'Home' ||
+                      e.key === 'End' ||
+                      e.key.length === 1;
+
+    if (!isValidKey) {
+      return;
+    }
 
     // Handle special keys first
     switch (e.key) {
@@ -277,6 +302,12 @@ export function useCommandParser({ commands: commands }: UseCommandParserProps) 
           return;
         }
 
+        // Trim any whitespace from input
+        const trimmedInput = currentInput.trim();
+        if (trimmedInput === '') {
+          return;
+        }
+
         if (isEnteringArg && currentNode?.handler) {
           // Handle argument submission
           const args = [...parsedInput.words];
@@ -311,12 +342,17 @@ export function useCommandParser({ commands: commands }: UseCommandParserProps) 
     }
 
     // Handle character input
-    if (!isEnteringArg) {
+    if (!isEnteringArg && e.key.length === 1) {
       const nextInput = parseInput(currentInput + e.key);
       if (!isValidCommandInput(nextInput, currentNode)) {
         e.preventDefault();
         return;
       }
+    }
+
+    // Allow default behavior for navigation keys
+    if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+      e.preventDefault = () => {}; // No-op to allow default behavior
     }
   }, [
     getAvailableNodes,

@@ -72,10 +72,7 @@ export const createMockCitadelState = (overrides = {}): CitadelState => ({
   commandStack: [],
   currentInput: '',
   isEnteringArg: false,
-  currentNode: undefined,
   output: [],
-  validation: { isValid: true },
-  currentSegmentIndex: 0,
   history: {
     commands: [],
     position: null,
@@ -89,7 +86,6 @@ export const createMockCitadelActions = (overrides = {}): CitadelActions => ({
   setCommandStack: vi.fn(),
   setCurrentInput: vi.fn(),
   setIsEnteringArg: vi.fn(),
-  setCurrentNode: vi.fn(),
   addOutput: vi.fn(),
   setValidation: vi.fn(),
   executeCommand: vi.fn(),

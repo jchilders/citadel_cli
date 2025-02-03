@@ -19,10 +19,7 @@ export const useCitadelState = () => {
     commandStack: [],
     currentInput: '',
     isEnteringArg: false,
-    currentNode: undefined,
-    currentSegmentIndex: 0,
     output: [],
-    validation: { isValid: true },
     history
   });
 
@@ -211,26 +208,12 @@ export const useCitadelState = () => {
       setState(prev => ({ ...prev, isEnteringArg: isEntering }));
     }, []),
 
-    setCurrentSegmentIndex: useCallback((segmentIndex: number) => {
-      Logger.debug("setCurrentSegmentIndex: ", segmentIndex);
-      setState(prev => ({ ...prev, currentSegmentIndex: segmentIndex }));
-    }, []),
-
-    setCurrentNode: useCallback((node) => {
-      Logger.debug("setCurrentNode: ", node);
-      setState(prev => ({ ...prev, currentNode: node }));
-    }, []),
-
     addOutput: useCallback((output: OutputItem) => {
       Logger.debug("addOutput: ", output);
       setState(prev => ({ 
         ...prev, 
         output: [...prev.output, output] 
       }));
-    }, []),
-
-    setValidation: useCallback((validation: { isValid: boolean; message?: string }) => {
-      setState(prev => ({ ...prev, validation }));
     }, []),
 
     executeCommand: useCallback(async (path: string[], args?: ArgumentSegment[]) => {

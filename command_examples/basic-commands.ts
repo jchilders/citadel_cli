@@ -9,7 +9,7 @@ export function registerBasicCommands() {
     [
       { type: 'word', name: 'user' },
       { type: 'word', name: 'show' },
-      { type: 'argument', name: 'userId', description: 'Enter user ID', required: true }
+      { type: 'argument', name: 'userId', description: 'Enter user ID' }
     ],
     'Show user details',
     async (args: string[]) => {
@@ -29,7 +29,7 @@ export function registerBasicCommands() {
     [
       { type: 'word', name: 'user' },
       { type: 'word', name: 'deactivate' },
-      { type: 'argument', name: 'userId', description: 'Enter user ID', required: true }
+      { type: 'argument', name: 'userId', description: 'Enter user ID' }
     ],
     'Deactivate user account',
     async (args: string[]) => new JsonCommandResult({
@@ -43,7 +43,7 @@ export function registerBasicCommands() {
       { type: 'word', name: 'user' },
       { type: 'word', name: 'query' },
       { type: 'word', name: 'firstname' },
-      { type: 'argument', name: 'firstName', description: 'Enter first name', required: true }
+      { type: 'argument', name: 'firstName', description: 'Enter first name' }
     ],
     'Search by first name',
     async (args: string[]) => new JsonCommandResult({
@@ -59,7 +59,7 @@ export function registerBasicCommands() {
       { type: 'word', name: 'user' },
       { type: 'word', name: 'query' },
       { type: 'word', name: 'lastname' },
-      { type: 'argument', name: 'lastName', description: 'Enter last name', required: true }
+      { type: 'argument', name: 'lastName', description: 'Enter last name' }
     ],
     'Search by last name',
     async (args: string[]) => new JsonCommandResult({
@@ -142,7 +142,7 @@ export function registerBasicCommands() {
   trie.addCommand(
     [
       { type: 'word', name: 'cowsay' },
-      { type: 'argument', name: 'message', description: 'What should the cow say?', required: true }
+      { type: 'argument', name: 'message', description: 'What should the cow say?' }
     ],
     'Make a cow say something',
     async (args: string[]) => {

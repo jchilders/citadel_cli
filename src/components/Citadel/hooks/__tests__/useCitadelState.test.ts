@@ -38,8 +38,6 @@ describe('useCitadelState', () => {
       commandStack: [],
       currentInput: '',
       isEnteringArg: false,
-      currentNode: undefined,
-      currentSegmentIndex: 0,
       output: [],
       validation: { isValid: true },
       history: {
