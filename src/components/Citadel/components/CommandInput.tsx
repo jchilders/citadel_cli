@@ -8,10 +8,12 @@ import { defaultConfig } from '../config/defaults';
 import { useCitadelConfig, useCitadelCommands } from '../config/CitadelConfigContext';
 import styles from './CommandInput.module.css';
 import { CursorType } from '../types/cursor';
+import { SegmentStackActions } from '../types/segment-actions';
 
 interface CommandInputProps {
   state: CitadelState;
   actions: CitadelActions;
+  segmentActions: SegmentStackActions;
   availableCommandSegments: CommandSegment[];
 }
 

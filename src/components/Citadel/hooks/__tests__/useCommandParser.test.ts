@@ -2,11 +2,12 @@ import { renderHook, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useCommandParser } from '../useCommandParser';
-import { ArgumentSegment, CommandNode, CommandTrie } from '../../types/command-trie';
+import { CommandNode, CommandSegment, CommandTrie, NoopHandler } from '../../types/command-trie';
 import { CitadelState, CitadelActions, TextCommandResult } from '../../types';
 import { createMockNode, createMockCommandTrie, createMockCitadelState } from '../../../../__test-utils__/factories';
 
 import { parseInput } from '../useCommandParser';
+import { SegmentStack } from '../../types/segment-stack';
 
 describe('useCommandParser', () => {
   describe('parseInput', () => {
@@ -94,6 +95,9 @@ describe('useCommandParser', () => {
     ];
 
     vi.spyOn(mockCommandTrie, 'commands', 'get').mockReturnValue(mockCommands);
+    vi.spyOn(mockCommandTrie, 'getCommand').mockImplementation((path) => {
+      return mockCommands.find(cmd => cmd.fullPath.join(' ') === path.join(' '));
+    });
     vi.spyOn(mockCommandTrie, 'getCompletions_s').mockImplementation((path) => {
       if (path.length === 0) return ['user', 'help'];
       if (path[0] === 'user') return ['comment'];
@@ -105,13 +109,10 @@ describe('useCommandParser', () => {
       setCommandStack: vi.fn(),
       setCurrentInput: vi.fn(),
       setIsEnteringArg: vi.fn(),
-      setCurrentNode: vi.fn(),
       addOutput: vi.fn(),
-      setValidation: vi.fn(),
       executeCommand: vi.fn(),
       executeHistoryCommand: vi.fn(),
       clearHistory: vi.fn(),
-      setCurrentSegmentIndex: vi.fn(),
     };
     user = userEvent.setup();
   });
@@ -398,8 +399,6 @@ describe('useCommandParser', () => {
     });
 
     it('should prevent invalid command input when not entering arguments', async () => {
-      const mockNode = createMockNode('test1');
-
       // Mock findMatchingCommands to return no matches
       const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
       
@@ -414,13 +413,111 @@ describe('useCommandParser', () => {
         result.current.handleKeyDown(mockEvent, {
           ...mockState,
           currentInput: 'invalid',
-          currentNode: mockNode,
           isEnteringArg: false,
         }, mockActions);
       });
 
       // Verify preventDefault was called, meaning the input was prevented
       expect(preventDefaultCalled).toBe(true);
+    });
+  });
+
+  describe('getAutocompleteSuggestion', () => {
+    it('should return exact match when input matches a command exactly', () => {
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
+      const suggestion = result.current.getAutocompleteSuggestion('help');
+      expect(suggestion).toBe('help');
+    });
+
+    it('should return unique match when input is unambiguous prefix', () => {
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
+      const suggestion = result.current.getAutocompleteSuggestion('he');
+      expect(suggestion).toBe('help');
+    });
+
+    it('should return null when input matches multiple commands', () => {
+      // Add another command starting with 'h' to create ambiguity
+      const trie = new CommandTrie();
+      trie.addCommand(
+        [{ type: 'word', name: 'help' }],
+        'Help command'
+      );
+      trie.addCommand(
+        [{ type: 'word', name: 'history' }],
+        'History command'
+      );
+
+      const { result } = renderHook(() => useCommandParser({ commands: trie }));
+      const suggestion = result.current.getAutocompleteSuggestion('h');
+      expect(suggestion).toBeNull();
+    });
+
+    it('should return null when no commands match input', () => {
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
+      const suggestion = result.current.getAutocompleteSuggestion('xyz');
+      expect(suggestion).toBeNull();
+    });
+
+    it('should be case insensitive', () => {
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
+      const suggestion = result.current.getAutocompleteSuggestion('HELP');
+      expect(suggestion).toBe('help');
+    });
+  });
+
+  describe('getAvailableNodes', () => {
+    it('should return all root commands when no segments in stack', () => {
+      const trie = new CommandTrie();
+      trie.addCommand(
+        [
+          {type: 'word', name: 'user'},
+          {type: 'word', name: 'show'},
+        ],
+        'User show'
+      );
+      trie.addCommand(
+        [
+          {type: 'word', name: 'user'},
+          {type: 'word', name: 'deactivate'},
+        ],
+        'User deactivate'
+      );
+      trie.addCommand(
+        [
+          {type: 'word', name: 'help'},
+        ],
+        'Help command'
+      );
+     
+      const { result } = renderHook(() => useCommandParser({ commands: trie }));
+      
+      const availableNodes = result.current.getAvailableNodes();
+      console.log("availableNodes", availableNodes);
+      
+      expect(availableNodes).toHaveLength(2); // 'user' and 'help' commands
+      expect(availableNodes.map(node => node.segments[0].name)).toContain('user');
+      expect(availableNodes.map(node => node.segments[0].name)).toContain('help');
+    });
+
+    it('should return next available nodes for a given command path', () => {
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
+      const stack = new SegmentStack();
+      stack.push({ type: 'word', name: 'user' } as CommandSegment);
+      
+      const availableNodes = result.current.getAvailableNodes();
+      
+      expect(availableNodes).toHaveLength(1);
+      expect(availableNodes[0].segments[1].name).toBe('comment');
+    });
+
+    it('should return empty array when no further commands available', () => {
+      const { result } = renderHook(() => useCommandParser({ commands: mockCommandTrie }));
+      const stack = new SegmentStack();
+      stack.push({ type: 'word', name: 'help' } as CommandSegment);
+      
+      const availableNodes = result.current.getAvailableNodes(stack);
+      
+      expect(availableNodes).toHaveLength(0);
     });
   });
 

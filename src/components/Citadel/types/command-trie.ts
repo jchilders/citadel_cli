@@ -32,7 +32,7 @@ export class NullSegment extends BaseSegment {
 }
 
 /** Represents a segment in a command path - either a word or argument */
-export type CommandSegment = WordSegment | ArgumentSegment;
+export type CommandSegment = WordSegment | ArgumentSegment | NullSegment;
 
 /** Represents a literal word in a command path */
 export class WordSegment extends BaseSegment {
@@ -183,7 +183,7 @@ export class CommandTrie {
   }
 
   /**
-   * Gets command completions for a given path as a `string[]`.
+   * Gets possible matches for a given path.
    * 
    * @param path The path to get completions for.
    * @returns An array of completion strings.
@@ -194,7 +194,7 @@ export class CommandTrie {
   }
 
   /**
-   * Gets command completions for a given path as a `CommandSegment[]`.
+   * Gets an array of segments reachable from a given path
    * 
    * @param path The path to get completions for.
    * @returns An array of completion strings.

@@ -1,7 +1,7 @@
 import React from 'react';
 import { CitadelState } from '../types/state';
-import { useCitadelConfig } from '../config/CitadelConfigContext';
-import { Logger } from '../utils/logger';
+import { useCitadelCommands, useCitadelConfig } from '../config/CitadelConfigContext';
+import { useSegmentStack } from '../hooks/useSegmentStack';
 
 interface AvailableCommandsProps {
   state: CitadelState;
@@ -12,45 +12,40 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
   state,
   availableCommands
 }) => {
-  Logger.debug("[AvailableCommands] state: ", state);
-  Logger.debug("[AvailableCommands] availableCommands: ", availableCommands);
   const config = useCitadelConfig();
-  const showCommands = !state.isEnteringArg && availableCommands.length > 0;
+  const commands = useCitadelCommands();
+  const segmentStack = useSegmentStack();
+
   const containerClasses = "h-12 mt-2 border-t border-gray-700 px-4";
   const contentClasses = "text-gray-300 pt-2";
 
-  // Show description for nodes at their last segment
-  const isLastSegment = state.currentNode && 
-    state.commandStack.length === state.currentNode.segments.length;
+  const showCommands = !state.isEnteringArg && availableCommands.length > 0;
 
-  // Sort commands and handle help command placement
+  // Show description for leaf nodes without handlers or arguments
+  // instead we need to get the completions for the current segmentStack.path and see if there are any more segments
+  const path = segmentStack.path();
+  const completions = commands.getCompletions(path);
+  const isLeafNode = completions.length === 0;
+
   const sortedCommands = React.useMemo(() => {
     if (!state.commandStack.length && config.includeHelpCommand) {
-      // At root level, ensure help command is last
       const nonHelpCommands = availableCommands.filter(cmd => cmd !== 'help');
       const helpCommand = availableCommands.find(cmd => cmd === 'help');
       return [...nonHelpCommands, ...(helpCommand ? [helpCommand] : [])];
     }
     return availableCommands;
   }, [availableCommands, state.commandStack, config.includeHelpCommand]);
-  Logger.debug("[AvailableCommands] sortedCommands: ", sortedCommands);
 
   return (
     <div className={containerClasses} data-testid="available-commands">
-      {isLastSegment ? (
+      {isLeafNode ? (
         <div className={contentClasses}>
-          {state.currentNode ? (
+          {!segmentStack.isEmpty() ? (
             <>
-              <span className="text-blue-400">
-                {state.currentNode.segments.map(seg => seg.toString()).join(' ')}
-              </span>
-              <span className="text-gray-400 ml-2">- {state.currentNode.description}</span>
+              <span className="text-blue-400">{segmentStack.peek().name}</span>
+              <span className="text-gray-400 ml-2">- {segmentStack.peek().description}</span>
             </>
           ) : null}
-        </div>
-      ) : state.isEnteringArg ? (
-        <div className={contentClasses}>
-          {state.currentNode?.segments[state.commandStack.length]?.description || ''}
         </div>
       ) : showCommands ? (
         <div className={contentClasses}>
@@ -84,7 +79,7 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
           </div>
         </div>
       ) : (
-        <div className={contentClasses}>{state.currentNode?.description}</div>
+        <div className={contentClasses}>{segmentStack.peek().description}</div>
       )}
     </div>
   );

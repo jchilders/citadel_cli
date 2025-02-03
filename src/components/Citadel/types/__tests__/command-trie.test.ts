@@ -105,35 +105,74 @@ describe('CommandTrie', () => {
 
       it('should return root level segment completions', () => {
         const completions = trie.getCompletions([]);
-        expect(completions).toEqual([
-          { type: 'word', name: 'help' },
-          { type: 'word', name: 'user' }]);
+        expect(completions.length).toEqual(2);
+        expect(completions).toContainEqual({ type: 'word', name: 'user' });
+        expect(completions).toContainEqual({ type: 'word', name: 'help' });
       });
 
-      it('should deduplicate first-level segments', () => {
-        // Add more commands that start with 'user' to test deduplication
-        trie.addCommand(
-          [
-            { type: 'word', name: 'user' },
-            { type: 'word', name: 'list' }
-          ],
-          'List users',
-          successHandler
-        );
-        trie.addCommand(
-          [
-            { type: 'word', name: 'user' },
-            { type: 'word', name: 'search' }
-          ],
-          'Search users',
-          successHandler
-        );
+      it('should return nested completions', () => {
+        const completions = trie.getCompletions(['user']);
+        expect(completions.length).toEqual(2);
+        expect(completions).toContainEqual({ type: 'word', name: 'create' });
+        expect(completions).toContainEqual({ type: 'word', name: 'delete' });
+      });
 
+      it('should return empty array for invalid completions', () => {
+        const completions = trie.getCompletions(['fnord']);
+        expect(completions.length).toEqual(0);
+      });
+    });
+
+    describe('one argument', () => {
+      beforeEach(() => {
+        trie.addCommand(
+          [{ type: 'word', name: 'help' }],
+          'Help command',
+          successHandler
+        );
+        trie.addCommand(
+          [
+            { type: 'word', name: 'user' },
+            { type: 'argument', name: 'userId' },
+            { type: 'word', name: 'create' }
+          ],
+          'Create user',
+          successHandler
+        );
+        trie.addCommand(
+          [
+            { type: 'word', name: 'user' },
+            { type: 'argument', name: 'userId' },
+            { type: 'word', name: 'delete' }
+          ],
+          'Delete user',
+          successHandler
+        );
+      });
+
+      it('should return root level segment completions', () => {
         const completions = trie.getCompletions([]);
-        expect(completions).toEqual([
-          { type: 'word', name: 'help' },
-          { type: 'word', name: 'user' }
-        ]);
+        expect(completions.length).toEqual(2);
+        expect(completions).toContainEqual({ type: 'word', name: 'user' });
+        expect(completions).toContainEqual({ type: 'word', name: 'help' });
+      });
+
+      it('should return nested completions for parent word', () => {
+        const completions = trie.getCompletions(['user']);
+        expect(completions.length).toEqual(1);
+        expect(completions).toContainEqual({ type: 'argument', name: 'userId' });
+      });
+
+      it('should return nested completions for parent word child argument', () => {
+        const completions = trie.getCompletions(['user', 'userId']);
+        expect(completions.length).toEqual(2);
+        expect(completions).toContainEqual({ type: 'word', name: 'create' });
+        expect(completions).toContainEqual({ type: 'word', name: 'delete' });
+      });
+
+      it('should return empty array for invalid completions', () => {
+        const completions = trie.getCompletions(['user', 'fnord']);
+        expect(completions.length).toEqual(0);
       });
     });
   });

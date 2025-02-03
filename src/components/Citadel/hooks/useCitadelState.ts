@@ -4,7 +4,6 @@ import { useCitadelConfig, useCitadelCommands, useCitadelStorage } from '../conf
 import { CommandResult } from '../types/command-results';
 import { ErrorCommandResult } from '../types/command-results';
 import { useCommandHistory } from './useCommandHistory';
-import { useCommandParser } from './useCommandParser';
 import { initializeHistoryService } from '../services/HistoryService';
 import { ArgumentSegment } from '../types/command-trie';
 import { Logger } from '../utils/logger';
@@ -13,7 +12,7 @@ export const useCitadelState = () => {
   const config = useCitadelConfig();
   const commandTrie = useCitadelCommands();
   const [history, historyActions] = useCommandHistory();
-  const { replayCommand } = useCommandParser({ commands: commandTrie });
+  // const { replayCommand } = useCommandParser({ commands: commandTrie });
 
   const [state, setState] = useState<CitadelState>({
     commandStack: [],
@@ -25,7 +24,6 @@ export const useCitadelState = () => {
 
   // Initialize history service
   const storage = useCitadelStorage();
-
   useEffect(() => {
     if (!storage) return;
     initializeHistoryService(storage);
@@ -57,7 +55,6 @@ export const useCitadelState = () => {
       commandStack: [],
       currentInput: '',
       isEnteringArg: false,
-      currentNode: undefined,
       validation: { isValid: true }
     }));
 
@@ -193,8 +190,7 @@ export const useCitadelState = () => {
 
       setState(prev => ({ 
         ...prev, 
-        commandStack: stack,
-        currentNode: commandTrie.getCommand(stack)
+        commandStack: stack
       }));
     }, [commandTrie]),
 
@@ -287,13 +283,11 @@ export const useCitadelState = () => {
 
   const getAvailableCommands_s = useCallback(() => {
     const completions = commandTrie.getCompletions_s(state.commandStack);
-    Logger.debug("[getAvailableCommands_s] completions: ", completions);
     return completions;
   }, [state.commandStack, commandTrie]);
 
   const getAvailableCommandSegments = useCallback(() => {
     const completions = commandTrie.getCompletions(state.commandStack);
-    Logger.debug("[getAvailableCommandSegments] completions: ", completions);
     return completions;
   }, [state.commandStack, commandTrie]);
 
