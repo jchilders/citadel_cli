@@ -1,7 +1,6 @@
 import React from 'react';
 import { CitadelState } from '../types/state';
-import { useCitadelCommands, useCitadelConfig } from '../config/CitadelConfigContext';
-import { useSegmentStack } from '../hooks/useSegmentStack';
+import { useCitadelCommands, useCitadelConfig, useSegmentStack } from '../config/CitadelConfigContext';
 
 interface AvailableCommandsProps {
   state: CitadelState;

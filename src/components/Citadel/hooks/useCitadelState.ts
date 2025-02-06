@@ -1,20 +1,18 @@
 import { useState, useCallback, useEffect } from 'react';
 import { CitadelState, CitadelActions, OutputItem } from '../types/state';
-import { useCitadelConfig, useCitadelCommands, useCitadelStorage } from '../config/CitadelConfigContext';
+import { useCitadelConfig, useCitadelCommands, useCitadelStorage, useSegmentStack } from '../config/CitadelConfigContext';
 import { CommandResult } from '../types/command-results';
 import { ErrorCommandResult } from '../types/command-results';
 import { useCommandHistory } from './useCommandHistory';
 import { initializeHistoryService } from '../services/HistoryService';
 import { Logger } from '../utils/logger';
-import { useSegmentStack } from './useSegmentStack';
-import { useCommandParser } from './useCommandParser';
 
 export const useCitadelState = () => {
   const config = useCitadelConfig();
   const segmentStack = useSegmentStack();
   const commandTrie = useCitadelCommands();
   const [history, historyActions] = useCommandHistory();
-  const { replayCommand } = useCommandParser({ commands: commandTrie });
+  // const { replayCommand } = useCommandParser({ commands: commandTrie });
 
   const [state, setState] = useState<CitadelState>({
     currentInput: '',
@@ -186,17 +184,17 @@ export const useCitadelState = () => {
 
   const actions: CitadelActions = {
     setCurrentInput: useCallback((input: string) => {
-      Logger.debug("setCurrentInput: ", input);
+      Logger.debug("[CitadelActions] setCurrentInput: ", input);
       setState(prev => ({ ...prev, currentInput: input }));
     }, []),
 
     setIsEnteringArg: useCallback((isEntering: boolean) => {
-      Logger.debug("setIsEnteringArg: ", isEntering);
+      Logger.debug("[CitadelActions] setIsEnteringArg: ", isEntering);
       setState(prev => ({ ...prev, isEnteringArg: isEntering }));
     }, []),
 
     addOutput: useCallback((output: OutputItem) => {
-      Logger.debug("addOutput: ", output);
+      Logger.debug("[CitadelActions]addOutput: ", output);
       setState(prev => ({ 
         ...prev, 
         output: [...prev.output, output] 
@@ -204,7 +202,7 @@ export const useCitadelState = () => {
     }, []),
 
     executeCommand: useCallback(async () => {
-      console.log(`[executeCommand] path: {path}`)
+      console.log(`[CitadelActions][executeCommand] path: {path}`)
       const path = segmentStack.path();
       const node = commandTrie.getCommand(path);
       if (!node) return;

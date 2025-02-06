@@ -5,16 +5,19 @@ import { defaultConfig } from './defaults';
 import { StorageFactory } from '../storage/StorageFactory';
 import { CommandStorage } from '../types/storage';
 import { CommandTrie } from '../types/command-trie';
+import { SegmentStack } from '../types/segment-stack';
 
 interface CitadelContextValue {
   config: CitadelConfig;
   commands: CommandTrie;
   storage?: CommandStorage;
+  segmentStack: SegmentStack;
 }
 
 const defaultContextValue: CitadelContextValue = {
   config: defaultConfig,
-  commands: new CommandTrie()
+  commands: new CommandTrie(),
+  segmentStack: new SegmentStack()
 };
 
 const CitadelConfigContext = createContext<CitadelContextValue>(defaultContextValue);
@@ -66,7 +69,8 @@ export const CitadelConfigProvider: React.FC<{
   const contextValue: CitadelContextValue = {
     config: mergedConfig,
     commands: commands || new CommandTrie(),
-    storage
+    storage,
+    segmentStack: new SegmentStack()
   };
 
   return (
@@ -98,4 +102,12 @@ export const useCitadelStorage = () => {
     throw new Error('useCitadelStorage must be used within a CitadelConfigProvider');
   }
   return context.storage;
+};
+
+export const useSegmentStack = () => {
+  const context = useContext(CitadelConfigContext);
+  if (context === undefined) {
+    throw new Error('useCitadelStorage must be used within a CitadelConfigProvider');
+  }
+  return context.segmentStack;
 };

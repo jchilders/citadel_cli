@@ -4,10 +4,10 @@ import { Logger } from '../utils/logger';
 import { useCommandParser } from '../hooks/useCommandParser';
 import { Cursor } from '../Cursor';
 import { defaultConfig } from '../config/defaults';
-import { useCitadelConfig, useCitadelCommands } from '../config/CitadelConfigContext';
+import { useCitadelConfig, useCitadelCommands, useSegmentStack } from '../config/CitadelConfigContext';
 import styles from './CommandInput.module.css';
 import { CursorType } from '../types/cursor';
-import { useSegmentStack } from '../hooks/useSegmentStack';
+import { ArgumentSegment } from '../types/command-trie';
 
 interface CommandInputProps {
   state: CitadelState;
@@ -31,7 +31,6 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   };
 
   const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    Logger.debug('[CommandInput] onInputChange', { event: event, state });
     handleInputChange(event.target.value, actions);
   };
 
@@ -55,14 +54,26 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     }
   }, [segmentStack]);
 
+  const segAry = segmentStack.toArray().map((segment, index, array) => {
+    const isLastSegment = index === array.length - 1;
+    if (isLastSegment && state.isEnteringArg) {
+      return '';
+    }
+    if (segment.type === 'argument') {
+      return (segment as ArgumentSegment).value;
+    }
+
+    return segment.name;
+  }).filter(Boolean).join(' ');
+
   return (
     <div className="flex flex-col w-full bg-gray-900 rounded-lg p-4">
       <div className="flex items-center gap-2">
         <div className="text-gray-400 font-mono">&gt;</div>
         <div className="flex-1 font-mono flex items-center">
           <span className="text-blue-400 whitespace-pre" data-testid="user-input-area">
-            {segmentStack.segments().map(segment => segment.name).join(' ')}
-            {segmentStack.segments().length > 0 && ' '}
+            {segAry}
+            {segAry.length > 0 && ' '}
           </span>
           <div className="relative flex-1">
             <input
