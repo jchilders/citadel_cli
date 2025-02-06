@@ -1,13 +1,11 @@
 import React from 'react';
 import { useCitadelCommands, useCitadelConfig, useSegmentStack } from '../config/CitadelConfigContext';
-import { useCitadelState } from '../hooks/useCitadelState';
 import { Logger } from '../utils/logger';
 
 export const AvailableCommands: React.FC = () => {
   const commands  = useCitadelCommands();
   const config = useCitadelConfig();
   const segmentStack = useSegmentStack();
-  const { state } = useCitadelState();
 
   const containerClasses = "h-12 mt-2 border-t border-gray-700 px-4";
   const contentClasses = "text-gray-300 pt-2";
@@ -57,7 +55,7 @@ export const AvailableCommands: React.FC = () => {
           </div>
         ) : !segmentStack.isEmpty() ? (
           <>
-            <span className="text-blue-400">[ {segmentStack.peek().name} ]</span>
+            <span className="text-blue-400">{segmentStack.peek().name}</span>
             {segmentStack.peek().description && (
               <span className="text-gray-400 ml-2">- {segmentStack.peek().description}</span>
             )}

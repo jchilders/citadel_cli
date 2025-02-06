@@ -174,10 +174,12 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     if (inputState == 'entering_argument') {
       console.log("-=-=-=-=-=> 1.2");
       // Always update the current argument segment with the latest input
-      const argumentSegment = segmentStack.peek() as ArgumentSegment;
+      const argumentSegment = segmentStack.peek();
       if (argumentSegment.type === 'argument') {
-        argumentSegment.value = newValue;
+        (argumentSegment as ArgumentSegment).value = newValue;
       }
+      console.log("-=-=-=-=-=> 1.2 set argumentSegment.value to ", newValue);
+      console.log("-=-=-=-=-=> 1.2 segstack.peek().value", (segmentStack.peek() as ArgumentSegment).value);
 
       if (parsedInput.isComplete) {
         console.log("-=-=-=-=-=> 1.2.1");
