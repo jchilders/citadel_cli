@@ -119,21 +119,17 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
   }, [segmentStack]);
 
   const tryAutoComplete = useCallback((
-    parsedInput: ParsedInput,
-    actions: CitadelActions
-  ): boolean => {
+    parsedInput: ParsedInput
+  ): CommandSegment => {
     const suggestion = getAutocompleteSuggestion(parsedInput.currentWord);
+    console.log("[tryAutoComplete] currentWord: ", parsedInput.currentWord);
     console.log("[tryAutoComplete] suggestion: ", suggestion);
     
     if (!suggestion || suggestion.name === parsedInput.currentWord) {
-      return false;
+      return new NullSegment;
     }
 
-    segmentStack.push(suggestion);
-    
-    actions.setCurrentInput(suggestion.name);
-    
-    return true;
+    return suggestion;
   }, [getAvailableNodes, getAutocompleteSuggestion, segmentStack, commands, getNextExpectedSegment]);
 
   /**
@@ -203,9 +199,10 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     } else {
       console.log("-=-=-=-=-=> 1.3");
       setInputStateWithLogging('entering_command');
-      const result = tryAutoComplete(parsedInput, actions);
-      if (result) {
-        console.log("YAY!");
+      const suggestedSegment = tryAutoComplete(parsedInput);
+      if (suggestedSegment.type !== 'null') {
+        console.log("pushing autocomplete segment: ", suggestedSegment);
+        segmentStack.push(suggestedSegment);
         setInputStateWithLogging('idle');
       } else {
         console.log("BOOOO!");
