@@ -5,17 +5,18 @@ import { CommandResult } from '../types/command-results';
 import { ErrorCommandResult } from '../types/command-results';
 import { useCommandHistory } from './useCommandHistory';
 import { initializeHistoryService } from '../services/HistoryService';
-import { ArgumentSegment } from '../types/command-trie';
 import { Logger } from '../utils/logger';
+import { useSegmentStack } from './useSegmentStack';
+import { useCommandParser } from './useCommandParser';
 
 export const useCitadelState = () => {
   const config = useCitadelConfig();
+  const segmentStack = useSegmentStack();
   const commandTrie = useCitadelCommands();
   const [history, historyActions] = useCommandHistory();
-  // const { replayCommand } = useCommandParser({ commands: commandTrie });
+  const { replayCommand } = useCommandParser({ commands: commandTrie });
 
   const [state, setState] = useState<CitadelState>({
-    commandStack: [],
     currentInput: '',
     isEnteringArg: false,
     output: [],
@@ -52,7 +53,6 @@ export const useCitadelState = () => {
 
     setState(prev => ({
       ...prev,
-      commandStack: [],
       currentInput: '',
       isEnteringArg: false,
       validation: { isValid: true }
@@ -185,15 +185,6 @@ export const useCitadelState = () => {
   }, [handleKeyDown]);
 
   const actions: CitadelActions = {
-    setCommandStack: useCallback((stack: string[]) => {
-      Logger.debug("setCommandStack: ", stack);
-
-      setState(prev => ({ 
-        ...prev, 
-        commandStack: stack
-      }));
-    }, [commandTrie]),
-
     setCurrentInput: useCallback((input: string) => {
       Logger.debug("setCurrentInput: ", input);
       setState(prev => ({ ...prev, currentInput: input }));
@@ -212,9 +203,12 @@ export const useCitadelState = () => {
       }));
     }, []),
 
-    executeCommand: useCallback(async (path: string[], args?: ArgumentSegment[]) => {
+    executeCommand: useCallback(async () => {
+      console.log(`[executeCommand] path: {path}`)
+      const path = segmentStack.path();
       const node = commandTrie.getCommand(path);
       if (!node) return;
+
 
       const outputItem = new OutputItem([...path, ...(args || [])]);
       setState(prev => ({
@@ -282,14 +276,14 @@ export const useCitadelState = () => {
   };
 
   const getAvailableCommands_s = useCallback(() => {
-    const completions = commandTrie.getCompletions_s(state.commandStack);
+    const completions = commandTrie.getCompletions_s(segmentStack.path());
     return completions;
-  }, [state.commandStack, commandTrie]);
+  }, [segmentStack, commandTrie]);
 
   const getAvailableCommandSegments = useCallback(() => {
-    const completions = commandTrie.getCompletions(state.commandStack);
+    const completions = commandTrie.getCompletions(segmentStack.path());
     return completions;
-  }, [state.commandStack, commandTrie]);
+  }, [segmentStack, commandTrie]);
 
   return { state, actions, getAvailableCommands_s, getAvailableCommandSegments };
 };

@@ -28,13 +28,13 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
   const isLeafNode = completions.length === 0;
 
   const sortedCommands = React.useMemo(() => {
-    if (!state.commandStack.length && config.includeHelpCommand) {
+    if (config.includeHelpCommand) {
       const nonHelpCommands = availableCommands.filter(cmd => cmd !== 'help');
       const helpCommand = availableCommands.find(cmd => cmd === 'help');
       return [...nonHelpCommands, ...(helpCommand ? [helpCommand] : [])];
     }
     return availableCommands;
-  }, [availableCommands, state.commandStack, config.includeHelpCommand]);
+  }, [availableCommands, segmentStack, config.includeHelpCommand]);
 
   return (
     <div className={containerClasses} data-testid="available-commands">
@@ -79,7 +79,7 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
           </div>
         </div>
       ) : (
-        <div className={contentClasses}>{segmentStack.peek().description}</div>
+        <div className={contentClasses}>[[{segmentStack.peek().description}]]</div>
       )}
     </div>
   );

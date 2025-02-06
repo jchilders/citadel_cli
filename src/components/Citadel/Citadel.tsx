@@ -217,7 +217,6 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
           <CommandInput
             state={state}
             actions={actions}
-            availableCommandSegments={getAvailableCommandSegments()}
           />
           <AvailableCommands
             state={state}

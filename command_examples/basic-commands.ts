@@ -194,5 +194,14 @@ export function registerBasicCommands() {
     }
   );
 
+  trie.addCommand(
+    [
+      { type: 'word', name: 'thing' },
+      { type: 'argument', name: 'arg1' },
+      { type: 'word', name: 'thing2' },
+    ],
+    'Test cmd w/ arg in middle'
+  );
+
   return trie;
 }

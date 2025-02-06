@@ -27,7 +27,7 @@ export function useSegmentStack(): SegmentStackActions {
   }, [stack]);
 
   const getArguments = useCallback(() => {
-    return stack.getArguments;
+    return stack.arguments;
   }, [stack]);
 
   const path = useCallback(() => {

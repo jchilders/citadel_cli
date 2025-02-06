@@ -1,4 +1,5 @@
 import { CommandResult, TextCommandResult } from './command-results';
+import { SegmentStack } from './segment-stack';
 
 /** Function type for handling command execution */
 export type CommandHandler = (args: string[]) => Promise<CommandResult>;
@@ -272,13 +273,15 @@ export class CommandTrie {
    * @returns The `CommandResult`
    * @throws Error if command cannot be found
    */
-  async executeCommand(path: string[], args: ArgumentSegment[] = []): Promise<CommandResult | undefined> {
+  async executeCommand(segmentStack: SegmentStack): Promise<CommandResult | undefined> {
+    const path = segmentStack.path()
     const command = this.getCommand(path);
 
     if (!command) {
       throw new Error(`Command '${path.join(' ')}' not found`);
     }
 
-    return await command.handler(args.map(arg => arg.value));
+    const args = segmentStack.arguments.map(argSeg => argSeg.value);
+    return await command.handler(args);
   }
 }

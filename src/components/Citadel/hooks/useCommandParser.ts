@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { CommandNode, CommandTrie, CommandSegment, ArgumentSegment, NullSegment } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
 import { useSegmentStack } from './useSegmentStack';
+import { Logger } from '../utils/logger';
 
 type InputState = 'idle' | 'entering_command' | 'entering_argument';
 
@@ -12,6 +13,11 @@ interface UseCommandParserProps {
 export const useCommandParser = ({ commands }: UseCommandParserProps) => {
   const segmentStack = useSegmentStack();
   const [inputState, setInputState] = useState<InputState>('idle');
+
+  const setInputStateWithLogging = (newState: InputState) => {
+    Logger.debug(`InputState changing from ${inputState} to ${newState}`);
+    setInputState(newState);
+  }
 
   function getNextExpectedSegment(path: string[]): CommandSegment {
     const segments = commands.getCompletions(path);
@@ -35,7 +41,6 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
   const findMatchingCommands = useCallback((input: string, availableNodes: CommandNode[]): CommandNode[] => {
     if (!input) return availableNodes;
     
-    // Get unique first segments from available nodes
     const uniqueFirstSegments = availableNodes.reduce((acc, node) => {
       const segment = getNextExpectedSegment(node.fullPath);
       if (segment?.type === 'word') {
@@ -47,7 +52,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     // Filter nodes whose next word segment matches the input
     const matches = Array.from(uniqueFirstSegments.values()).filter(node => {
       const nextSegment = getNextExpectedSegment(node.fullPath);
-      if (!nextSegment || nextSegment.type !== 'word') return false;
+      if (nextSegment.type !== 'word') return false;
       return nextSegment.name.toLowerCase().startsWith(input.toLowerCase());
     });
 
@@ -107,23 +112,18 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
   }, [commands]);
 
   const executeCommand = useCallback((
-    commandStack: string[],
-    actions: CitadelActions,
-    args?: ArgumentSegment[]
+    actions: CitadelActions
   ) => {
-    const node = commands.getCommand(commandStack);
-    if (node?.handler) {
-      actions.executeCommand(commandStack, args);
-      resetInputState(actions);
-    }
-  }, [commands]);
+    actions.executeCommand();
+    resetInputState(actions);
+  }, [segmentStack]);
 
   const tryAutoComplete = useCallback((
     parsedInput: ParsedInput,
-    state: CitadelState,
     actions: CitadelActions
   ): boolean => {
     const suggestion = getAutocompleteSuggestion(parsedInput.currentWord);
+    console.log("[tryAutoComplete] suggestion: ", suggestion);
     
     if (!suggestion || suggestion.name === parsedInput.currentWord) {
       return false;
@@ -131,21 +131,10 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
 
     segmentStack.push(suggestion);
     
-    const newStack = [...state.commandStack, suggestion.name];
-    actions.setCommandStack(newStack);
-    actions.setCurrentInput('');
+    actions.setCurrentInput(suggestion.name);
     
-    const nextSegment = getNextExpectedSegment(newStack);
-    if (nextSegment?.type === 'argument') {
-      actions.setIsEnteringArg(true);
-      setInputState('entering_argument');
-    } else {
-      actions.setIsEnteringArg(false);
-      setInputState('idle');
-    }
-
     return true;
-  }, [getAvailableNodes, getAutocompleteSuggestion, commands, getNextExpectedSegment]);
+  }, [getAvailableNodes, getAutocompleteSuggestion, segmentStack, commands, getNextExpectedSegment]);
 
   /**
    * Handles changes to the input text value (typing, pasting)
@@ -156,29 +145,74 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
    */
   const handleInputChange = useCallback((
     newValue: string,
-    state: CitadelState,
     actions: CitadelActions,
   ) => {
-    const parsedInput = parseInput(newValue);
+    console.log("[handleInputChange] inputState: ", inputState);
+    console.log("[handleInputChange] newValue: ", newValue);
     actions.setCurrentInput(newValue);
+    const parsedInput = parseInput(newValue);
+    console.log("-=-=-=-=-=> segmentStack: ", segmentStack.segments());
+    console.log("-=-=-=-=-=> parsedInput: ", parsedInput);
 
-    function nextSegmentIsArgument(): boolean {
-      const nextSegment = getNextExpectedSegment(segmentStack.path())
-      return nextSegment.type === 'argument';
-    }
+    const nextSegment = getNextExpectedSegment(segmentStack.path())
+    console.log("-=-=-=-=-=> nextSegment: ", nextSegment);
+    const nextSegmentIsArgument = nextSegment.type === 'argument';
 
-    // Handle quoted input differently
-    if (parsedInput.isQuoted || nextSegmentIsArgument()) {
+    // Because segements at a given level can be EITHER arguments OR words --
+    // but not a mix of both for the same level -- we can determine which is
+    // coming next simply by checking the type of the next
+    if (inputState === 'idle' && nextSegmentIsArgument) {
+      console.log("-=-=-=-=-=> 1.1");
       actions.setIsEnteringArg(true);
-      setInputState('entering_argument');
+      segmentStack.push(getNextExpectedSegment(segmentStack.path()))
+      setInputStateWithLogging('entering_argument');
+      return;
+    } else if (inputState == 'entering_argument') {
+      console.log("-=-=-=-=-=> 1.2");
+      if (parsedInput.isQuoted) {
+        console.log("-=-=-=-=-=> 1.2.1");
+        if (parsedInput.isComplete) { // `"hello"`
+          console.log("-=-=-=-=-=> 1.2.1.1");
+          // pop argSeg, set value, push back onto stack, then reset input state
+          const argumentSegment = (segmentStack.pop() as ArgumentSegment);
+          argumentSegment.value = parsedInput.currentWord;
+          segmentStack.push(argumentSegment);
+          setInputStateWithLogging('idle');
+          return;
+        } else { // `"hello`
+          console.log("-=-=-=-=-=> 1.2.1.2");
+          // User is still entering a quoted argument. Do nothing
+          return;
+        }
+      } else {
+        console.log("-=-=-=-=-=> 1.2.2");
+        if (parsedInput.isComplete) { // `hello `
+          console.log("-=-=-=-=-=> 1.2.2.1");
+          // pop argSeg, set value, push back onto stack, then reset input state
+          const argumentSegment = (segmentStack.pop() as ArgumentSegment);
+          argumentSegment.value = parsedInput.currentWord;
+          segmentStack.push(argumentSegment);
+          setInputStateWithLogging('idle');
+          return;
+        } else {
+          console.log("-=-=-=-=-=> 1.2.2.2");
+          // User is still entering an argument. Do nothing
+          return;
+        }
+      }
+    } else {
+      console.log("-=-=-=-=-=> 1.3");
+      setInputStateWithLogging('entering_command');
+      const result = tryAutoComplete(parsedInput, actions);
+      if (result) {
+        console.log("YAY!");
+        setInputStateWithLogging('idle');
+      } else {
+        console.log("BOOOO!");
+      }
+      console.log("-=-=-=-=-=> 1.3 segmentStack: ", segmentStack.segments());
       return;
     }
-
-    // Try auto-completion if we're not entering an argument
-    if (!parsedInput.isQuoted && !state.isEnteringArg) {
-      tryAutoComplete(parsedInput, state, actions);
-    }
-
   }, [tryAutoComplete]);
 
   /**
@@ -211,7 +245,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
       return;
     }
 
-    const { commandStack, currentInput, isEnteringArg } = state;
+    const { currentInput, isEnteringArg } = state;
     const parsedInput = parseInput(currentInput);
 
     // Handle special keys first
@@ -219,13 +253,10 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
       case 'Backspace':
         if (currentInput === '') {
           e.preventDefault();
-          if (commandStack.length > 0) {
-            const newStack = commandStack.slice(0, -1);
-            
-            actions.setCommandStack(newStack);
-            actions.setIsEnteringArg(false);
+          if (segmentStack.size() > 0) {
             segmentStack.pop();
-            setInputState('entering_command');
+            actions.setIsEnteringArg(false);
+            setInputStateWithLogging('idle');
           }
         }
         return;
@@ -249,7 +280,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
           if (parsedInput.currentWord) {
             args.push(parsedInput.currentWord);
           }
-          executeCommand(commandStack, actions, args);
+          executeCommand(actions);
         } else if (!isEnteringArg && parsedInput.currentWord) {
           // Try to match and execute a command
           const availableNodes = getAvailableNodes();
@@ -257,20 +288,18 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
           
           if (matches.length === 1) {
             const matchedNode = matches[0];
-            const newStack = [...commandStack, matchedNode.segments[0].name];
             
             if (matchedNode.hasArguments) {
-              actions.setCommandStack(newStack);
               actions.setCurrentInput('');
               actions.setIsEnteringArg(true);
-              setInputState('entering_argument');
+              setInputStateWithLogging('entering_argument');
             } else {
-              executeCommand(newStack, actions, undefined);
+              executeCommand(actions);
             }
           }
-        } else if (currentNode && !currentNode.hasArguments) {
+        } else if (!segmentStack.isEmpty()) {
           // Execute handler for current node if it doesn't need args
-          executeCommand(commandStack, actions, undefined);
+          executeCommand(actions);
         }
         return;
     }
@@ -295,8 +324,8 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
   const resetInputState = useCallback((actions: CitadelActions) => {
     actions.setCurrentInput('');
     actions.setIsEnteringArg(false);
-    actions.setCommandStack([]);
-    setInputState('idle');
+    segmentStack.clear();
+    setInputStateWithLogging('idle');
   }, []);
 
   return {

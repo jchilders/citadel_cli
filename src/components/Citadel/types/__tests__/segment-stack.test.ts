@@ -76,7 +76,7 @@ describe('SegmentStack', () => {
       stack.push(new WordSegment('subcommand'));
       stack.push(arg2);
       
-      const args = stack.getArguments;
+      const args = stack.arguments;
       expect(args).toHaveLength(2);
       expect(args).toContain(arg1);
       expect(args).toContain(arg2);

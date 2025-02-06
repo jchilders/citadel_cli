@@ -62,7 +62,7 @@ export class SegmentStack {
   /**
    * Returns all argument segments in the stack
    */
-  get getArguments(): ArgumentSegment[] {
+  get arguments(): ArgumentSegment[] {
     return this.items.filter((segment): segment is ArgumentSegment => 
       segment.type === 'argument'
     );

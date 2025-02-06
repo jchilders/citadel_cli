@@ -1,9 +1,8 @@
-import { ArgumentSegment, CommandSegment } from './command-trie';
+import { CommandSegment } from './command-trie';
 import { CommandResult, PendingCommandResult } from './command-results';
 import { CommandStorage, StoredCommand } from './storage';
 
 export interface CitadelState {
-  commandStack: string[];
   currentInput: string;
   isEnteringArg: boolean;
   output: OutputItem[];
@@ -16,11 +15,10 @@ export interface CitadelState {
 }
 
 export interface CitadelActions {
-  setCommandStack: (stack: string[]) => void;
   setCurrentInput: (input: string) => void;
   setIsEnteringArg: (isEntering: boolean) => void;
   addOutput: (output: OutputItem) => void;
-  executeCommand: (path: string[], args?: ArgumentSegment[]) => Promise<void>;
+  executeCommand: () => Promise<void>;
   executeHistoryCommand: (index: number) => Promise<void>;
   clearHistory: () => Promise<void>;
 }
