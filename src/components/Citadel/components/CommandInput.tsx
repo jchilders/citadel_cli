@@ -54,7 +54,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     }
   }, [segmentStack]);
 
-  const segAry = segmentStack.toArray().map((segment, index, array) => {
+  const segments = segmentStack.toArray().map((segment, index, array) => {
     const isLastSegment = index === array.length - 1;
     if (isLastSegment && state.isEnteringArg) {
       return '';
@@ -72,8 +72,8 @@ export const CommandInput: React.FC<CommandInputProps> = ({
         <div className="text-gray-400 font-mono">&gt;</div>
         <div className="flex-1 font-mono flex items-center">
           <span className="text-blue-400 whitespace-pre" data-testid="user-input-area">
-            {segAry}
-            {segAry.length > 0 && ' '}
+            {segments}
+            {segments.length > 0 && ' '}
           </span>
           <div className="relative flex-1">
             <input
