@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
 import { AvailableCommands } from '../AvailableCommands';
-import { CitadelState } from '../../types/state';
 import { CommandNode, NoopHandler } from '../../types/command-trie';
 import { CitadelConfigProvider } from '../../config/CitadelConfigContext';
 import { TextCommandResult } from '../../types/command-results';
@@ -12,27 +11,20 @@ describe('AvailableCommands', () => {
 
   const mockCommands: CommandNode[] = [
     new CommandNode({
-      fullPath: ['help'],
       description: 'Show help information',
       handler: async () => new TextCommandResult('Help info')
     }),
     new CommandNode({
-      fullPath: ['test'],
       description: 'Test command'
     })
   ];
 
   const renderWithConfig = (
-    state: CitadelState = defaultState,
-    availableCommands: CommandNode[] = mockCommands,
     config = { includeHelpCommand: true, resetStateOnHide: true, showCitadelKey: '.' }
   ) => {
     return render(
       <CitadelConfigProvider config={config}>
-        <AvailableCommands
-          state={state}
-          availableCommands={availableCommands}
-        />
+        <AvailableCommands />
       </CitadelConfigProvider>
     );
   };
@@ -45,7 +37,7 @@ describe('AvailableCommands', () => {
 
   it('does not render commands when entering arguments', () => {
     const state = { ...defaultState, isEnteringArg: true };
-    const { container } = renderWithConfig(state);
+    const { container } = renderWithConfig();
     expect(container.textContent).not.toContain('help');
     expect(container.textContent).not.toContain('test');
   });

@@ -214,14 +214,8 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
           <CommandOutput output={state.output} outputRef={outputRef} />
         </div>
         <div>
-          <CommandInput
-            state={state}
-            actions={actions}
-          />
-          <AvailableCommands
-            state={state}
-            availableCommands={getAvailableCommands_s()}
-          />
+          <CommandInput state={state} actions={actions} />
+          <AvailableCommands />
         </div>
       </div>
     </div>

@@ -197,6 +197,7 @@ export function registerBasicCommands() {
   trie.addCommand(
     [
       { type: 'word', name: 'thing' },
+      // { type: 'argument', name: 'message', description: 'What should the cow say?' },
       { type: 'argument', name: 'arg1' },
       { type: 'word', name: 'thing2' },
     ],
