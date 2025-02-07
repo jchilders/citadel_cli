@@ -10,7 +10,7 @@ import { Logger } from '../utils/logger';
 export const useCitadelState = () => {
   const config = useCitadelConfig();
   const segmentStack = useSegmentStack();
-  const commandTrie = useCitadelCommands();
+  const commands = useCitadelCommands();
   const [history, historyActions] = useCommandHistory();
   // const { replayCommand } = useCommandParser({ commands: commandTrie });
 
@@ -37,7 +37,7 @@ export const useCitadelState = () => {
   }, [history]);
 
   const executeCommand = useCallback(async (path: string[], args?: string[]) => {
-    const node = commandTrie.getCommand(path);
+    const node = commands.getCommand(path);
 
     if (!node) {
       throw new Error(`Command not found: ${path.join(' ')}`);
@@ -121,7 +121,7 @@ export const useCitadelState = () => {
         )
       }));
     }
-  }, [commandTrie, config.commandTimeoutMs, historyActions, state]);
+  }, [commands, config.commandTimeoutMs, historyActions, state]);
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const { key } = event;
@@ -204,21 +204,23 @@ export const useCitadelState = () => {
     executeCommand: useCallback(async () => {
       console.log(`[CitadelActions][executeCommand] path: {path}`)
       const path = segmentStack.path();
-      const node = commandTrie.getCommand(path);
-      if (!node) return;
+      const command = commands.getCommand(path);
+      if (!command) {
+        console.error("[CitadelActions][executeCommand] Cannot execute command because no command was found for the given path: ", path);
+        return;
+      }
 
-
-      const outputItem = new OutputItem([...path, ...(args || [])]);
+      const outputItem = new OutputItem(segmentStack);
       setState(prev => ({
         ...prev,
         output: [...prev.output, outputItem]
       }));
 
       try {
-        const stringArgs = args?.map(arg => arg.toString()) || [];
+        const argVals = segmentStack.arguments.map(argSeg => argSeg.value());
         
         const result = await Promise.race([
-          node.handler(stringArgs),
+          command.handler(argVals),
           new Promise<never>((_, reject) => {
             setTimeout(() => reject(new Error('Command timed out')), config.commandTimeoutMs);
           })
@@ -227,10 +229,10 @@ export const useCitadelState = () => {
         result.markSuccess();
         
         // Save successful command to history
-        await historyActions.addCommand({
-          inputs: [...path, ...(args || [])],
-          timestamp: Date.now()
-        });
+        // await historyActions.addCommand({
+        //   inputs: [...path, ...(args || [])],
+        //   timestamp: Date.now()
+        // });
 
         setState(prev => ({
           ...prev,
@@ -251,7 +253,7 @@ export const useCitadelState = () => {
           )
         }));
       }
-    }, [commandTrie, config.commandTimeoutMs, historyActions]),
+    }, [commands, config.commandTimeoutMs, historyActions]),
 
     executeHistoryCommand: useCallback(async (index: number) => {
       const commands = state.history.commands;
@@ -274,13 +276,13 @@ export const useCitadelState = () => {
   };
 
   const getAvailableCommands_s = useCallback(() => {
-    const completions = commandTrie.getCompletions_s(segmentStack.path());
+    const completions = commands.getCompletions_s(segmentStack.path());
     return completions;
-  }, [segmentStack, commandTrie]);
+  }, [segmentStack, commands]);
 
   const getAvailableCommandSegments = useCallback(() => {
-    return commandTrie.getCompletions(segmentStack.path());
-  }, [segmentStack, commandTrie]);
+    return commands.getCompletions(segmentStack.path());
+  }, [segmentStack, commands]);
 
   return { 
     state, 

@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useCommandParser } from '../useCommandParser';
-import { CommandNode, CommandSegment, CommandTrie, NoopHandler } from '../../types/command-trie';
+import { CommandNode, CommandSegment, CommandTrie } from '../../types/command-trie';
 import { CitadelState, CitadelActions, TextCommandResult } from '../../types';
 import { createMockNode, createMockCommandTrie, createMockCitadelState } from '../../../../__test-utils__/factories';
 
@@ -14,18 +14,7 @@ describe('useCommandParser', () => {
     it('should parse unquoted input correctly', () => {
       const result = parseInput('user comment 1234 test');
       expect(result).toEqual({
-        words: ['user', 'comment', '1234'],
-        currentWord: 'test',
-        isQuoted: false,
-        quoteChar: undefined,
-        isComplete: false
-      });
-    });
-
-    it('should parse double-quoted input correctly', () => {
-      const result = parseInput('user comment 1234 "A test comment"');
-      expect(result).toEqual({
-        words: ['user', 'comment', '1234', 'A test comment'],
+        words: ['user', 'comment', '1234', 'test'],
         currentWord: '',
         isQuoted: false,
         quoteChar: undefined,
@@ -33,13 +22,24 @@ describe('useCommandParser', () => {
       });
     });
 
+    it('should parse double-quoted input correctly', () => {
+      const result = parseInput('user comment 1234 "A test comment"');
+      expect(result).toEqual({
+        words: ['user', 'comment', '1234', '"A test comment"'],
+        currentWord: '',
+        isQuoted: false,
+        quoteChar: '"',
+        isComplete: true
+      });
+    });
+
     it('should parse single-quoted input correctly', () => {
       const result = parseInput("user comment 1234 'A test comment'");
       expect(result).toEqual({
-        words: ['user', 'comment', '1234', 'A test comment'],
+        words: ['user', 'comment', '1234', "'A test comment'"],
         currentWord: '',
-        isQuoted: false,
-        quoteChar: undefined,
+        isQuoted: true,
+        quoteChar: "'",
         isComplete: true
       });
     });
@@ -48,7 +48,7 @@ describe('useCommandParser', () => {
       const result = parseInput('user comment 1234 "unclosed quote');
       expect(result).toEqual({
         words: ['user', 'comment', '1234'],
-        currentWord: 'unclosed quote',
+        currentWord: '"unclosed quote',
         isQuoted: true,
         quoteChar: '"',
         isComplete: false

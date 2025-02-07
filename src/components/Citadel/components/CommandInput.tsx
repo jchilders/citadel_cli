@@ -27,11 +27,12 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   const segmentStackVersion = useSegmentStackVersion();
 
   const onKeyDown = (e: React.KeyboardEvent) => {
+    console.log("[CommandInput][onKeyDown]");
     handleKeyDown(e, state, actions);
   };
 
   const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("[onInputChange]. value: ", event.target.value);
+    console.log("[CommandInput][onInputChange]. value: ", event.target.value);
     handleInputChange(event.target.value, actions);
   };
 
