@@ -107,7 +107,7 @@ export const useCitadelStorage = () => {
 export const useSegmentStack = () => {
   const context = useContext(CitadelConfigContext);
   if (context === undefined) {
-    throw new Error('useCitadelStorage must be used within a CitadelConfigProvider');
+    throw new Error('useSegmentStack must be used within a CitadelConfigProvider');
   }
   return context.segmentStack;
 };

@@ -21,7 +21,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const commands = useCitadelCommands();
   const segmentStack = useSegmentStack();
-  const { handleKeyDown, handleInputChange } = useCommandParser({ commands });
+  const { handleKeyDown, handleInputChange, inputState, setInputStateWithLogging } = useCommandParser({ commands });
   const [showInvalidAnimation ] = useState(false);
   const config = useCitadelConfig();
 
@@ -47,6 +47,13 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     }
   }, []);
 
+  // Set initial input state on mount
+  useEffect(() => {
+    if (inputState !== 'entering_command') {
+      setInputStateWithLogging('entering_command');
+    }
+  }, []);
+
   // Re-focus input when command stack changes
   useEffect(() => {
     if (inputRef.current) {
@@ -54,17 +61,24 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     }
   }, [segmentStack]);
 
-  const segments = segmentStack.toArray().map((segment, index, array) => {
+  // React to inputState changes
+  useEffect(() => {
+    console.log("[CommandInput] inputState changed to:", inputState);
+    // Add any other logic you want to execute when inputState changes
+  }, [inputState]);
+
+  // For word segments, show the name. For argument segments, show the value.
+  const segmentNamesAndVals: string = segmentStack.toArray().map((segment, index, array) => {
     const isLastSegment = index === array.length - 1;
     if (isLastSegment && state.isEnteringArg) {
       return '';
     }
     if (segment.type === 'argument') {
-      return (segment as ArgumentSegment).value;
+      return `[ ${(segment as ArgumentSegment).value} ]`;
     }
 
     return segment.name;
-  }).filter(Boolean).join(' ');
+  }).join(' ');
 
   return (
     <div className="flex flex-col w-full bg-gray-900 rounded-lg p-4">
@@ -72,8 +86,8 @@ export const CommandInput: React.FC<CommandInputProps> = ({
         <div className="text-gray-400 font-mono">&gt;</div>
         <div className="flex-1 font-mono flex items-center">
           <span className="text-blue-400 whitespace-pre" data-testid="user-input-area">
-            {segments}
-            {segments.length > 0 && ' '}
+            {segmentNamesAndVals}
+            {segmentNamesAndVals.length > 0 && ' '}
           </span>
           <div className="relative flex-1">
             <input

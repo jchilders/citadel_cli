@@ -61,6 +61,7 @@ export class ArgumentSegment extends BaseSegment {
    }
 
    set value(newValue: any) {
+     console.log(`[ArgumentSegment] set value for ${this.name} to '${newValue}'`);
      this._value = newValue;
    }
  }
@@ -201,6 +202,7 @@ export class CommandTrie {
    * @returns An array of completion strings.
    */
   getCompletions(path: string[]): CommandSegment[] {
+    console.log("[getCompletions] path: ", path);
     // If no path provided, get all top-level segments
     if (!path.length) {
       const firstSegments = this._commands.map(cmd => cmd.segments[0]);
@@ -262,6 +264,7 @@ export class CommandTrie {
       )
     );
 
+    console.log("[getCompletions] uniqueSegments: ", uniqueSegments);
     return uniqueSegments;
   }
 

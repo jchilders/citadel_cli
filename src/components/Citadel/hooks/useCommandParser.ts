@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react';
 import { CommandNode, CommandTrie, CommandSegment, ArgumentSegment, NullSegment } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
-import { Logger } from '../utils/logger';
 import { useSegmentStack } from '../config/CitadelConfigContext';
 import { useCitadelState } from './useCitadelState';
 
@@ -17,13 +16,15 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
   const [inputState, setInputState] = useState<InputState>('idle');
 
   const setInputStateWithLogging = (newState: InputState) => {
-    Logger.debug(`InputState changing from ${inputState} to ${newState}`);
+    console.log(`InputState changing from ${inputState} to ${newState}`);
     setInputState(newState);
   }
 
   function getNextExpectedSegment(path: string[]): CommandSegment {
     const segments = commands.getCompletions(path);
-    return segments[0] || segmentStack.nullSegment; // Return first available completion
+    const nextExpectedSegment = segments[0] || segmentStack.nullSegment; // Return first available completion
+    console.log("[getNextExpectedSegment] ", nextExpectedSegment);
+    return nextExpectedSegment;
   }
 
   const getAvailableNodes = useCallback((): CommandNode[] => {
@@ -85,7 +86,8 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     if (matchingSegments.length === 1) {
       return matchingSegments[0];
     }
-    return new NullSegment;
+
+    return segmentStack.nullSegment;
   }, [findMatchingCommands]);
 
   const isValidCommandInput = useCallback((
@@ -155,35 +157,41 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     console.log("-=-=-=-=-=> segmentStack: ", segmentStack.toArray());
     console.log("-=-=-=-=-=> parsedInput: ", parsedInput);
 
+    // Because segments at a given level can be EITHER arguments OR words --
+    // but not a mix of both for the same level -- we can determine which is
+    // coming next simply by checking the type of whatever the next one is.
     const nextSegment = getNextExpectedSegment(segmentStack.path())
     console.log("-=-=-=-=-=> nextSegment: ", nextSegment);
     const nextSegmentIsArgument = nextSegment.type === 'argument';
 
-    // Because segements at a given level can be EITHER arguments OR words --
-    // but not a mix of both for the same level -- we can determine which is
-    // coming next simply by checking the type of the next
-    if (inputState === 'idle' && nextSegmentIsArgument) {
+    if (nextSegmentIsArgument) {
       console.log("-=-=-=-=-=> 1.1");
       actions.setIsEnteringArg(true);
-      segmentStack.push(nextSegment);
       setInputStateWithLogging('entering_argument');
 
       return;
     } 
 
     if (inputState == 'entering_argument') {
-      console.log("-=-=-=-=-=> 1.2");
-      // Always update the current argument segment with the latest input
-      const argumentSegment = segmentStack.peek();
-      if (argumentSegment.type === 'argument') {
-        (argumentSegment as ArgumentSegment).value = newValue;
-      }
-      console.log("-=-=-=-=-=> 1.2 set argumentSegment.value to ", newValue);
-      console.log("-=-=-=-=-=> 1.2 segstack.peek().value", (segmentStack.peek() as ArgumentSegment).value);
+      console.log("-=-=-=-=-=> 1.2 entering_argument");
 
       if (parsedInput.isComplete) {
         console.log("-=-=-=-=-=> 1.2.1");
-        setInputStateWithLogging('idle');
+        
+        // Get the next expected segment after completing the argument
+        const nextSegment = getNextExpectedSegment(segmentStack.path());
+        if (nextSegment.type !== 'null') {
+          if (nextSegment.type === 'argument') {
+            actions.setIsEnteringArg(true);
+            const argumentSegment = (segmentStack.pop() as ArgumentSegment);
+            argumentSegment.value = parsedInput.words[0];
+            console.log("-=-=-=-=-=> 1.2.1.1 pushing", argumentSegment);
+            segmentStack.push(argumentSegment);
+            setInputStateWithLogging('entering_argument');
+          } else {
+            setInputStateWithLogging('entering_command');
+          }
+        }
         actions.setCurrentInput('');
       }
 
@@ -191,11 +199,11 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     }
 
     // Handle command input
-    console.log("-=-=-=-=-=> 1.3 segmentStack before: ", segmentStack.toArray());
+    console.log("-=-=-=-=-=> 1.3 segmentStack: ", segmentStack.toArray());
     setInputStateWithLogging('entering_command');
     const suggestedSegment = tryAutoComplete(parsedInput);
     if (suggestedSegment.type !== 'null') {
-      console.log("-=-=-=-=-=> 1.3.1 pushing autocomplete segment: ", suggestedSegment);
+      console.log("-=-=-=-=-=> 1.3.1 pushing", suggestedSegment);
       segmentStack.push(suggestedSegment);
       actions.setCurrentInput('');
 
@@ -204,6 +212,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
       if (nextSegment.type === 'argument') {
         console.log("-=-=-=-=-=> 1.3.1.1");
         actions.setIsEnteringArg(true);
+        console.log("-=-=-=-=-=> 1.3.1.1 pushing", nextSegment);
         segmentStack.push(nextSegment);
         setInputStateWithLogging('entering_argument');
 
@@ -345,6 +354,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     handleKeyDown,
     executeCommand,
     inputState,
+    setInputStateWithLogging,
     // Expose internal functions for testing
     findMatchingCommands,
     getAutocompleteSuggestion,

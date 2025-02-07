@@ -19,6 +19,7 @@ export class SegmentStack {
    * Pushes a new segment onto the stack
    */
   push(segment: CommandSegment): void {
+    console.log("[SegmentStack] push segment: ", segment);
     this.segments.push(segment);
   }
 
@@ -27,7 +28,10 @@ export class SegmentStack {
    * Returns NullSegment if stack is empty
    */
   pop(): CommandSegment {
-    return this.segments.pop() || this.nullSegment;
+    const poppedSegment = this.segments.pop() || this.nullSegment;
+    console.log("[SegmentStack] pop segment: ", poppedSegment);
+    return poppedSegment;
+    // return this.segments.pop() || this.nullSegment;
   }
 
   /**
