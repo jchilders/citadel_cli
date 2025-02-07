@@ -3,8 +3,9 @@ import { CommandNode, CommandTrie, CommandSegment, ArgumentSegment, NullSegment 
 import { CitadelState, CitadelActions } from '../types/state';
 import { useSegmentStack } from '../config/CitadelConfigContext';
 import { useCitadelState } from './useCitadelState';
+import { Logger } from '../utils/logger';
 
-type InputState = 'idle' | 'entering_command' | 'entering_argument';
+export type InputState = 'idle' | 'entering_command' | 'entering_argument';
 
 interface UseCommandParserProps {
   commands: CommandTrie;
@@ -20,9 +21,9 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     setInputState(newState);
   }
 
-  function getNextExpectedSegment(path: string[]): CommandSegment {
-    const segments = commands.getCompletions(path);
-    const nextExpectedSegment = segments[0] || segmentStack.nullSegment; // Return first available completion
+  const getNextExpectedSegment = (): CommandSegment => {
+    const completions = commands.getCompletions(segmentStack.path());
+    const nextExpectedSegment = completions[0] || segmentStack.nullSegment; // Return first available completion
     console.log("[getNextExpectedSegment] ", nextExpectedSegment);
     return nextExpectedSegment;
   }
@@ -45,7 +46,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     if (!input) return availableNodes;
     
     const uniqueFirstSegments = availableNodes.reduce((acc, node) => {
-      const segment = getNextExpectedSegment(node.fullPath);
+      const segment = getNextExpectedSegment();
       if (segment?.type === 'word') {
         acc.set(segment.name, node);
       }
@@ -53,8 +54,8 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     }, new Map<string, CommandNode>());
 
     // Filter nodes whose next word segment matches the input
-    const matches = Array.from(uniqueFirstSegments.values()).filter(node => {
-      const nextSegment = getNextExpectedSegment(node.fullPath);
+    const matches = Array.from(uniqueFirstSegments.values()).filter(_node => {
+      const nextSegment = getNextExpectedSegment();
       if (nextSegment.type !== 'word') return false;
       return nextSegment.name.toLowerCase().startsWith(input.toLowerCase());
     });
@@ -90,9 +91,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     return segmentStack.nullSegment;
   }, [findMatchingCommands]);
 
-  const isValidCommandInput = useCallback((
-    input: ParsedInput
-  ): boolean => {
+  const isValidCommandInput = useCallback((input: ParsedInput): boolean => {
     if (!input.currentWord && !input.isQuoted) return true;
 
     const currentPath = segmentStack.path();
@@ -122,7 +121,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     resetInputState(actions);
   }, [segmentStack]);
 
-  const tryAutoComplete = useCallback((
+  const tryAutocomplete = useCallback((
     parsedInput: ParsedInput
   ): CommandSegment => {
     console.log("[tryAutoComplete] parsedInput: ", parsedInput);
@@ -131,9 +130,11 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     console.log("[tryAutoComplete] suggestion: ", suggestion);
     
     if (!suggestion || suggestion.name === parsedInput.currentWord) {
+      console.log("[tryAutoComplete] retuning NullSegment");
       return new NullSegment;
     }
 
+    console.log("[tryAutoComplete] retuning ", suggestion);
     return suggestion;
   }, [getAvailableNodes, getAutocompleteSuggestion, segmentStack, commands, getNextExpectedSegment]);
 
@@ -142,7 +143,6 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
    * Responsible for:
    * - Parsing input into words/quotes
    * - Auto-completion
-   * - Updating command/argument state
    */
   const handleInputChange = useCallback((
     newValue: string,
@@ -153,43 +153,42 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
 
     actions.setCurrentInput(newValue);
 
-    const parsedInput = parseInput(newValue);
     console.log("-=-=-=-=-=> segmentStack: ", segmentStack.toArray());
-    console.log("-=-=-=-=-=> parsedInput: ", parsedInput);
-
     // Because segments at a given level can be EITHER arguments OR words --
     // but not a mix of both for the same level -- we can determine which is
     // coming next simply by checking the type of whatever the next one is.
-    const nextSegment = getNextExpectedSegment(segmentStack.path())
+    const nextSegment = getNextExpectedSegment()
     console.log("-=-=-=-=-=> nextSegment: ", nextSegment);
-    const nextSegmentIsArgument = nextSegment.type === 'argument';
+    // const nextSegmentIsArgument = nextSegment.type === 'argument';
 
-    if (nextSegmentIsArgument) {
-      console.log("-=-=-=-=-=> 1.1");
-      actions.setIsEnteringArg(true);
-      setInputStateWithLogging('entering_argument');
+    // if (nextSegmentIsArgument) {
+    //   console.log("-=-=-=-=-=> 1.1");
+    //   actions.setIsEnteringArg(true);
+    //   setInputStateWithLogging('entering_argument');
+    //
+    //   return;
+    // } 
 
-      return;
-    } 
+    const parsedInput = parseInput(newValue);
+    console.log("-=-=-=-=-=> parsedInput: ", parsedInput);
 
     if (inputState == 'entering_argument') {
       console.log("-=-=-=-=-=> 1.2 entering_argument");
-
       if (parsedInput.isComplete) {
         console.log("-=-=-=-=-=> 1.2.1");
         
         // Get the next expected segment after completing the argument
-        const nextSegment = getNextExpectedSegment(segmentStack.path());
+        const nextSegment = getNextExpectedSegment();
         if (nextSegment.type !== 'null') {
           if (nextSegment.type === 'argument') {
-            actions.setIsEnteringArg(true);
             const argumentSegment = (segmentStack.pop() as ArgumentSegment);
-            argumentSegment.value = parsedInput.words[0];
+            argumentSegment.value = parsedInput.words[0].trim();
             console.log("-=-=-=-=-=> 1.2.1.1 pushing", argumentSegment);
             segmentStack.push(argumentSegment);
-            setInputStateWithLogging('entering_argument');
+            setInputStateWithLogging('idle');
+            return;
           } else {
-            setInputStateWithLogging('entering_command');
+            console.log("-=-=-=-=-=> 1.2.1.2 hmm. how? nextSegment: ", nextSegment);
           }
         }
         actions.setCurrentInput('');
@@ -198,37 +197,24 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
       return;
     }
 
-    // Handle command input
-    console.log("-=-=-=-=-=> 1.3 segmentStack: ", segmentStack.toArray());
-    setInputStateWithLogging('entering_command');
-    const suggestedSegment = tryAutoComplete(parsedInput);
-    if (suggestedSegment.type !== 'null') {
-      console.log("-=-=-=-=-=> 1.3.1 pushing", suggestedSegment);
-      segmentStack.push(suggestedSegment);
-      actions.setCurrentInput('');
+    if (inputState == 'entering_command') {
+      // Handle command input
+      console.log("-=-=-=-=-=> 1.3 segmentStack: ", segmentStack.toArray());
+      const suggestedSegment = tryAutocomplete(parsedInput);
+      if (suggestedSegment.type == 'word') {
+        console.log("-=-=-=-=-=> 1.3.1 pushing", suggestedSegment);
+        segmentStack.push(suggestedSegment);
+        actions.setCurrentInput('');
 
-      const nextSegment = getNextExpectedSegment(segmentStack.path())
-      console.log("-=-=-=-=-=> 1.3.1 nextSegment: ", nextSegment);
-      if (nextSegment.type === 'argument') {
-        console.log("-=-=-=-=-=> 1.3.1.1");
-        actions.setIsEnteringArg(true);
-        console.log("-=-=-=-=-=> 1.3.1.1 pushing", nextSegment);
-        segmentStack.push(nextSegment);
-        setInputStateWithLogging('entering_argument');
-
+        setInputStateWithLogging('idle');
         return;
       } else {
-        console.log("-=-=-=-=-=> 1.3.1.2");
-        setInputStateWithLogging('entering_command');
-
-        return;
+        console.log("-=-=-=-=-=> 1.3.2 this shouldn't happen? suggestedSegment: ", suggestedSegment);
       }
-    } else {
-      console.log("-=-=-=-=-=> 1.3.2 this shouldn't happen?");
+
+      console.log("-=-=-=-=-=> 1.3 segmentStack after: ", segmentStack.toArray());
     }
-    console.log("-=-=-=-=-=> 1.3 segmentStack after: ", segmentStack.toArray());
-    return;
-  }, [tryAutoComplete, state]);
+  }, [tryAutocomplete, state]);
 
   /**
    * Handles keyboard events
@@ -259,6 +245,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     if (!isValidKey) {
       return;
     }
+    Logger.debug('[handleKeyDown] ', { key: e.key, state });
 
     const { currentInput, isEnteringArg } = state;
     const parsedInput = parseInput(currentInput);
@@ -266,20 +253,22 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     // Handle special keys first
     switch (e.key) {
       case 'Backspace':
+        console.log("[Backspace] segmentStack: ", segmentStack);
         if (currentInput === '') {
           e.preventDefault();
           if (segmentStack.size() > 0) {
             const poppedSeg = segmentStack.pop();
+            console.log("[Backspace] poppedSeg: ", poppedSeg);
             // Need to pop twice for arguments because we push the argument
             // segment -- but not the word -- so we can set the value
-            if (poppedSeg.type === 'argument') {
-              segmentStack.pop();
-            }
-            console.log("Backspace. inputState: ", inputState);
-            actions.setIsEnteringArg(false);
-            setInputStateWithLogging('idle');
+            // if (poppedSeg.type === 'argument') {
+            //   segmentStack.pop();
+            // }
+            // actions.setIsEnteringArg(false);
+            // setInputStateWithLogging('idle');
           }
         }
+        console.log("[Backspace] segmentStack: ", segmentStack);
         return;
 
       case 'Enter':
@@ -334,11 +323,11 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
       }
     }
   }, [
+    commands,
+    executeCommand,
+    findMatchingCommands,
     getAvailableNodes,
     getAutocompleteSuggestion,
-    findMatchingCommands,
-    executeCommand,
-    commands,
     isValidCommandInput
   ]);
 
@@ -359,6 +348,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     findMatchingCommands,
     getAutocompleteSuggestion,
     getAvailableNodes,
+    getNextExpectedSegment,
     isValidCommandInput,
   };
 }

@@ -4,15 +4,33 @@ import { CommandSegment, ArgumentSegment, NullSegment } from './command-trie';
  * A stack implementation for managing command segments.
  * Uses NullSegment to avoid undefined returns.
  */
+interface StackObserver {
+  update: () => void;
+}
+
 export class SegmentStack {
   private segments: CommandSegment[] = [];
   readonly nullSegment = new NullSegment();
+  private observers: StackObserver[] = [];
+
+  subscribe(observer: StackObserver) {
+    this.observers.push(observer);
+  }
+
+  unsubscribe(observer: StackObserver) {
+    this.observers = this.observers.filter(obs => obs !== observer);
+  }
+
+  private notifyObservers() {
+    this.observers.forEach(observer => observer.update());
+  }
 
   /**
    * Clears all segments from the stack
    */
   clear(): void {
     this.segments = [];
+    this.notifyObservers();
   }
 
   /**
@@ -21,6 +39,7 @@ export class SegmentStack {
   push(segment: CommandSegment): void {
     console.log("[SegmentStack] push segment: ", segment);
     this.segments.push(segment);
+    this.notifyObservers();
   }
 
   /**
@@ -30,8 +49,8 @@ export class SegmentStack {
   pop(): CommandSegment {
     const poppedSegment = this.segments.pop() || this.nullSegment;
     console.log("[SegmentStack] pop segment: ", poppedSegment);
+    this.notifyObservers();
     return poppedSegment;
-    // return this.segments.pop() || this.nullSegment;
   }
 
   /**

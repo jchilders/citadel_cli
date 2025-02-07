@@ -1,13 +1,13 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { CitadelState, CitadelActions } from '../types/state';
-import { Logger } from '../utils/logger';
-import { useCommandParser } from '../hooks/useCommandParser';
+import { InputState, useCommandParser,  } from '../hooks/useCommandParser';
 import { Cursor } from '../Cursor';
 import { defaultConfig } from '../config/defaults';
 import { useCitadelConfig, useCitadelCommands, useSegmentStack } from '../config/CitadelConfigContext';
 import styles from './CommandInput.module.css';
 import { CursorType } from '../types/cursor';
 import { ArgumentSegment } from '../types/command-trie';
+import { useStackVersion } from '../hooks/useStackVersion';
 
 interface CommandInputProps {
   state: CitadelState;
@@ -21,16 +21,16 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const commands = useCitadelCommands();
   const segmentStack = useSegmentStack();
-  const { handleKeyDown, handleInputChange, inputState, setInputStateWithLogging } = useCommandParser({ commands });
+  const { handleKeyDown, handleInputChange, inputState, setInputStateWithLogging, getNextExpectedSegment } = useCommandParser({ commands });
   const [showInvalidAnimation ] = useState(false);
   const config = useCitadelConfig();
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    Logger.debug('[CommandInput] onKeyDown', { key: e.key, state });
     handleKeyDown(e, state, actions);
   };
 
   const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("[onInputChange]. value: ", event.target.value);
     handleInputChange(event.target.value, actions);
   };
 
@@ -40,45 +40,64 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     handleInputChange(pastedText, actions);
   };
 
-  // Focus input on mount
+  // Focus input and set initial input state on mount
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
-  }, []);
-
-  // Set initial input state on mount
-  useEffect(() => {
     if (inputState !== 'entering_command') {
       setInputStateWithLogging('entering_command');
     }
   }, []);
+
+  const stackVersion = useStackVersion();
 
   // Re-focus input when command stack changes
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
-  }, [segmentStack]);
+  }, [stackVersion]);
 
   // React to inputState changes
   useEffect(() => {
     console.log("[CommandInput] inputState changed to:", inputState);
-    // Add any other logic you want to execute when inputState changes
-  }, [inputState]);
+    if (inputState !== 'idle') return;
+      
+    const nextExpectedSegment = getNextExpectedSegment();
+    console.log("[CommandInput] nextExpectedSegment:", nextExpectedSegment);
+    let nextInputState: InputState = 'idle';
+    switch (nextExpectedSegment.type) {
+      case 'word':
+        console.log("[CommandInput] case word");
+        nextInputState = 'entering_command';
+        actions.setIsEnteringArg(false);
+        break;
+      case 'argument':
+        console.log("[CommandInput] case argument");
+        nextInputState = 'entering_argument';
+        actions.setIsEnteringArg(true);
+        break;
+      default:
+        console.log("[CommandInput] case default");
+        break;
+    }
+    console.log(`[CommandInput] changing inputState to '${nextInputState}'`);
+    setInputStateWithLogging(nextInputState);
+  }, [stackVersion]);
 
   // For word segments, show the name. For argument segments, show the value.
-  const segmentNamesAndVals: string = segmentStack.toArray().map((segment, index, array) => {
-    const isLastSegment = index === array.length - 1;
-    if (isLastSegment && state.isEnteringArg) {
-      return '';
-    }
-    if (segment.type === 'argument') {
-      return `[ ${(segment as ArgumentSegment).value} ]`;
-    }
+  const [segmentNamesAndVals, setSegmentNamesAndVals] = useState<string>("");
+  useEffect(() => {
+    let result = segmentStack.toArray().map((segment) => {
+      if (segment.type === 'argument') {
+        return `[ ${(segment as ArgumentSegment).value} ]`;
+      }
 
-    return segment.name;
-  }).join(' ');
+      return segment.name;
+    }).join(' ');
+    setSegmentNamesAndVals(result);
+  }, [stackVersion, state.isEnteringArg]);
 
   return (
     <div className="flex flex-col w-full bg-gray-900 rounded-lg p-4">
@@ -102,7 +121,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
               className={`w-full bg-transparent outline-none text-gray-200 caret-transparent ${showInvalidAnimation ? styles.invalidInput : ''}`}
               spellCheck={false}
               autoComplete="off"
-              placeholder={state.isEnteringArg ? (segmentStack.peek().name) : ''}
+              placeholder={state.isEnteringArg ? 'toDoArgName' : ''}
             />
             <div 
               className="absolute top-0 pointer-events-none"

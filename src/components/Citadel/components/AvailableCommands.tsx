@@ -1,5 +1,6 @@
 import React from 'react';
 import { useCitadelCommands, useCitadelConfig, useSegmentStack } from '../config/CitadelConfigContext';
+import { useStackVersion } from '../hooks/useStackVersion';
 import { Logger } from '../utils/logger';
 
 export const AvailableCommands: React.FC = () => {
@@ -12,13 +13,15 @@ export const AvailableCommands: React.FC = () => {
 
   const nextCommandSegments = commands.getCompletions(segmentStack.path());
   Logger.debug("[AvailableCommands] nextCommandSegments: ", nextCommandSegments);
+  const stackVersion = useStackVersion();
+  
   const sortedCommands = React.useMemo(() => {
     if (config.includeHelpCommand) {
       const nonHelpCommands = nextCommandSegments.filter(segment => segment.name !== 'help');
       const helpCommand = nextCommandSegments.find(segment => segment.name === 'help');
       return [...nonHelpCommands, ...(helpCommand ? [helpCommand] : [])];
     }
-  }, [nextCommandSegments, segmentStack, config.includeHelpCommand]);
+  }, [nextCommandSegments, stackVersion, config.includeHelpCommand]);
 
   const nextSegmentIsArgument = segmentStack.peek().type === 'argument';
   return (

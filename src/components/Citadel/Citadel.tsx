@@ -119,7 +119,7 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
   const isDraggingRef = useRef(false);
   const startYRef = useRef(0);
   const startHeightRef = useRef(0);
-  const { state, actions, getAvailableCommands_s } = useCitadelState();
+  const { state, actions } = useCitadelState();
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (containerRef.current) {
