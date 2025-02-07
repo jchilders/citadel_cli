@@ -1,4 +1,4 @@
-import { CommandNode, CommandTrie, ArgumentSegment, CommandHandler } from '../components/Citadel/types/command-trie';
+import { CommandNode, CommandTrie, CommandHandler } from '../components/Citadel/types/command-trie';
 import { TextCommandResult } from '../components/Citadel/types/command-results';
 import { CitadelState, CitadelActions } from '../components/Citadel/types';
 
@@ -13,7 +13,7 @@ interface MockNodeOptions {
 }
 
 export const createMockNode = (name: string, options: MockNodeOptions = {}): CommandNode => {
-  const defaultHandler: CommandHandler = async (_args: ArgumentSegment[]) => {
+  const defaultHandler: CommandHandler = async (_args: string[]) => {
     const result = new TextCommandResult('Success');
     result.markSuccess();
     return result;
@@ -38,7 +38,6 @@ export const createMockCommandTrie = (): CommandTrie => {
   vi.spyOn(trie, 'getCommand').mockReturnValue(mockNode);
   vi.spyOn(trie, 'addCommand').mockImplementation(() => {});
   vi.spyOn(trie, 'getCompletions_s').mockReturnValue([]);
-  vi.spyOn(trie, 'executeCommand').mockResolvedValue(undefined);
 
   return trie;
 };
@@ -69,7 +68,6 @@ export const createMockCommandHistoryActions = (overrides = {}): CommandHistoryA
 });
 
 export const createMockCitadelState = (overrides = {}): CitadelState => ({
-  commandStack: [],
   currentInput: '',
   isEnteringArg: false,
   output: [],
@@ -83,14 +81,11 @@ export const createMockCitadelState = (overrides = {}): CitadelState => ({
 });
 
 export const createMockCitadelActions = (overrides = {}): CitadelActions => ({
-  setCommandStack: vi.fn(),
   setCurrentInput: vi.fn(),
   setIsEnteringArg: vi.fn(),
   addOutput: vi.fn(),
-  setValidation: vi.fn(),
   executeCommand: vi.fn(),
   executeHistoryCommand: vi.fn(),
   clearHistory: vi.fn(),
-  setCurrentSegmentIndex: vi.fn(),
   ...overrides
 });

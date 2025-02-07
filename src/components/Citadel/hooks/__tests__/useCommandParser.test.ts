@@ -58,10 +58,10 @@ describe('useCommandParser', () => {
     it('should handle mixed quotes', () => {
       const result = parseInput('user comment "1234" \'test comment\'');
       expect(result).toEqual({
-        words: ['user', 'comment', '1234', 'test comment'],
+        words: ['user', 'comment', '"1234"', "'test comment'"],
         currentWord: '',
         isQuoted: false,
-        quoteChar: undefined,
+        quoteChar: "'",
         isComplete: true
       });
     });

@@ -217,7 +217,7 @@ export const useCitadelState = () => {
       }));
 
       try {
-        const argVals = segmentStack.arguments.map(argSeg => argSeg.value());
+        const argVals = segmentStack.arguments.map(argSeg => argSeg.value);
         
         const result = await Promise.race([
           command.handler(argVals),

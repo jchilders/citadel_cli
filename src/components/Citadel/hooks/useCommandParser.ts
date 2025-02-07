@@ -4,6 +4,7 @@ import { CitadelState, CitadelActions } from '../types/state';
 import { useSegmentStack } from '../config/CitadelConfigContext';
 import { useCitadelState } from './useCitadelState';
 import { Logger } from '../utils/logger';
+import { useSegmentStackVersion } from './useSegmentStackVersion';
 
 export type InputState = 'idle' | 'entering_command' | 'entering_argument';
 
@@ -14,17 +15,18 @@ interface UseCommandParserProps {
 export const useCommandParser = ({ commands }: UseCommandParserProps) => {
   const { state } = useCitadelState();
   const segmentStack = useSegmentStack();
+  const segmentStackVersion = useSegmentStackVersion();
   const [inputState, setInputState] = useState<InputState>('idle');
 
   const setInputStateWithLogging = (newState: InputState) => {
-    console.log(`InputState changing from ${inputState} to ${newState}`);
+    Logger.debug(`InputState changing from ${inputState} to ${newState}`);
     setInputState(newState);
   }
 
   const getNextExpectedSegment = (): CommandSegment => {
     const completions = commands.getCompletions(segmentStack.path());
     const nextExpectedSegment = completions[0] || segmentStack.nullSegment; // Return first available completion
-    console.log("[getNextExpectedSegment] ", nextExpectedSegment);
+    Logger.debug("[getNextExpectedSegment] ", nextExpectedSegment);
     return nextExpectedSegment;
   }
 
@@ -71,17 +73,14 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
    * returns "user". But if input is "u", returns null since it's ambiguous.
    */
   const getAutocompleteSuggestion = useCallback((input: string): CommandSegment => {
-    console.log("[getAutocompleteSuggestion] >> input: ", input);
     // Get available word segments
     const availableSegments = commands.getCompletions(segmentStack.path())
       .filter(segment => segment.type === 'word');
-    console.log("[getAutocompleteSuggestion] >> availableSegments: ", availableSegments);
     
     // Find segments that match the input
     const matchingSegments = availableSegments.filter(segment =>
       segment.name.toLowerCase().startsWith(input.toLowerCase())
     );
-    console.log("[getAutocompleteSuggestion] >> matchingSegments: ", matchingSegments);
     
     // Only return a suggestion if we have exactly one match
     if (matchingSegments.length === 1) {
@@ -123,7 +122,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
       return new NullSegment;
     }
 
-    console.log("[tryAutoComplete] result: ", suggestion);
+    Logger.debug("[tryAutoComplete] result: ", suggestion);
     return suggestion;
   }, [getAvailableNodes, getAutocompleteSuggestion, segmentStack, commands, getNextExpectedSegment]);
 
@@ -143,6 +142,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
         
       const nextSegment = getNextExpectedSegment();
       if (nextSegment.type === 'argument') {
+        Logger.debug("[useCommandParser][handleInputChange][entering_argument] nextSegment: ", nextSegment);
         const argumentSegment = (nextSegment as ArgumentSegment);
         argumentSegment.value = parsedInput.words[0]?.trim() || '';
         segmentStack.push(argumentSegment);
@@ -156,6 +156,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     if (inputState == 'entering_command') {
       const suggestedSegment = tryAutocomplete(parsedInput);
       if (suggestedSegment.type === 'word') {
+        Logger.debug("[useCommandParser][handleInputChange][entering_command] suggestedSegment: ", suggestedSegment);
         segmentStack.push(suggestedSegment as WordSegment);
         actions.setCurrentInput('');
         setInputStateWithLogging('idle');
@@ -163,15 +164,13 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
         return;
       }
     }
-  }, [tryAutocomplete, state]);
+  }, [tryAutocomplete, segmentStackVersion, state]);
 
   /**
-   * Handles keyboard events
+   * Handles keyboard events for Backspace, Enter, and regular input.
    * Responsible for:
-   * - Special key handling (Tab, Backspace, Enter)
    * - Command execution
    * - Navigation
-   * - Input validation
    */
   const handleKeyDown = useCallback((
     e: KeyboardEvent | React.KeyboardEvent,
@@ -201,61 +200,33 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     // Handle special keys first
     switch (e.key) {
       case 'Backspace':
-        console.log("[handleKeyDown][Backspace] Before segmentStack: ", segmentStack);
         if (currentInput === '') {
           e.preventDefault();
-          if (segmentStack.size() > 0) {
-            const poppedSeg = segmentStack.pop();
-            console.log("[Backspace] poppedSeg: ", poppedSeg);
-          }
+          if (segmentStack.size() > 0) segmentStack.pop(); 
           setInputStateWithLogging('idle');
         }
-        console.log("[handleKeyDown][Backspace] After segmentStack: ", segmentStack);
         return;
 
       case 'Enter':
-        console.log("[handleKeyDown][Enter] segmentStack: ", segmentStack);
         e.preventDefault();
 
         const parsedInput = parseInput(currentInput);
-        console.log("[handleKeyDown][Enter] parsedInput: ", parsedInput);
         // Don't execute if quotes aren't closed
         if (parsedInput.isQuoted && !parsedInput.isComplete) {
-          console.log("[handleKeyDown][Enter] Incomplete input. Doing nothing.");
           return;
         }
 
-        console.log("[handleKeyDown][Enter] calling executeCommand");
+        if (inputState === 'entering_argument') {
+          const nextSegment = getNextExpectedSegment();
+          const argumentSegment = (nextSegment as ArgumentSegment);
+          argumentSegment.value = parsedInput.words[0]?.trim() || '';
+          segmentStack.push(argumentSegment);
+        }
+
+        Logger.debug("[handleKeyDown][Enter] calling executeCommand. segmentStack: ", segmentStack);
         actions.executeCommand();
         resetInputState(actions);
 
-        // if (isEnteringArg) {
-        //   // Handle argument submission
-        //   const args = [...parsedInput.words];
-        //   if (parsedInput.currentWord) {
-        //     args.push(parsedInput.currentWord);
-        //   }
-        //   executeCommand(actions);
-        // } else if (!isEnteringArg && parsedInput.currentWord) {
-        //   // Try to match and execute a command
-        //   const availableNodes = getAvailableNodes();
-        //   const matches = findMatchingCommands(parsedInput.currentWord, availableNodes);
-        //   
-        //   if (matches.length === 1) {
-        //     const matchedNode = matches[0];
-        //     
-        //     if (matchedNode.hasArguments) {
-        //       actions.setCurrentInput('');
-        //       actions.setIsEnteringArg(true);
-        //       setInputStateWithLogging('entering_argument');
-        //     } else {
-        //       executeCommand(actions);
-        //     }
-        //   }
-        // } else if (!segmentStack.isEmpty()) {
-        //   // Execute handler for current node if it doesn't need args
-        //   executeCommand(actions);
-        // }
         return;
     }
 
@@ -272,7 +243,9 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     findMatchingCommands,
     getAvailableNodes,
     getAutocompleteSuggestion,
-    isValidCommandInput
+    inputState,
+    isValidCommandInput,
+    segmentStackVersion,
   ]);
 
   const resetInputState = useCallback((actions: CitadelActions) => {
