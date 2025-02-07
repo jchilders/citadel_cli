@@ -1,7 +1,7 @@
 import React from 'react';
 import { useCitadelCommands, useCitadelConfig, useSegmentStack } from '../config/CitadelConfigContext';
-import { useStackVersion } from '../hooks/useStackVersion';
 import { Logger } from '../utils/logger';
+import { useSegmentStackVersion } from '../hooks/useSegmentStackVersion';
 
 export const AvailableCommands: React.FC = () => {
   const commands  = useCitadelCommands();
@@ -13,7 +13,7 @@ export const AvailableCommands: React.FC = () => {
 
   const nextCommandSegments = commands.getCompletions(segmentStack.path());
   Logger.debug("[AvailableCommands] nextCommandSegments: ", nextCommandSegments);
-  const stackVersion = useStackVersion();
+  const segmentStackVersion = useSegmentStackVersion();
   
   const sortedCommands = React.useMemo(() => {
     if (config.includeHelpCommand) {
@@ -21,7 +21,7 @@ export const AvailableCommands: React.FC = () => {
       const helpCommand = nextCommandSegments.find(segment => segment.name === 'help');
       return [...nonHelpCommands, ...(helpCommand ? [helpCommand] : [])];
     }
-  }, [nextCommandSegments, stackVersion, config.includeHelpCommand]);
+  }, [nextCommandSegments, segmentStackVersion, config.includeHelpCommand]);
 
   const nextSegmentIsArgument = segmentStack.peek().type === 'argument';
   return (

@@ -205,14 +205,15 @@ export class CommandTrie {
     console.log("[getCompletions] path: ", path);
     // If no path provided, get all top-level segments
     if (!path.length) {
-      const firstSegments = this._commands.map(cmd => cmd.segments[0]);
+      const topLevelSegments = this._commands.map(cmd => cmd.segments[0]);
       const isEqual = (a: CommandSegment, b: CommandSegment): boolean => 
         a.type === b.type && a.name === b.name;
       
-      const uniqueObjects = firstSegments.filter((seg, index, self) =>
+      const uniqueSegments = topLevelSegments.filter((seg, index, self) =>
         index === self.findIndex(o => isEqual(o, seg))
       );
-      return uniqueObjects;
+
+      return uniqueSegments;
     }
 
     const pathDepth = path.length;
@@ -247,14 +248,8 @@ export class CommandTrie {
       .filter(command => command.segments.length > pathDepth)
       .map(command => {
         const segment = command.segments[pathDepth];
-        // Ensure segments are proper class instances
-        if (segment.type === 'argument') {
-          return new ArgumentSegment(
-            segment.name,
-            segment.description
-          );
-        }
-        return segment;
+        const SegmentClass = segment.type === 'argument' ? ArgumentSegment : WordSegment;
+        return new SegmentClass(segment.name, segment.description);
       });
 
     // Deduplicate segments based on type and name

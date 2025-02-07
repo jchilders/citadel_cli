@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSegmentStack } from '../config/CitadelConfigContext';
 
-export const useStackVersion = () => {
+export const useSegmentStackVersion = () => {
   const segmentStack = useSegmentStack();
   const [stackVersion, setStackVersion] = useState(0);
   

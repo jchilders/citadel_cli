@@ -7,7 +7,7 @@ import { useCitadelConfig, useCitadelCommands, useSegmentStack } from '../config
 import styles from './CommandInput.module.css';
 import { CursorType } from '../types/cursor';
 import { ArgumentSegment } from '../types/command-trie';
-import { useStackVersion } from '../hooks/useStackVersion';
+import { useSegmentStackVersion } from '../hooks/useSegmentStackVersion';
 
 interface CommandInputProps {
   state: CitadelState;
@@ -24,7 +24,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   const { handleKeyDown, handleInputChange, inputState, setInputStateWithLogging, getNextExpectedSegment } = useCommandParser({ commands });
   const [showInvalidAnimation ] = useState(false);
   const config = useCitadelConfig();
-  const stackVersion = useStackVersion();
+  const segmentStackVersion = useSegmentStackVersion();
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     handleKeyDown(e, state, actions);
@@ -56,7 +56,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     if (inputRef.current) {
       inputRef.current.focus();
     }
-  }, [stackVersion]);
+  }, [segmentStackVersion]);
 
   // React to inputState changes
   useEffect(() => {
@@ -83,7 +83,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     }
     console.log(`[CommandInput] changing inputState to '${nextInputState}'`);
     setInputStateWithLogging(nextInputState);
-  }, [stackVersion]);
+  }, [segmentStackVersion]);
 
   // For word segments, show the name. For argument segments, show the value.
   const [segmentNamesAndVals, setSegmentNamesAndVals] = useState<string>("");
@@ -96,7 +96,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       return segment.name;
     }).join(' ');
     setSegmentNamesAndVals(result);
-  }, [stackVersion, state.isEnteringArg]);
+  }, [segmentStackVersion, state.isEnteringArg]);
 
   // Placeholder text for the input field
   const [placeholderText, setPlaceholderText] = useState<string>("");
