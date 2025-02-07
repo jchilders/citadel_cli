@@ -76,11 +76,13 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     // Get available word segments
     const availableSegments = commands.getCompletions(segmentStack.path())
       .filter(segment => segment.type === 'word');
+    console.log("availableSegments: ", availableSegments);
     
     // Find segments that match the input
     const matchingSegments = availableSegments.filter(segment =>
       segment.name.toLowerCase().startsWith(input.toLowerCase())
     );
+    console.log("matchingSegments: ", matchingSegments);
     
     // Only return a suggestion if we have exactly one match
     if (matchingSegments.length === 1) {
@@ -90,14 +92,15 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     return segmentStack.nullSegment;
   }, [findMatchingCommands]);
 
-  const isValidCommandInput = useCallback((input: ParsedInput): boolean => {
-    if (!input.currentWord && !input.isQuoted) return true;
+  const isValidCommandInput = useCallback((input: string): boolean => {
+    console.log("[useCommandParser][isValidCommandInput] input: ", input);
+    // if (!input.currentWord && !input.isQuoted) return true;
 
     const currentPath = segmentStack.path();
     const availableSegments = commands.getCompletions(currentPath);
     
     // If we have no completions and there's input, it's invalid
-    if (availableSegments.length === 0 && input.currentWord) {
+    if (availableSegments.length === 0 && input) {
       return false;
     }
 
@@ -109,16 +112,17 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     // For word segments, check if input matches any available completion
     return availableSegments.some(segment =>
       segment.type === 'word' && 
-      segment.name.toLowerCase().startsWith(input.currentWord.toLowerCase())
+      segment.name.toLowerCase().startsWith(input.toLowerCase())
     );
   }, [commands]);
 
   const tryAutocomplete = useCallback((
-    parsedInput: ParsedInput
+    input: string
   ): CommandSegment => {
-    const suggestion = getAutocompleteSuggestion(parsedInput.currentWord);
+    Logger.debug("[tryAutoComplete] input: ", input);
+    const suggestion = getAutocompleteSuggestion(input);
     
-    if (!suggestion || suggestion.name === parsedInput.currentWord) {
+    if (!suggestion || suggestion.name === input) {
       return new NullSegment;
     }
 
@@ -135,16 +139,16 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     actions: CitadelActions,
   ) => {
     actions.setCurrentInput(newValue);
-    const parsedInput = parseInput(newValue);
+    Logger.debug("[useCommandParser][handleInputChange] newValue: ", newValue);
 
     if (inputState === 'entering_argument') {
-      if (!parsedInput.isComplete) return; 
+      if (!inputIsCorrectlyQuoted(newValue)) return;
         
       const nextSegment = getNextExpectedSegment();
       if (nextSegment.type === 'argument') {
         Logger.debug("[useCommandParser][handleInputChange][entering_argument] nextSegment: ", nextSegment);
         const argumentSegment = (nextSegment as ArgumentSegment);
-        argumentSegment.value = parsedInput.words[0]?.trim() || '';
+        argumentSegment.value = newValue.trim() || '';
         segmentStack.push(argumentSegment);
         actions.setCurrentInput('');
         setInputStateWithLogging('idle');
@@ -154,7 +158,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     }
 
     if (inputState == 'entering_command') {
-      const suggestedSegment = tryAutocomplete(parsedInput);
+      const suggestedSegment = tryAutocomplete(newValue);
       if (suggestedSegment.type === 'word') {
         Logger.debug("[useCommandParser][handleInputChange][entering_command] suggestedSegment: ", suggestedSegment);
         segmentStack.push(suggestedSegment as WordSegment);
@@ -210,16 +214,15 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
       case 'Enter':
         e.preventDefault();
 
-        const parsedInput = parseInput(currentInput);
         // Don't execute if quotes aren't closed
-        if (parsedInput.isQuoted && !parsedInput.isComplete) {
+        if (!inputIsCorrectlyQuoted(currentInput)) {
           return;
         }
 
         if (inputState === 'entering_argument') {
           const nextSegment = getNextExpectedSegment();
           const argumentSegment = (nextSegment as ArgumentSegment);
-          argumentSegment.value = parsedInput.words[0]?.trim() || '';
+          argumentSegment.value = currentInput;
           segmentStack.push(argumentSegment);
         }
 
@@ -232,7 +235,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
 
     // Handle character input
     if (!isEnteringArg && e.key.length === 1) {
-      const nextInput = parseInput(currentInput + e.key);
+      const nextInput = (currentInput + e.key);
       if (!isValidCommandInput(nextInput)) {
         e.preventDefault();
         return;
@@ -269,90 +272,47 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
   };
 }
 
-export interface ParsedInput {
-  words: string[];
-  currentWord: string;
-  isQuoted: boolean;
-  quoteChar?: "'" | '"';
-  isComplete: boolean;
-}
+export function inputIsCorrectlyQuoted(input: string): boolean {
+  // If string is empty or just whitespace, it's valid (no quotes)
+  if (!input.trim()) return true;
 
-/* Parses command input into words, handling quoted strings and spaces.
- * Returns parsed words, current word being typed, and quote state.
- *
- * Example 1: Simple command with spaces
- *   const example1 = parseInput('git commit -m "initial commit');
- * Returns:
- *   {
- *     words: ['git', 'commit', '-m'],
- *     currentWord: 'initial commit',
- *     isQuoted: true,
- *     quoteChar: '"',
- *     isComplete: false
- *   }
- *
- * Example 2: Unfinished quoted string
- *   const example2 = parseInput('echo "hello world');
- * Returns:
- *   {
- *     words: ['echo'],
- *     currentWord: '"hello world',
- *     isQuoted: true,
- *     quoteChar: '"',
- *     isComplete: false
- *   }
- *
- * Example 3: Complete command with multiple words
- *   const example3 = parseInput('docker build -t my-image .');
- * Returns:
- *   {
- *     words: ['docker', 'build', '-t', 'my-image', '.'],
- *     currentWord: '',
- *     isQuoted: false,
- *     quoteChar: undefined,
- *     isComplete: true
- *   }
- */
-export function parseInput(input: string): ParsedInput {
-  const words: string[] = [];
-  let currentWord = '';
-  let isQuoted = false;
-  let quoteChar: "'" | '"' | undefined;
+  // Get first and last characters
+  const first = input[0];
+  const last = input[input.length - 1];
 
-  for (let i = 0; i < input.length; i++) {
+  // If no quotes at start, it's valid
+  if (first !== '"' && first !== "'") return true;
+
+  // At this point, we have a starting quote, so we need:
+  // 1. Matching end quote
+  // 2. No unescaped matching quotes in between
+
+  // If no matching end quote, invalid
+  if (last !== first) return false;
+
+  // Check for unescaped quotes in between
+  const quoteType = first;
+  let escaped = false;
+
+  // Check characters from index 1 to length-2 (excluding start/end quotes)
+  for (let i = 1; i < input.length - 1; i++) {
     const char = input[i];
 
-    if ((char === '"' || char === "'") && (!isQuoted || char === quoteChar)) {
-      if (isQuoted) {
-        // End quote
-        words.push(currentWord);
-        currentWord = '';
-        isQuoted = false;
-        quoteChar = undefined;
-      } else {
-        // Start quote
-        if (currentWord) {
-          words.push(currentWord);
-          currentWord = '';
-        }
-        isQuoted = true;
-        quoteChar = char;
-      }
-    } else if (!isQuoted && char === ' ') {
-      if (currentWord) {
-        words.push(currentWord);
-        currentWord = '';
-      }
-    } else {
-      currentWord += char;
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+
+    if (char === '\\') {
+      escaped = true;
+      continue;
+    }
+
+    // If we find an unescaped matching quote in the middle, it's invalid
+    if (char === quoteType && !escaped) {
+      return false;
     }
   }
 
-  return {
-    words,
-    currentWord,
-    isQuoted,
-    quoteChar,
-    isComplete: !isQuoted && !currentWord
-  };
+  return true;
 }

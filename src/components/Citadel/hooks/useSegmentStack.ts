@@ -1,7 +1,19 @@
 import { useState, useCallback } from 'react';
 import { SegmentStack } from '../types/segment-stack';
-import { CommandSegment } from '../types/command-trie';
-import { SegmentStackActions } from '../types/segment-actions';
+import { ArgumentSegment, CommandSegment } from '../types/command-trie';
+
+export interface SegmentStackActions {
+  push: (segment: CommandSegment) => void;
+  pop: () => CommandSegment;
+  peek: () => CommandSegment;
+  clear: () => void;
+  hasArguments: () => boolean;
+  getArguments: () => ArgumentSegment[];
+  path: () => string[];
+  segments: () => CommandSegment[];
+  isEmpty: () => boolean;
+  size: () => number;
+}
 
 export function useSegmentStack(): SegmentStackActions {
   const [stack] = useState(() => new SegmentStack());
