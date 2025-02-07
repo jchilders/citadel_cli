@@ -159,15 +159,6 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     // coming next simply by checking the type of whatever the next one is.
     const nextSegment = getNextExpectedSegment()
     console.log("-=-=-=-=-=> nextSegment: ", nextSegment);
-    // const nextSegmentIsArgument = nextSegment.type === 'argument';
-
-    // if (nextSegmentIsArgument) {
-    //   console.log("-=-=-=-=-=> 1.1");
-    //   actions.setIsEnteringArg(true);
-    //   setInputStateWithLogging('entering_argument');
-    //
-    //   return;
-    // } 
 
     const parsedInput = parseInput(newValue);
     console.log("-=-=-=-=-=> parsedInput: ", parsedInput);
@@ -182,7 +173,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
         if (nextSegment.type !== 'null') {
           if (nextSegment.type === 'argument') {
             const argumentSegment = (segmentStack.pop() as ArgumentSegment);
-            argumentSegment.value = parsedInput.words[0].trim();
+            argumentSegment.value = parsedInput.words[0] ? parsedInput.words[0].trim() : '';
             console.log("-=-=-=-=-=> 1.2.1.1 pushing", argumentSegment);
             segmentStack.push(argumentSegment);
             setInputStateWithLogging('idle');
@@ -253,22 +244,16 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     // Handle special keys first
     switch (e.key) {
       case 'Backspace':
-        console.log("[Backspace] segmentStack: ", segmentStack);
+        console.log("[Backspace] before segmentStack: ", segmentStack);
         if (currentInput === '') {
           e.preventDefault();
           if (segmentStack.size() > 0) {
             const poppedSeg = segmentStack.pop();
             console.log("[Backspace] poppedSeg: ", poppedSeg);
-            // Need to pop twice for arguments because we push the argument
-            // segment -- but not the word -- so we can set the value
-            // if (poppedSeg.type === 'argument') {
-            //   segmentStack.pop();
-            // }
-            // actions.setIsEnteringArg(false);
-            // setInputStateWithLogging('idle');
           }
+          setInputStateWithLogging('idle');
         }
-        console.log("[Backspace] segmentStack: ", segmentStack);
+        console.log("[Backspace] after segmentStack: ", segmentStack);
         return;
 
       case 'Enter':

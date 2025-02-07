@@ -24,6 +24,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   const { handleKeyDown, handleInputChange, inputState, setInputStateWithLogging, getNextExpectedSegment } = useCommandParser({ commands });
   const [showInvalidAnimation ] = useState(false);
   const config = useCitadelConfig();
+  const stackVersion = useStackVersion();
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     handleKeyDown(e, state, actions);
@@ -49,8 +50,6 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       setInputStateWithLogging('entering_command');
     }
   }, []);
-
-  const stackVersion = useStackVersion();
 
   // Re-focus input when command stack changes
   useEffect(() => {
@@ -99,6 +98,18 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     setSegmentNamesAndVals(result);
   }, [stackVersion, state.isEnteringArg]);
 
+  // Placeholder text for the input field
+  const [placeholderText, setPlaceholderText] = useState<string>("");
+  useEffect(() => {
+    const nextExpectedSegment = getNextExpectedSegment();
+    if (nextExpectedSegment.type === 'argument') {
+      setPlaceholderText(nextExpectedSegment.name);
+    } else {
+      setPlaceholderText("");
+    }
+    console.log("[CommandInput] placeholderText:", placeholderText);
+  });
+
   return (
     <div className="flex flex-col w-full bg-gray-900 rounded-lg p-4">
       <div className="flex items-center gap-2">
@@ -121,7 +132,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
               className={`w-full bg-transparent outline-none text-gray-200 caret-transparent ${showInvalidAnimation ? styles.invalidInput : ''}`}
               spellCheck={false}
               autoComplete="off"
-              placeholder={state.isEnteringArg ? 'toDoArgName' : ''}
+              placeholder={placeholderText}
             />
             <div 
               className="absolute top-0 pointer-events-none"
