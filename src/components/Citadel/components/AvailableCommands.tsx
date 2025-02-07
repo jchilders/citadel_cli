@@ -23,7 +23,8 @@ export const AvailableCommands: React.FC = () => {
     }
   }, [nextCommandSegments, segmentStackVersion, config.includeHelpCommand]);
 
-  const nextSegmentIsArgument = segmentStack.peek().type === 'argument';
+  const nextSegmentIsArgument = nextCommandSegments.some(seg => seg.type === 'argument');
+  const nextSegment = nextCommandSegments[0];
   return (
     <div className={containerClasses} data-testid="available-commands">
       <div className={contentClasses}>
@@ -56,11 +57,11 @@ export const AvailableCommands: React.FC = () => {
               );
             })}
           </div>
-        ) : !segmentStack.isEmpty() ? (
+        ) : nextCommandSegments.length > 0 ? (
           <>
-            <span className="text-blue-400">{segmentStack.peek().name}</span>
-            {segmentStack.peek().description && (
-              <span className="text-gray-400 ml-2">- {segmentStack.peek().description}</span>
+            <span className="text-blue-400">{nextSegment.name}</span>
+            {nextSegment.description && (
+              <span className="text-gray-400 ml-2">- {nextSegment.description}</span>
             )}
           </>
         ) : null}

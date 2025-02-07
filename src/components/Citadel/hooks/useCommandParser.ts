@@ -154,11 +154,6 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     actions.setCurrentInput(newValue);
 
     console.log("-=-=-=-=-=> segmentStack: ", segmentStack.toArray());
-    // Because segments at a given level can be EITHER arguments OR words --
-    // but not a mix of both for the same level -- we can determine which is
-    // coming next simply by checking the type of whatever the next one is.
-    const nextSegment = getNextExpectedSegment()
-    console.log("-=-=-=-=-=> nextSegment: ", nextSegment);
 
     const parsedInput = parseInput(newValue);
     console.log("-=-=-=-=-=> parsedInput: ", parsedInput);
@@ -172,17 +167,18 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
         const nextSegment = getNextExpectedSegment();
         if (nextSegment.type !== 'null') {
           if (nextSegment.type === 'argument') {
-            const argumentSegment = (segmentStack.pop() as ArgumentSegment);
+            const argumentSegment = (nextSegment as ArgumentSegment);
             argumentSegment.value = parsedInput.words[0] ? parsedInput.words[0].trim() : '';
             console.log("-=-=-=-=-=> 1.2.1.1 pushing", argumentSegment);
             segmentStack.push(argumentSegment);
             setInputStateWithLogging('idle');
+            actions.setCurrentInput('');
+
             return;
           } else {
             console.log("-=-=-=-=-=> 1.2.1.2 hmm. how? nextSegment: ", nextSegment);
           }
         }
-        actions.setCurrentInput('');
       }
 
       return;
