@@ -263,6 +263,10 @@ export class CommandTrie {
     return uniqueSegments;
   }
 
+  hasNextSegment(path: string[]): boolean {
+    return this.getCompletions(path).length > 0;
+  }
+
   /**
    * Executes a command for the given path and arguments.
    *

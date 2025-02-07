@@ -1,12 +1,12 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { ArgumentSegment } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
-import { InputState, useCommandParser,  } from '../hooks/useCommandParser';
 import { Cursor } from '../Cursor';
+import { CursorType } from '../types/cursor';
 import { defaultConfig } from '../config/defaults';
+import { InputState, useCommandParser } from '../hooks/useCommandParser';
 import { useCitadelConfig, useCitadelCommands, useSegmentStack } from '../config/CitadelConfigContext';
 import styles from './CommandInput.module.css';
-import { CursorType } from '../types/cursor';
-import { ArgumentSegment } from '../types/command-trie';
 import { useSegmentStackVersion } from '../hooks/useSegmentStackVersion';
 
 interface CommandInputProps {
@@ -60,25 +60,20 @@ export const CommandInput: React.FC<CommandInputProps> = ({
 
   // React to inputState changes
   useEffect(() => {
-    console.log("[CommandInput] inputState changed to:", inputState);
     if (inputState !== 'idle') return;
       
     const nextExpectedSegment = getNextExpectedSegment();
-    console.log("[CommandInput] nextExpectedSegment:", nextExpectedSegment);
     let nextInputState: InputState = 'idle';
     switch (nextExpectedSegment.type) {
       case 'word':
-        console.log("[CommandInput] case word");
         nextInputState = 'entering_command';
         actions.setIsEnteringArg(false);
         break;
       case 'argument':
-        console.log("[CommandInput] case argument");
         nextInputState = 'entering_argument';
         actions.setIsEnteringArg(true);
         break;
       default:
-        console.log("[CommandInput] case default");
         break;
     }
     console.log(`[CommandInput] changing inputState to '${nextInputState}'`);
@@ -86,16 +81,41 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   }, [segmentStackVersion]);
 
   // For word segments, show the name. For argument segments, show the value.
-  const [segmentNamesAndVals, setSegmentNamesAndVals] = useState<string>("");
+  const [segmentNamesAndVals, setSegmentNamesAndVals] = useState<JSX.Element[]>([]);
   useEffect(() => {
-    let result = segmentStack.toArray().map((segment) => {
+    const segments: string[] = [];
+    const elements = segmentStack.toArray().map((segment, index) => {
+      segments.push(segment.name);
+      const hasNextSegment = commands.hasNextSegment(segments);
       if (segment.type === 'argument') {
-        return `[ ${(segment as ArgumentSegment).value} ]`;
+        return (
+          <React.Fragment key={index}>
+            <span className="text-gray-400 whitespace-pre">
+              {(segment as ArgumentSegment).value}
+            </span>
+            { (index < segmentStack.size() && hasNextSegment) &&
+              <span className="text-red-400 whitespace-pre"> </span>
+            }
+          </React.Fragment>
+        );
       }
-
-      return segment.name;
-    }).join(' ');
-    setSegmentNamesAndVals(result);
+      return (
+        <React.Fragment key={index}>
+          <span className="text-blue-400 whitespace-pre">{segment.name}</span>
+          { (index < segmentStack.size() && hasNextSegment) &&
+            <span className="text-blue-400 whitespace-pre"> </span>
+          }
+        </React.Fragment>
+      );
+    });
+    
+    const wrappedElements = (
+      <div className="flex items-center gap-1" data-testid="user-input-area">
+        {elements}
+      </div>
+    );
+    
+    setSegmentNamesAndVals([wrappedElements]);
   }, [segmentStackVersion, state.isEnteringArg]);
 
   // Placeholder text for the input field
@@ -115,10 +135,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       <div className="flex items-center gap-2">
         <div className="text-gray-400 font-mono">&gt;</div>
         <div className="flex-1 font-mono flex items-center">
-          <span className="text-blue-400 whitespace-pre" data-testid="user-input-area">
-            {segmentNamesAndVals}
-            {segmentNamesAndVals.length > 0 && ' '}
-          </span>
+          {segmentNamesAndVals}
           <div className="relative flex-1">
             <input
               ref={inputRef}
