@@ -4,7 +4,7 @@ import { render, fireEvent } from '@testing-library/react';
 import { CommandInput } from '../CommandInput';
 import { CommandNode } from '../../types/command-trie';
 import { TextCommandResult } from '../../types/command-results';
-import { createMockCitadelState, createMockNode } from '../../../../__test-utils__/factories';
+import { createMockCitadelState, createMockCommand } from '../../../../__test-utils__/factories';
 
 // Create test wrapper
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -17,21 +17,21 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 // Mock commands for testing
 const mockCommands: CommandNode[] = [
-  createMockNode('help', {
+  createMockCommand('help', {
     description: 'Show help information',
     handler: async () => new TextCommandResult('Help info')
   }),
-  createMockNode('user', {
+  createMockCommand('user', {
     description: 'User management'
   }),
-  createMockNode('検索', {
+  createMockCommand('検索', {
     description: '検索機能',
     handler: async () => new TextCommandResult('検索結果')
   })
 ];
 
 // Create a child command for user management
-const userShowCommand = createMockNode('show', {
+const userShowCommand = createMockCommand('show', {
   description: 'Show user details',
   argument: {
     name: 'userId',
@@ -87,7 +87,7 @@ describe('CommandInput', () => {
   });
 
   it('prevents input at leaf nodes without handlers or arguments', () => {
-    const leafNode = createMockNode('leaf', {
+    const leafNode = createMockCommand('leaf', {
       description: 'Leaf node',
       handler: undefined
     });
@@ -114,7 +114,7 @@ describe('CommandInput', () => {
   });
 
   it('allows input for nodes with handlers', () => {
-    const handlerNode = createMockNode('handler', {
+    const handlerNode = createMockCommand('handler', {
       description: 'Node with handler',
       handler: async () => new TextCommandResult('test')
     });

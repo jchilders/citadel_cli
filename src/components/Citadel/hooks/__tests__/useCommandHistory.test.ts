@@ -3,7 +3,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useCommandHistory } from '../useCommandHistory';
 import { StorageFactory } from '../../storage/StorageFactory';
 import { StoredCommand, CommandStorage } from '../../types/storage';
-import { createMockNode } from '../../../../__test-utils__/factories';
+import { createMockCommand } from '../../../../__test-utils__/factories';
 import { CommandNode } from '../../types/command-trie';
 
 // Mock storage implementing CommandStorage interface
@@ -25,7 +25,7 @@ describe('useCommandHistory', () => {
   let mockCommand: StoredCommand;
 
   beforeEach(() => {
-    mockNode = createMockNode('test');
+    mockNode = createMockCommand('test');
 
     // Set the correct path for the node
     (mockNode as any)._fullPath = ['test', 'command'];

@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { useCitadelState } from '../useCitadelState';
 import { vi, Mock } from 'vitest'
-import { createMockCommandHistory, createMockCommandHistoryActions, createMockCommandTrie, createMockNode } from '../../../../__test-utils__/factories';
+import { createMockCommandHistory, createMockCommandHistoryActions, createMockCommandTrie, createMockCommand } from '../../../../__test-utils__/factories';
 import { TextCommandResult } from '../../types/command-results';
 import { OutputItem } from '../../types/state';
 import { useCommandHistory } from '../useCommandHistory';
@@ -86,7 +86,7 @@ describe('useCitadelState', () => {
   it('should handle setCurrentNode action', () => {
     const { result } = renderHook(() => useCitadelState());
 
-    const node = createMockNode('test');
+    const node = createMockCommand('test');
     act(() => {
       result.current.actions.setCurrentNode(node);
     });
@@ -122,7 +122,7 @@ describe('useCitadelState', () => {
   it('should handle multiple actions in sequence', () => {
     const { result } = renderHook(() => useCitadelState());
 
-    const node = createMockNode('test');
+    const node = createMockCommand('test');
     act(() => {
       result.current.actions.setCurrentInput('test');
       result.current.actions.setCurrentNode(node);

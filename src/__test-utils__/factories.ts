@@ -1,6 +1,7 @@
 import { CommandNode, CommandTrie, CommandHandler } from '../components/Citadel/types/command-trie';
 import { TextCommandResult } from '../components/Citadel/types/command-results';
 import { CitadelState, CitadelActions } from '../components/Citadel/types';
+import { SegmentStack } from '../components/Citadel/types/segment-stack';
 
 interface MockNodeOptions {
   argument?: {
@@ -12,7 +13,7 @@ interface MockNodeOptions {
   isLeaf?: boolean;
 }
 
-export const createMockNode = (name: string, options: MockNodeOptions = {}): CommandNode => {
+export const createMockCommand = (name: string, options: MockNodeOptions = {}): CommandNode => {
   const defaultHandler: CommandHandler = async (_args: string[]) => {
     const result = new TextCommandResult('Success');
     result.markSuccess();
@@ -32,7 +33,7 @@ export const createMockNode = (name: string, options: MockNodeOptions = {}): Com
 
 export const createMockCommandTrie = (): CommandTrie => {
   const trie = new CommandTrie();
-  const mockNode = createMockNode('test1');
+  const mockNode = createMockCommand('test1');
   
   // Mock the public methods
   vi.spyOn(trie, 'getCommand').mockReturnValue(mockNode);
@@ -89,3 +90,15 @@ export const createMockCitadelActions = (overrides = {}): CitadelActions => ({
   clearHistory: vi.fn(),
   ...overrides
 });
+
+export const createMockSegmentStack = (): SegmentStack => {
+  const stack = new SegmentStack();
+  
+  // Spy on the main methods
+  vi.spyOn(stack, 'push');
+  vi.spyOn(stack, 'pop');
+  vi.spyOn(stack, 'clear');
+  vi.spyOn(stack, 'peek');
+  
+  return stack;
+};
