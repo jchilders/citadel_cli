@@ -1,13 +1,12 @@
 import { CommandSegment, ArgumentSegment, NullSegment } from './command-trie';
 
-/**
- * A stack implementation for managing command segments.
- * Uses NullSegment to avoid undefined returns.
- */
 interface StackObserver {
   update: () => void;
 }
 
+/**
+ * A stack used to store command segments as they are (or were) entered by a user.
+ */
 export class SegmentStack {
   private segments: CommandSegment[] = [];
   readonly nullSegment = new NullSegment();

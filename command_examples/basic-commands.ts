@@ -94,6 +94,16 @@ export function registerBasicCommands() {
     }
   );
 
+  trie.addCommand(
+    [
+      { type: 'word', name: 'error' },
+      { type: 'word', name: 'returnval' }
+    ],
+    'This command returns an invalid type',
+    // @ts-expect-error - intentionally returning invalid type
+    async (_args: string[]) => "whoops"
+  );
+
   // Image commands
   trie.addCommand(
     [

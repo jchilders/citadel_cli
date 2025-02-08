@@ -1,8 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { CitadelState, CitadelActions, OutputItem } from '../types/state';
 import { useCitadelConfig, useCitadelCommands, useCitadelStorage, useSegmentStack } from '../config/CitadelConfigContext';
-import { CommandResult } from '../types/command-results';
-import { ErrorCommandResult } from '../types/command-results';
+import { CommandResult, ErrorCommandResult } from '../types/command-results';
 import { useCommandHistory } from './useCommandHistory';
 import { initializeHistoryService } from '../services/HistoryService';
 import { Logger } from '../utils/logger';
@@ -36,98 +35,14 @@ export const useCitadelState = () => {
     }));
   }, [history]);
 
-  const executeCommand = useCallback(async (path: string[], args?: string[]) => {
-    const node = commands.getCommand(path);
-
-    if (!node) {
-      throw new Error(`Command not found: ${path.join(' ')}`);
-    }
-
-    const outputItem = new OutputItem([...path, ...(args || [])]);
-    setState(prev => ({
-      ...prev,
-      output: [...prev.output, outputItem]
-    }));
-
-    setState(prev => ({
-      ...prev,
-      currentInput: '',
-      isEnteringArg: false,
-      validation: { isValid: true }
-    }));
-
-    try {
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => {
-          reject(new Error('Request timed out'));
-        }, config.commandTimeoutMs);
-      });
-
-      const result = await Promise.race([
-        node.handler(args || []),
-        timeoutPromise
-      ]);
-
-      if (!(result instanceof CommandResult)) {
-        throw new Error(
-          `The ${node.fullPath.join('.')} command returned an invalid result type. Commands must return an instance of a CommandResult.\n` +
-          'For example:\n   return new JsonCommandResult({ text: "Hello World" });\n' +
-          `Check the definition of the ${node.fullPath.join('.')} command and update the return type.`
-        );
-      }
-
-      result.markSuccess();
-
-      // Save successful command to history
-      const storedCommand = {
-        inputs: [...node.fullPath, ...(args || [])],
-        timestamp: Date.now()
-      };
-
-      try {
-        await historyActions.addCommand(storedCommand);
-        setState(prev => ({
-          ...prev,
-          output: prev.output.map(item => 
-            item.timestamp === outputItem.timestamp
-              ? { ...item, result }
-              : item
-          )
-        }));
-      } catch (error) {
-        console.warn('Failed to save command to history:', error);
-        setState(prev => ({
-          ...prev,
-          output: prev.output.map(item => 
-            item.timestamp === outputItem.timestamp
-              ? { ...item, result }
-              : item
-          )
-        }));
-      }
-    } catch (error) {
-      console.warn('Command failed:', error);
-      const result = new ErrorCommandResult(
-        error instanceof Error ? error.message : 'Unknown error'
-      );
-      result.markFailure();
-
-      setState(prev => ({
-        ...prev,
-        output: prev.output.map(item => 
-          item.timestamp === outputItem.timestamp
-            ? { ...item, result }
-            : item
-        )
-      }));
-    }
-  }, [commands, config.commandTimeoutMs, historyActions, state]);
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    console.log("[useCitadelState][handleKeyDown]");
     const { key } = event;
 
     switch (key) {
       case 'ArrowUp':
+        console.log("[useCitadelState][handleKeyDown][ArrowUp]");
         event.preventDefault();
         const { command: upCommand } = historyActions.navigateHistory('up', state.currentInput);
         if (upCommand) {
@@ -136,6 +51,7 @@ export const useCitadelState = () => {
         break;
 
       case 'ArrowDown':
+        console.log("[useCitadelState][handleKeyDown][ArrowDown]");
         event.preventDefault();
         const { command: downCommand } = historyActions.navigateHistory('down', state.currentInput);
         if (downCommand) {
@@ -143,23 +59,8 @@ export const useCitadelState = () => {
         }
         break;
 
-      case 'Enter':
-        event.preventDefault();
-        if (state.history.position !== null) {
-          const command = state.history.commands[state.history.position];
-          executeCommand([...command.inputs]);
-          setState(prev => ({
-            ...prev,
-            history: {
-              ...prev.history,
-              position: null,
-              savedInput: null
-            }
-          }));
-        }
-        break;
-
       case 'Escape':
+        console.log("[useCitadelState][handleKeyDown][Escape]");
         event.preventDefault();
         if (state.history.position !== null) {
           const savedInput = state.history.savedInput || '';
@@ -175,7 +76,7 @@ export const useCitadelState = () => {
         }
         break;
     }
-  }, [state.currentInput, state.history, historyActions, executeCommand]);
+  }, [state.currentInput, state.history, historyActions ]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -219,13 +120,24 @@ export const useCitadelState = () => {
       try {
         const argVals = segmentStack.arguments.map(argSeg => argSeg.value);
         
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('Request timed out'));
+          }, config.commandTimeoutMs);
+        });
+
         const result = await Promise.race([
           command.handler(argVals),
-          new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error('Command timed out')), config.commandTimeoutMs);
-          })
+          timeoutPromise
         ]);
 
+        if (!(result instanceof CommandResult)) {
+          throw new Error(
+            `The ${path.join('.')} command returned an invalid result type. Commands must return an instance of a CommandResult.\n` +
+              'For example:\n   return new JsonCommandResult({ text: "Hello World" });\n' +
+              `Check the definition of the ${path.join('.')} command and update the return type for its handler.`
+          );
+        }
         result.markSuccess();
         
         // Save successful command to history
@@ -264,7 +176,7 @@ export const useCitadelState = () => {
       }
 
       await replayCommand(command, state, actions);
-    }, [state.history.commands, executeCommand]),
+    }, [state.history.commands ]),
 
     clearHistory: useCallback(async () => {
       try {

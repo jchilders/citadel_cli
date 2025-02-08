@@ -1,4 +1,4 @@
-import { ArgumentSegment, CommandSegment } from './command-trie';
+import { ArgumentSegment } from './command-trie';
 import { CommandResult, PendingCommandResult } from './command-results';
 import { CommandStorage, StoredCommand } from './storage';
 import { SegmentStack } from './segment-stack';
