@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useReducer } from 'react';
 import { CommandNode, CommandTrie, CommandSegment, ArgumentSegment, NullSegment, WordSegment } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
 import { useSegmentStack } from '../config/CitadelConfigContext';
@@ -8,6 +8,21 @@ import { useSegmentStackVersion } from './useSegmentStackVersion';
 
 export type InputState = 'idle' | 'entering_command' | 'entering_argument';
 
+type InputStateAction = {
+  type: 'set';
+  state: InputState;
+};
+
+function inputStateReducer(state: InputState, action: InputStateAction): InputState {
+  switch (action.type) {
+    case 'set':
+      Logger.debug(`[inputStateReducer] InputState changing from ${state} to ${action.state}`);
+      return action.state;
+    default:
+      return state;
+  }
+}
+
 interface UseCommandParserProps {
   commands: CommandTrie;
 }
@@ -16,11 +31,10 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
   const { state } = useCitadelState();
   const segmentStack = useSegmentStack();
   const segmentStackVersion = useSegmentStackVersion();
-  const [inputState, setInputState] = useState<InputState>('idle');
+  const [inputState, dispatch] = useReducer(inputStateReducer, 'idle');
 
   const setInputStateWithLogging = (newState: InputState) => {
-    Logger.debug(`InputState changing from ${inputState} to ${newState}`);
-    setInputState(newState);
+    dispatch({ type: 'set', state: newState });
   }
 
   const getNextExpectedSegment = (): CommandSegment => {
@@ -225,15 +239,16 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
 
     // Handle special keys first
     switch (e.key) {
-      case 'Backspace':
+      case 'Backspace': {
         if (currentInput === '') {
           e.preventDefault();
           if (segmentStack.size() > 0) segmentStack.pop(); 
           setInputStateWithLogging('idle');
         }
         return;
+      }
 
-      case 'Enter':
+      case 'Enter': {
         e.preventDefault();
 
         // Don't execute if quotes aren't closed
@@ -253,6 +268,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
         resetInputState(actions);
 
         return;
+      }
     }
 
     // Handle character input

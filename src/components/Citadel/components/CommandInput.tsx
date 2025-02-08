@@ -47,19 +47,21 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     if (inputRef.current) {
       inputRef.current.focus();
     }
+    // TODO: Set this based on nextExpectedSegment()
+    // TODO: make nextExpectedSegment stateful?
     if (inputState !== 'entering_command') {
       setInputStateWithLogging('entering_command');
     }
   }, []);
 
   // Re-focus input when command stack changes
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [segmentStackVersion]);
+  // useEffect(() => {
+  //   if (inputRef.current) {
+  //     inputRef.current.focus();
+  //   }
+  // }, [segmentStackVersion]);
 
-  // React to inputState changes
+  // Set the input state hen the segmentStack changes
   useEffect(() => {
     if (inputState !== 'idle') return;
       
@@ -81,7 +83,11 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     setInputStateWithLogging(nextInputState);
   }, [segmentStackVersion]);
 
-  // For word segments, show the name. For argument segments, show the value.
+  // Our CLI is made up of zero or more spans followed up by a div which in
+  // turn contains an input element. Each of those spans contains whatever the
+  // user has previously entered, either an argument or a word. The code below
+  // builds those spans. For word segments it shows the name (i.e. "show"), for
+  // argument segments, the value (i.e. "1234").
   const [segmentNamesAndVals, setSegmentNamesAndVals] = useState<JSX.Element[]>([]);
   useEffect(() => {
     const segments: string[] = [];
@@ -91,11 +97,11 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       if (segment.type === 'argument') {
         return (
           <React.Fragment key={index}>
-            <span className="text-gray-400 whitespace-pre">
+            <span className="text-gray-200 whitespace-pre">
               {(segment as ArgumentSegment).value}
             </span>
             { (index < segmentStack.size() && hasNextSegment) &&
-              <span className="text-red-400 whitespace-pre"> </span>
+              <span className="text-gray-200 whitespace-pre"> </span>
             }
           </React.Fragment>
         );
@@ -129,7 +135,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       setPlaceholderText("");
     }
     console.log("[CommandInput] placeholderText:", placeholderText);
-  });
+  }, [segmentStackVersion]);
 
   return (
     <div className="flex flex-col w-full bg-gray-900 rounded-lg p-4">

@@ -196,12 +196,15 @@ export function registerBasicCommands() {
 
   trie.addCommand(
     [
-      { type: 'word', name: 'thing' },
-      // { type: 'argument', name: 'message', description: 'What should the cow say?' },
-      { type: 'argument', name: 'arg1' },
+      { type: 'word', name: 'thing fnord' },
+      { type: 'argument', name: 'arg1', description: 'Arg 1' },
       { type: 'word', name: 'thing2' },
     ],
-    'Test cmd w/ arg in middle'
+    'Test cmd w/ arg in middle',
+      async (args: string[]) => {
+        localStorage.clear();
+        return new TextCommandResult(`args[0]: ${args[0]}`);
+      }
   );
 
   return trie;
