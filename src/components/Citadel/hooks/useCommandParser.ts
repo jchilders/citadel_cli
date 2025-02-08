@@ -142,25 +142,46 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     Logger.debug("[useCommandParser][handleInputChange] newValue: ", newValue);
 
     if (inputState === 'entering_argument') {
-      if (!inputIsCorrectlyQuoted(newValue)) return;
+      const parsedInput = parseInput(newValue);
         
-      const nextSegment = getNextExpectedSegment();
-      if (nextSegment.type === 'argument') {
-        Logger.debug("[useCommandParser][handleInputChange][entering_argument] nextSegment: ", nextSegment);
-        const argumentSegment = (nextSegment as ArgumentSegment);
-        argumentSegment.value = newValue.trim() || '';
-        segmentStack.push(argumentSegment);
-        actions.setCurrentInput('');
-        setInputStateWithLogging('idle');
+      if (parsedInput.isQuoted) {
+        if (parsedInput.isComplete) { // `"hello"`
+          const nextSegment = getNextExpectedSegment();
+          if (nextSegment.type === 'argument') {
+            const argumentSegment = (nextSegment as ArgumentSegment);
+            argumentSegment.value = newValue.trim() || '';
+            Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", argumentSegment);
+            segmentStack.push(argumentSegment);
+            actions.setCurrentInput('');
+            setInputStateWithLogging('idle');
 
-        return;
+            return;
+          }
+        } else { // `"hello`
+          // User is still entering an argument. Do nothing
+          return;
+        }
+      } else { // unquoted input
+        if (parsedInput.isComplete) { // `hello `
+          const argumentSegment = (getNextExpectedSegment() as ArgumentSegment);
+          argumentSegment.value = newValue.trim() || '';
+          Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", argumentSegment);
+          segmentStack.push(argumentSegment);
+          actions.setCurrentInput('');
+          setInputStateWithLogging('idle');
+
+          return;
+        } else { // `hello`
+          // User is still entering an argument. Do nothing
+          return;
+        }
       }
     }
 
     if (inputState == 'entering_command') {
       const suggestedSegment = tryAutocomplete(newValue);
       if (suggestedSegment.type === 'word') {
-        Logger.debug("[useCommandParser][handleInputChange][entering_command] suggestedSegment: ", suggestedSegment);
+        Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", suggestedSegment);
         segmentStack.push(suggestedSegment as WordSegment);
         actions.setCurrentInput('');
         setInputStateWithLogging('idle');
@@ -200,6 +221,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     Logger.debug('[handleKeyDown] ', { key: e.key, state });
 
     const { currentInput, isEnteringArg } = state;
+    const parsedInput = parseInput(currentInput);
 
     // Handle special keys first
     switch (e.key) {
@@ -215,7 +237,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
         e.preventDefault();
 
         // Don't execute if quotes aren't closed
-        if (!inputIsCorrectlyQuoted(currentInput)) {
+        if (parsedInput.isQuoted && !parsedInput.isComplete) {
           return;
         }
 
@@ -272,47 +294,55 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
   };
 }
 
-export function inputIsCorrectlyQuoted(input: string): boolean {
-  // If string is empty or just whitespace, it's valid (no quotes)
-  if (!input.trim()) return true;
 
-  // Get first and last characters
-  const first = input[0];
-  const last = input[input.length - 1];
+export interface ParsedInput {
+  words: string[];
+  currentWord: string;
+  isQuoted: boolean;
+  quoteChar?: "'" | '"';
+  isComplete: boolean;
+}
 
-  // If no quotes at start, it's valid
-  if (first !== '"' && first !== "'") return true;
+export function parseInput(input: string): ParsedInput {
+  const words: string[] = [];
+  let currentWord = '';
+  let isQuoted = false;
+  let quoteChar: "'" | '"' | undefined;
 
-  // At this point, we have a starting quote, so we need:
-  // 1. Matching end quote
-  // 2. No unescaped matching quotes in between
-
-  // If no matching end quote, invalid
-  if (last !== first) return false;
-
-  // Check for unescaped quotes in between
-  const quoteType = first;
-  let escaped = false;
-
-  // Check characters from index 1 to length-2 (excluding start/end quotes)
-  for (let i = 1; i < input.length - 1; i++) {
+  for (let i = 0; i < input.length; i++) {
     const char = input[i];
 
-    if (escaped) {
-      escaped = false;
-      continue;
-    }
-
-    if (char === '\\') {
-      escaped = true;
-      continue;
-    }
-
-    // If we find an unescaped matching quote in the middle, it's invalid
-    if (char === quoteType && !escaped) {
-      return false;
+    if ((char === '"' || char === "'") && (!isQuoted || char === quoteChar)) {
+      if (isQuoted) {
+        // End quote
+        words.push(currentWord);
+        currentWord = '';
+        isQuoted = false;
+        quoteChar = undefined;
+      } else {
+        // Start quote
+        if (currentWord) {
+          words.push(currentWord);
+          currentWord = '';
+        }
+        isQuoted = true;
+        quoteChar = char;
+      }
+    } else if (!isQuoted && char === ' ') {
+      if (currentWord) {
+        words.push(currentWord);
+        currentWord = '';
+      }
+    } else {
+      currentWord += char;
     }
   }
 
-  return true;
+  return {
+    words,
+    currentWord,
+    isQuoted,
+    quoteChar,
+    isComplete: !isQuoted && !currentWord
+  };
 }
