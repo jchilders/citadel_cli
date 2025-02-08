@@ -95,10 +95,11 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       segments.push(segment.name);
       const hasNextSegment = commands.hasNextSegment(segments);
       if (segment.type === 'argument') {
+        let argSegment =(segment as ArgumentSegment);
         return (
-          <React.Fragment key={index}>
+          <React.Fragment key={"arg-" + argSegment.name + argSegment.value}>
             <span className="text-gray-200 whitespace-pre">
-              {(segment as ArgumentSegment).value}
+              {argSegment.value}
             </span>
             { (index < segmentStack.size() && hasNextSegment) &&
               <span className="text-gray-200 whitespace-pre"> </span>
@@ -107,7 +108,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
         );
       }
       return (
-        <React.Fragment key={index}>
+        <React.Fragment key={"word-" + segment.name}>
           <span className="text-blue-400 whitespace-pre">{segment.name}</span>
           { (index < segmentStack.size() && hasNextSegment) &&
             <span className="text-blue-400 whitespace-pre"> </span>
@@ -117,7 +118,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     });
     
     const wrappedElements = (
-      <div className="flex items-center gap-1" data-testid="user-input-area">
+      <div className="flex items-center gap-1" data-testid="user-input-area" key="{segmentStackVersion}">
         {elements}
       </div>
     );
