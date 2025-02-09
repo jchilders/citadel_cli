@@ -1,7 +1,7 @@
 import { useCallback, useReducer } from 'react';
-import { CommandNode, CommandTrie, CommandSegment, ArgumentSegment, NullSegment, WordSegment } from '../types/command-trie';
+import { CommandNode, CommandSegment, ArgumentSegment, NullSegment, WordSegment } from '../types/command-trie';
 import { CitadelState, CitadelActions } from '../types/state';
-import { useSegmentStack } from '../config/CitadelConfigContext';
+import { useCitadelCommands, useSegmentStack } from '../config/CitadelConfigContext';
 import { useCitadelState } from './useCitadelState';
 import { Logger } from '../utils/logger';
 import { useSegmentStackVersion } from './useSegmentStackVersion';
@@ -23,12 +23,9 @@ function inputStateReducer(state: InputState, action: InputStateAction): InputSt
   }
 }
 
-interface UseCommandParserProps {
-  commands: CommandTrie;
-}
-
-export const useCommandParser = ({ commands }: UseCommandParserProps) => {
+export const useCommandParser = () => {
   const { state } = useCitadelState();
+  const commands = useCitadelCommands();
   const segmentStack = useSegmentStack();
   const segmentStackVersion = useSegmentStackVersion();
   const [inputState, dispatch] = useReducer(inputStateReducer, 'idle');
@@ -145,8 +142,8 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
   }, [getAvailableNodes, getAutocompleteSuggestion, segmentStack, commands, getNextExpectedSegment]);
 
   /**
-   * Handles autocompleting word segments, and saving the values for argument
-   * segments to the segment stack.
+   * Handles autocompleting word segments, and saving argument values to the
+   * segment stack.
    */
   const handleInputChange = useCallback((
     newValue: string,
@@ -216,6 +213,7 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     state: CitadelState,
     actions: CitadelActions
   ) => {
+    console.log("[useCommandParser][handleKeyDown]", e.key);
     // Validate key input first
     const isValidKey = e.key === 'Backspace' || 
                        e.key === 'Enter' ||
@@ -232,7 +230,6 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
     if (!isValidKey) {
       return;
     }
-    Logger.debug('[handleKeyDown] ', { key: e.key, state });
 
     const { currentInput, isEnteringArg } = state;
     const parsedInput = parseInput(currentInput);
@@ -269,14 +266,34 @@ export const useCommandParser = ({ commands }: UseCommandParserProps) => {
 
         return;
       }
-    }
 
-    // Handle character input
-    if (!isEnteringArg && e.key.length === 1) {
-      const nextInput = (currentInput + e.key);
-      if (!isValidCommandInput(nextInput)) {
-        e.preventDefault();
+      case 'ArrowUp': {
+        console.log("[useCommandParser][handleKeyDown][ArrowUp]");
+        segmentStack.clear();
+        const wordSegment = new WordSegment('cowsay');
+        segmentStack.push(wordSegment);
+        const argSegment = new ArgumentSegment('message');
+        argSegment.value = "Mooooo";
+        segmentStack.push(argSegment);
+       
+        // e.preventDefault();
+        // const { command: upCommand } = historyActions.navigateHistory('up', state.currentInput);
+        // if (upCommand) {
+        //   replayCommand(upCommand, state, actions);
+        // }
         return;
+      }
+
+      default: {
+        // Handle character input
+        console.log("[useCommandParser][handleKeyDown][char input]");
+        if (!isEnteringArg && e.key.length === 1) {
+          const nextInput = (currentInput + e.key);
+          if (!isValidCommandInput(nextInput)) {
+            e.preventDefault();
+            return;
+          }
+        }
       }
     }
   }, [

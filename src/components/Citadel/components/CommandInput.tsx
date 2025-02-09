@@ -21,13 +21,19 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const commands = useCitadelCommands();
   const segmentStack = useSegmentStack();
-  const { handleKeyDown, handleInputChange, inputState, setInputStateWithLogging, getNextExpectedSegment } = useCommandParser({ commands });
+  const {
+    handleKeyDown,
+    handleInputChange,
+    inputState,
+    setInputStateWithLogging,
+    getNextExpectedSegment
+  } = useCommandParser();
   const [showInvalidAnimation ] = useState(false);
   const config = useCitadelConfig();
   const segmentStackVersion = useSegmentStackVersion();
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    console.log("[CommandInput][onKeyDown]");
+    console.log("[CommandInput][onKeyDown]", e.key);
     handleKeyDown(e, state, actions);
   };
 
@@ -47,6 +53,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     if (inputRef.current) {
       inputRef.current.focus();
     }
+
     // TODO: Set this based on nextExpectedSegment()
     // TODO: make nextExpectedSegment stateful?
     if (inputState !== 'entering_command') {
@@ -83,7 +90,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     setInputStateWithLogging(nextInputState);
   }, [segmentStackVersion]);
 
-  // Our CLI is made up of zero or more spans followed up by a div which in
+  // The CLI is made up of zero or more spans followed up by a div, which in
   // turn contains an input element. Each of those spans contains whatever the
   // user has previously entered, either an argument or a word. The code below
   // builds those spans. For word segments it shows the name (i.e. "show"), for
@@ -124,7 +131,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     );
     
     setSegmentNamesAndVals([wrappedElements]);
-  }, [segmentStackVersion, state.isEnteringArg]);
+  }, [segmentStackVersion]);
 
   // Placeholder text for the input field
   const [placeholderText, setPlaceholderText] = useState<string>("");

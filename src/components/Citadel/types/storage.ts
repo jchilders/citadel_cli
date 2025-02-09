@@ -1,3 +1,5 @@
+import { CommandSegment } from "./command-trie";
+
 /**
  * Supported storage mechanisms for command history
  */
@@ -25,7 +27,7 @@ export interface StorageConfig {
  * Represents a command entry to be stored in history
  */
 export interface StoredCommand {
-  inputs: string[];
+  commandSegments: CommandSegment[];
   timestamp: number;
 }
 
@@ -36,12 +38,12 @@ export interface CommandStorage {
   /**
    * Add a command to storage
    */
-  addCommand: (command: StoredCommand) => Promise<void>;
+  addStoredCommand: (command: StoredCommand) => Promise<void>;
 
   /**
    * Get all stored commands
    */
-  getCommands: () => Promise<StoredCommand[]>;
+  getStoredCommands: () => Promise<StoredCommand[] | []>;
 
   /**
    * Clear all stored commands

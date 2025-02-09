@@ -44,7 +44,7 @@ export class WordSegment extends BaseSegment {
    }
  }
 
-/** Represents an argument that can be passed to a command */
+/** Represents an argument that can be passed to a command, and its value*/
 export class ArgumentSegment extends BaseSegment {
    constructor(
      name: string,

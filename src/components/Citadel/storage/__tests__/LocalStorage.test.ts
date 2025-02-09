@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { LocalStorage } from '../LocalStorage';
 import { StoredCommand } from '../../types/storage';
+import { WordSegment, ArgumentSegment } from '../../types/command-trie';
 
 describe('LocalStorage', () => {
   let localStorage: LocalStorage;
@@ -12,15 +13,18 @@ describe('LocalStorage', () => {
 
   it('should store and retrieve commands', async () => {
     const command: StoredCommand = {
-      inputs: ['test', 'arg1'],
+      commandSegments: [
+        new WordSegment('test'),
+        new ArgumentSegment('arg1')
+      ],
       timestamp: Date.now()
     };
 
-    await localStorage.addCommand(command);
-    const commands = await localStorage.getCommands();
+    await localStorage.addStoredCommand(command);
+    const commands = await localStorage.getStoredCommands();
 
     expect(commands).toHaveLength(1);
-    expect(commands[0].inputs).toEqual(command.inputs);
+    expect(commands[0].commandSegments).toEqual(command.commandSegments);
     expect(commands[0].timestamp).toEqual(command.timestamp);
   });
 
@@ -28,40 +32,58 @@ describe('LocalStorage', () => {
     const localStorage = new LocalStorage({ maxCommands: 2 });
 
     const command1: StoredCommand = {
-      inputs: ['test1', 'arg1'],
+      commandSegments: [
+        new WordSegment('test1'),
+        new ArgumentSegment('arg1')
+      ],
       timestamp: Date.now()
     };
 
     const command2: StoredCommand = {
-      inputs: ['test2', 'arg2'],
+      commandSegments: [
+        new WordSegment('test2'),
+        new ArgumentSegment('arg2')
+      ],
       timestamp: Date.now()
     };
 
     const command3: StoredCommand = {
-      inputs: ['test3', 'arg3'],
+      commandSegments: [
+        new WordSegment('test3'),
+        new ArgumentSegment('arg3')
+      ],
       timestamp: Date.now()
     };
 
-    await localStorage.addCommand(command1);
-    await localStorage.addCommand(command2);
-    await localStorage.addCommand(command3);
+    await localStorage.addStoredCommand(command1);
+    await localStorage.addStoredCommand(command2);
+    await localStorage.addStoredCommand(command3);
 
-    const commands = await localStorage.getCommands();
+    const commands = await localStorage.getStoredCommands();
     expect(commands).toHaveLength(2);
-    expect(commands[0].inputs).toEqual(['test2', 'arg2']);
-    expect(commands[1].inputs).toEqual(['test3', 'arg3']);
+    expect(commands[0].commandSegments).toEqual([
+      new WordSegment('test2'),
+      new ArgumentSegment('arg2')
+    ]);
+    expect(commands[1].commandSegments).toEqual([
+      new WordSegment('test3'),
+      new ArgumentSegment('arg3')
+    ]);
   });
 
   it('should clear storage', async () => {
-    const command: StoredCommand = {
-      inputs: ['test', 'arg1'],
+    const command1: StoredCommand = {
+      commandSegments: [
+        new WordSegment('test1'),
+        new ArgumentSegment('arg1')
+      ],
       timestamp: Date.now()
     };
 
-    await localStorage.addCommand(command);
+    await localStorage.addStoredCommand(command1);
     await localStorage.clear();
 
-    const commands = await localStorage.getCommands();
+    const commands = await localStorage.getStoredCommands();
     expect(commands).toHaveLength(0);
   });
 });

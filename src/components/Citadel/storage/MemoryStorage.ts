@@ -5,28 +5,28 @@ import { BaseStorage } from './BaseStorage';
  * In-memory command history storage
  */
 export class MemoryStorage extends BaseStorage {
-  private commands: StoredCommand[] = [];
+  private storedCommands: StoredCommand[] = [];
 
   constructor(config?: StorageConfig) {
     super(config);
   }
 
-  async getCommands(): Promise<StoredCommand[]> {
+  async getStoredCommands(): Promise<StoredCommand[]> {
     // Return a deep copy to prevent external mutations
-    return this.commands.map(cmd => ({
-      inputs: Array.isArray(cmd.inputs) ? [...cmd.inputs] : [],
+    return this.storedCommands.map(cmd => ({
+      commandSegments: Array.isArray(cmd.commandSegments) ? [...cmd.commandSegments] : [],
       timestamp: cmd.timestamp
     }));
   }
 
   async clear(): Promise<void> {
-    this.commands = [];
+    this.storedCommands = [];
   }
 
   protected async saveCommands(commands: StoredCommand[]): Promise<void> {
     // Create a deep copy to prevent external mutations
-    this.commands = commands.map(cmd => ({
-      inputs: Array.isArray(cmd.inputs) ? [...cmd.inputs] : [],
+    this.storedCommands = commands.map(cmd => ({
+      commandSegments: Array.isArray(cmd.commandSegments) ? [...cmd.commandSegments] : [],
       timestamp: cmd.timestamp
     }));
   }

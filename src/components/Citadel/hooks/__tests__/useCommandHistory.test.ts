@@ -3,15 +3,20 @@ import { renderHook, act } from '@testing-library/react';
 import { useCommandHistory } from '../useCommandHistory';
 import { StorageFactory } from '../../storage/StorageFactory';
 import { StoredCommand, CommandStorage } from '../../types/storage';
-import { createMockCommand } from '../../../../__test-utils__/factories';
+import { createMockCommand, createMockCommandSegment } from '../../../../__test-utils__/factories';
 import { CommandNode } from '../../types/command-trie';
 
 // Mock storage implementing CommandStorage interface
 const mockStorage = {
-  addCommand: vi.fn().mockResolvedValue(undefined),
-  getCommands: vi.fn().mockResolvedValue([]),
-  clear: vi.fn().mockResolvedValue(undefined)
-} as unknown as CommandStorage;
+  addStoredCommand: vi.fn(),
+  getStoredCommands: vi.fn(),
+  clear: vi.fn()
+};
+
+// Setup default mock implementations
+mockStorage.addStoredCommand.mockResolvedValue(undefined);
+mockStorage.getStoredCommands.mockResolvedValue([]);
+mockStorage.clear.mockResolvedValue(undefined);
 
 vi.mock('../../config/CitadelConfigContext', () => ({
   useCitadelConfig: () => ({
@@ -22,21 +27,16 @@ vi.mock('../../config/CitadelConfigContext', () => ({
 
 describe('useCommandHistory', () => {
   let mockNode: CommandNode;
-  let mockCommand: StoredCommand;
+  let mockStoredCommand: StoredCommand;
 
   beforeEach(() => {
     mockNode = createMockCommand('test');
+    let wordCmdSegment = createMockCommandSegment('word', 'command1');
+    mockStoredCommand = {
+      commandSegments: [wordCmdSegment],
+      timestamp: Date.now()
+    }
 
-    // Set the correct path for the node
-    (mockNode as any)._fullPath = ['test', 'command'];
-
-    mockCommand = {
-      inputs: ['test', 'arg1'],
-      timestamp: 1
-    };
-  });
-
-  beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(StorageFactory.getInstance(), 'getStorage').mockReturnValue(mockStorage);
   });
@@ -48,24 +48,30 @@ describe('useCommandHistory', () => {
       result = hookResult.result;
     });
     expect(result.current[0]).toEqual({
-      commands: [],
+      storedCommands: [],
       position: null,
-      savedInput: null
     });
   });
 
   it('should add command to history', async () => {
     const { result } = renderHook(() => useCommandHistory());
+    const segments = mockStoredCommand.commandSegments;
     await act(async () => {
-      await result.current[1].addCommand(mockCommand);
+      await result.current[1].addStoredCommand(segments);
     });
-    expect(mockStorage.addCommand).toHaveBeenCalledTimes(1);
-    expect(mockStorage.addCommand).toHaveBeenCalledWith(mockCommand);
-    expect(result.current[0].commands).toEqual([mockCommand]);
+    expect(mockStorage.addStoredCommand).toHaveBeenCalledTimes(1);
+    expect(mockStorage.addStoredCommand).toHaveBeenCalledWith({
+      commandSegments: mockStoredCommand.commandSegments,
+      timestamp: expect.any(Number)
+    });
+    expect(result.current[0].storedCommands).toEqual([{
+      commandSegments: mockStoredCommand.commandSegments,
+      timestamp: expect.any(Number)
+    }]);
   });
 
   it('should navigate history upward', async () => {
-    (mockStorage.getCommands as unknown as Mock<() => Promise<StoredCommand[]>>).mockResolvedValue([mockCommand]);
+    mockStorage.getStoredCommands.mockResolvedValue([mockStoredCommand]);
 
     const { result } = renderHook(() => useCommandHistory());
 
@@ -73,27 +79,21 @@ describe('useCommandHistory', () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
 
-    const currentInput = 'current input';
-    let navigation;
+    const currentSegments = [createMockCommandSegment('word', 'command1')];
+    let historyItem;
 
-    act(() => {
-      navigation = result.current[1].navigateHistory('up', currentInput);
+    await act(async () => {
+      historyItem = await result.current[1].navigateHistory('up', currentSegments);
     });
 
-    expect(navigation).toEqual({
-      command: mockCommand,
+    expect(historyItem).toEqual({
+      segments: mockStoredCommand.commandSegments,
       position: 0
-    });
-    const savedInput = result.current[0].savedInput;
-    expect(savedInput).not.toBeNull();
-    expect(savedInput).toEqual({
-      inputs: ['current', 'input'],
-      timestamp: expect.any(Number)
     });
   });
 
   it('should navigate history downward', async () => {
-    (mockStorage.getCommands as unknown as Mock<() => Promise<StoredCommand[]>>).mockResolvedValue([mockCommand]);
+    mockStorage.getStoredCommands.mockResolvedValue([mockStoredCommand]);
 
     const { result } = renderHook(() => useCommandHistory());
 
@@ -101,26 +101,27 @@ describe('useCommandHistory', () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
 
+    const currentSegments = [createMockCommandSegment('word', 'command1')];
+
     // First go up
-    act(() => {
-      result.current[1].navigateHistory('up', 'current input');
+    await act(async () => {
+      await result.current[1].navigateHistory('up', currentSegments);
     });
 
     // Then go down
     let navigation;
-    act(() => {
-      navigation = result.current[1].navigateHistory('down', '');
+    await act(async () => {
+      navigation = await result.current[1].navigateHistory('down', currentSegments);
     });
 
     expect(navigation).toEqual({
-      command: { inputs: ['current', 'input'], timestamp: expect.any(Number) },
+      segments: currentSegments,
       position: null
     });
-    expect(result.current[0].savedInput).toBeNull();
   });
 
   it('should clear history', async () => {
-    (mockStorage.getCommands as unknown as Mock<() => Promise<StoredCommand[]>>).mockResolvedValue([mockCommand]);
+    (mockStorage.getStoredCommands as unknown as Mock<() => Promise<StoredCommand[]>>).mockResolvedValue([mockStoredCommand]);
 
     const { result } = renderHook(() => useCommandHistory());
 
@@ -134,15 +135,14 @@ describe('useCommandHistory', () => {
 
     expect(mockStorage.clear).toHaveBeenCalledTimes(1);
     expect(result.current[0]).toEqual({
-      commands: [],
-      position: null,
-      savedInput: null
+      storedCommands: [],
+      position: null
     });
   });
 
   it('should handle storage errors gracefully', async () => {
     const consoleSpy = vi.spyOn(console, 'warn');
-    (mockStorage.getCommands as unknown as Mock<() => Promise<StoredCommand[]>>).mockRejectedValue(new Error('Storage error'));
+    mockStorage.getStoredCommands.mockRejectedValue(new Error('Storage error'));
 
     renderHook(() => useCommandHistory());
 
