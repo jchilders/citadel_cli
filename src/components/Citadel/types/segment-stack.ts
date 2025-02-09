@@ -36,9 +36,15 @@ export class SegmentStack {
    * Pushes a new segment onto the stack
    */
   push(segment: CommandSegment): void {
-    console.log("[SegmentStack] push segment: ", segment);
     this.segments.push(segment);
     this.notifyObservers();
+  }
+
+  /**
+   * Pushes an array of segments onto the stack
+   */
+  pushAll(segments: CommandSegment[]): void {
+    segments.forEach(segment => this.push(segment));
   }
 
   /**
@@ -47,7 +53,6 @@ export class SegmentStack {
    */
   pop(): CommandSegment {
     const poppedSegment = this.segments.pop() || this.nullSegment;
-    console.log("[SegmentStack] pop segment: ", poppedSegment);
     this.notifyObservers();
     return poppedSegment;
   }

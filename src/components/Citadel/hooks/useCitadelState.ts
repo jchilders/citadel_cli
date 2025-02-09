@@ -5,23 +5,27 @@ import { CommandResult, ErrorCommandResult } from '../types/command-results';
 import { useCommandHistory } from './useCommandHistory';
 import { initializeHistoryService } from '../services/HistoryService';
 import { Logger } from '../utils/logger';
+import { useSegmentStackVersion } from './useSegmentStackVersion';
 
 export const useCitadelState = () => {
   const config = useCitadelConfig();
-  const segmentStack = useSegmentStack();
   const commands = useCitadelCommands();
-  const [history, historyActions] = useCommandHistory();
-  // const { replayCommand } = useCommandParser({ commands: commandTrie });
+  const history = useCommandHistory();
+  const segmentStack = useSegmentStack();
+  const segmentStackVersion = useSegmentStackVersion();
+  const storage = useCitadelStorage();
 
   const [state, setState] = useState<CitadelState>({
     currentInput: '',
     isEnteringArg: false,
     output: [],
-    history
+    history: {
+      commands: [],
+      position: null,
+      storage
+    }
   });
 
-  // Initialize history service
-  const storage = useCitadelStorage();
   useEffect(() => {
     if (!storage) return;
     initializeHistoryService(storage);
@@ -31,57 +35,13 @@ export const useCitadelState = () => {
   useEffect(() => {
     setState(prev => ({
       ...prev,
-      history
+      history: {
+        commands: history.history.storedCommands,
+        position: history.history.position,
+        storage
+      }
     }));
-  }, [history]);
-
-
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    console.log("[useCitadelState][handleKeyDown]");
-    const { key } = event;
-
-    switch (key) {
-      case 'ArrowUp':
-        console.log("[useCitadelState][handleKeyDown][ArrowUp]");
-        event.preventDefault();
-        const { command: upCommand } = historyActions.navigateHistory('up', state.currentInput);
-        if (upCommand) {
-          replayCommand(upCommand, state, actions);
-        }
-        break;
-
-      case 'ArrowDown':
-        console.log("[useCitadelState][handleKeyDown][ArrowDown]");
-        event.preventDefault();
-        const { command: downCommand } = historyActions.navigateHistory('down', state.currentInput);
-        if (downCommand) {
-          replayCommand(downCommand, state, actions);
-        }
-        break;
-
-      case 'Escape':
-        console.log("[useCitadelState][handleKeyDown][Escape]");
-        event.preventDefault();
-        if (state.history.position !== null) {
-          const savedInput = state.history.savedInput || '';
-          setState(prev => ({
-            ...prev,
-            currentInput: typeof savedInput === 'string' ? savedInput : savedInput?.inputs.join(' ') ?? '',
-            history: {
-              ...prev.history,
-              position: null,
-              savedInput: null
-            }
-          }));
-        }
-        break;
-    }
-  }, [state.currentInput, state.history, historyActions ]);
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
+  }, [history.history, storage]);
 
   const actions: CitadelActions = {
     setCurrentInput: useCallback((input: string) => {
@@ -103,7 +63,6 @@ export const useCitadelState = () => {
     }, []),
 
     executeCommand: useCallback(async () => {
-      console.log(`[CitadelActions][executeCommand] path: {path}`)
       const path = segmentStack.path();
       const command = commands.getCommand(path);
       if (!command) {
@@ -118,14 +77,13 @@ export const useCitadelState = () => {
       }));
 
       try {
-        const argVals = segmentStack.arguments.map(argSeg => argSeg.value);
-        
         const timeoutPromise = new Promise<never>((_, reject) => {
           setTimeout(() => {
             reject(new Error('Request timed out'));
           }, config.commandTimeoutMs);
         });
 
+        const argVals = segmentStack.arguments.map(argSeg => argSeg.value || '');
         const result = await Promise.race([
           command.handler(argVals),
           timeoutPromise
@@ -140,12 +98,6 @@ export const useCitadelState = () => {
         }
         result.markSuccess();
         
-        // Save successful command to history
-        // await historyActions.addCommand({
-        //   inputs: [...path, ...(args || [])],
-        //   timestamp: Date.now()
-        // });
-
         setState(prev => ({
           ...prev,
           output: prev.output.map(item => 
@@ -165,26 +117,15 @@ export const useCitadelState = () => {
           )
         }));
       }
-    }, [commands, config.commandTimeoutMs, historyActions]),
-
-    executeHistoryCommand: useCallback(async (index: number) => {
-      const commands = state.history.commands;
-      const command = commands[index];
-      if (!command) {
-        console.warn(`No command found at history index ${index}`);
-        return;
-      }
-
-      await replayCommand(command, state, actions);
-    }, [state.history.commands ]),
+    }, [commands, config.commandTimeoutMs, segmentStackVersion]),
 
     clearHistory: useCallback(async () => {
       try {
-        await historyActions.clear();
+        await history.clear();
       } catch (error) {
         console.warn('Failed to clear history:', error);
       }
-    }, [historyActions])
+    }, [history])
   };
 
   const getAvailableCommands_s = useCallback(() => {

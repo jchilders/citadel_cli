@@ -1,3 +1,4 @@
+import { Logger } from '../utils/logger';
 import { CommandResult, TextCommandResult } from './command-results';
 
 /** Function type for handling command execution */
@@ -49,19 +50,10 @@ export class ArgumentSegment extends BaseSegment {
    constructor(
      name: string,
      description?: string,
-     private _value?: any,
+     public value?: string,
      public readonly valid?: () => boolean
    ) {
      super('argument', name, description);
-   }
-
-   get value(): any {
-     return this._value;
-   }
-
-   set value(newValue: any) {
-     console.log(`[ArgumentSegment] set value for ${this.name} to '${newValue}'`);
-     this._value = newValue;
    }
  }
 
@@ -201,7 +193,7 @@ export class CommandTrie {
    * @returns An array of completion strings.
    */
   getCompletions(path: string[]): CommandSegment[] {
-    console.log("[getCompletions] path: ", path);
+    Logger.debug("[getCompletions] path: ", path);
     // If no path provided, get all top-level segments
     if (!path.length) {
       const topLevelSegments = this._commands.map(cmd => cmd.segments[0]);
@@ -258,7 +250,6 @@ export class CommandTrie {
       )
     );
 
-    console.log("[getCompletions] uniqueSegments: ", uniqueSegments);
     return uniqueSegments;
   }
 

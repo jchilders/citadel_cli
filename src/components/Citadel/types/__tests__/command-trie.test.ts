@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { CommandTrie, NoopHandler, CommandHandler } from '../command-trie';
+import { CommandTrie, NoopHandler, CommandHandler, ArgumentSegment } from '../command-trie';
 import { TextCommandResult } from '../command-results';
 
 describe('CommandTrie', () => {
@@ -300,6 +300,50 @@ describe('CommandTrie', () => {
         const node = trie.getCommand(['command', 'arg1', 'subcommand']);
         expect(node?.fullPath).toEqual(['command', 'arg1', 'subcommand']);
       });
+    });
+  });
+
+  describe('ArgumentSegment', () => {
+    it('should store and retrieve value', () => {
+      const arg = new ArgumentSegment('testArg', 'Test argument');
+      arg.value = 'test value';
+      expect(arg.value).toBe('test value');
+    });
+
+    it('should initialize with undefined value', () => {
+      const arg = new ArgumentSegment('testArg', 'Test argument');
+      expect(arg.value).toBeUndefined();
+    });
+
+    it('should initialize with optional value', () => {
+      const arg = new ArgumentSegment('testArg', 'Test argument', 'initial value');
+      expect(arg.value).toBe('initial value');
+    });
+
+    it('should have correct type', () => {
+      const arg = new ArgumentSegment('testArg', 'Test argument');
+      expect(arg.type).toBe('argument');
+    });
+
+    it('should have correct name', () => {
+      const arg = new ArgumentSegment('testArg', 'Test argument');
+      expect(arg.name).toBe('testArg');
+    });
+
+    it('should have correct description', () => {
+      const arg = new ArgumentSegment('testArg', 'Test argument');
+      expect(arg.description).toBe('Test argument');
+    });
+
+    it('should handle validation function', () => {
+      const isValid = () => true;
+      const arg = new ArgumentSegment('testArg', 'Test argument', undefined, isValid);
+      expect(arg.valid).toBe(isValid);
+    });
+
+    it('should convert to string correctly', () => {
+      const arg = new ArgumentSegment('testArg', 'Test argument');
+      expect(arg.toString()).toBe('testArg');
     });
   });
 });

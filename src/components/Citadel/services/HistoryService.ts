@@ -10,11 +10,11 @@ export class DefaultHistoryService implements HistoryService {
   constructor(private readonly storage: CommandStorage) {}
 
   async getCommands(): Promise<StoredCommand[]> {
-    return this.storage.getCommands();
+    return this.storage.getStoredCommands();
   }
 
   async addCommand(command: StoredCommand): Promise<void> {
-    return this.storage.addCommand(command);
+    return this.storage.addStoredCommand(command);
   }
 
   async clear(): Promise<void> {

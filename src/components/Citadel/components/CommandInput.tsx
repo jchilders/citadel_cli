@@ -8,6 +8,7 @@ import { InputState, useCommandParser } from '../hooks/useCommandParser';
 import { useCitadelConfig, useCitadelCommands, useSegmentStack } from '../config/CitadelConfigContext';
 import styles from './CommandInput.module.css';
 import { useSegmentStackVersion } from '../hooks/useSegmentStackVersion';
+import { Logger } from '../utils/logger';
 
 interface CommandInputProps {
   state: CitadelState;
@@ -33,12 +34,10 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   const segmentStackVersion = useSegmentStackVersion();
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    console.log("[CommandInput][onKeyDown]", e.key);
     handleKeyDown(e, state, actions);
   };
 
   const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("[CommandInput][onInputChange]. value: ", event.target.value);
     handleInputChange(event.target.value, actions);
   };
 
@@ -61,13 +60,6 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     }
   }, []);
 
-  // Re-focus input when command stack changes
-  // useEffect(() => {
-  //   if (inputRef.current) {
-  //     inputRef.current.focus();
-  //   }
-  // }, [segmentStackVersion]);
-
   // Set the input state hen the segmentStack changes
   useEffect(() => {
     if (inputState !== 'idle') return;
@@ -86,7 +78,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       default:
         break;
     }
-    console.log(`[CommandInput] changing inputState to '${nextInputState}'`);
+    Logger.debug(`[CommandInput] changing inputState to '${nextInputState}'`);
     setInputStateWithLogging(nextInputState);
   }, [segmentStackVersion]);
 
@@ -142,7 +134,6 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     } else {
       setPlaceholderText("");
     }
-    console.log("[CommandInput] placeholderText:", placeholderText);
   }, [segmentStackVersion]);
 
   return (

@@ -10,7 +10,6 @@ export interface CitadelState {
   history: {
     commands: StoredCommand[];
     position: number | null;
-    savedInput: StoredCommand | null;
     storage?: CommandStorage;
   };
 }
@@ -20,7 +19,6 @@ export interface CitadelActions {
   setIsEnteringArg: (isEntering: boolean) => void;
   addOutput: (output: OutputItem) => void;
   executeCommand: () => Promise<void>;
-  executeHistoryCommand: (index: number) => Promise<void>;
   clearHistory: () => Promise<void>;
 }
 
@@ -32,7 +30,7 @@ export class OutputItem {
   constructor(segmentStack: SegmentStack, result?: CommandResult) {
     this.command = segmentStack.toArray().map((segment): string => {
       if (segment.type === 'argument') {
-        return (segment as ArgumentSegment).value;
+        return (segment as ArgumentSegment).value || '';
       }
       return segment.name;
     });

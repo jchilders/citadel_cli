@@ -1,17 +1,23 @@
-import { CommandNode, CommandTrie, CommandHandler } from '../components/Citadel/types/command-trie';
+import { CommandNode, CommandTrie, CommandHandler, WordSegment, ArgumentSegment, CommandSegment } from '../components/Citadel/types/command-trie';
 import { TextCommandResult } from '../components/Citadel/types/command-results';
 import { CitadelState, CitadelActions } from '../components/Citadel/types';
 import { SegmentStack } from '../components/Citadel/types/segment-stack';
 
 interface MockNodeOptions {
-  argument?: {
-    name: string;
-    description: string;
-  };
   handler?: CommandHandler;
   description?: string;
-  isLeaf?: boolean;
 }
+
+export const createMockCommandSegment = (type: 'word' | 'argument', name: string, description?: string): CommandSegment => {
+  switch (type) {
+    case 'word':
+      return new WordSegment(name, description);
+    case 'argument':
+      return new ArgumentSegment(name, description);
+    default:
+      throw new Error('Invalid segment type');
+  }
+};
 
 export const createMockCommand = (name: string, options: MockNodeOptions = {}): CommandNode => {
   const defaultHandler: CommandHandler = async (_args: string[]) => {
@@ -32,15 +38,15 @@ export const createMockCommand = (name: string, options: MockNodeOptions = {}): 
 };
 
 export const createMockCommandTrie = (): CommandTrie => {
-  const trie = new CommandTrie();
+  const commands = new CommandTrie();
   const mockNode = createMockCommand('test1');
   
   // Mock the public methods
-  vi.spyOn(trie, 'getCommand').mockReturnValue(mockNode);
-  vi.spyOn(trie, 'addCommand').mockImplementation(() => {});
-  vi.spyOn(trie, 'getCompletions_s').mockReturnValue([]);
+  vi.spyOn(commands, 'getCommand').mockReturnValue(mockNode);
+  vi.spyOn(commands, 'addCommand').mockImplementation(() => {});
+  vi.spyOn(commands, 'getCompletions_s').mockReturnValue([]);
 
-  return trie;
+  return commands;
 };
 
 import { StoredCommand } from '../components/Citadel/types/storage';
@@ -53,15 +59,15 @@ export const createMockStoredCommand = (overrides = {}): StoredCommand => ({
 
 import { CommandHistory, CommandHistoryActions } from '../components/Citadel/hooks/useCommandHistory';
 export const createMockCommandHistory = (overrides = {}): CommandHistory => ({
-  commands: [],
+  storedCommands: [],
   position: null,
   savedInput: null,
   ...overrides
 });
 
 export const createMockCommandHistoryActions = (overrides = {}): CommandHistoryActions => ({
-  addCommand: vi.fn(),
-  getCommands: vi.fn(),
+  addStoredCommand: vi.fn(),
+  getStoredCommands: vi.fn(),
   navigateHistory: vi.fn(),
   saveInput: vi.fn(),
   clear: vi.fn(),

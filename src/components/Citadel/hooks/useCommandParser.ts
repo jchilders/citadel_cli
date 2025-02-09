@@ -5,6 +5,7 @@ import { useCitadelCommands, useSegmentStack } from '../config/CitadelConfigCont
 import { useCitadelState } from './useCitadelState';
 import { Logger } from '../utils/logger';
 import { useSegmentStackVersion } from './useSegmentStackVersion';
+import { useCommandHistory } from './useCommandHistory';
 
 export type InputState = 'idle' | 'entering_command' | 'entering_argument';
 
@@ -26,10 +27,11 @@ function inputStateReducer(state: InputState, action: InputStateAction): InputSt
 export const useCommandParser = () => {
   const { state } = useCitadelState();
   const commands = useCitadelCommands();
+  const history = useCommandHistory();
   const segmentStack = useSegmentStack();
   const segmentStackVersion = useSegmentStackVersion();
-  const [inputState, dispatch] = useReducer(inputStateReducer, 'idle');
 
+  const [inputState, dispatch] = useReducer(inputStateReducer, 'idle');
   const setInputStateWithLogging = (newState: InputState) => {
     dispatch({ type: 'set', state: newState });
   }
@@ -87,13 +89,11 @@ export const useCommandParser = () => {
     // Get available word segments
     const availableSegments = commands.getCompletions(segmentStack.path())
       .filter(segment => segment.type === 'word');
-    console.log("availableSegments: ", availableSegments);
     
     // Find segments that match the input
     const matchingSegments = availableSegments.filter(segment =>
       segment.name.toLowerCase().startsWith(input.toLowerCase())
     );
-    console.log("matchingSegments: ", matchingSegments);
     
     // Only return a suggestion if we have exactly one match
     if (matchingSegments.length === 1) {
@@ -104,9 +104,6 @@ export const useCommandParser = () => {
   }, [findMatchingCommands]);
 
   const isValidCommandInput = useCallback((input: string): boolean => {
-    console.log("[useCommandParser][isValidCommandInput] input: ", input);
-    // if (!input.currentWord && !input.isQuoted) return true;
-
     const currentPath = segmentStack.path();
     const availableSegments = commands.getCompletions(currentPath);
     
@@ -149,6 +146,10 @@ export const useCommandParser = () => {
     newValue: string,
     actions: CitadelActions,
   ) => {
+    // Don't process input changes when navigating history
+    if (state.history.position !== null) {
+      return;
+    }
     actions.setCurrentInput(newValue);
     Logger.debug("[useCommandParser][handleInputChange] newValue: ", newValue);
 
@@ -208,12 +209,11 @@ export const useCommandParser = () => {
    * - Command execution
    * - Navigation
    */
-  const handleKeyDown = useCallback((
+  const handleKeyDown = useCallback(async (
     e: KeyboardEvent | React.KeyboardEvent,
     state: CitadelState,
     actions: CitadelActions
   ) => {
-    console.log("[useCommandParser][handleKeyDown]", e.key);
     // Validate key input first
     const isValidKey = e.key === 'Backspace' || 
                        e.key === 'Enter' ||
@@ -257,36 +257,46 @@ export const useCommandParser = () => {
           const nextSegment = getNextExpectedSegment();
           const argumentSegment = (nextSegment as ArgumentSegment);
           argumentSegment.value = currentInput;
+          Logger.debug("[handleKeyDown][Enter]['entering_argument'] pushing: ", argumentSegment);
           segmentStack.push(argumentSegment);
         }
 
-        Logger.debug("[handleKeyDown][Enter] calling executeCommand. segmentStack: ", segmentStack);
+        Logger.debug("[handleKeyDown][Enter] calling actions.executeCommand. segmentStack: ", segmentStack);
         actions.executeCommand();
+
+        history.addStoredCommand(segmentStack.toArray());
+
         resetInputState(actions);
 
         return;
       }
 
       case 'ArrowUp': {
-        console.log("[useCommandParser][handleKeyDown][ArrowUp]");
-        segmentStack.clear();
-        const wordSegment = new WordSegment('cowsay');
-        segmentStack.push(wordSegment);
-        const argSegment = new ArgumentSegment('message');
-        argSegment.value = "Mooooo";
-        segmentStack.push(argSegment);
-       
-        // e.preventDefault();
-        // const { command: upCommand } = historyActions.navigateHistory('up', state.currentInput);
-        // if (upCommand) {
-        //   replayCommand(upCommand, state, actions);
-        // }
+        e.preventDefault();
+        const navResult = await history.navigateHistory('up', segmentStack.toArray());
+        if (navResult.segments) {
+          segmentStack.clear();
+          segmentStack.pushAll(navResult.segments);
+          // Set current input to empty since all segments (including arguments) are in the stack
+          actions.setCurrentInput('');
+        }
+        return;
+      }
+
+      case 'ArrowDown': {
+        e.preventDefault();
+        const navResult = await history.navigateHistory('down', segmentStack.toArray());
+        if (navResult.segments) {
+          segmentStack.clear();
+          segmentStack.pushAll(navResult.segments);
+          // Set current input to empty since all segments (including arguments) are in the stack
+          actions.setCurrentInput('');
+        }
         return;
       }
 
       default: {
         // Handle character input
-        console.log("[useCommandParser][handleKeyDown][char input]");
         if (!isEnteringArg && e.key.length === 1) {
           const nextInput = (currentInput + e.key);
           if (!isValidCommandInput(nextInput)) {
