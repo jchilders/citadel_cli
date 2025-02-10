@@ -5,6 +5,7 @@ import { CitadelConfigProvider } from '../../config/CitadelConfigContext';
 import { defaultConfig } from '../../config/defaults';
 import { OutputItem } from '../../types/state';
 import { TextCommandResult } from '../../types/command-results';
+import { createMockSegment, createMockSegmentStack } from '../../../../__test-utils__/factories';
 
 describe('CommandOutput', () => {
   const mockOutputRef = { current: document.createElement('div') };
@@ -16,8 +17,12 @@ describe('CommandOutput', () => {
     });
   });
 
-  const createOutputItem = (command: string[] = ['test']) => {
-    const item = new OutputItem(command);
+  const createOutputItem = (commandNames: string[] = ['test']) => {
+    const mockSegmentStack = createMockSegmentStack();
+    const segments = commandNames.map(name => createMockSegment('word', name));
+    segments.forEach(segment => mockSegmentStack.push(segment));
+
+    const item = new OutputItem(mockSegmentStack);
     const result = new TextCommandResult('Test output');
     result.markSuccess();
     item.result = result;
