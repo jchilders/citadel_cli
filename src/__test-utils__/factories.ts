@@ -156,10 +156,9 @@ export const createMockSegmentStack = (): SegmentStack => {
 };
 
 export const createMockKeyboardEvent = (key: string): KeyboardEvent => {
-  let preventDefaultCalled = false;
   const event = new KeyboardEvent('keydown', { key });
   Object.defineProperty(event, 'preventDefault', {
-    value: () => { preventDefaultCalled = true; }
+    value: () => { /* noop */ }
   });
   return event;
 };
