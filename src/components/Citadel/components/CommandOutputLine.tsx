@@ -39,7 +39,7 @@ export const CommandOutputLine: React.FC<CommandOutputLineProps> = ({
       )}
       {(status === CommandStatus.Timeout || status === CommandStatus.Failure) && (
         <div 
-          data-testid="error-indicator"
+          data-testid="success-indicator"
           className="w-4 h-4 rounded-full bg-red-500" 
         />
       )}

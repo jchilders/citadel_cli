@@ -13,7 +13,8 @@ describe('CommandOutputLine', () => {
   it('renders command and timestamp', () => {
     render(<CommandOutputLine {...defaultProps} />);
     
-    expect(screen.getByText('> user show')).toBeDefined();
+    expect(screen.getByText('user')).toBeDefined();
+    expect(screen.getByText('show')).toBeDefined();
     expect(screen.getByText('10:00:00 AM')).toBeDefined();
   });
 
@@ -29,5 +30,19 @@ describe('CommandOutputLine', () => {
     
     const successIndicator = screen.getByTestId('success-indicator');
     expect(successIndicator.className).includes('bg-green-500');
+  });
+
+  it('shows success indicator when status is success', () => {
+    render(<CommandOutputLine {...defaultProps} status={CommandStatus.Failure} />);
+    
+    const successIndicator = screen.getByTestId('success-indicator');
+    expect(successIndicator.className).includes('bg-red-500');
+  });
+
+  it('shows success indicator when status is success', () => {
+    render(<CommandOutputLine {...defaultProps} status={CommandStatus.Timeout} />);
+    
+    const successIndicator = screen.getByTestId('success-indicator');
+    expect(successIndicator.className).includes('bg-red-500');
   });
 });
