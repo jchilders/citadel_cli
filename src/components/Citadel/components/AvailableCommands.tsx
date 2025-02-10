@@ -7,13 +7,13 @@ export const AvailableCommands: React.FC = () => {
   const commands  = useCitadelCommands();
   const config = useCitadelConfig();
   const segmentStack = useSegmentStack();
+  const segmentStackVersion = useSegmentStackVersion();
 
   const containerClasses = "h-12 mt-2 border-t border-gray-700 px-4";
   const contentClasses = "text-gray-300 pt-2";
 
   const nextCommandSegments = commands.getCompletions(segmentStack.path());
   Logger.debug("[AvailableCommands] nextCommandSegments: ", nextCommandSegments);
-  const segmentStackVersion = useSegmentStackVersion();
   
   const sortedCommands = React.useMemo(() => {
     if (config.includeHelpCommand) {
@@ -21,6 +21,8 @@ export const AvailableCommands: React.FC = () => {
       const helpCommand = nextCommandSegments.find(segment => segment.name === 'help');
       return [...nonHelpCommands, ...(helpCommand ? [helpCommand] : [])];
     }
+
+    return nextCommandSegments;
   }, [nextCommandSegments, segmentStackVersion, config.includeHelpCommand]);
 
   const nextSegmentIsArgument = nextCommandSegments.some(seg => seg.type === 'argument');
