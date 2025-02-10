@@ -27,7 +27,7 @@ if (segmentStack.peek().type === 'argument') {
 
 For the placeholder text, `segmentStack.peek()` will only work for ArgumentSegments: WordSegments are either about to be entered or already have been, so we can't add it "before". Also, and more importantly, there CAN be multiple WordSegments at the same level, whereas having multiple different ArgumentSegments at the same level is not accepted/valid.
 
-Add `nextSegmentIsArgument` function to `CommandTrie`?
+Add `nextSegmentIsArgument` function to `CommandRegistry`?
     1. Initially will be false if all root segments are commands
     2. User selects a command. 
 

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
 import { CommandInput } from '../CommandInput';
-import { CommandNode } from '../../types/command-trie';
+import { CommandNode } from '../../types/command-registry';
 import { TextCommandResult } from '../../types/command-results';
 import {
   createMockCitadelActions,

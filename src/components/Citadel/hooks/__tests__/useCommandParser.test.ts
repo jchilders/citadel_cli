@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { useCommandParser } from '../useCommandParser';
-import { CommandNode, CommandSegment, CommandTrie } from '../../types/command-trie';
+import { CommandNode, CommandSegment, CommandRegistry } from '../../types/command-registry';
 import { CitadelState, CitadelActions } from '../../types';
 import { 
   createMockCitadelState, 
@@ -26,14 +26,14 @@ vi.mock('../../config/CitadelConfigContext', () => ({
     getStoredCommands: vi.fn().mockResolvedValue([]),
     clear: vi.fn().mockResolvedValue(undefined)
   }),
-  useCitadelCommands: () => new CommandTrie(),
+  useCitadelCommands: () => new CommandRegistry(),
   useSegmentStack: () => createMockSegmentStack(),
   useSegmentStackVersion: () => 1
 }));
 
 // TODO rm skip
 describe.skip('useCommandParser', () => {
-  let mockCommandTrie: CommandTrie;
+  let mockCommandRegistry: CommandRegistry;
   let mockState: CitadelState;
   let mockActions: CitadelActions;
   let user: ReturnType<typeof userEvent.setup>;
@@ -41,16 +41,16 @@ describe.skip('useCommandParser', () => {
   beforeEach(() => {
     user = userEvent.setup();
     
-    // Create a real CommandTrie with test commands
-    mockCommandTrie = new CommandTrie();
+    // Create a real CommandRegistry with test commands
+    mockCommandRegistry = new CommandRegistry();
     const mockCommands = [
       createTestCommand(['user', 'comment'], 'Add a comment to a user'),
       createTestCommand(['help'], 'Show help')
     ];
 
-    // Add commands to the trie
+    // Add commands to the command registry
     mockCommands.forEach(cmd => {
-      mockCommandTrie.addCommand(cmd.segments, cmd.description || '', cmd.handler);
+      mockCommandRegistry.addCommand(cmd.segments, cmd.description || '', cmd.handler);
     });
 
     mockState = createMockCitadelState();
@@ -61,7 +61,7 @@ describe.skip('useCommandParser', () => {
     it('should handle multiple quoted arguments', async () => {
       const mockCommand = createTestCommand(['user', 'comment']);
 
-      vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockCommand);
+      vi.spyOn(mockCommandRegistry, 'getCommand').mockReturnValue(mockCommand);
 
       const stateWithArgs = {
         ...mockState,
@@ -92,7 +92,7 @@ describe.skip('useCommandParser', () => {
         'Add a comment'
       );
 
-      vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockNode);
+      vi.spyOn(mockCommandRegistry, 'getCommand').mockReturnValue(mockNode);
 
       const stateWithArgs = {
         ...mockState,
@@ -117,7 +117,7 @@ describe.skip('useCommandParser', () => {
       const mockNode = createMockCommand('test1', {
       });
 
-      vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockNode);
+      vi.spyOn(mockCommandRegistry, 'getCommand').mockReturnValue(mockNode);
 
       const stateWithArg = {
         ...mockState,
@@ -141,7 +141,7 @@ describe.skip('useCommandParser', () => {
     it('should not complete command while quote is unclosed', async () => {
       const mockNode = createMockCommand('test1', { });
 
-      vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockNode);
+      vi.spyOn(mockCommandRegistry, 'getCommand').mockReturnValue(mockNode);
 
       const stateWithArg = {
         ...mockState,
@@ -165,7 +165,7 @@ describe.skip('useCommandParser', () => {
     it('should handle Enter for argument submission', async () => {
       const mockNode = createMockCommand('test1', { });
 
-      vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockNode);
+      vi.spyOn(mockCommandRegistry, 'getCommand').mockReturnValue(mockNode);
 
       const stateWithArg = {
         ...mockState,
@@ -191,7 +191,7 @@ describe.skip('useCommandParser', () => {
     it('should handle Enter for current node without argument', async () => {
       const mockNode = createMockCommand('test1');
 
-      vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockNode);
+      vi.spyOn(mockCommandRegistry, 'getCommand').mockReturnValue(mockNode);
 
       const stateWithNode = {
         ...mockState,
@@ -214,7 +214,7 @@ describe.skip('useCommandParser', () => {
     it('should handle Enter for command without arguments', async () => {
       const mockNode = createMockCommand('test1');
 
-      vi.spyOn(mockCommandTrie, 'getCommand').mockReturnValue(mockNode);
+      vi.spyOn(mockCommandRegistry, 'getCommand').mockReturnValue(mockNode);
 
       const stateWithCommand = {
         ...mockState,
@@ -344,12 +344,12 @@ describe.skip('useCommandParser', () => {
 
     it('should return null when input matches multiple commands', () => {
       // Add another command starting with 'h' to create ambiguity
-      const trie = new CommandTrie();
-      trie.addCommand(
+      const cmdRegistry = new CommandRegistry();
+      cmdRegistry.addCommand(
         [{ type: 'word', name: 'help' }],
         'Help command'
       );
-      trie.addCommand(
+      cmdRegistry.addCommand(
         [{ type: 'word', name: 'history' }],
         'History command'
       );
@@ -375,24 +375,24 @@ describe.skip('useCommandParser', () => {
 
   describe('getAvailableNodes', () => {
     it('should return all root commands when no segments in stack', () => {
-      // Create a real CommandTrie with test commands
-      const trie = new CommandTrie();
-      trie.addCommand(
+      // Create a real CommandRegistry with test commands
+      const cmdRegistry = new CommandRegistry();
+      cmdRegistry.addCommand(
         [ createMockSegment('word', 'user'),
           createMockSegment('word', 'show') ],
         'User show'
       );
-      trie.addCommand(
+      cmdRegistry.addCommand(
         [ createMockSegment('word', 'user'),
           createMockSegment('word', 'deactivate') ],
         'User deactivate'
       );
-      trie.addCommand(
+      cmdRegistry.addCommand(
         [ createMockSegment('word', 'help') ],
         'Help command'
       );
 
-      // Override the mock to use our test trie
+      // Override the mock to use our test command registry
       const { result } = renderHook(() => useCommandParser());
       const availableNodes = result.current.getAvailableNodes();
 

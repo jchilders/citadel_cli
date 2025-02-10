@@ -2,11 +2,11 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { AvailableCommands } from '../AvailableCommands';
 import { CitadelConfigProvider } from '../../config/CitadelConfigContext';
-import { CommandTrie } from '../../types/command-trie';
+import { CommandRegistry } from '../../types/command-registry';
 import { createMockSegment } from '../../../../__test-utils__/factories';
 
 describe('AvailableCommands', () => {
-  let commandTrie: CommandTrie;
+  let cmdRegistry: CommandRegistry;
 
   const defaultConfig = {
     includeHelpCommand: false,
@@ -18,7 +18,7 @@ describe('AvailableCommands', () => {
     return render(
       <CitadelConfigProvider 
         config={config}
-        commands={commandTrie}
+        commandRegistry={cmdRegistry}
       >
         <AvailableCommands />
       </CitadelConfigProvider>
@@ -26,16 +26,16 @@ describe('AvailableCommands', () => {
   };
 
   beforeEach(() => {
-    commandTrie = new CommandTrie();
+    cmdRegistry = new CommandRegistry();
   });
 
   describe('command display', () => {
     beforeEach(() => {
-      commandTrie.addCommand(
+      cmdRegistry.addCommand(
         [createMockSegment('word', 'test')],
         'Test command'
       );
-      commandTrie.addCommand(
+      cmdRegistry.addCommand(
         [createMockSegment('word', 'help')],
         'Help command'
       );
@@ -67,7 +67,7 @@ describe('AvailableCommands', () => {
 
   describe.skip('argument handling', () => {
     beforeEach(() => {
-      commandTrie.addCommand(
+      cmdRegistry.addCommand(
         [
           createMockSegment('word', 'user'),
           createMockSegment('argument', 'id', 'User ID')
@@ -86,14 +86,14 @@ describe('AvailableCommands', () => {
 
   describe('command completion', () => {
     beforeEach(() => {
-      commandTrie.addCommand(
+      cmdRegistry.addCommand(
         [
           createMockSegment('word', 'test'),
           createMockSegment('word', 'sub')
         ],
         'Test subcommand'
       );
-      commandTrie.addCommand(
+      cmdRegistry.addCommand(
         [
           createMockSegment('word', 'test'),
           createMockSegment('word', 'other')

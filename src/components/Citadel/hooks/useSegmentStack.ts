@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { SegmentStack } from '../types/segment-stack';
-import { ArgumentSegment, CommandSegment } from '../types/command-trie';
+import { ArgumentSegment, CommandSegment } from '../types/command-registry';
 
 export interface SegmentStackActions {
   push: (segment: CommandSegment) => void;

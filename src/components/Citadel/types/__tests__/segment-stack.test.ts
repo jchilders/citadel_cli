@@ -1,5 +1,5 @@
 import { SegmentStack } from '../segment-stack';
-import { WordSegment, ArgumentSegment, NullSegment } from '../command-trie';
+import { WordSegment, ArgumentSegment, NullSegment } from '../command-registry';
 
 describe('SegmentStack', () => {
   let stack: SegmentStack;

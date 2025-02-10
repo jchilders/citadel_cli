@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { MemoryStorage } from '../MemoryStorage';
 import { StoredCommand } from '../../types/storage';
-import { WordSegment, ArgumentSegment } from '../../types/command-trie';
+import { WordSegment, ArgumentSegment } from '../../types/command-registry';
 
 describe('MemoryStorage', () => {
   let memoryStorage: MemoryStorage;

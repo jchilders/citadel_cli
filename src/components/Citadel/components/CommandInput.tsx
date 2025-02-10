@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { ArgumentSegment } from '../types/command-trie';
+import { ArgumentSegment } from '../types/command-registry';
 import { CitadelState, CitadelActions } from '../types/state';
 import { Cursor } from '../Cursor';
 import { CursorType } from '../types/cursor';

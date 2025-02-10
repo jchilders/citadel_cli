@@ -1,4 +1,4 @@
-import { CommandSegment, ArgumentSegment, NullSegment } from './command-trie';
+import { CommandSegment, ArgumentSegment, NullSegment } from './command-registry';
 
 interface StackObserver {
   update: () => void;

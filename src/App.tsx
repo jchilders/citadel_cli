@@ -6,12 +6,13 @@ import { registerBasicCommands } from '../command_examples/basic-commands';
 // import { commands } from '../command_examples/customer-service-commands';
 
 export const config: CitadelConfig = {
-  commandTimeoutMs: 10000,
-  includeHelpCommand: true,
-  resetStateOnHide: true,
-  showCitadelKey: '.',
-  maxHeight: '80vh'
+  // commandTimeoutMs: 10000,
+  // includeHelpCommand: true,
+  // resetStateOnHide: true,
+  // showCitadelKey: '.',
+  // maxHeight: '80vh'
 };
+
 
 import "./styles/app.css"
 
@@ -22,7 +23,7 @@ function App() {
         <p className="text-center text-gray-700">
           Press <code className="px-2 border border-gray-300 rounded">.</code> to<br />activate Citadel
         </p>
-        <Citadel config={config} commandTrie={registerBasicCommands()}/>
+        <Citadel config={config} commandRegistry={registerBasicCommands()}/>
       </div>
     </div>
   );

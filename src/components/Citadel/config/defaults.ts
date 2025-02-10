@@ -14,7 +14,7 @@ import { LogLevel } from '../utils/logger';
  * @property cursorType - The type of cursor animation to display. Can be one of 'blink', 'spin', 'solid', or 'bbs'. Default: 'bbs'.
  * 
  * @property includeHelpCommand - When true, automatically adds a 'help' command that displays all available commands.
- *                               When false, no help command is included in the command trie. Default: true.
+ *                               When false, no help command will be shown. Default: true.
  * 
  * @property initialHeight - The initial CSS height of the interface. Default: '40vh'.
  * 

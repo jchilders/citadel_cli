@@ -1,9 +1,9 @@
-import { CommandTrie } from './command-trie';
+import { CommandRegistry } from './command-registry';
 import { TextCommandResult } from './command-results';
 
-export const createHelpHandler = (trie: CommandTrie) => {
+export const createHelpHandler = (cmdRegistry: CommandRegistry) => {
   return async function(_args: string[]) {
-    const commands:string[] = trie.commands
+    const commands:string[] = cmdRegistry.commands
       .filter(command => command.fullPath[0] !== 'help')
       .map(command => {
         const cmdPath = command.segments.map(segment => {

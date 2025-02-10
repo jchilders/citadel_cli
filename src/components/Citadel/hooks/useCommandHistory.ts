@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { StoredCommand } from '../types/storage';
 import { useCitadelStorage } from '../config/CitadelConfigContext';
 import { useSegmentStackVersion } from './useSegmentStackVersion';
-import { CommandSegment } from '../types/command-trie';
+import { CommandSegment } from '../types/command-registry';
 
 export interface CommandHistory {
   storedCommands: StoredCommand[];

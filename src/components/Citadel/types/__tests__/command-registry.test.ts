@@ -1,32 +1,32 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { CommandTrie, NoopHandler, CommandHandler, ArgumentSegment } from '../command-trie';
+import { CommandRegistry, NoopHandler, CommandHandler, ArgumentSegment } from '../command-registry';
 import { TextCommandResult } from '../command-results';
 
-describe('CommandTrie', () => {
-  let trie: CommandTrie;
+describe('CommandRegistry', () => {
+  let cmdRegistry: CommandRegistry;
   let successHandler: CommandHandler;
 
   beforeEach(() => {
-    trie = new CommandTrie();
+    cmdRegistry = new CommandRegistry();
     successHandler = async (_args: string[]) => new TextCommandResult('success');
   });
 
   describe('addCommand', () => {
     it('should add leaf command successfully', () => {
-      trie.addCommand(
+      cmdRegistry.addCommand(
         [{ type: 'word', name: 'test' }],
         'Test command'
       );
 
-      const node = trie.getCommand(['test']);
+      const node = cmdRegistry.getCommand(['test']);
       expect(node?.fullPath).toEqual(['test']);
       expect(node?.description).toBe('Test command');
       expect(node?.handler).toBe(NoopHandler);
     });
 
     it('should add nested commands successfully', () => {
-      trie.addCommand([
+      cmdRegistry.addCommand([
           { type: 'word', name: 'parent' },
           { type: 'word', name: 'child' }
         ],
@@ -35,39 +35,39 @@ describe('CommandTrie', () => {
       );
 
       
-      const childNode = trie.getCommand(['parent', 'child']);
+      const childNode = cmdRegistry.getCommand(['parent', 'child']);
       expect(childNode?.description).toBe('Child command');
       expect(childNode?.handler).toBe(successHandler);
       expect(childNode?.fullPath).toEqual(['parent', 'child']);
     });
 
     it('should throw on empty path', () => {
-      expect(() => trie.addCommand(
+      expect(() => cmdRegistry.addCommand(
         [],
         'Empty command'
       )).toThrow('Command path cannot be empty');
     });
 
     it('should throw on duplicate commands', () => {
-      trie.addCommand(
+      cmdRegistry.addCommand(
          [{ type: 'word', name: 'test' }],
         'Test command'
       );
-      expect(() => trie.addCommand(
+      expect(() => cmdRegistry.addCommand(
         [{ type: 'word', name: 'test' }],
         'Duplicate test'
       )).toThrow("Duplicate commands: 'test' and 'test'");
     });
 
     it('should throw on duplicate commands with an argument', () => {
-      trie.addCommand(
+      cmdRegistry.addCommand(
         [
           { type: 'word', name: 'test' },
           { type: 'argument', name: 'arg1' }
         ],
         'word arg1'
       );
-      expect(() => trie.addCommand(
+      expect(() => cmdRegistry.addCommand(
         [
           { type: 'word', name: 'test' },
           { type: 'argument', name: 'arg2' }
@@ -80,12 +80,12 @@ describe('CommandTrie', () => {
   describe('getCompletions', () => {
     describe('no arguments', () => {
       beforeEach(() => {
-        trie.addCommand(
+        cmdRegistry.addCommand(
           [{ type: 'word', name: 'help' }],
           'Help command',
           successHandler
         );
-        trie.addCommand(
+        cmdRegistry.addCommand(
           [
             { type: 'word', name: 'user' },
             { type: 'word', name: 'create' }
@@ -93,7 +93,7 @@ describe('CommandTrie', () => {
           'Create user',
           successHandler
         );
-        trie.addCommand(
+        cmdRegistry.addCommand(
           [
             { type: 'word', name: 'user' },
             { type: 'word', name: 'delete' }
@@ -104,33 +104,33 @@ describe('CommandTrie', () => {
       });
 
       it('should return root level segment completions', () => {
-        const completions = trie.getCompletions([]);
+        const completions = cmdRegistry.getCompletions([]);
         expect(completions.length).toEqual(2);
         expect(completions).toContainEqual({ type: 'word', name: 'user' });
         expect(completions).toContainEqual({ type: 'word', name: 'help' });
       });
 
       it('should return nested completions', () => {
-        const completions = trie.getCompletions(['user']);
+        const completions = cmdRegistry.getCompletions(['user']);
         expect(completions.length).toEqual(2);
         expect(completions).toContainEqual({ type: 'word', name: 'create' });
         expect(completions).toContainEqual({ type: 'word', name: 'delete' });
       });
 
       it('should return empty array for invalid completions', () => {
-        const completions = trie.getCompletions(['fnord']);
+        const completions = cmdRegistry.getCompletions(['fnord']);
         expect(completions.length).toEqual(0);
       });
     });
 
     describe('one argument', () => {
       beforeEach(() => {
-        trie.addCommand(
+        cmdRegistry.addCommand(
           [{ type: 'word', name: 'help' }],
           'Help command',
           successHandler
         );
-        trie.addCommand(
+        cmdRegistry.addCommand(
           [
             { type: 'word', name: 'user' },
             { type: 'argument', name: 'userId' },
@@ -139,7 +139,7 @@ describe('CommandTrie', () => {
           'Create user',
           successHandler
         );
-        trie.addCommand(
+        cmdRegistry.addCommand(
           [
             { type: 'word', name: 'user' },
             { type: 'argument', name: 'userId' },
@@ -151,27 +151,27 @@ describe('CommandTrie', () => {
       });
 
       it('should return root level segment completions', () => {
-        const completions = trie.getCompletions([]);
+        const completions = cmdRegistry.getCompletions([]);
         expect(completions.length).toEqual(2);
         expect(completions).toContainEqual({ type: 'word', name: 'user' });
         expect(completions).toContainEqual({ type: 'word', name: 'help' });
       });
 
       it('should return nested completions for parent word', () => {
-        const completions = trie.getCompletions(['user']);
+        const completions = cmdRegistry.getCompletions(['user']);
         expect(completions.length).toEqual(1);
         expect(completions).toContainEqual({ type: 'argument', name: 'userId' });
       });
 
       it('should return nested completions for parent word child argument', () => {
-        const completions = trie.getCompletions(['user', 'userId']);
+        const completions = cmdRegistry.getCompletions(['user', 'userId']);
         expect(completions.length).toEqual(2);
         expect(completions).toContainEqual({ type: 'word', name: 'create' });
         expect(completions).toContainEqual({ type: 'word', name: 'delete' });
       });
 
       it('should return empty array for invalid completions', () => {
-        const completions = trie.getCompletions(['user', 'fnord']);
+        const completions = cmdRegistry.getCompletions(['user', 'fnord']);
         expect(completions.length).toEqual(0);
       });
     });
@@ -180,12 +180,12 @@ describe('CommandTrie', () => {
   describe('getCompletions_s', () => {
     describe('no arguments', () => {
       beforeEach(() => {
-        trie.addCommand(
+        cmdRegistry.addCommand(
           [{ type: 'word', name: 'help' }],
           'Help command',
           successHandler
         );
-        trie.addCommand(
+        cmdRegistry.addCommand(
           [
             { type: 'word', name: 'user' },
             { type: 'word', name: 'create' }
@@ -193,7 +193,7 @@ describe('CommandTrie', () => {
           'Create user',
           successHandler
         );
-        trie.addCommand(
+        cmdRegistry.addCommand(
           [
             { type: 'word', name: 'user' },
             { type: 'word', name: 'delete' }
@@ -204,34 +204,34 @@ describe('CommandTrie', () => {
       });
 
       it('should return root level string completions', () => {
-        const completions = trie.getCompletions_s([]);
+        const completions = cmdRegistry.getCompletions_s([]);
         expect(completions).toEqual(['help', 'user']);
       });
 
       it('should return nested completions', () => {
-        const completions = trie.getCompletions_s(['user']);
+        const completions = cmdRegistry.getCompletions_s(['user']);
         expect(completions).toEqual(['create', 'delete']);
       });
 
       it('should return empty array for invalid path', () => {
-        const completions = trie.getCompletions_s(['invalid', 'path']);
+        const completions = cmdRegistry.getCompletions_s(['invalid', 'path']);
         expect(completions).toEqual([]);
       });
 
       it('should return empty array for leaf command', () => {
-        const completions = trie.getCompletions_s(['help']);
+        const completions = cmdRegistry.getCompletions_s(['help']);
         expect(completions).toEqual([]);
       });
     });
 
     describe('for commands with arguments', () => {
       beforeEach(() => {
-        trie.addCommand(
+        cmdRegistry.addCommand(
           [{ type: 'word', name: 'help' }],
           'Help command',
           successHandler
         );
-        trie.addCommand(
+        cmdRegistry.addCommand(
           [
             { type: 'word', name: 'user' },
             { type: 'argument', name: 'userId' },
@@ -240,7 +240,7 @@ describe('CommandTrie', () => {
           'Deactivate user',
           successHandler
         );
-        trie.addCommand(
+        cmdRegistry.addCommand(
           [
             { type: 'word', name: 'user' },
             { type: 'argument', name: 'userId' },
@@ -252,12 +252,12 @@ describe('CommandTrie', () => {
       });
 
       it('should return argument name for word segment', () => {
-        const completions = trie.getCompletions_s(['user'])
+        const completions = cmdRegistry.getCompletions_s(['user'])
         expect(completions).toEqual(['userId']);
       });
 
       it('should return children node names for word and argument segments', () => {
-        const completions = trie.getCompletions_s(['user', 'userId'])
+        const completions = cmdRegistry.getCompletions_s(['user', 'userId'])
         expect(completions).toEqual(['deactivate', 'delete']);
       });
 
@@ -267,16 +267,16 @@ describe('CommandTrie', () => {
   describe('CommandNode', () => {
     describe('fullPath', () => {
       it('should return correct path for single-level command', () => {
-        trie.addCommand(
+        cmdRegistry.addCommand(
           [{ type: 'word', name: 'test' }],
           'word test'
         );
-        const node = trie.getCommand(['test']);
+        const node = cmdRegistry.getCommand(['test']);
         expect(node?.fullPath).toEqual(['test']);
       });
 
       it('should return correct path for nested command', () => {
-        trie.addCommand(
+        cmdRegistry.addCommand(
           [
             { type: 'word', name: 'parent' },
             { type: 'word', name: 'child' },
@@ -284,12 +284,12 @@ describe('CommandTrie', () => {
           ],
           'description'
         );
-        const node = trie.getCommand(['parent', 'child', 'grandchild']);
+        const node = cmdRegistry.getCommand(['parent', 'child', 'grandchild']);
         expect(node?.fullPath).toEqual(['parent', 'child', 'grandchild']);
       });
 
       it('should return correct path for command with arguments', () => {
-        trie.addCommand(
+        cmdRegistry.addCommand(
           [
             { type: 'word', name: 'command' },
             { type: 'argument', name: 'arg1' },
@@ -297,7 +297,7 @@ describe('CommandTrie', () => {
           ],
           'description'
         );
-        const node = trie.getCommand(['command', 'arg1', 'subcommand']);
+        const node = cmdRegistry.getCommand(['command', 'arg1', 'subcommand']);
         expect(node?.fullPath).toEqual(['command', 'arg1', 'subcommand']);
       });
     });

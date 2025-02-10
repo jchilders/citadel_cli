@@ -1,11 +1,11 @@
-import { CommandTrie } from '../src/components/Citadel/types/command-trie';
+import { CommandRegistry } from '../src/components/Citadel/types/command-registry';
 import { JsonCommandResult, ImageCommandResult, TextCommandResult } from '../src/components/Citadel/types/command-results';
 
 export function registerBasicCommands() {
-  const trie = new CommandTrie();
+  const cmdRegistry = new CommandRegistry();
 
   // User commands
-  trie.addCommand(
+  cmdRegistry.addCommand(
     [
       { type: 'word', name: 'user' },
       { type: 'word', name: 'show' },
@@ -25,7 +25,7 @@ export function registerBasicCommands() {
     }
   );
 
-  trie.addCommand(
+  cmdRegistry.addCommand(
     [
       { type: 'word', name: 'user' },
       { type: 'word', name: 'deactivate' },
@@ -38,7 +38,7 @@ export function registerBasicCommands() {
     })
   );
 
-  trie.addCommand(
+  cmdRegistry.addCommand(
     [
       { type: 'word', name: 'user' },
       { type: 'word', name: 'query' },
@@ -54,7 +54,7 @@ export function registerBasicCommands() {
     })
   );
 
-  trie.addCommand(
+  cmdRegistry.addCommand(
     [
       { type: 'word', name: 'user' },
       { type: 'word', name: 'query' },
@@ -71,7 +71,7 @@ export function registerBasicCommands() {
   );
 
   // Error commands
-  trie.addCommand(
+  cmdRegistry.addCommand(
     [
       { type: 'word', name: 'error' },
       { type: 'word', name: 'timeout' }
@@ -83,7 +83,7 @@ export function registerBasicCommands() {
     }
   );
 
-  trie.addCommand(
+  cmdRegistry.addCommand(
     [
       { type: 'word', name: 'error' },
       { type: 'word', name: 'raise' }
@@ -94,7 +94,7 @@ export function registerBasicCommands() {
     }
   );
 
-  trie.addCommand(
+  cmdRegistry.addCommand(
     [
       { type: 'word', name: 'error' },
       { type: 'word', name: 'returnval' }
@@ -105,7 +105,7 @@ export function registerBasicCommands() {
   );
 
   // Image commands
-  trie.addCommand(
+  cmdRegistry.addCommand(
     [
       { type: 'word', name: 'image' },
       { type: 'word', name: 'random' },
@@ -120,7 +120,7 @@ export function registerBasicCommands() {
     }
   );
 
-  trie.addCommand(
+  cmdRegistry.addCommand(
     [
       { type: 'word', name: 'image' },
       { type: 'word', name: 'random' },
@@ -134,7 +134,7 @@ export function registerBasicCommands() {
     }
   );
 
-  trie.addCommand(
+  cmdRegistry.addCommand(
     [
       { type: 'word', name: 'image' },
       { type: 'word', name: 'random' },
@@ -149,7 +149,7 @@ export function registerBasicCommands() {
   );
 
   // Cowsay command
-  trie.addCommand(
+  cmdRegistry.addCommand(
     [
       { type: 'word', name: 'cowsay' },
       { type: 'argument', name: 'message', description: 'What should the cow say?' }
@@ -174,7 +174,7 @@ export function registerBasicCommands() {
   );
 
   // LocalStorage commands
-  trie.addCommand(
+  cmdRegistry.addCommand(
     [
       { type: 'word', name: 'localstorage' },
       { type: 'word', name: 'show' }
@@ -192,7 +192,7 @@ export function registerBasicCommands() {
     }
   );
 
-  trie.addCommand(
+  cmdRegistry.addCommand(
     [
       { type: 'word', name: 'localstorage' },
       { type: 'word', name: 'clear' }
@@ -204,7 +204,7 @@ export function registerBasicCommands() {
     }
   );
 
-  trie.addCommand(
+  cmdRegistry.addCommand(
     [
       { type: 'word', name: 'thing fnord' },
       { type: 'argument', name: 'arg1', description: 'Arg 1' },
@@ -217,5 +217,5 @@ export function registerBasicCommands() {
       }
   );
 
-  return trie;
+  return cmdRegistry;
 }

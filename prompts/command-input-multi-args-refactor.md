@@ -24,4 +24,4 @@ In other words: an argument is a string of characters. If an argument contains a
 
 6. Once all command node segments are filled (such as "user 12341 show"), then the user may press the Enter key to execute the command. This will result in executing the handler for that node (see `executeCommand` in useCommandParser.ts), and passing it the values for any arguments entered.
 
-This is very different from how CommandInput used to work. Please update it with the above requiremets, taking into account the changes made to CommandTrie, CommandNode, and the various states provided by CitadelState.
+This is very different from how CommandInput used to work. Please update it with the above requiremets, taking into account the changes made to CommandRegistry, CommandNode, and the various states provided by CitadelState.

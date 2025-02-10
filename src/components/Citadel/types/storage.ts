@@ -1,4 +1,4 @@
-import { CommandSegment } from "./command-trie";
+import { CommandSegment } from "./command-registry";
 
 /**
  * Supported storage mechanisms for command history

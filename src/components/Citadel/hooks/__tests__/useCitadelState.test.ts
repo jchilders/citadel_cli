@@ -2,7 +2,7 @@ import { act } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { 
   createMockCommand,
-  createMockCommandTrie,
+  createMockCommandRegistry,
   createMockOutputItem,
   createMockSegmentStack,
   createMockCommandHistory,
@@ -23,7 +23,7 @@ vi.mock('../../config/CitadelConfigContext', () => ({
     getStoredCommands: vi.fn().mockResolvedValue([]),
     clear: vi.fn().mockResolvedValue(undefined)
   }),
-  useCitadelCommands: () => createMockCommandTrie(),
+  useCitadelCommands: () => createMockCommandRegistry(),
   useSegmentStack: () => createMockSegmentStack(),
   useSegmentStackVersion: () => 1
 }));
@@ -100,7 +100,7 @@ describe.skip('useCitadelState', () => {
       const { hook } = setupCitadelStateHook();
       const mockResult = new TextCommandResult('Success');
       
-      vi.mocked(createMockCommandTrie().getCommand).mockReturnValue(
+      vi.mocked(createMockCommandRegistry().getCommand).mockReturnValue(
         createMockCommand('test', { 
           handler: async () => mockResult 
         })
@@ -117,7 +117,7 @@ describe.skip('useCitadelState', () => {
       const { hook } = setupCitadelStateHook();
       const mockError = new Error('Test error');
       
-      vi.mocked(createMockCommandTrie().getCommand).mockReturnValue(
+      vi.mocked(createMockCommandRegistry().getCommand).mockReturnValue(
         createMockCommand('test', { 
           handler: async () => { throw mockError; }
         })

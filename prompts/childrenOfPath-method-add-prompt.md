@@ -1,4 +1,4 @@
-I need a function added to the CommandTrie that will take a partial path and return all "subsegements" for it. Call it 'childrenOfPath(string[])', and it should return `string[]`. It will be used to determine valid next inputs for a given "command level". For example, consider the following menu structure:
+I need a function added to the CommandRegistry that will take a partial path and return all "subsegements" for it. Call it 'childrenOfPath(string[])', and it should return `string[]`. It will be used to determine valid next inputs for a given "command level". For example, consider the following menu structure:
 
 user
 |-- :userId

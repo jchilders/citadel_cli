@@ -1,6 +1,6 @@
 import { render, act } from '@testing-library/react';
 import { CitadelConfigProvider, useCitadelCommands, useCitadelConfig, useCitadelStorage } from '../CitadelConfigContext';
-import { CommandTrie } from '../../types/command-trie';
+import { CommandRegistry } from '../../types/command-registry';
 import { StorageFactory } from '../../storage/StorageFactory';
 import { defaultConfig } from '../defaults';
 import { CitadelElement } from '../../Citadel';
@@ -38,14 +38,14 @@ describe('CitadelConfigContext', () => {
     });
 
     it('should provide and persist commands when passed', () => {
-      const testTrie = new CommandTrie();
-      testTrie.addCommand(
+      const testCmdRegistry = new CommandRegistry();
+      testCmdRegistry.addCommand(
         [{ type: 'word', name: 'test-command' }],
         'Test command'
       );
 
       const { getByTestId, rerender } = render(
-        <CitadelConfigProvider commands={testTrie}>
+        <CitadelConfigProvider commandRegistry={testCmdRegistry}>
         <TestComponent />
         </CitadelConfigProvider>
       );
@@ -53,15 +53,15 @@ describe('CitadelConfigContext', () => {
       const initialCommandsText = getByTestId('commands').textContent;
       expect(initialCommandsText).toContain('test-command');
 
-      // Modify the trie
-      testTrie.addCommand(
+      // Modify the registry
+      testCmdRegistry.addCommand(
         [{ type: 'word', name: 'another-command' }],
         'Another command'
       );
 
-      // Rerender with same trie
+      // Rerender with same registry
       rerender(
-        <CitadelConfigProvider commands={testTrie}>
+        <CitadelConfigProvider commandRegistry={testCmdRegistry}>
         <TestComponent />
         </CitadelConfigProvider>
       );
@@ -71,7 +71,7 @@ describe('CitadelConfigContext', () => {
     });
 
     describe('command persistence in shadow DOM', () => {
-      it('should maintain command trie across shadow DOM renders', () => {
+      it('should maintain command regsitry across shadow DOM renders', () => {
         // Mock CSS modules
         vi.mock('../../../Citadel.module.css', () => ({
           default: {
@@ -81,17 +81,17 @@ describe('CitadelConfigContext', () => {
           }
         }));
 
-        const testTrie = new CommandTrie();
-        testTrie.addCommand(
+        const testCmdRegsitry = new CommandRegistry();
+        testCmdRegsitry.addCommand(
           [{ type: 'word', name: 'test' }],
           'Test command'
         );
 
         // Create CitadelElement with mocked styles
-        const citadelElement = new CitadelElement(testTrie);
+        const citadelElement = new CitadelElement(testCmdRegsitry);
 
-        // Verify the command trie is maintained
-        expect(citadelElement['commands']).toBe(testTrie);
+        // Verify the command regsitry is maintained
+        expect(citadelElement['commands']).toBe(testCmdRegsitry);
 
         // Clean up
         vi.resetModules();
@@ -137,11 +137,11 @@ describe('CitadelConfigContext', () => {
     });
 
     it('should not add help command twice when includeHelpCommand is true', () => {
-      const testTrie = new CommandTrie();
-      const helpHandler = createHelpHandler(testTrie);
+      const testCmdRegistry = new CommandRegistry();
+      const helpHandler = createHelpHandler(testCmdRegistry);
 
       // Add help command manually first
-      testTrie.addCommand(
+      testCmdRegistry.addCommand(
         [{ type: 'word', name: 'help' }],
         'Show available commands',
         helpHandler
@@ -150,7 +150,7 @@ describe('CitadelConfigContext', () => {
       const { rerender } = render(
         <CitadelConfigProvider
         config={{ includeHelpCommand: true }}
-        commands={testTrie}
+        commandRegistry={testCmdRegistry}
         >
         <div>Test</div>
         </CitadelConfigProvider>
@@ -160,14 +160,14 @@ describe('CitadelConfigContext', () => {
       rerender(
         <CitadelConfigProvider
         config={{ includeHelpCommand: true }}
-        commands={testTrie}
+        commandRegistry={testCmdRegistry}
         >
         <div>Test</div>
         </CitadelConfigProvider>
       );
 
       // Verify help command exists exactly once
-      const commands = testTrie.commands.filter(cmd => 
+      const commands = testCmdRegistry.commands.filter(cmd => 
                                                 cmd.segments[0].name === 'help'
                                                );
                                                expect(commands).toHaveLength(1);

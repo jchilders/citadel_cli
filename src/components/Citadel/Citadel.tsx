@@ -9,7 +9,7 @@ import { CommandOutput } from './components/CommandOutput';
 import { AvailableCommands } from './components/AvailableCommands';
 import { CitadelConfig } from './config/types';
 import { CitadelConfigProvider } from './config/CitadelConfigContext';
-import { CommandTrie } from './types/command-trie';
+import { CommandRegistry } from './types/command-registry';
 import { defaultConfig } from './config/defaults';
 import { Logger, LogLevel } from './utils/logger';
 
@@ -20,7 +20,7 @@ import tailwindStyles from '../../styles/tailwind.css?raw';
 
 export const Citadel = ({ 
   config = defaultConfig, 
-  commandTrie = new CommandTrie(),
+  commandRegistry = new CommandRegistry(),
   containerId = null
 }) => {
   useEffect(() => {
@@ -28,7 +28,7 @@ export const Citadel = ({
       level: config.logLevel || defaultConfig.logLevel || LogLevel.ERROR,
       prefix: '[Citadel]'
     });
-    const citadelElement = new CitadelElement(commandTrie, config);
+    const citadelElement = new CitadelElement(commandRegistry, config);
     const container = containerId ? document.getElementById(containerId) : document.body;
     
     if (!container) {
@@ -41,7 +41,7 @@ export const Citadel = ({
     return () => {
       citadelElement.parentElement?.removeChild(citadelElement);
     };
-  }, [commandTrie, containerId]);
+  }, [commandRegistry, containerId]);
 
   return null;
 };
@@ -51,14 +51,14 @@ export const Citadel = ({
 export class CitadelElement extends HTMLElement {
   private shadow: ShadowRoot;
   private root: ReturnType<typeof createRoot> | null = null;
-  private commands?: CommandTrie;
+  private commandRegistry?: CommandRegistry;
   
   private config?: CitadelConfig;
 
-  constructor(commandTrie: CommandTrie, config?: CitadelConfig) {
+  constructor(commandRegistry: CommandRegistry, config?: CitadelConfig) {
     super();
     this.shadow = this.attachShadow({ mode: 'open' });
-    this.commands = commandTrie;
+    this.commandRegistry = commandRegistry;
     this.config = config;
   }
 
@@ -88,18 +88,11 @@ export class CitadelElement extends HTMLElement {
     // Initialize React within shadow DOM
     this.root = createRoot(container);
     this.root.render(
-      <CitadelConfigProvider config={this.config || defaultConfig} commands={this.commands}>
+      <CitadelConfigProvider config={this.config || defaultConfig} commandRegistry={this.commandRegistry}>
         <CitadelInner />
       </CitadelConfigProvider>
     );
   }
-
-  // disconnectedCallback() {
-  //   if (this.root) {
-  //     this.root.unmount();
-  //     this.root = null;
-  //   }
-  // }
 }
 
 customElements.define('citadel-element', CitadelElement);
@@ -120,6 +113,14 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
   const startYRef = useRef(0);
   const startHeightRef = useRef(0);
   const { state, actions } = useCitadelState();
+
+  // Set the key used to show Citadel
+  useGlobalShortcut({
+    onOpen: () => setIsVisible(true),
+    onClose: () => setIsClosing(true),
+    isVisible,
+    showCitadelKey: config.showCitadelKey || '.'
+  });
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (containerRef.current) {
@@ -176,13 +177,6 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
     };
   // }, [handleMouseMove, handleMouseUp]);
   }, [handleMouseUp]);
-
-  useGlobalShortcut({
-    onOpen: () => setIsVisible(true),
-    onClose: () => setIsClosing(true),
-    isVisible,
-    showCitadelKey: config.showCitadelKey || '.'
-  });
 
   const handleAnimationComplete = useCallback(() => {
     if (isClosing) {

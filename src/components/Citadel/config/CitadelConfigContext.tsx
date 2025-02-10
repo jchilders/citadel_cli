@@ -4,19 +4,19 @@ import { CitadelConfig } from './types';
 import { defaultConfig } from './defaults';
 import { StorageFactory } from '../storage/StorageFactory';
 import { CommandStorage } from '../types/storage';
-import { CommandTrie } from '../types/command-trie';
+import { CommandRegistry } from '../types/command-registry';
 import { SegmentStack } from '../types/segment-stack';
 
 interface CitadelContextValue {
   config: CitadelConfig;
-  commands: CommandTrie;
+  commands: CommandRegistry;
   storage?: CommandStorage;
   segmentStack: SegmentStack;
 }
 
 const defaultContextValue: CitadelContextValue = {
   config: defaultConfig,
-  commands: new CommandTrie(),
+  commands: new CommandRegistry(),
   segmentStack: new SegmentStack()
 };
 
@@ -24,9 +24,9 @@ const CitadelConfigContext = createContext<CitadelContextValue>(defaultContextVa
 
 export const CitadelConfigProvider: React.FC<{
   config?: CitadelConfig;
-  commands?: CommandTrie;
+  commandRegistry?: CommandRegistry;
   children: React.ReactNode;
-}> = ({ config = defaultConfig, commands: commands, children }) => {
+}> = ({ config = defaultConfig, commandRegistry: commands, children }) => {
   const [storage, setStorage] = React.useState<CommandStorage>();
 
   const mergedConfig = {
@@ -68,7 +68,7 @@ export const CitadelConfigProvider: React.FC<{
 
   const contextValue: CitadelContextValue = {
     config: mergedConfig,
-    commands: commands || new CommandTrie(),
+    commands: commands || new CommandRegistry(),
     storage,
     segmentStack: new SegmentStack()
   };

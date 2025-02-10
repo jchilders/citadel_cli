@@ -1,4 +1,4 @@
-import { CommandNode, CommandTrie, CommandHandler, WordSegment, ArgumentSegment, CommandSegment, NullSegment } from '../components/Citadel/types/command-trie';
+import { CommandNode, CommandRegistry, CommandHandler, WordSegment, ArgumentSegment, CommandSegment, NullSegment } from '../components/Citadel/types/command-registry';
 import { TextCommandResult } from '../components/Citadel/types/command-results';
 import { CitadelState, CitadelActions, OutputItem } from '../components/Citadel/types';
 import { SegmentStack } from '../components/Citadel/types/segment-stack';
@@ -50,8 +50,8 @@ export const createMockCommand = (name: string, options: MockNodeOptions = {}): 
   return node;
 };
 
-export const createMockCommandTrie = (): CommandTrie => {
-  const commands = new CommandTrie();
+export const createMockCommandRegistry = (): CommandRegistry => {
+  const commands = new CommandRegistry();
   const mockNode = createMockCommand('test1');
   
   // Mock the public methods
@@ -111,7 +111,7 @@ export const createMockOutputItem = (command: string[] = ['test']) => {
 export const setupCitadelStateHook = () => {
   const mockHistory = createMockCommandHistory();
   const mockActions = createMockCommandHistoryActions();
-  const mockCommands = createMockCommandTrie();
+  const mockCommands = createMockCommandRegistry();
   const mockStack = createMockSegmentStack();
   
   // Mock the history hook before rendering

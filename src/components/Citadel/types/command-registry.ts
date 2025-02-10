@@ -99,11 +99,9 @@ export class CommandNode {
 }
 
 /**
- * A trie data structure for managing hierarchical commands.
- * Provides functionality for adding commands, retrieving commands,
- * and getting command completions.
+ * Used to store user-defined commands.
  */
-export class CommandTrie {
+export class CommandRegistry {
   private _commands: CommandNode[] = [];
 
   get commands(): CommandNode[] {
@@ -111,7 +109,7 @@ export class CommandTrie {
   }
 
   /**
-   * Adds a new command to the trie.
+   * Registers a new command
    * 
    * @param newCommandNode The new command to add
    * @throws {Error} If attempting to add a duplicate leaf command or a subcommand to a leaf
@@ -143,7 +141,7 @@ export class CommandTrie {
   }
 
   /**
-   * Retrieves a command from the trie.
+   * Retrieves a command from the registry for the given path.
    * 
    * @param path The path of the command.
    * @returns The command node or undefined if not found.

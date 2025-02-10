@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { LocalStorage } from '../LocalStorage';
 import { StoredCommand } from '../../types/storage';
-import { WordSegment, ArgumentSegment } from '../../types/command-trie';
+import { WordSegment, ArgumentSegment } from '../../types/command-registry';
 
 describe('LocalStorage', () => {
   let localStorage: LocalStorage;
