@@ -1,8 +1,18 @@
-# Citadel
+# Citadel CLI
 
-A hierarchical command-line interface (CLI) for web applications. It is intended to be an drop-in addition to existing web applications, intended for power users to quickly access frequently used application functionality.
+A hierarchical command-line interface (CLI) for web applications.
 
-A demo is available on [Codesandbox](https://codesandbox.io/p/sandbox/m32qkc).
+Use cases:
+
+- Developers: Perform (multiple) REST API calls & view results, view/modify
+  application state at runtime
+- Devops: Improve how you interface existing CI/CD web app
+- Power users: Provide a hook for advanced users of your internal or external
+  apps to quickly perform complex actions
+
+TODO: A gif here showing the CLI in action
+
+A demo is available on [GitHub pages](https://codesandbox.io/p/sandbox/m32qkc).
 
 # Installation
 
@@ -16,10 +26,7 @@ In your application:
 
 ```typescript
 
-import {
-  Citadel,
-  JsonCommandResult, // See below for supported result types
-} from "citadel_cli";
+import { Citadel } from "citadel_cli";
 
 const commands = {
   user: {
@@ -96,7 +103,7 @@ Contributions are welcome.
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/jchilders/citadel_react.git
+git clone https://github.com/jchilders/citadel_cli.git
 cd citadel_react
 ```
 
