@@ -21,6 +21,7 @@
     "dev": "vite",
     "lint": "eslint .",
     "preview": "vite preview",
+    "push": "NODE_ENV=production && npm run build && npm push",
     "test": "vitest --run",
     "coverage": "vitest run --coverage"
   },

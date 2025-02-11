@@ -57,7 +57,7 @@ Adding your own commands is pretty straightforward. There are three steps to doi
 Let's add a simple `greet` command to demonstrate this. 
 
 ```
-import { CommandRegistry, TextCommandResult } from "citadel_cli";
+import { Citadel, CommandRegistry, TextCommandResult } from "citadel_cli";
 
 // 1. Create the registry where your commands will be stored
 const cmdRegistry = new CommandRegistry();

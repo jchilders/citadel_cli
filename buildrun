@@ -1,0 +1,27 @@
+#!/usr/bin/env zsh
+
+set -e  # Exit script on error
+
+IMAGE_NAME="vite-citadel-app"
+CONTAINER_NAME="vite-citadel-container"
+PORT=5173
+
+echo "🛠  Building Docker image: $IMAGE_NAME..."
+if ! docker build -t $IMAGE_NAME .; then
+  echo "❌ Failed to build Docker image"
+  exit 1
+fi
+
+# Remove existing container if it exists
+if docker ps -aq --filter "name=$CONTAINER_NAME" | grep -q .; then
+  echo "🛑 Removing existing container: $CONTAINER_NAME..."
+  docker rm -f $CONTAINER_NAME || echo "⚠️  Could not remove container"
+fi
+
+echo "🚀 Running container: $CONTAINER_NAME..."
+if ! docker run --name $CONTAINER_NAME -p $PORT:5173 $IMAGE_NAME; then
+  echo "❌ Failed to start container"
+  exit 1
+fi
+
+echo "✅ Container is running. Access the app at http://localhost:$PORT"
