@@ -5,7 +5,8 @@ A hierarchical command-line interface (CLI) for web applications.
 Use cases:
 
 - Developers: Perform (multiple) REST API calls & view results, view/modify
-  cookies/localstorage. Do JavaScript things without affecting the application
+  cookies/localstorage. Do JavaScript things without affecting the application.
+- "Poor man's Postman": execute API calls within the context of your application
 - Devops: Improve how you interface with your existing CI/CD web app
 - Power users: Provide a hook for advanced users of your internal or external
   applications to quickly perform complex actions
@@ -36,18 +37,84 @@ function App() {
 ```
 
 Press <kbd>.</kbd> (period) to activate Citadel. Now this doesn't do much, yet:
-it just shows the "help" command, which you can execute by pressing
-<kbd>h[Enter]</kbd>.
+it just shows the "help" command. which you can execute by pressing
+<kbd>h[Enter]</kbd>. You should see the following:
 
-Each command is composed of:
-1. `description`
-2. `argument` Optional. One or more arguments, each with a `name` and a
-   `description`
-3. A `handler`. Required. The `handler` is what gets executed when you hit
-   Enter, and can be any valid JavaScript. The only requirement is that it must
-   return a `CommandResult` class. At the time of this writing they are
-   `JsonCommandResult`, `TextCommandResult`, `ImageCommandResult`, and
-   `ErrorCommandResult`.
+![Screenshot of Citadel CLI](https://github.com/image)
+
+When you execute a command the result is displayed in the output area. It shows the command that was executed, a timestamp, whether the command succesfully executed, and the command's output.
+
+Let's add a simple `greet` command.
+
+```
+import { CommandRegistry, TextCommandResult } from "citadel_cli";
+
+// 1. Create the registry where your commands will be stored
+const cmdRegistry = new CommandRegistry();
+
+// 2. Add a command to the registry. This can be called as many times as you like.
+cmdRegistry.addCommand(
+  [
+    { type: 'word', name: 'greet' },
+    { type: 'argument', name: 'name', description: 'Enter your name' }
+  ],
+  'Say hello to the world', // The description of this command. Used by "help".
+
+  // Next comes the "handler", which is what will get called when the user hits enter.
+  // The return type for this handler is `TextCommandResult`. There are other
+  // types of command result that we'll cover later.
+  async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`) 
+);
+```
+So, this defines a command with two segments: `greet` and `name`. `greet` is a
+command word. `help` is also a command word: when you press `h` it
+autocompletes. The same thing will happen when you press 'g' after defining
+this command: it will autocomplete to "greet".
+
+After that is the argument named 'name'. A few notes on arguments:
+
+1. You can have zero or more arguments in a command, and they can appear in any
+   order.
+2. The arguments the user enters will be passed to the handler as an array of
+   strings.
+3. Arguments can be single- or double-quoted. This lets you enter in values
+   that have spaces or other special characters.
+
+Continuing, our `hello` command has a description ("Say hello..."). This is the
+text that will be shown by the help command, and is optional.
+
+Finally the handler. Let's go over that:
+
+```
+  async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`)
+
+```
+
+As mentioned before, this is what gets called when the user hits enter. The values for the arguments entered by the user, if any, are passed in as the `args: string[]` to the handler/callback function. You can do anything you want in here: it's JavaScript. For example, say you wanted to clear the localstorage:
+
+```
+  async (_args: string[]) => {
+    localStorage.clear();
+    return new TextCommandResult('localStorage cleared');
+  }
+```
+
+At the time of this writing the following command result types are available:
+
+- `TextCommandResult`
+- `JsonCommandResult`
+- `ImageCommandResult`
+- `ErrorCommandResult`
+
+Ok, back to our `greeting` command. Now that the command has been registered,
+all that remains is to pass the registry to the `Citadel` component:
+
+```
+<Citadel cmdRegistry={cmdRegistry} />
+```
+
+After executing the command you should see something like this:
+
 
 ## Configuration
 

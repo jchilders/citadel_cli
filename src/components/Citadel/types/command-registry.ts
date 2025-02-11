@@ -1,7 +1,11 @@
 import { Logger } from '../utils/logger';
 import { CommandResult, TextCommandResult } from './command-results';
 
-/** Function type for handling command execution */
+/** 
+ * A callback function that executes a command and returns a Promise of CommandResult.
+ * Similar to a lambda in Ruby, this is a first-class function that can be passed
+ * as an argument and stored as a variable.
+ */
 export type CommandHandler = (args: string[]) => Promise<CommandResult>;
 
 /**

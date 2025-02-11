@@ -212,7 +212,6 @@ export function registerBasicCommands() {
     ],
     'Test cmd w/ arg in middle',
       async (args: string[]) => {
-        localStorage.clear();
         return new TextCommandResult(`args[0]: ${args[0]}`);
       }
   );
