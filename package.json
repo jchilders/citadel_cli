@@ -14,7 +14,7 @@
     "type": "git",
     "url": "git+https://github.com/jchilders/citadel_cli.git"
   },
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "build": "tsc && vite build",
