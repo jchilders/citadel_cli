@@ -17,8 +17,8 @@ export abstract class BaseStorage implements CommandStorage {
   /**
    * Add a command to history, enforcing storage limits
    */
-  async addCommand(command: StoredCommand): Promise<void> {
-    const commands = await this.getCommands();
+  async addStoredCommand(command: StoredCommand): Promise<void> {
+    const commands = await this.getStoredCommands();
     commands.push(command);
 
     // Remove oldest commands if we exceed the limit
@@ -32,7 +32,7 @@ export abstract class BaseStorage implements CommandStorage {
   /**
    * Get all stored commands, ordered by timestamp ascending
    */
-  abstract getCommands(): Promise<StoredCommand[]>;
+  abstract getStoredCommands(): Promise<StoredCommand[]>;
 
   /**
    * Clear all stored commands

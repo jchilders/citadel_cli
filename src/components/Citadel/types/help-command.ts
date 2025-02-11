@@ -1,28 +1,22 @@
-import { CommandNode, CommandTrie } from './command-trie';
-import { CitadelConfig } from '../config/types';
+import { CommandRegistry } from './command-registry';
 import { TextCommandResult } from './command-results';
 
-export const createHelpCommand = (trie: CommandTrie, config: CitadelConfig): [string, CommandNode] => {
-  /**
-   * Handles the help command, printing out all available leaf commands
-   * with their descriptions. If includeHelpCommand is true, the help
-   * command itself is also included in the output.
-   * @returns TextCommandResult with a string containing a list of all
-   * available commands.
-   */
-  const handler = async function(_args: string[]) {
-    const commands = trie.getLeafCommands()
-      .filter((cmd: CommandNode) => cmd.name !== 'help')
-      .map((cmd: CommandNode) => {
-        const cmdStr = cmd.fullPath.join(' ') + (cmd.requiresArgument ? ` <${cmd.argument?.name}>` : '');
-        return `${cmdStr} - ${cmd.description}`;
+export const createHelpHandler = (cmdRegistry: CommandRegistry) => {
+  return async function(_args: string[]) {
+    const commands:string[] = cmdRegistry.commands
+      .filter(command => command.fullPath[0] !== 'help')
+      .map(command => {
+        const cmdPath = command.segments.map(segment => {
+          if (segment.type === 'argument') {
+            return `<${segment.name}>`;
+          }
+          return segment.name;
+        });
+        return `${cmdPath.join(' ')} - ${command.description}`;
       })
       .sort();
 
-    // Add help command at the end if it's enabled
-    if (config.includeHelpCommand) {
-      commands.push('help - Show available commands');
-    }
+    commands.push('help - Show available commands');
 
     return new TextCommandResult(
       commands.length > 0
@@ -30,10 +24,4 @@ export const createHelpCommand = (trie: CommandTrie, config: CitadelConfig): [st
         : 'No commands available yet. Add some commands to get started!'
     );
   };
-
-  return ['help', new CommandNode({
-    fullPath: ['help'],
-    description: 'Show available commands',
-    handler
-  })];
 };

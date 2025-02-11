@@ -1,32 +1,70 @@
 import { useState, useCallback, useEffect } from 'react';
 import { StoredCommand } from '../types/storage';
 import { useCitadelStorage } from '../config/CitadelConfigContext';
+import { useSegmentStackVersion } from './useSegmentStackVersion';
+import { CommandSegment } from '../types/command-registry';
 
 export interface CommandHistory {
-  commands: StoredCommand[];
+  storedCommands: StoredCommand[];
   position: number | null;
-  savedInput: StoredCommand | null;
 }
 
 export interface CommandHistoryActions {
-  addCommand: (command: StoredCommand) => Promise<void>;
-  getCommands: () => StoredCommand[];
-  navigateHistory: (direction: 'up' | 'down', currentInput: string) => {
-    command: StoredCommand | null;
+  addStoredCommand: (segments: CommandSegment[]) => Promise<void>;
+  getStoredCommands: () => Promise<StoredCommand[]>;
+  navigateHistory: (direction: 'up' | 'down', currentSegments: CommandSegment[]) => Promise<{
+    segments: CommandSegment[] | null;
     position: number | null;
-  };
-  saveInput: (input: string) => void;
+  }>;
   clear: () => Promise<void>;
 }
 
-export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
+export function createStoredCommand(segments: CommandSegment[]): StoredCommand {
+  return {
+    commandSegments: segments,
+    timestamp: Date.now()
+  };
+}
+
+export interface CommandHistoryHook {
+  history: CommandHistory;
+  addStoredCommand: (segments: CommandSegment[]) => Promise<void>;
+  getStoredCommands: () => Promise<StoredCommand[]>;
+  navigateHistory: (direction: 'up' | 'down', currentSegments: CommandSegment[]) => Promise<{
+    segments: CommandSegment[] | null;
+    position: number | null;
+  }>;
+  clear: () => Promise<void>;
+}
+
+export function useCommandHistory(): CommandHistoryHook {
   const storage = useCitadelStorage();
 
   const [history, setHistory] = useState<CommandHistory>({
-    commands: [],
-    position: null,
-    savedInput: null
+    storedCommands: [],
+    position: null
   });
+
+  const addStoredCommand = useCallback(async (segments: CommandSegment[]) => {
+    if (!storage) return;
+
+    try {
+      const storedCommand = createStoredCommand(segments);
+      await storage.addStoredCommand(storedCommand);
+      setHistory(prev => ({
+        ...prev,
+        storedCommands: [...prev.storedCommands, storedCommand],
+        position: null
+      }));
+    } catch (error) {
+      console.warn('Failed to save command to history:', error);
+    }
+  }, [storage]);
+
+  const getStoredCommands = useCallback(async () => {
+    if (!storage) return [];
+    return await storage.getStoredCommands();
+  }, [storage]);
 
   // Load command history from storage on mount
   useEffect(() => {
@@ -34,11 +72,12 @@ export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
 
     const loadHistory = async () => {
       try {
-        const commands = await storage.getCommands();
+        const storedCommands = await storage.getStoredCommands();
         setHistory(prev => ({
           ...prev,
-          commands
+          storedCommands: storedCommands
         }));
+        return storedCommands;
       } catch (error) {
         console.warn('Failed to load command history:', error);
       }
@@ -46,54 +85,23 @@ export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
     loadHistory();
   }, [storage]);
 
-  const addCommand = useCallback(async (command: StoredCommand) => {
-    if (!storage) return;
-
-    try {
-      await storage.addCommand(command);
-      setHistory(prev => ({
-        ...prev,
-        commands: [...prev.commands, command],
-        position: null,
-        savedInput: null
-      }));
-    } catch (error) {
-      console.warn('Failed to save command to history:', error);
-    }
-  }, [storage]);
-
-  const getCommands = useCallback(() => {
-    return history.commands;
-  }, [history.commands]);
-
-  const navigateHistory = useCallback((direction: 'up' | 'down', currentInput: string): { command: StoredCommand | null; position: number | null } => {
-    if (history.commands.length === 0) {
-      return { command: null, position: null };
-    }
-
-    // Save current input when starting history navigation
-    if (history.position === null && direction === 'up') {
-      const savedCommand: StoredCommand = {
-        inputs: currentInput.split(' ').filter(Boolean),
-        timestamp: Date.now()
-      };
-      setHistory(prev => ({
-        ...prev,
-        savedInput: savedCommand
-      }));
+  const navigateHistory = useCallback(async (direction: 'up' | 'down'): Promise<{ segments: CommandSegment[] | null; position: number | null }> => {
+    const commands = await getStoredCommands();
+    if (commands.length === 0) {
+      return { segments: null, position: null };
     }
 
     let newPosition: number | null = null;
     if (direction === 'up') {
       if (history.position === null) {
-        newPosition = history.commands.length - 1;
+        newPosition = history.storedCommands.length - 1;
       } else if (history.position > 0) {
         newPosition = history.position - 1;
       } else {
         newPosition = 0;
       }
     } else {
-      if (history.position === null || history.position >= history.commands.length - 1) {
+      if (history.position === null || history.position >= history.storedCommands.length - 1) {
         newPosition = null;
       } else {
         newPosition = history.position + 1;
@@ -105,32 +113,21 @@ export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
       position: newPosition
     }));
 
-    // If we've returned to the original position, return saved input command
-    if (newPosition === null && history.savedInput) {
-      setHistory(prev => ({
-        ...prev,
-        savedInput: null
-      }));
-      return { command: history.savedInput, position: null };
+    // If we've returned to the original position or navigated down past the end, clear the input
+    if (newPosition === null) {
+      return { 
+        segments: [],
+        position: null 
+      };
     }
 
-    // Otherwise return the historical command
-    return { 
-      command: newPosition !== null ? history.commands[newPosition] : null,
+    // Otherwise return the historical command segments
+    let result = { 
+      segments: newPosition !== null ? history.storedCommands[newPosition].commandSegments : null,
       position: newPosition 
     };
-  }, [history]);
-
-  const saveInput = useCallback((input: string) => {
-    const savedCommand: StoredCommand = {
-      inputs: input.split(' ').filter(Boolean),
-      timestamp: Date.now()
-    };
-    setHistory(prev => ({
-      ...prev,
-      savedInput: savedCommand
-    }));
-  }, []);
+    return result;
+  }, [history, useSegmentStackVersion]);
 
   const clear = useCallback(async () => {
     try {
@@ -138,22 +135,19 @@ export function useCommandHistory(): [CommandHistory, CommandHistoryActions] {
 
       await storage.clear();
       setHistory({
-        commands: [],
-        position: null,
-        savedInput: null
+        storedCommands: [],
+        position: null
       });
     } catch (error) {
       console.warn('Failed to clear command history:', error);
     }
   }, [storage]);
 
-  const actions: CommandHistoryActions = {
-    addCommand,
-    getCommands,
+  return {
+    history,
+    addStoredCommand,
+    getStoredCommands,
     navigateHistory,
-    saveInput,
     clear
   };
-
-  return [history, actions];
 }

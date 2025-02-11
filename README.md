@@ -1,8 +1,17 @@
-# Citadel
+# Citadel CLI
 
-A hierarchical command-line interface (CLI) for web applications. It is intended to be an drop-in addition to existing web applications, intended for power users to quickly access frequently used application functionality.
+A hierarchical command-line interface (CLI) for web applications.
 
-A demo is available on [Codesandbox](https://codesandbox.io/p/sandbox/m32qkc).
+Use cases:
+
+- Developers: Perform (multiple) REST API calls & view results, view/modify
+  cookies/localstorage. Do JavaScript things without affecting the application.
+- "Poor man's Postman": execute API calls within the context of your application
+- Devops: Improve how you interface with your existing CI/CD web app
+- Power users: Provide a hook for advanced users of your internal or external
+  applications to quickly perform complex actions
+
+![Animated screenshot of Citadel CLI](https://github.com/user-attachments/assets/b64da0f7-a4a0-4f76-bc03-c0e40c0e14e5)
 
 # Installation
 
@@ -16,54 +25,152 @@ In your application:
 
 ```typescript
 
-import {
-  Citadel,
-  JsonCommandResult, // See below for supported result types
-} from "citadel_cli";
-
-const commands = {
-  user: {
-    show: {
-      description: 'Show user details',
-      argument: { name: 'userId', description: 'Enter user ID' },
-      handler: async (args: string[]) => {
-        // Pause to simulate a long request
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        return new JsonCommandResult({
-          id: args[0],
-          name: "John Doe",
-          email: "john@example.com",
-          status: "active"
-        });
-      },
-    },
-  }
-};
+import { Citadel } from "citadel_cli";
 
 function App() {
   return (
     <>
-      <Citadel commands={commands} />
+      <Citadel />
     </>
   );
 }
 ```
 
-Press <kbd>.</kbd> (period) to activate Citadel. The command as defined would render the following:
+Press <kbd>.</kbd> (period) to activate Citadel.
 
-![Demo of Citadel CLI](https://github.com/user-attachments/assets/b64da0f7-a4a0-4f76-bc03-c0e40c0e14e5)
+Now this doesn't do much, yet: it just shows the "help" command. You can
+execute it by pressing <kbd>h[Enter]</kbd>. If you do then you should see the
+following:
 
-Note that the exact keys pressed to perform the above were <kbd>us123</kbd>: you only have to press the first letter of each word to advance to the next. 
+![screenshot_help_cmd](https://github.com/user-attachments/assets/1cc6fd58-7591-45f1-980a-46da15a1843a)
 
-Each command is composed of:
-1. `description`
-2. `argument` Optional. One or more arguments, each with a `name` and a `description`
-3. A `handler`. Required. The `handler` is what gets executed when you hit Enter, and can be any valid JavaScript. The only requirement is that it must return a `CommandResult` class. At the time of this writing they are `JsonCommandResult`, `TextCommandResult`, `ImageCommandResult`, and `ErrorCommandResult`.
+When you execute a command the result is displayed in the output area. It shows
+the command that was executed, a timestamp, whether the command succesfully
+executed, and the command's output.
+
+Adding your own commands is pretty straightforward. There are three steps to doing so.
+
+1. Create a `CommandRegistry`
+2. Add commands to the registry
+3. Pass the registry to the `Citadel` component
+
+Let's add a simple `greet` command to demonstrate this. 
+
+```
+import { CommandRegistry, TextCommandResult } from "citadel_cli";
+
+// 1. Create the registry where your commands will be stored
+const cmdRegistry = new CommandRegistry();
+
+// 2. Add a command to the registry. This can be called as many times as you like.
+cmdRegistry.addCommand(
+  [
+    { type: 'word', name: 'greet' },
+    { type: 'argument', name: 'name', description: 'Enter your name' }
+  ],
+  'Say hello to the world', // The description of this command. Used by "help".
+
+  // Next comes the "handler", which is what will get called when the user hits enter.
+  // The return type for this handler is `TextCommandResult`. There are other
+  // types of command result that we'll cover later.
+  async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`) 
+);
+```
+The first argument to the `addCommand` function is an array of "command
+segments". There are two types of command segments: `word`s and `argument`s.
+Here we are defining a command with two segments named `greet` and `name`.
+`greet` being a `word` segment and `name` being an `argument`. 
+
+Word segments are autocompleted, whereas argument segments are used to store
+user-entered values. 
+
+A few notes on arguments:
+
+1. You can have zero or more arguments in a command, and they can appear in any
+   order.
+2. The arguments the user enters will be passed to the handler as an array of
+   strings.
+3. Arguments can be single- or double-quoted. This allows users to enter in
+   values that have spaces or other special characters.
+
+Continuing on with our `greet` example, after the segments are defined is a
+description ("Say hello..."). This is the text that will be shown by the help
+command.
+
+The final argument to `addCommand` is the *handler*. Let's go over that:
+
+```
+  async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`)
+```
+
+As mentioned before this is what will be called after the user hits Enter. The
+values for the arguments entered by the user (if any) are passed in to the
+handler as `args: string[]`. What you do inside the handler is completely up to
+your imagination. For example, say you wanted to clear the localstorage:
+
+```
+  async (_args: string[]) => {
+    localStorage.clear();
+    return new TextCommandResult('localStorage cleared!');
+  }
+```
+
+Or perhaps make an HTTP POST and return the result as JSON:
+
+```
+async (args: string[]) => {
+  const response = await fetch('https://api.example.com/endpoint', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name: args[0] }),
+  });
+  return new JsonCommandResult(await response.json());
+}
+```
+
+At the time of this writing the following command result types are available:
+
+- `ErrorCommandResult`
+- `ImageCommandResult`
+- `JsonCommandResult`
+- `TextCommandResult`
+
+Back to our `greeting` command. The final code for it (without comments) should
+now look like this:
+
+```
+import { CommandRegistry, TextCommandResult } from "citadel_cli";
+
+const cmdRegistry = new CommandRegistry();
+
+cmdRegistry.addCommand(
+  [
+    { type: 'word', name: 'greet' },
+    { type: 'argument', name: 'name', description: 'Enter your name' }
+  ],
+  'Say hello to the world',
+  async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`) 
+);
+```
+Now that the command has been added all that is left is to pass the registry to
+the `Citadel` component:
+
+```
+<Citadel commandRegistry={cmdRegistry} />
+```
+
+The result of this should look like this:
+
+![screenshot_greeting_cmd](https://github.com/user-attachments/assets/a3c1acad-69b3-4079-87af-0425aea3980a)
+
+Go forth and make your application experience better!
 
 ## Configuration
 
-Certain configuration options can be passed to the Citadel component. These are given below along with their default values.
+Certain configuration options can be passed to the Citadel component. These are
+given below, along with their default values.
 
 ```
 const config = {
@@ -84,10 +191,10 @@ const config = {
 };
 ```
 
-Then when you render the component:
+Then to make the component aware of them:
 
 ```
-<Citadel commands={commands} config={config} />
+<Citadel commandRegistry={cmdRegistry} config={config} />
 ```
 
 ## Contributing
@@ -96,8 +203,8 @@ Contributions are welcome.
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/jchilders/citadel_react.git
-cd citadel_react
+git clone https://github.com/jchilders/citadel_cli.git
+cd citadel_cli
 ```
 
 2. Install dependencies:
@@ -169,17 +276,3 @@ Load your appliation and press <kbd>.</kbd>
 - Keep functions focused and modular
 - Use consistent formatting (the project uses ESLint and Prettier)
 
-## License
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-Citadel is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-This means you can use Citadel in your own projects (commercial or non-commercial) as long as you include the original copyright notice and license terms. The MIT License is simple and permissive, allowing you to:
-
-- Use the code commercially
-- Modify the code
-- Distribute the code
-- Use in private/closed-source projects
-
-All we ask is that you include the original license and copyright notice in any copy or substantial portion of the software.

@@ -9,26 +9,26 @@ import { CommandOutput } from './components/CommandOutput';
 import { AvailableCommands } from './components/AvailableCommands';
 import { CitadelConfig } from './config/types';
 import { CitadelConfigProvider } from './config/CitadelConfigContext';
+import { CommandRegistry } from './types/command-registry';
 import { defaultConfig } from './config/defaults';
+import { Logger, LogLevel } from './utils/logger';
 
 import citadelStyles from '../../styles/citadel.css?raw';
 import citadelModuleStyles from './Citadel.module.css?raw';
 import mainStyles from '../../styles/styles.css?raw';
 import tailwindStyles from '../../styles/tailwind.css?raw';
 
-export interface CitadelProps {
-  config?: CitadelConfig;
-  commands?: Record<string, any>;
-  containerId?: string;
-}
-
 export const Citadel = ({ 
   config = defaultConfig, 
-  commands = {},
+  commandRegistry = new CommandRegistry(),
   containerId = null
 }) => {
   useEffect(() => {
-    const citadelElement = new CitadelElement(commands, config);
+    Logger.configure({
+      level: config.logLevel || defaultConfig.logLevel || LogLevel.ERROR,
+      prefix: '[Citadel]'
+    });
+    const citadelElement = new CitadelElement(commandRegistry, config);
     const container = containerId ? document.getElementById(containerId) : document.body;
     
     if (!container) {
@@ -41,24 +41,24 @@ export const Citadel = ({
     return () => {
       citadelElement.parentElement?.removeChild(citadelElement);
     };
-  }, [commands, containerId]);
+  }, [commandRegistry, containerId]);
 
   return null;
 };
 
 // Custom element to host the Citadel component inside shadow DOM. This is done
 // to isolate the styling of the component from its container (and vice versa).
-class CitadelElement extends HTMLElement {
+export class CitadelElement extends HTMLElement {
   private shadow: ShadowRoot;
   private root: ReturnType<typeof createRoot> | null = null;
-  private commands?: Record<string, any>;
+  private commandRegistry?: CommandRegistry;
   
   private config?: CitadelConfig;
 
-  constructor(commands?: Record<string, any>, config?: CitadelConfig) {
+  constructor(commandRegistry: CommandRegistry, config?: CitadelConfig) {
     super();
     this.shadow = this.attachShadow({ mode: 'open' });
-    this.commands = commands;
+    this.commandRegistry = commandRegistry;
     this.config = config;
   }
 
@@ -88,18 +88,11 @@ class CitadelElement extends HTMLElement {
     // Initialize React within shadow DOM
     this.root = createRoot(container);
     this.root.render(
-      <CitadelConfigProvider config={this.config || defaultConfig} commands={this.commands}>
+      <CitadelConfigProvider config={this.config || defaultConfig} commandRegistry={this.commandRegistry}>
         <CitadelInner />
       </CitadelConfigProvider>
     );
   }
-
-  // disconnectedCallback() {
-  //   if (this.root) {
-  //     this.root.unmount();
-  //     this.root = null;
-  //   }
-  // }
 }
 
 customElements.define('citadel-element', CitadelElement);
@@ -118,7 +111,15 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
   const isDraggingRef = useRef(false);
   const startYRef = useRef(0);
   const startHeightRef = useRef(0);
-  const { state, actions, getAvailableCommands } = useCitadelState();
+  const { state, actions } = useCitadelState();
+
+  // Set the key used to show Citadel
+  useGlobalShortcut({
+    onOpen: () => setIsVisible(true),
+    onClose: () => setIsClosing(true),
+    isVisible,
+    showCitadelKey: config.showCitadelKey || '.'
+  });
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (containerRef.current) {
@@ -140,10 +141,11 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
     if (!isDraggingRef.current) return;
     
     const delta = e.clientY - startYRef.current;
+    
     const maxHeightValue = config.maxHeight?.endsWith('vh') 
       ? (window.innerHeight * parseInt(config.maxHeight, 10) / 100)
       : parseInt(config.maxHeight || '80vh', 10);
-    
+
     const newHeight = Math.min(
       Math.max(startHeightRef.current - delta, parseInt(config.minHeight || '200', 10)),
       maxHeightValue
@@ -152,7 +154,7 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
     if (containerRef.current) {
       containerRef.current.style.height = `${newHeight}px`;
       containerRef.current.style.bottom = '0';
-      setHeight(newHeight);
+      setHeight(`${newHeight}px`);
     }
   }, [config.maxHeight]);
 
@@ -174,13 +176,6 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
       document.removeEventListener('mouseup', handleMouseUp);
     };
   }, [handleMouseMove, handleMouseUp]);
-
-  useGlobalShortcut({
-    onOpen: () => setIsVisible(true),
-    onClose: () => setIsClosing(true),
-    isVisible,
-    showCitadelKey: config.showCitadelKey || '.'
-  });
 
   const handleAnimationComplete = useCallback(() => {
     if (isClosing) {
@@ -212,15 +207,8 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
           <CommandOutput output={state.output} outputRef={outputRef} />
         </div>
         <div>
-          <CommandInput
-            state={state}
-            actions={actions}
-            availableCommands={getAvailableCommands()}
-          />
-          <AvailableCommands
-            state={state}
-            availableCommands={getAvailableCommands()}
-          />
+          <CommandInput state={state} actions={actions} />
+          <AvailableCommands />
         </div>
       </div>
     </div>

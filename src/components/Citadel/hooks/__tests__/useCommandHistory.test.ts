@@ -1,18 +1,14 @@
-import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useCommandHistory } from '../useCommandHistory';
-import { StorageFactory } from '../../storage/StorageFactory';
-import { StoredCommand, CommandStorage } from '../../types/storage';
-import { createMockNode } from '../../../../__test-utils__/factories';
-import { CommandNode } from '../../types/command-trie';
+import { 
+  createMockStoredCommand,
+  createMockStorage 
+} from '../../../../__test-utils__/factories';
 
-// Mock storage implementing CommandStorage interface
-const mockStorage = {
-  addCommand: vi.fn().mockResolvedValue(undefined),
-  getCommands: vi.fn().mockResolvedValue([]),
-  clear: vi.fn().mockResolvedValue(undefined)
-} as unknown as CommandStorage;
+const mockStorage = createMockStorage();
 
+// Mock CitadelConfigContext
 vi.mock('../../config/CitadelConfigContext', () => ({
   useCitadelConfig: () => ({
     storage: { type: 'memory', maxCommands: 100 }
@@ -21,135 +17,125 @@ vi.mock('../../config/CitadelConfigContext', () => ({
 }));
 
 describe('useCommandHistory', () => {
-  let mockNode: CommandNode;
-  let mockCommand: StoredCommand;
-
-  beforeEach(() => {
-    mockNode = createMockNode('test');
-
-    // Set the correct path for the node
-    (mockNode as any)._fullPath = ['test', 'command'];
-
-    mockCommand = {
-      inputs: ['test', 'arg1'],
-      timestamp: 1
-    };
-  });
+  const mockStoredCommand = createMockStoredCommand();
+  const mockSegments = mockStoredCommand.commandSegments;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(StorageFactory.getInstance(), 'getStorage').mockReturnValue(mockStorage);
   });
 
-  it('should initialize with empty history', async () => {
-    let result: any;
+  const setupHistory = async () => {
+    const hook = renderHook(() => useCommandHistory());
+    // Wait for initial load
     await act(async () => {
-      const hookResult = renderHook(() => useCommandHistory());
-      result = hookResult.result;
+      await new Promise(resolve => setTimeout(resolve, 0));
     });
-    expect(result.current[0]).toEqual({
-      commands: [],
+    return hook;
+  };
+
+  it('should initialize with empty history', async () => {
+    const { result } = await setupHistory();
+    expect(result.current.history).toEqual({
+      storedCommands: [],
       position: null,
-      savedInput: null
     });
   });
 
   it('should add command to history', async () => {
-    const { result } = renderHook(() => useCommandHistory());
+    const { result } = await setupHistory();
+    
     await act(async () => {
-      await result.current[1].addCommand(mockCommand);
+      await result.current.addStoredCommand(mockSegments);
     });
-    expect(mockStorage.addCommand).toHaveBeenCalledTimes(1);
-    expect(mockStorage.addCommand).toHaveBeenCalledWith(mockCommand);
-    expect(result.current[0].commands).toEqual([mockCommand]);
+
+    expect(mockStorage.addStoredCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        commandSegments: mockSegments,
+        timestamp: expect.any(Number)
+      })
+    );
   });
 
-  it('should navigate history upward', async () => {
-    (mockStorage.getCommands as unknown as Mock<() => Promise<StoredCommand[]>>).mockResolvedValue([mockCommand]);
-
-    const { result } = renderHook(() => useCommandHistory());
-
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
+  describe('history navigation', () => {
+    beforeEach(() => {
+      mockStorage.getStoredCommands.mockResolvedValue([mockStoredCommand]);
     });
 
-    const currentInput = 'current input';
-    let navigation;
+    it('should navigate up to previous command', async () => {
+      const { result } = await setupHistory();
+      
+      const navigation = await act(async () => {
+        return await result.current.navigateHistory('up', mockSegments);
+      });
 
-    act(() => {
-      navigation = result.current[1].navigateHistory('up', currentInput);
+      expect(navigation).toEqual({
+        segments: mockStoredCommand.commandSegments,
+        position: 0
+      });
     });
 
-    expect(navigation).toEqual({
-      command: mockCommand,
-      position: 0
-    });
-    const savedInput = result.current[0].savedInput;
-    expect(savedInput).not.toBeNull();
-    expect(savedInput).toEqual({
-      inputs: ['current', 'input'],
-      timestamp: expect.any(Number)
-    });
-  });
+    it('should navigate down to clear input', async () => {
+      const { result } = await setupHistory();
+      
+      // First navigate up
+      await act(async () => {
+        await result.current.navigateHistory('up', mockSegments);
+      });
 
-  it('should navigate history downward', async () => {
-    (mockStorage.getCommands as unknown as Mock<() => Promise<StoredCommand[]>>).mockResolvedValue([mockCommand]);
+      // Then navigate down
+      const navigation = await act(async () => {
+        return await result.current.navigateHistory('down', mockSegments);
+      });
 
-    const { result } = renderHook(() => useCommandHistory());
-
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(navigation).toEqual({
+        segments: [],
+        position: null
+      });
     });
 
-    // First go up
-    act(() => {
-      result.current[1].navigateHistory('up', 'current input');
-    });
+    it('should stay at start of history when navigating up at beginning', async () => {
+      const { result } = await setupHistory();
+      
+      // Navigate up twice
+      await act(async () => {
+        await result.current.navigateHistory('up', mockSegments);
+      });
+      
+      const navigation = await act(async () => {
+        return await result.current.navigateHistory('up', mockSegments);
+      });
 
-    // Then go down
-    let navigation;
-    act(() => {
-      navigation = result.current[1].navigateHistory('down', '');
+      expect(navigation).toEqual({
+        segments: mockStoredCommand.commandSegments,
+        position: 0
+      });
     });
-
-    expect(navigation).toEqual({
-      command: { inputs: ['current', 'input'], timestamp: expect.any(Number) },
-      position: null
-    });
-    expect(result.current[0].savedInput).toBeNull();
   });
 
   it('should clear history', async () => {
-    (mockStorage.getCommands as unknown as Mock<() => Promise<StoredCommand[]>>).mockResolvedValue([mockCommand]);
-
-    const { result } = renderHook(() => useCommandHistory());
-
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
-    });
+    mockStorage.getStoredCommands.mockResolvedValue([mockStoredCommand]);
+    const { result } = await setupHistory();
 
     await act(async () => {
-      await result.current[1].clear();
+      await result.current.clear();
     });
 
-    expect(mockStorage.clear).toHaveBeenCalledTimes(1);
-    expect(result.current[0]).toEqual({
-      commands: [],
-      position: null,
-      savedInput: null
+    expect(mockStorage.clear).toHaveBeenCalled();
+    expect(result.current.history).toEqual({
+      storedCommands: [],
+      position: null
     });
   });
 
   it('should handle storage errors gracefully', async () => {
     const consoleSpy = vi.spyOn(console, 'warn');
-    (mockStorage.getCommands as unknown as Mock<() => Promise<StoredCommand[]>>).mockRejectedValue(new Error('Storage error'));
+    mockStorage.getStoredCommands.mockRejectedValue(new Error('Storage error'));
 
-    renderHook(() => useCommandHistory());
+    await setupHistory();
 
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
-    });
-
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to load command history:', expect.any(Error));
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Failed to load command history:',
+      expect.any(Error)
+    );
   });
 });

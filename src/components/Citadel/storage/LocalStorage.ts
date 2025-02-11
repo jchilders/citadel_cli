@@ -11,11 +11,15 @@ export class LocalStorage extends BaseStorage {
     super(config);
   }
 
-  async getCommands(): Promise<StoredCommand[]> {
+  async getStoredCommands(): Promise<StoredCommand[]> {
     try {
       const data = window.localStorage.getItem(this.storageKey);
       if (!data) return [];
-      return JSON.parse(data) as StoredCommand[];
+      const commands = JSON.parse(data) as StoredCommand[];
+      return commands.map(cmd => ({
+        commandSegments: cmd.commandSegments || [],
+        timestamp: cmd.timestamp
+      }));
     } catch (error) {
       console.warn('Failed to load commands from localStorage:', error);
       return [];
@@ -33,7 +37,7 @@ export class LocalStorage extends BaseStorage {
   protected async saveCommands(commands: StoredCommand[]): Promise<void> {
     try {
       const serializedCommands = commands.map(cmd => ({
-        inputs: Array.isArray(cmd.inputs) ? [...cmd.inputs] : [],
+        commandSegments: Array.isArray(cmd.commandSegments) ? [...cmd.commandSegments] : [],
         timestamp: cmd.timestamp
       }));
       window.localStorage.setItem(this.storageKey, JSON.stringify(serializedCommands));

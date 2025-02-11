@@ -1,58 +1,45 @@
 import React from 'react';
-import { CommandNode, NoopHandler } from '../types/command-trie';
-import { CitadelState } from '../types/state';
-import { useCitadelConfig } from '../config/CitadelConfigContext';
+import { useCitadelCommands, useCitadelConfig, useSegmentStack } from '../config/CitadelConfigContext';
+import { Logger } from '../utils/logger';
+import { useSegmentStackVersion } from '../hooks/useSegmentStackVersion';
 
-interface AvailableCommandsProps {
-  state: CitadelState;
-  availableCommands: CommandNode[];
-}
-
-export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
-  state,
-  availableCommands
-}) => {
+export const AvailableCommands: React.FC = () => {
+  const commands  = useCitadelCommands();
   const config = useCitadelConfig();
-  const showCommands = !state.isEnteringArg && availableCommands.length > 0;
+  const segmentStack = useSegmentStack();
+  const segmentStackVersion = useSegmentStackVersion();
+
   const containerClasses = "h-12 mt-2 border-t border-gray-700 px-4";
   const contentClasses = "text-gray-300 pt-2";
 
-  // Show description for leaf nodes without handlers or arguments
-  const isLeafNode = state.currentNode?.isLeaf && state.currentNode.handler === NoopHandler && !state.currentNode.requiresArgument;
-
-  // Sort commands and handle help command placement
+  const nextCommandSegments = commands.getCompletions(segmentStack.path());
+  Logger.debug("[AvailableCommands] nextCommandSegments: ", nextCommandSegments);
+  
   const sortedCommands = React.useMemo(() => {
-    if (!state.commandStack.length && config.includeHelpCommand) {
-      // At root level, ensure help command is last
-      const nonHelpCommands = availableCommands.filter(cmd => cmd.name !== 'help');
-      const helpCommand = availableCommands.find(cmd => cmd.name === 'help');
+    if (config.includeHelpCommand) {
+      const nonHelpCommands = nextCommandSegments.filter(segment => segment.name !== 'help');
+      const helpCommand = nextCommandSegments.find(segment => segment.name === 'help');
       return [...nonHelpCommands, ...(helpCommand ? [helpCommand] : [])];
     }
-    return availableCommands;
-  }, [availableCommands, state.commandStack, config.includeHelpCommand]);
 
+    return nextCommandSegments;
+  }, [nextCommandSegments, segmentStackVersion, config.includeHelpCommand]);
+
+  const nextSegmentIsArgument = nextCommandSegments.some(seg => seg.type === 'argument');
+  const nextSegment = nextCommandSegments[0];
   return (
     <div className={containerClasses} data-testid="available-commands">
-      {isLeafNode ? (
-        <div className={contentClasses}>
-          {state.currentNode ? (
-            <>
-              <span className="text-blue-400">{state.currentNode.name}</span>
-              <span className="text-gray-400 ml-2">- {state.currentNode.description}</span>
-            </>
-          ) : null}
-        </div>
-      ) : showCommands ? (
-        <div className={contentClasses}>
+      <div className={contentClasses}>
+        {!nextSegmentIsArgument ? (
           <div className="flex flex-wrap gap-2">
-            {sortedCommands.map((cmd) => {
-              const boldLength = sortedCommands.reduce((length, other) => {
-                if (other.name === cmd.name) return length;
+            {sortedCommands?.map((segment) => {
+              const boldLength = sortedCommands?.reduce((length, other) => {
+                if (other === segment) return length;
                 let commonPrefix = 0;
                 while (
-                  commonPrefix < cmd.name.length &&
+                  commonPrefix < segment.name.length &&
                   commonPrefix < other.name.length &&
-                  cmd.name[commonPrefix].toLowerCase() === other.name[commonPrefix].toLowerCase()
+                  segment.name[commonPrefix].toLowerCase() === other.name[commonPrefix].toLowerCase()
                 ) {
                   commonPrefix++;
                 }
@@ -61,21 +48,26 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({
 
               return (
                 <div
-                  key={cmd.fullPath.join('.')}
+                  key={segment.name}
                   className="px-2 py-1 rounded bg-gray-800 mr-2 last:mr-0"
                 >
                   <span className="font-mono text-white">
-                    <strong className="underline">{cmd.name.slice(0, boldLength)}</strong>
-                    {cmd.name.slice(boldLength)}
+                    <strong className="underline">{segment.name.slice(0, boldLength)}</strong>
+                    {segment.name.slice(boldLength)}
                   </span>
                 </div>
               );
             })}
           </div>
-        </div>
-      ) : (
-        <div className={contentClasses}>{state.currentNode?.description}</div>
-      )}
+        ) : nextCommandSegments.length > 0 ? (
+          <>
+            <span className="text-blue-400">{nextSegment.name}</span>
+            {nextSegment.description && (
+              <span className="text-gray-400 ml-2">- {nextSegment.description}</span>
+            )}
+          </>
+        ) : null}
+      </div>
     </div>
   );
 };
