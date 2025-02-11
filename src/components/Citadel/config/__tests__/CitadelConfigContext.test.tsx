@@ -91,7 +91,7 @@ describe('CitadelConfigContext', () => {
         const citadelElement = new CitadelElement(testCmdRegsitry);
 
         // Verify the command regsitry is maintained
-        expect(citadelElement['commands']).toBe(testCmdRegsitry);
+        expect(citadelElement['commandRegistry']).toBe(testCmdRegsitry);
 
         // Clean up
         vi.resetModules();
