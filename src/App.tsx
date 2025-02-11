@@ -1,7 +1,7 @@
 import { Citadel } from './components/Citadel';
 import { CitadelConfig } from './components/Citadel/config/types';
 
-import { registerBasicCommands } from '../command_examples/basic-commands';
+import { registerCommands } from '../command_examples/basic-commands';
 // import { commands } from '../command_examples/devops-commands';
 // import { commands } from '../command_examples/customer-service-commands';
 
@@ -23,7 +23,7 @@ function App() {
         <p className="text-center text-gray-700">
           Press <code className="px-2 border border-gray-300 rounded">.</code> to<br />activate Citadel
         </p>
-        <Citadel config={config} commandRegistry={registerBasicCommands()}/>
+        <Citadel config={config} commandRegistry={registerCommands()}/>
       </div>
     </div>
   );
