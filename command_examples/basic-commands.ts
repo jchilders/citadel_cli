@@ -1,7 +1,7 @@
 import { CommandRegistry } from '../src/components/Citadel/types/command-registry';
 import { JsonCommandResult, ImageCommandResult, TextCommandResult } from '../src/components/Citadel/types/command-results';
 
-export function registerBasicCommands() {
+export function registerCommands() {
   const cmdRegistry = new CommandRegistry();
 
   // User commands
@@ -214,6 +214,27 @@ export function registerBasicCommands() {
       async (args: string[]) => {
         return new TextCommandResult(`args[0]: ${args[0]}`);
       }
+  );
+
+  // Command to dynamically add new commands
+  cmdRegistry.addCommand(
+    [
+      { type: 'word', name: 'command' },
+      { type: 'word', name: 'add' },
+      { type: 'argument', name: 'name', description: 'Name of the command to add' }
+    ],
+    'Dynamically add a new command',
+    async (args: string[]) => {
+      const newCommandName = args[0];
+      cmdRegistry.addCommand(
+        [
+          { type: 'word', name: newCommandName }
+        ],
+        `Dynamically added command "${newCommandName}"`,
+        async () => new TextCommandResult(`Executed dynamic command "${newCommandName}"`)
+      );
+      return new TextCommandResult(`Successfully added command "${newCommandName}"`);
+    }
   );
 
   return cmdRegistry;

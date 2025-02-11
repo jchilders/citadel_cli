@@ -38,8 +38,9 @@ function App() {
 
 Press <kbd>.</kbd> (period) to activate Citadel.
 
-Now this doesn't do much, yet: it just shows the "help" command. which you can
-execute by pressing <kbd>h[Enter]</kbd>. You should see the following:
+Now this doesn't do much, yet: it just shows the "help" command. You can
+execute it by pressing <kbd>h[Enter]</kbd>. If you do then you should see the
+following:
 
 ![screenshot_help_cmd](https://github.com/user-attachments/assets/1cc6fd58-7591-45f1-980a-46da15a1843a)
 
@@ -69,12 +70,15 @@ cmdRegistry.addCommand(
   async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`) 
 );
 ```
-So, this defines a command with two segments: `greet` and `name`. `greet` is a
-word segment. This means that when you press `g` it will autocomplete.
-(Internally the `help` command is a command with a single word segment.)
+The first part is an array of "command segments". There are two types of
+segments: `word`s and `argument`s. Here we define a command with two segments
+named `greet` and `name`. `greet` being a `word` segment and `name` being an
+`argument`. 
 
-After the definition for the `name` segment is an argument definition, named
-'name'. A few notes on arguments:
+Word segments are autocompleted, whereas argument segments are used to store
+user-entered values. 
+
+A few notes on arguments:
 
 1. You can have zero or more arguments in a command, and they can appear in any
    order.
@@ -83,10 +87,11 @@ After the definition for the `name` segment is an argument definition, named
 3. Arguments can be single- or double-quoted. This lets you enter in values
    that have spaces or other special characters.
 
-Continuing on, our `greet` command has a description ("Say hello..."). This is the
-text that will be shown by the help command.
+Continuing on with our `greet` example, after the segments are defined is a
+description ("Say hello..."). This is the text that will be shown by the help
+command.
 
-The final part of command definitions is the handler. Let's go over that:
+Finally is the handler. Let's go over that:
 
 ```
   async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`)
@@ -100,7 +105,7 @@ your imagination. For example, say you wanted to clear the localstorage:
 ```
   async (_args: string[]) => {
     localStorage.clear();
-    return new TextCommandResult('localStorage cleared');
+    return new TextCommandResult('localStorage cleared!');
   }
 ```
 
@@ -126,20 +131,41 @@ At the time of this writing the following command result types are available:
 - `ImageCommandResult`
 - `ErrorCommandResult`
 
-Ok, back to our `greeting` command. Now that the command has been registered,
-the final step is simply to pass the registry to the `Citadel` component:
+Back to our `greeting` command. The code (without comments) should now look like this:
+
+
+```
+import { CommandRegistry, TextCommandResult } from "citadel_cli";
+
+const cmdRegistry = new CommandRegistry();
+
+cmdRegistry.addCommand(
+  [
+    { type: 'word', name: 'greet' },
+    { type: 'argument', name: 'name', description: 'Enter your name' }
+  ],
+  'Say hello to the world',
+  async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`) 
+);
+```
+
+Now that the command has been registered with the call to `addCommand` all that
+is left is to pass the registry to the `Citadel` component:
 
 ```
 <Citadel commandRegistry={cmdRegistry} />
 ```
 
-After executing the command you should see something like this:
+The result of this should look like this:
 
 ![screenshot_greeting_cmd](https://github.com/user-attachments/assets/a3c1acad-69b3-4079-87af-0425aea3980a)
 
+Go forth and make your application experience better!
+
 ## Configuration
 
-Certain configuration options can be passed to the Citadel component. These are given below along with their default values.
+Certain configuration options can be passed to the Citadel component. These are
+given below, along with their default values.
 
 ```
 const config = {
@@ -160,7 +186,7 @@ const config = {
 };
 ```
 
-Then:
+Then to make the component aware of them:
 
 ```
 <Citadel commandRegistry={cmdRegistry} config={config} />
