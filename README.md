@@ -40,7 +40,7 @@ Press <kbd>.</kbd> (period) to activate Citadel. Now this doesn't do much, yet:
 it just shows the "help" command. which you can execute by pressing
 <kbd>h[Enter]</kbd>. You should see the following:
 
-![Screenshot of Citadel CLI](https://github.com/image)
+![screenshot_help_cmd](https://github.com/user-attachments/assets/1cc6fd58-7591-45f1-980a-46da15a1843a)
 
 When you execute a command the result is displayed in the output area. It shows the command that was executed, a timestamp, whether the command succesfully executed, and the command's output.
 
@@ -115,6 +115,7 @@ all that remains is to pass the registry to the `Citadel` component:
 
 After executing the command you should see something like this:
 
+![screenshot_greeting_cmd](https://github.com/user-attachments/assets/a3c1acad-69b3-4079-87af-0425aea3980a)
 
 ## Configuration
 
