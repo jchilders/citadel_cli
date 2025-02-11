@@ -36,13 +36,16 @@ function App() {
 }
 ```
 
-Press <kbd>.</kbd> (period) to activate Citadel. Now this doesn't do much, yet:
-it just shows the "help" command. which you can execute by pressing
-<kbd>h[Enter]</kbd>. You should see the following:
+Press <kbd>.</kbd> (period) to activate Citadel.
+
+Now this doesn't do much, yet: it just shows the "help" command. which you can
+execute by pressing <kbd>h[Enter]</kbd>. You should see the following:
 
 ![screenshot_help_cmd](https://github.com/user-attachments/assets/1cc6fd58-7591-45f1-980a-46da15a1843a)
 
-When you execute a command the result is displayed in the output area. It shows the command that was executed, a timestamp, whether the command succesfully executed, and the command's output.
+When you execute a command the result is displayed in the output area. It shows
+the command that was executed, a timestamp, whether the command succesfully
+executed, and the command's output.
 
 Let's add a simple `greet` command.
 
@@ -67,11 +70,11 @@ cmdRegistry.addCommand(
 );
 ```
 So, this defines a command with two segments: `greet` and `name`. `greet` is a
-command word. `help` is also a command word: when you press `h` it
-autocompletes. The same thing will happen when you press 'g' after defining
-this command: it will autocomplete to "greet".
+word segment. This means that when you press `g` it will autocomplete.
+(Internally the `help` command is a command with a single word segment.)
 
-After that is the argument named 'name'. A few notes on arguments:
+After the definition for the `name` segment is an argument definition, named
+'name'. A few notes on arguments:
 
 1. You can have zero or more arguments in a command, and they can appear in any
    order.
@@ -80,23 +83,40 @@ After that is the argument named 'name'. A few notes on arguments:
 3. Arguments can be single- or double-quoted. This lets you enter in values
    that have spaces or other special characters.
 
-Continuing, our `hello` command has a description ("Say hello..."). This is the
-text that will be shown by the help command, and is optional.
+Continuing on, our `greet` command has a description ("Say hello..."). This is the
+text that will be shown by the help command.
 
-Finally the handler. Let's go over that:
+The final part of command definitions is the handler. Let's go over that:
 
 ```
   async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`)
-
 ```
 
-As mentioned before, this is what gets called when the user hits enter. The values for the arguments entered by the user, if any, are passed in as the `args: string[]` to the handler/callback function. You can do anything you want in here: it's JavaScript. For example, say you wanted to clear the localstorage:
+As mentioned before this is what will be called after the user hits Enter. The
+values for the arguments entered by the user, if any, are passed in to the
+handler as `args: string[]`. What you do inside the handler is completely up to
+your imagination. For example, say you wanted to clear the localstorage:
 
 ```
   async (_args: string[]) => {
     localStorage.clear();
     return new TextCommandResult('localStorage cleared');
   }
+```
+
+Or perhaps make an HTTP POST and return the result as JSON:
+
+```
+async (args: string[]) => {
+  const response = await fetch('https://api.example.com/endpoint', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name: args[0] }),
+  });
+  return new JsonCommandResult(await response.json());
+}
 ```
 
 At the time of this writing the following command result types are available:
@@ -107,10 +127,10 @@ At the time of this writing the following command result types are available:
 - `ErrorCommandResult`
 
 Ok, back to our `greeting` command. Now that the command has been registered,
-all that remains is to pass the registry to the `Citadel` component:
+the final step is simply to pass the registry to the `Citadel` component:
 
 ```
-<Citadel cmdRegistry={cmdRegistry} />
+<Citadel commandRegistry={cmdRegistry} />
 ```
 
 After executing the command you should see something like this:
@@ -140,10 +160,10 @@ const config = {
 };
 ```
 
-Then when you render the component:
+Then:
 
 ```
-<Citadel commands={commands} config={config} />
+<Citadel commandRegistry={cmdRegistry} config={config} />
 ```
 
 ## Contributing
@@ -229,13 +249,17 @@ Load your appliation and press <kbd>.</kbd>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Citadel is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+Citadel is licensed under the MIT License. See the [LICENSE](LICENSE) file for
+details.
 
-This means you can use Citadel in your own projects (commercial or non-commercial) as long as you include the original copyright notice and license terms. The MIT License is simple and permissive, allowing you to:
+This means you can use Citadel in your own projects (commercial or
+non-commercial) as long as you include the original copyright notice and
+license terms. The MIT License is simple and permissive, allowing you to:
 
 - Use the code commercially
 - Modify the code
 - Distribute the code
 - Use in private/closed-source projects
 
-All we ask is that you include the original license and copyright notice in any copy or substantial portion of the software.
+All we ask is that you include the original license and copyright notice in any
+copy or substantial portion of the software.
