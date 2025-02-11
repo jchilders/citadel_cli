@@ -12,7 +12,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jchilders/citadel_react.git"
+    "url": "git+https://github.com/jchilders/citadel_cli.git"
   },
   "version": "1.0.0",
   "type": "module",
