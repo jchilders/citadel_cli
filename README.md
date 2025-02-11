@@ -48,7 +48,13 @@ When you execute a command the result is displayed in the output area. It shows
 the command that was executed, a timestamp, whether the command succesfully
 executed, and the command's output.
 
-Let's add a simple `greet` command.
+Adding your own commands is pretty straightforward. There are three steps to doing so.
+
+1. Create a `CommandRegistry`
+2. Add commands to the registry
+3. Pass the registry to the `Citadel` component
+
+Let's add a simple `greet` command to demonstrate this. 
 
 ```
 import { CommandRegistry, TextCommandResult } from "citadel_cli";
@@ -70,10 +76,10 @@ cmdRegistry.addCommand(
   async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`) 
 );
 ```
-The first part is an array of "command segments". There are two types of
-segments: `word`s and `argument`s. Here we define a command with two segments
-named `greet` and `name`. `greet` being a `word` segment and `name` being an
-`argument`. 
+The first argument to the `addCommand` function is an array of "command
+segments". There are two types of command segments: `word`s and `argument`s.
+Here we are defining a command with two segments named `greet` and `name`.
+`greet` being a `word` segment and `name` being an `argument`. 
 
 Word segments are autocompleted, whereas argument segments are used to store
 user-entered values. 
@@ -84,21 +90,21 @@ A few notes on arguments:
    order.
 2. The arguments the user enters will be passed to the handler as an array of
    strings.
-3. Arguments can be single- or double-quoted. This lets you enter in values
-   that have spaces or other special characters.
+3. Arguments can be single- or double-quoted. This allows users to enter in
+   values that have spaces or other special characters.
 
 Continuing on with our `greet` example, after the segments are defined is a
 description ("Say hello..."). This is the text that will be shown by the help
 command.
 
-Finally is the handler. Let's go over that:
+The final argument to `addCommand` is the *handler*. Let's go over that:
 
 ```
   async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`)
 ```
 
 As mentioned before this is what will be called after the user hits Enter. The
-values for the arguments entered by the user, if any, are passed in to the
+values for the arguments entered by the user (if any) are passed in to the
 handler as `args: string[]`. What you do inside the handler is completely up to
 your imagination. For example, say you wanted to clear the localstorage:
 
@@ -126,13 +132,13 @@ async (args: string[]) => {
 
 At the time of this writing the following command result types are available:
 
-- `TextCommandResult`
-- `JsonCommandResult`
-- `ImageCommandResult`
 - `ErrorCommandResult`
+- `ImageCommandResult`
+- `JsonCommandResult`
+- `TextCommandResult`
 
-Back to our `greeting` command. The code (without comments) should now look like this:
-
+Back to our `greeting` command. The final code for it (without comments) should
+now look like this:
 
 ```
 import { CommandRegistry, TextCommandResult } from "citadel_cli";
@@ -148,9 +154,8 @@ cmdRegistry.addCommand(
   async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`) 
 );
 ```
-
-Now that the command has been registered with the call to `addCommand` all that
-is left is to pass the registry to the `Citadel` component:
+Now that the command has been added all that is left is to pass the registry to
+the `Citadel` component:
 
 ```
 <Citadel commandRegistry={cmdRegistry} />
