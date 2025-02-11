@@ -103,8 +103,7 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const config = useCitadelConfig();
-  // const [height, setHeight] = useState<string | null>(() => {
-  const [height, _] = useState<string | null>(() => {
+  const [height, setHeight] = useState<string | null>(() => {
     return config.initialHeight || null;
   });
   const outputRef = useRef<HTMLDivElement>(null);
@@ -133,30 +132,31 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
       document.documentElement.style.mozUserSelect = 'none';
       // @ts-ignore: Vendor prefixed property
       document.documentElement.style.msUserSelect = 'none';
-      // document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     }
   }, []);
 
-  // const handleMouseMove = useCallback((e: MouseEvent) => {
-  //   if (!isDraggingRef.current) return;
-  //   
-  //   const delta = e.clientY - startYRef.current;
-  //   const maxHeightValue = config.maxHeight?.endsWith('vh') 
-  //     ? (window.innerHeight * parseInt(config.maxHeight, 10) / 100)
-  //     : parseInt(config.maxHeight || '80vh', 10);
-  //
-  //   const newHeight = Math.min(
-  //     Math.max(startHeightRef.current - delta, parseInt(config.minHeight || '200', 10)),
-  //     maxHeightValue
-  //   );
-  //   
-  //   if (containerRef.current) {
-  //     containerRef.current.style.height = `${newHeight}px`;
-  //     containerRef.current.style.bottom = '0';
-  //     setHeight(newHeight);
-  //   }
-  // }, [config.maxHeight]);
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDraggingRef.current) return;
+    
+    const delta = e.clientY - startYRef.current;
+    
+    const maxHeightValue = config.maxHeight?.endsWith('vh') 
+      ? (window.innerHeight * parseInt(config.maxHeight, 10) / 100)
+      : parseInt(config.maxHeight || '80vh', 10);
+
+    const newHeight = Math.min(
+      Math.max(startHeightRef.current - delta, parseInt(config.minHeight || '200', 10)),
+      maxHeightValue
+    );
+    
+    if (containerRef.current) {
+      containerRef.current.style.height = `${newHeight}px`;
+      containerRef.current.style.bottom = '0';
+      setHeight(`${newHeight}px`);
+    }
+  }, [config.maxHeight]);
 
   const handleMouseUp = useCallback(() => {
     isDraggingRef.current = false;
@@ -166,17 +166,16 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
     document.documentElement.style.mozUserSelect = '';
     // @ts-ignore: Vendor prefixed property
     document.documentElement.style.msUserSelect = '';
-    // document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
   }, []);
 
   useEffect(() => {
     return () => {
-      // document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  // }, [handleMouseMove, handleMouseUp]);
-  }, [handleMouseUp]);
+  }, [handleMouseMove, handleMouseUp]);
 
   const handleAnimationComplete = useCallback(() => {
     if (isClosing) {
