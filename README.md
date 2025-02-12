@@ -224,8 +224,8 @@ npm link
 
 5. (Optional) From the directory of the project you want to import Citadel into:
 ```bash
-npm link @jchilders/citadel_cli
-# ... your normal build/run steps ...
+npm unlink citadel_cli && npm link citadel_cli
+# ... your normal dev process ...
 ```
 
 Load your appliation and press <kbd>.</kbd>
