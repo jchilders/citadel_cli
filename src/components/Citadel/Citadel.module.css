@@ -1,6 +1,6 @@
 /* Keep only component-specific styles here */
 
-.container {
+.citadelContainer {
   position: fixed;
   height: var(--citadel-default-height);
   min-height: var(--citadel-min-height);
@@ -14,9 +14,17 @@
   bottom: 0;
   left: 0;
   right: 0;
+  transform: translateY(100%);
+  opacity: 0;
+  z-index: 9999;
+  pointer-events: auto;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.innerContainer {
+.citadelInnerContainer {
   height: 100%;
   width: 100%;
   display: flex;
@@ -25,14 +33,14 @@
   padding: 0;
 }
 
-.inputSection {
+.citadelInputSection {
   border-top: 1px solid var(--citadel-border);
   padding: 1rem;
   margin: 0;
   box-sizing: border-box;
 }
 
-.resizeHandle {
+.citadelResizeHandle {
   width: 100%;
   height: 6px;
   background: transparent;
@@ -47,24 +55,36 @@
   pointer-events: all;
 }
 
-.resizeHandle:hover {
+.citadel-resizeHandle:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
-@keyframes citadel_slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+@keyframes slideUp {
+  from { 
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to { 
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
-@keyframes citadel_slideDown {
-  from { transform: translateY(0); }
-  to { transform: translateY(100%); }
+@keyframes slideDown {
+  from { 
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to { 
+    transform: translateY(100%);
+    opacity: 0;
+  }
 }
 
-.citadel_slideUp {
-  animation: citadel_slideUp 0.2s ease-out forwards;
+.slideUp {
+  animation: slideUp 200ms ease-out forwards;
 }
 
-.citadel_slideDown {
-  animation: citadel_slideDown 0.2s ease-out forwards;
+.slideDown {
+  animation: slideDown 200ms ease-out forwards;
 }

@@ -9,8 +9,8 @@ export const AvailableCommands: React.FC = () => {
   const segmentStack = useSegmentStack();
   const segmentStackVersion = useSegmentStackVersion();
 
-  const containerClasses = "h-12 mt-2 border-t border-gray-700 px-4";
-  const contentClasses = "text-gray-300 pt-2";
+  const containerClasses = "h-12 border-t border-gray-700 px-4";
+  const contentClasses = "text-gray-300 pt-3";
 
   const nextCommandSegments = commands.getCompletions(segmentStack.path());
   Logger.debug("[AvailableCommands] nextCommandSegments: ", nextCommandSegments);

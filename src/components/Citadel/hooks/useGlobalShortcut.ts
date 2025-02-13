@@ -11,11 +11,15 @@ export const useGlobalShortcut = ({ onOpen, onClose, isVisible, showCitadelKey }
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Check if the pressed key matches showCitadelKey and no input elements are focused
-      if (
-        !isVisible &&
-        event.key === showCitadelKey &&
-        !['input', 'textarea'].includes((event.target as HTMLElement)?.tagName?.toLowerCase() || '')
-      ) {
+      const targetTag = (event.target as HTMLElement)?.tagName?.toLowerCase() || '';
+      const isInputElement = ['input', 'textarea'].includes(targetTag);
+      
+      if (!isVisible && event.key === showCitadelKey && !isInputElement) {
+        console.log('Citadel shortcut triggered:', {
+          key: event.key,
+          target: targetTag,
+          isVisible
+        });
         event.preventDefault();
         onOpen();
       }

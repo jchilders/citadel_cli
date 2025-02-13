@@ -1,4 +1,4 @@
-:host {
+:root {
   --citadel-bg: rgb(17, 24, 39);
   --citadel-text: rgba(255, 255, 255, 0.87);
   --citadel-border: rgb(55, 65, 81);
@@ -8,23 +8,6 @@
   --citadel-max-height: 80vh;
   --citadel-default-height: 35vh;
   --citadel-error: rgb(239, 68, 68);
-
-  height: var(--citadel-default-height);
-  max-height: var(--citadel-max-height);
-  min-height: var(--citadel-min-height);
-  width: 100%;
-
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  overflow: hidden;
-
-  pointer-events: auto;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 button {

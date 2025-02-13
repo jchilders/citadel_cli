@@ -1,6 +1,7 @@
-import { Citadel, CommandRegistry, TextCommandResult } from "citadel_cli";
+import { Citadel, CommandRegistry, TextCommandResult } from ".";
 
-// import { CitadelConfig } from './components/Citadel/config/types';
+import "./styles/app.css"
+
 // export const config: CitadelConfig = {
 //   commandTimeoutMs: 10000,
 //   includeHelpCommand: true,
@@ -25,8 +26,6 @@ cmdRegistry.addCommand(
   // types of command result that we'll cover later.
   async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`) 
 );
-
-import "./styles/app.css"
 
 function App() {
   return (
