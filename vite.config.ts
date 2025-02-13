@@ -18,7 +18,7 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: 'src/index.ts',
+      entry: 'src/components/Citadel/index.ts',
       name: 'Citadel',
       formats: ['es', 'umd'],
     },

@@ -27,14 +27,14 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./dist/components/Citadel/index.d.ts",
       "import": "./dist/citadel.es.js",
       "require": "./dist/citadel.umd.cjs"
     },
     "./dist/citadel.css": "./dist/citadel.css"
   },
   "style": "dist/citadel.css",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/components/Citadel/index.d.ts",
   "main": "./dist/citadel.umd.cjs",
   "module": "./dist/citadel.es.js",
   "files": [

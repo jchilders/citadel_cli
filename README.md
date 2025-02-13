@@ -259,6 +259,16 @@ Load your appliation and press <kbd>.</kbd>
 6. Commit your changes with a clear and descriptive commit message
 7. Push to your fork and submit a pull request
 
+## Building with Docker
+
+A `Dockerfile` is provided, as well as a script to help to quickly get running
+with it:
+
+```bash
+./dockerbuildrun
+```
+This will create a skeleton React app using vite and start the server.
+
 ### Pull Request Guidelines
 
 - Keep your changes focused. Submit separate pull requests for separate features/fixes

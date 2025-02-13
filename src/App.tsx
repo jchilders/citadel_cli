@@ -1,10 +1,8 @@
-import { Citadel, CitadelConfig, CommandRegistry, TextCommandResult } from ".";
-
-import "./styles/app.css"
+import { Citadel, CitadelConfig, CommandRegistry, TextCommandResult } from "./components/Citadel";
 
 export const config: CitadelConfig = {
 //   commandTimeoutMs: 10000,
-  includeHelpCommand: false,
+  includeHelpCommand: true, // Default is true
 //   resetStateOnHide: true,
 //   showCitadelKey: '.',
 //   maxHeight: '80vh'

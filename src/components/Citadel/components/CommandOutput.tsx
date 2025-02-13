@@ -37,7 +37,7 @@ export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef 
   return (
     <div 
       ref={outputRef}
-      className="h-full min-h-full border border-gray-700 rounded-lg p-3 text-left"
+      className="h-full overflow-y-auto min-h-full border border-gray-700 rounded-lg p-3 text-left"
     >
       {output.map((item, index) => (
         <div key={index} className="mb-4 last:mb-0">

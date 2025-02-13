@@ -22,7 +22,7 @@ RUN npm install
 # Copy the required source files
 COPY src/components/Citadel src/components/Citadel
 COPY src/styles src/styles
-COPY src/App.docker.tsx src/App.tsx
+COPY src/App.tsx src/App.tsx
 
 # Expose Vite's default port
 EXPOSE 5173
