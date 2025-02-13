@@ -1,0 +1,26 @@
+#!/usr/bin/env zsh
+
+set -e  # Exit immediately if a command exits with a non-zero status
+
+# Define paths
+CITADEL_CLI_DIR="/Users/jchilders/work/jchilders/citadel_cli"
+IMPORTING_DIR="/Users/jchilders/work/jchilders/vite_tailwind_react/importing_citadel_cli"
+
+# Build and link citadel_cli
+cd "$CITADEL_CLI_DIR"
+echo "Building citadel_cli..."
+npm run build
+echo "Linking citadel_cli..."
+npm link
+
+# Build and link citadel_cli in the importing project
+cd "$IMPORTING_DIR"
+echo "Building importing_citadel_cli..."
+npm run build
+echo "Linking citadel_cli in importing_citadel_cli..."
+npm link citadel_cli
+
+# Start the Vite development server
+echo "Starting Vite development server..."
+npm run dev
+
