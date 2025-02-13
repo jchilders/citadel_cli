@@ -4,18 +4,16 @@ import { useSlideAnimation } from './hooks/useSlideAnimation';
 import { useCitadelConfig } from './config/CitadelConfigContext';
 import { useCitadelState } from './hooks/useCitadelState';
 import { CommandInput } from './components/CommandInput';
-// import { CommandOutput } from './components/CommandOutput';
+import { CommandOutput } from './components/CommandOutput';
 import { AvailableCommands } from './components/AvailableCommands';
 import { CitadelConfigProvider } from './config/CitadelConfigContext';
 import { CommandRegistry } from './types/command-registry';
 import { defaultConfig } from './config/defaults';
 import { Logger, LogLevel } from './utils/logger';
 
-import styles from './Citadel.module.css';
 import '../../styles/citadel.css';
 import '../../styles/styles.css';
 import '../../styles/tailwind.css';
-import { CommandOutput } from './components/CommandOutput';
 
 export interface CitadelProps {
   config?: typeof defaultConfig;
@@ -134,18 +132,18 @@ const CitadelContent: React.FC = () => {
   return (
     <div 
       ref={containerRef}
-      className={`${styles.citadelContainer} ${isVisible ? styles.slideUp : ''} ${isClosing ? styles.slideDown : ''}`}
+      className={`citadel-container ${isVisible ? 'slide-up' : ''} ${isClosing ? 'slide-down' : ''}`}
       style={{
         ...height ? { height } : undefined,
         maxHeight: config.maxHeight
       }}
     >
-      <div className="resizeHandle" onMouseDown={handleMouseDown} />
-      <div className={styles.citadelInnerContainer}>
-        <div className="flex-1 min-h-0 overflow-y-auto pt-3 px-4">
+      <div className="citadel-resize-handle" onMouseDown={handleMouseDown} />
+      <div className="citadel-inner">
+        <div className="citadel-flex-1 citadel-min-h-0 citadel-overflow-y-auto citadel-pt-3 citadel-px-4">
           <CommandOutput output={state.output} outputRef={outputRef} />
         </div>
-        <div className="flex-shrink-0">
+        <div className="citadel-flex-shrink-0">
           <CommandInput state={state} actions={actions} />
           <AvailableCommands />
         </div>

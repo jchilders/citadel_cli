@@ -15,10 +15,10 @@ npm link
 
 # Build and link citadel_cli in the importing project
 cd "$IMPORTING_DIR"
-echo "Building importing_citadel_cli..."
-npm run build
 echo "Linking citadel_cli in importing_citadel_cli..."
 npm link citadel_cli
+echo "Building importing_citadel_cli..."
+npm run build
 
 # Start the Vite development server
 echo "Starting Vite development server..."

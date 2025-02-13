@@ -27,7 +27,10 @@ export default defineConfig({
       output: {
         entryFileNames: 'citadel.[format].js',
         chunkFileNames: 'citadel.[format].js',
-        assetFileNames: 'citadel.[ext]',
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name === 'style.css') return 'citadel.css';
+          return assetInfo.name;
+        },
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
@@ -36,6 +39,12 @@ export default defineConfig({
     },
     emptyOutDir: false,  // need to preserve the generated stylesheet; without this it gets deleted from dist/
     cssCodeSplit: false,
+    css: {
+      modules: {
+        localsConvention: 'camelCase',
+        generateScopedName: 'citadel-[local]'
+      }
+    },
     sourcemap: process.env.NODE_ENV === 'development',
     manifest: true,
     assetsDir: 'dist',

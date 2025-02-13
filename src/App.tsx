@@ -1,14 +1,14 @@
-import { Citadel, CommandRegistry, TextCommandResult } from ".";
+import { Citadel, CitadelConfig, CommandRegistry, TextCommandResult } from ".";
 
 import "./styles/app.css"
 
-// export const config: CitadelConfig = {
+export const config: CitadelConfig = {
 //   commandTimeoutMs: 10000,
-//   includeHelpCommand: true,
+  includeHelpCommand: false,
 //   resetStateOnHide: true,
 //   showCitadelKey: '.',
 //   maxHeight: '80vh'
-// };
+};
 
 // 1. Create the registry where commands will be stored
 const cmdRegistry = new CommandRegistry();
@@ -34,7 +34,7 @@ function App() {
         <p className="text-center text-gray-700">
           Press <code className="px-2 border border-gray-300 rounded">.</code> to<br />activate Citadel
         </p>
-        <Citadel commandRegistry={cmdRegistry} />
+        <Citadel commandRegistry={cmdRegistry} config={config} />
       </div>
     </div>
   );

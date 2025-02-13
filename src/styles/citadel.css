@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --citadel-bg: rgb(17, 24, 39);
   --citadel-text: rgba(255, 255, 255, 0.87);
@@ -10,7 +14,93 @@
   --citadel-error: rgb(239, 68, 68);
 }
 
-button {
+/* Citadel base styles */
+.citadel-container {
+  position: fixed;
+  height: var(--citadel-default-height);
+  min-height: var(--citadel-min-height);
+  max-height: var(--citadel-max-height);
+  background-color: var(--citadel-bg);
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transform: translateY(100%);
+  opacity: 0;
+  z-index: 9999;
+  pointer-events: auto;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Animation classes */
+@keyframes slideUp {
+  from { 
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to { 
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from { 
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to { 
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.slide-up {
+  animation: slideUp 200ms ease-out forwards;
+}
+
+.slide-down {
+  animation: slideDown 200ms ease-out forwards;
+}
+
+/* Component styles */
+.citadel-inner {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+}
+
+.citadel-resize-handle {
+  width: 100%;
+  height: 6px;
+  background: transparent;
+  cursor: ns-resize;
+  position: absolute;
+  top: -3px;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: all;
+}
+
+.citadel-resize-handle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Button styles */
+.citadel-button {
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
@@ -22,51 +112,37 @@ button {
   transition: border-color 0.25s;
 }
 
-button:hover {
+.citadel-button:hover {
   border-color: var(--citadel-accent);
 }
 
-button:focus,
-button:focus-visible {
+.citadel-button:focus,
+.citadel-button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-a {
+/* Link styles */
+.citadel-link {
   font-weight: 500;
   color: var(--citadel-accent);
   text-decoration: inherit;
 }
 
-a:hover {
+.citadel-link:hover {
   color: var(--citadel-accent-hover);
 }
 
-.flex-1 { flex: 1 1 0%; }
-.flex-shrink-0 { flex-shrink: 0; }
-.min-h-0 { min-height: 0px; }
-.pt-3 { padding-top: 0.75rem; }
-.px-4 { padding-left: 1rem; padding-right: 1rem; }
-
-.h-full {
-  height: 100%;
-}
-.overflow-y-auto {
-  overflow-y: auto;
-}
-.border {
-  border-width: 1px;
-}
-.border-gray-700 {
-  --tw-border-opacity: 1;
-  border-color: rgb(55 65 81 / var(--tw-border-opacity, 1));
-}
-.rounded-lg {
-  border-radius: 0.5rem;
-}
-.p-3 {
-  padding: 0.75rem;
-}
-.text-left {
-  text-align: left;
-}
+/* Utility classes */
+.citadel-flex-1 { flex: 1 1 0%; }
+.citadel-flex-shrink-0 { flex-shrink: 0; }
+.citadel-min-h-0 { min-height: 0px; }
+.citadel-pt-3 { padding-top: 0.75rem; }
+.citadel-px-4 { padding-left: 1rem; padding-right: 1rem; }
+.citadel-h-full { height: 100%; }
+.citadel-overflow-y-auto { overflow-y: auto; }
+.citadel-border { border-width: 1px; }
+.citadel-border-gray-700 { border-color: rgb(55 65 81); }
+.citadel-rounded-lg { border-radius: 0.5rem; }
+.citadel-p-3 { padding: 0.75rem; }
+.citadel-text-left { text-align: left; }
 
