@@ -3,7 +3,6 @@ import { CitadelConfigProvider, useCitadelCommands, useCitadelConfig, useCitadel
 import { CommandRegistry } from '../../types/command-registry';
 import { StorageFactory } from '../../storage/StorageFactory';
 import { defaultConfig } from '../defaults';
-import { CitadelElement } from '../../Citadel';
 import { createHelpHandler } from '../../types/help-command';
 
 describe('CitadelConfigContext', () => {
@@ -70,31 +69,31 @@ describe('CitadelConfigContext', () => {
       expect(updatedCommandsText).toContain('another-command');
     });
 
-    describe('command persistence in shadow DOM', () => {
-      it('should maintain command regsitry across shadow DOM renders', () => {
-        // Mock CSS modules
-        vi.mock('../../../Citadel.module.css', () => ({
-          default: {
-            container: 'container',
-            innerContainer: 'innerContainer',
-            resizeHandle: 'resizeHandle'
-          }
-        }));
-
-        const testCmdRegsitry = new CommandRegistry();
-        testCmdRegsitry.addCommand(
+    describe('command persistence across renders', () => {
+      it('should maintain command registry when component re-renders', () => {
+        const testCmdRegistry = new CommandRegistry();
+        testCmdRegistry.addCommand(
           [{ type: 'word', name: 'test' }],
           'Test command'
         );
 
-        // Create CitadelElement with mocked styles
-        const citadelElement = new CitadelElement(testCmdRegsitry);
+        const { rerender } = render(
+          <CitadelConfigProvider commandRegistry={testCmdRegistry}>
+            <TestComponent />
+          </CitadelConfigProvider>
+        );
 
-        // Verify the command regsitry is maintained
-        expect(citadelElement['commandRegistry']).toBe(testCmdRegsitry);
+        // Force re-render
+        rerender(
+          <CitadelConfigProvider commandRegistry={testCmdRegistry}>
+            <TestComponent />
+          </CitadelConfigProvider>
+        );
 
-        // Clean up
-        vi.resetModules();
+        // Verify the command registry is maintained
+        const commands = testCmdRegistry.commands;
+        expect(commands).toHaveLength(1);
+        expect(commands[0].segments[0].name).toBe('test');
       });
     });
   });

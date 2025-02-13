@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Logger } from '../utils/logger';
 
 interface UseGlobalShortcutProps {
   onOpen: () => void;
@@ -15,7 +16,7 @@ export const useGlobalShortcut = ({ onOpen, onClose, isVisible, showCitadelKey }
       const isInputElement = ['input', 'textarea'].includes(targetTag);
       
       if (!isVisible && event.key === showCitadelKey && !isInputElement) {
-        console.log('Citadel shortcut triggered:', {
+        Logger.debug('Citadel shortcut triggered:', {
           key: event.key,
           target: targetTag,
           isVisible
