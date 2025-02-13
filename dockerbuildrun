@@ -2,8 +2,8 @@
 
 set -e  # Exit script on error
 
-IMAGE_NAME="vite-citadel-app"
-CONTAINER_NAME="vite-citadel-container"
+IMAGE_NAME="citadel-cli-demo"
+CONTAINER_NAME="citadel-cli-demo-container"
 PORT=5173
 
 echo "🛠  Building Docker image: $IMAGE_NAME..."
