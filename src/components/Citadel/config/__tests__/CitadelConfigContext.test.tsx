@@ -1,4 +1,5 @@
-import { render, act } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { CitadelConfigProvider, useCitadelCommands, useCitadelConfig, useCitadelStorage } from '../CitadelConfigContext';
 import { CommandRegistry } from '../../types/command-registry';
 import { StorageFactory } from '../../storage/StorageFactory';
@@ -70,7 +71,7 @@ describe('CitadelConfigContext', () => {
     });
 
     describe('command persistence across renders', () => {
-      it('should maintain command registry when component re-renders', () => {
+      it('should maintain command registry when component rerenders', () => {
         const testCmdRegistry = new CommandRegistry();
         testCmdRegistry.addCommand(
           [{ type: 'word', name: 'test' }],
@@ -78,22 +79,37 @@ describe('CitadelConfigContext', () => {
         );
 
         const { rerender } = render(
-          <CitadelConfigProvider commandRegistry={testCmdRegistry}>
+          <CitadelConfigProvider 
+            config={{ includeHelpCommand: false }}
+            commandRegistry={testCmdRegistry}
+          >
             <TestComponent />
           </CitadelConfigProvider>
         );
 
         // Force re-render
         rerender(
-          <CitadelConfigProvider commandRegistry={testCmdRegistry}>
+          <CitadelConfigProvider 
+            config={{ includeHelpCommand: false }}
+            commandRegistry={testCmdRegistry}
+          >
             <TestComponent />
           </CitadelConfigProvider>
         );
 
-        // Verify the command registry is maintained
-        const commands = testCmdRegistry.commands;
-        expect(commands).toHaveLength(1);
-        expect(commands[0].segments[0].name).toBe('test');
+        // Get the commands from the rendered output
+        const { container } = render(
+          <CitadelConfigProvider 
+            config={{ includeHelpCommand: false }}
+            commandRegistry={testCmdRegistry}
+          >
+            <TestComponent />
+          </CitadelConfigProvider>
+        );
+        const commandsElement = container.querySelector('[data-testid="commands"]');
+        const parsedCommands = JSON.parse(commandsElement?.textContent || '{}');
+        expect(parsedCommands._commands).toHaveLength(1);
+        expect(parsedCommands._commands[0]._segments[0].name).toBe('test');
       });
     });
   });
