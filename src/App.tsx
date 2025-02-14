@@ -1,6 +1,8 @@
 import { Citadel, CitadelConfig, CommandRegistry, TextCommandResult } from "./components/Citadel";
 
-export const config: CitadelConfig = {
+import styles from './App.module.css';
+
+const config: CitadelConfig = {
 //   commandTimeoutMs: 10000,
   includeHelpCommand: true, // Default is true
 //   resetStateOnHide: true,
@@ -27,10 +29,10 @@ cmdRegistry.addCommand(
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-800 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <p className="text-center text-gray-700">
-          Press <code className="px-2 border border-gray-300 rounded">.</code> to<br />activate Citadel
+    <div className={styles.container}>
+      <div className={styles.card}>
+        <p className={styles.text}>
+          Press <code className={styles.keyCode}>.</code> to<br />activate Citadel
         </p>
         <Citadel commandRegistry={cmdRegistry} config={config} />
       </div>

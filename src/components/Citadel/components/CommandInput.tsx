@@ -6,9 +6,10 @@ import { CursorType } from '../types/cursor';
 import { defaultConfig } from '../config/defaults';
 import { InputState, useCommandParser } from '../hooks/useCommandParser';
 import { useCitadelConfig, useCitadelCommands, useSegmentStack } from '../config/CitadelConfigContext';
-import styles from './CommandInput.module.css';
 import { useSegmentStackVersion } from '../hooks/useSegmentStackVersion';
 import { Logger } from '../utils/logger';
+
+import styles from './CommandInput.module.css';
 
 interface CommandInputProps {
   state: CitadelState;

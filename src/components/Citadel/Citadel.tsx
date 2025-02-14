@@ -11,7 +11,7 @@ import { CommandRegistry } from './types/command-registry';
 import { defaultConfig } from './config/defaults';
 import { Logger, LogLevel } from './utils/logger';
 
-// CSS is bundled during build
+import './citadel.css';
 
 export interface CitadelProps {
   config?: typeof defaultConfig;

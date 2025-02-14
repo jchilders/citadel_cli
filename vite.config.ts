@@ -14,7 +14,7 @@ export default defineConfig({
   css: {
     modules: {
       localsConvention: 'camelCase',
-      generateScopedName: 'citadel-[local]'
+      generateScopedName: "cit-[name]__[local]___[hash:base64:5]",
     },
   },
   build: {
@@ -38,9 +38,6 @@ export default defineConfig({
     sourcemap: process.env.NODE_ENV === 'development',
     manifest: true,
     assetsDir: '',
-  },
-  optimizeDeps: {
-    include: ['./src/styles/citadel.css', './src/styles/styles.css']
   },
   test: {
     globals: true,

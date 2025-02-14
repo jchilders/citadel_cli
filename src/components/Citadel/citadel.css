@@ -2,8 +2,6 @@
 /* @tailwind components; */
 @tailwind utilities;
 
-/* Citadel Custom Styles */
-
 .citadel-container {
   /* CSS Variables */
   --citadel-bg: rgb(17, 24, 39);

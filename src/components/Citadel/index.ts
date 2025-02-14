@@ -8,6 +8,3 @@ export {
   TextCommandResult
 } from './types/command-results';
 export * from './types';
-
-// Import styles
-import '../../styles/citadel.css';
