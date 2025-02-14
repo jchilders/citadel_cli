@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./src/**/*.{js,ts,jsx,tsx}',],
+  content: ['./src/components/Citadel/**/*.{js,ts,jsx,tsx}'],
   // Tailwind classes to pre-compile into our component's standalone CSS bundle.
   // This means apps which use this component don't have to be using Tailwind.
   // This list is automatically maintained by extract-classes.js

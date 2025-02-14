@@ -23,4 +23,3 @@ npm run build
 # Start the Vite development server
 echo "Starting Vite development server..."
 npm run dev
-

@@ -1,8 +1,11 @@
 @tailwind base;
-@tailwind components;
+/* @tailwind components; */
 @tailwind utilities;
 
-:root {
+/* Citadel Custom Styles */
+
+.citadel-container {
+  /* CSS Variables */
   --citadel-bg: rgb(17, 24, 39);
   --citadel-text: rgba(255, 255, 255, 0.87);
   --citadel-border: rgb(55, 65, 81);
@@ -12,10 +15,8 @@
   --citadel-max-height: 80vh;
   --citadel-default-height: 35vh;
   --citadel-error: rgb(239, 68, 68);
-}
 
-/* Citadel base styles */
-.citadel-container {
+  /* Base styles */
   position: fixed;
   height: var(--citadel-default-height);
   min-height: var(--citadel-min-height);

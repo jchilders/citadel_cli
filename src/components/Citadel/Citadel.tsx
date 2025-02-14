@@ -11,9 +11,7 @@ import { CommandRegistry } from './types/command-registry';
 import { defaultConfig } from './config/defaults';
 import { Logger, LogLevel } from './utils/logger';
 
-import '../../styles/citadel.css';
-import '../../styles/styles.css';
-import '../../styles/tailwind.css';
+// CSS is bundled during build
 
 export interface CitadelProps {
   config?: typeof defaultConfig;
