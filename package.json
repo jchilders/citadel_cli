@@ -8,7 +8,10 @@
     "interface",
     "console"
   ],
-  "author": "James Childers <james.childers@gmail.com>",
+  "author": {
+    "name": "James Childers",
+    "email": "james.childers@gmail.com"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
