@@ -1,16 +1,27 @@
-## Version Compatibility
+# General Development Rules
 
-All code must be compatible with React 18+ and TypeScript as configured in the project. When generating or modifying code, ensure it adheres to:
-- React 18+ type definitions and patterns
+You should do task-based development. For every task, you should write the tests, implement the code, and run the tests to make sure everything works.
+
+When the tests pass:
+* Update the TODO list to reflect the task being completed
+* Update the memory file to reflect the current state of the project
+* Fix any warnings or errors in the code
+* Commit the changes to the repository with a descriptive commit message
+* Update the development guidelines to reflect anything that you've learned while working on the project
+* Stop and we will open a new chat for the next task
+
+# Version Compatibility
+
+All code must be compatible with TypeScript as configured in the project. When generating or modifying code, ensure it adheres to:
 - TypeScript strict mode and type checking
-- Modern React patterns (hooks, functional components)
+- Modern ES Web Component patterns
 
 Method arguments should conform to the types expected by that function. The goal here is to avoid TypeScript errors of the form "Argument of type 'ClassName | undefined' is not assignable to parameter of type 'ClassName'.
   Type 'undefined' is not assignable to type 'ClassName'." Check the function signature before adding arguments!
 
 Check `package.json` for the specific versions of dependencies if needed.
 
-## Error Messages
+# Error Messages
 
 When adding or updating error messages:
 - Include the name and value that is causing the error, when possible. 
@@ -18,7 +29,7 @@ When adding or updating error messages:
 
 Example of a good error message: say there was an error due to an invalid value of 1000 for the `param1` argument: "param1 was invalid. param1: 1000. You may want to prevent the user from entering invalid values in the UI."
 
-## Testing
+# Testing
 
 All tests use vitest. See `package.json` for details.
 
@@ -38,10 +49,10 @@ To run ALL tests use `npm test`.
 
 When creating or modifying mock objects, check to see if one already exists in `src/__test-utils__/factories.ts`, and use that mock if so.
 
-## Test Coverage
+# Test Coverage
 
 To get code coverage for a single test file use `npx vitest --coverage <test_file>`
 
-## Building
+# Building
 
 To build the project use `npm run build`

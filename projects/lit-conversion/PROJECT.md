@@ -1,13 +1,15 @@
 # Lit Conversion Project Plan
 
-## Overview
-Convert the Citadel command interface from React to Lit to enable proper Shadow DOM support.
+Project name: `lit-conversion`
 
-## Core Requirements
-1. Full Shadow DOM encapsulation
+## Overview
+Convert the Citadel command interface from React to Lit.
+
+## Core Project Requirements
+1. Migrate off of React and on to Lit
 2. Maintain existing functionality
 3. Preserve command system architecture
-4. Support Tailwind styling within Shadow DOM
+4. Should follow Web Components best practices
 
 ## Phase 1: Context System
 1. Create core context definitions using @lit/context
@@ -23,9 +25,8 @@ Convert the Citadel command interface from React to Lit to enable proper Shadow 
 
 ## Phase 2: Core Components
 1. Convert main Citadel component
-   - Shadow DOM setup
-   - Event handling
    - Global shortcuts
+   - Event handling
    - Style encapsulation
 
 2. Create Lit controllers for:
