@@ -29,7 +29,6 @@
   left: 0;
   right: 0;
   transform: translateY(100%);
-  opacity: 0;
   z-index: 9999;
   pointer-events: auto;
   font-synthesis: none;
@@ -42,22 +41,18 @@
 @keyframes slideUp {
   from { 
     transform: translateY(100%);
-    opacity: 0;
   }
   to { 
     transform: translateY(0);
-    opacity: 1;
   }
 }
 
 @keyframes slideDown {
   from { 
     transform: translateY(0);
-    opacity: 1;
   }
   to { 
     transform: translateY(100%);
-    opacity: 0;
   }
 }
 

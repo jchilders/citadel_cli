@@ -18,6 +18,7 @@
     "declaration": true,
     "declarationDir": "./dist",
     "allowImportingTsExtensions": true,
+    "experimentalDecorators": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
