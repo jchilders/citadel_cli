@@ -1,11 +1,18 @@
 # General Development Rules
 
-You should do task-based development. For every task, you should write the tests, implement the code, and run the tests to make sure everything works.
+Source code is in the `src/` directory, and tests are in various `__tests__` directories under `src`.
 
-When the tests pass:
+Project-related files, including project description and tasks, are in the `project/<project_name>` directory.
+
+You should do task-based development. For every task, you should write the tests, implement the code, and run the tests to make sure everything works. Do NOT update TODO.md or memory.md until the tests have run and are passing.
+
+On test failure:
+* Fix any warnings or errors in the code
+* Run the tests again
+
+After the tests are passing (and not before):
 * Update the TODO list to reflect the task being completed
 * Update the memory file to reflect the current state of the project
-* Fix any warnings or errors in the code
 * Commit the changes to the repository with a descriptive commit message
 * Update the development guidelines to reflect anything that you've learned while working on the project
 * Stop and we will open a new chat for the next task
