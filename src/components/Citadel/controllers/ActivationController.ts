@@ -1,21 +1,35 @@
-import { ReactiveController, ReactiveControllerHost } from 'lit';
+import { ReactiveController } from 'lit';
 import { ContextProvider } from '@lit/context';
 import { CitadelActivation, activationContext } from '../config/contexts';
+import { CitadelElement } from '../CitadelElement';
 
 export class ActivationController implements ReactiveController {
   private provider: ContextProvider<typeof activationContext>;
   private keyHandler: (e: KeyboardEvent) => void;
 
+  private _config: CitadelActivation;
+
+  get config(): CitadelActivation {
+    return this._config;
+  }
+
   constructor(
-    private host: ReactiveControllerHost,
-    private config: CitadelActivation
+    private host: CitadelElement,
+    initialConfig: CitadelActivation
   ) {
+    this._config = initialConfig;
     this.provider = new ContextProvider(this.host, {
       context: activationContext,
-      initialValue: config
+      initialValue: this._config
     });
     
     this.keyHandler = this.handleKeyDown.bind(this);
+  }
+
+  updateConfig(updates: Partial<CitadelActivation>) {
+    this._config = { ...this._config, ...updates };
+    this.provider.setValue(this._config);
+    this.host.requestUpdate();
   }
 
   hostConnected() {
@@ -30,14 +44,16 @@ export class ActivationController implements ReactiveController {
     const targetTag = (event.target as HTMLElement)?.tagName?.toLowerCase() || '';
     const isInputElement = ['input', 'textarea'].includes(targetTag);
     
-    if (!this.config.isVisible && event.key === this.config.showCitadelKey && !isInputElement) {
+    if (!this._config.isVisible && event.key === this._config.showCitadelKey && !isInputElement) {
       event.preventDefault();
-      this.config.onOpen();
+      this._config.onOpen();
+      this.updateConfig({ isVisible: true });
     }
 
-    if (this.config.isVisible && event.key === 'Escape') {
+    if (this._config.isVisible && event.key === 'Escape') {
       event.preventDefault();
-      this.config.onClose();
+      this._config.onClose();
+      this.updateConfig({ isVisible: false });
     }
   }
 }

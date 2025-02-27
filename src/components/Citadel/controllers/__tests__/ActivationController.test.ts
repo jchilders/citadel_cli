@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ActivationController } from '../ActivationController';
-import { LitElement } from 'lit';
+import { CitadelActivation } from '../../config/contexts';
+import { CitadelElement } from '../../CitadelElement';
 
-// Create a test element class
-class TestElement extends LitElement {
+// Create a test element class that extends CitadelElement
+class TestElement extends CitadelElement {
   constructor() {
     super();
     // Disable shadow DOM for tests
@@ -17,12 +18,7 @@ customElements.define('test-element', TestElement);
 describe('ActivationController', () => {
   let host: TestElement;
   let controller: ActivationController;
-  let config: {
-    showCitadelKey: string;
-    isVisible: boolean;
-    onOpen: () => void;
-    onClose: () => void;
-  };
+  let config: CitadelActivation;
 
   beforeEach(() => {
     config = {
@@ -54,17 +50,25 @@ describe('ActivationController', () => {
     expect(removeSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
   });
 
-  it('should call onOpen when activation key is pressed', () => {
+  it('should call onOpen and update visibility when activation key is pressed', () => {
     controller.hostConnected();
     document.dispatchEvent(new KeyboardEvent('keydown', { key: '/' }));
     expect(config.onOpen).toHaveBeenCalled();
+    expect(controller.config.isVisible).toBe(true);
   });
 
-  it('should call onClose when Escape is pressed while visible', () => {
+  it('should call onClose and update visibility when Escape is pressed while visible', () => {
     config.isVisible = true;
     controller.hostConnected();
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(config.onClose).toHaveBeenCalled();
+    expect(controller.config.isVisible).toBe(false);
+  });
+
+  it('should trigger host update when config changes', () => {
+    const updateSpy = vi.spyOn(host, 'requestUpdate');
+    controller.updateConfig({ isVisible: true });
+    expect(updateSpy).toHaveBeenCalled();
   });
 
   it('should not trigger on input elements', () => {
