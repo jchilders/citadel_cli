@@ -5,6 +5,31 @@ Convert React's context system to Lit's @lit/context implementation, starting wi
 
 ## 1. Activation Key Context
 
+### 1.1.2 Activation Behavior Refactoring
+
+Refactor the activation behavior to use internal state:
+
+1. Component State:
+   - Keep show/hide state internal to CitadelCli
+   - Use Lit reactive properties for visibility
+   - Handle transitions and animations
+
+2. Configuration Integration:
+   - Get showCitadelKey from CitadelConfig
+   - Remove CitadelActivation interface and context
+   - Use Lit context for config access
+
+3. Controller Updates:
+   - Update ActivationController to manage internal state
+   - Handle keyboard events based on showCitadelKey
+   - Implement proper Lit lifecycle hooks
+
+4. Testing Strategy:
+   - Test visibility state transitions
+   - Verify keyboard event handling
+   - Test configuration integration
+   - Ensure proper cleanup on disconnect
+
 ### 1.1.1 Package and Component Naming
 
 Update the component naming and package structure for proper npm distribution:

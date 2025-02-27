@@ -3,10 +3,39 @@
 ## Phase 1: Context System
 
 ### Activation System Implementation
-- Using @lit/context for context management
-- ActivationController handles keyboard events and state
-- CitadelElement manages visibility transitions
-- Shadow DOM considerations handled
+- ActivationController manages internal visibility state
+- Component responds to controller's state changes
+- Keyboard events handled directly by controller
+- Clean separation between configuration and state
+
+### Activation Behavior Refactoring
+
+#### Key Decisions
+1. Moved visibility state into ActivationController
+   - Simplified component state management
+   - Better separation of concerns
+   - Controller now fully responsible for show/hide behavior
+
+2. Removed CitadelActivation context
+   - Eliminated unnecessary abstraction
+   - Reduced code complexity
+   - Direct use of CitadelConfig for activation key
+
+#### Lessons Learned
+1. Lit controllers are powerful for managing component state
+   - Can handle both internal state and external events
+   - Provide clean lifecycle hooks
+   - Enable better component organization
+
+2. Keep configuration simple
+   - Only expose what's truly needed (showCitadelKey)
+   - Internal state doesn't need to be in configuration
+   - Clearer component boundaries
+
+3. Test improvements
+   - Focus on testing behavior, not implementation
+   - Use controller's public API in tests
+   - Verify state changes through observable attributes
 
 ### Key Implementation Details
 1. Activation Controller:

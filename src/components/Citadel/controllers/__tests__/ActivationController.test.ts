@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ActivationController } from '../ActivationController';
-import { CitadelActivation } from '../../config/contexts';
 import { CitadelCli } from '../../CitadelCli';
+import { CitadelConfig } from '../../config/types';
 
 // Create a test element class that extends CitadelCli
 class TestElement extends CitadelCli {
@@ -18,19 +18,16 @@ customElements.define('test-element', TestElement);
 describe('ActivationController', () => {
   let host: TestElement;
   let controller: ActivationController;
-  let config: CitadelActivation;
+  let config: CitadelConfig;
 
   beforeEach(() => {
     config = {
       showCitadelKey: '/',
-      isVisible: false,
-      onOpen: vi.fn(),
-      onClose: vi.fn()
     };
 
     host = document.createElement('test-element') as TestElement;
     document.body.appendChild(host);
-    controller = new ActivationController(host, config);
+    controller = new ActivationController(host, config, () => {});
   });
 
   afterEach(() => {
@@ -50,25 +47,29 @@ describe('ActivationController', () => {
     expect(removeSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
   });
 
-  it('should call onOpen and update visibility when activation key is pressed', () => {
+  it('should update visibility when activation key is pressed', () => {
+    const onVisibilityChange = vi.fn();
+    controller = new ActivationController(host, config, onVisibilityChange);
     controller.hostConnected();
     document.dispatchEvent(new KeyboardEvent('keydown', { key: '/' }));
-    expect(config.onOpen).toHaveBeenCalled();
-    expect(controller.config.isVisible).toBe(true);
+    expect(controller.isVisible).toBe(true);
+    expect(onVisibilityChange).toHaveBeenCalled();
   });
 
-  it('should call onClose and update visibility when Escape is pressed while visible', () => {
-    config.isVisible = true;
+  it('should update visibility when Escape is pressed while visible', () => {
+    controller.setVisible(true);
     controller.hostConnected();
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-    expect(config.onClose).toHaveBeenCalled();
-    expect(controller.config.isVisible).toBe(false);
+    expect(controller.isVisible).toBe(false);
   });
 
-  it('should trigger host update when config changes', () => {
+  it('should trigger host update when visibility changes', () => {
     const updateSpy = vi.spyOn(host, 'requestUpdate');
-    controller.updateConfig({ isVisible: true });
+    const onVisibilityChange = vi.fn();
+    controller = new ActivationController(host, config, onVisibilityChange);
+    controller.setVisible(true);
     expect(updateSpy).toHaveBeenCalled();
+    expect(onVisibilityChange).toHaveBeenCalled();
   });
 
   it('should not trigger on input elements', () => {
@@ -78,7 +79,7 @@ describe('ActivationController', () => {
     controller.hostConnected();
     input.dispatchEvent(new KeyboardEvent('keydown', { key: '/' }));
     
-    expect(config.onOpen).not.toHaveBeenCalled();
+    expect(controller.isVisible).toBe(false);
     document.body.removeChild(input);
   });
 });

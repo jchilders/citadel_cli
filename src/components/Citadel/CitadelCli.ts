@@ -1,6 +1,8 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, PropertyValues } from 'lit';
+import { property } from 'lit/decorators.js';
+import { defaultConfig } from './config/defaults';
 import { ActivationController } from './controllers/ActivationController';
-import type { CitadelActivation } from './config/contexts';
+import type { CitadelConfig } from './config/types';
 
 export class CitadelCli extends LitElement {
   protected activationController: ActivationController;
@@ -38,19 +40,35 @@ export class CitadelCli extends LitElement {
     }
   `;
 
-  private _visible = false;
+  private _config: CitadelConfig = defaultConfig;
+
+  @property({ type: Object })
+  get config(): CitadelConfig {
+    return this._config;
+  }
+
+  set config(value: CitadelConfig) {
+    const oldValue = this._config;
+    this._config = value;
+    this.requestUpdate('config', oldValue);
+  }
+
+  private updateVisibility() {
+    if (this.activationController.isVisible) {
+      this.setAttribute('visible', '');
+    } else {
+      this.removeAttribute('visible');
+    }
+  }
+
+  private handleVisibilityChange = () => {
+    this.updateVisibility();
+  }
 
   constructor() {
     super();
-    this._visible = false;
-    const config: CitadelActivation = {
-      showCitadelKey: '/',
-      isVisible: this._visible,
-      onOpen: () => this.show(),
-      onClose: () => this.hide()
-    };
-    
-    this.activationController = new ActivationController(this, config);
+    this.activationController = new ActivationController(this, this.config, this.handleVisibilityChange);
+    this.addController(this.activationController);
   }
 
   connectedCallback() {
@@ -59,26 +77,18 @@ export class CitadelCli extends LitElement {
   }
 
   disconnectedCallback() {
-    super.disconnectedCallback();
     this.activationController.hostDisconnected();
+    super.disconnectedCallback();
   }
 
-  private async show() {
-    this._visible = true;
-    this.setAttribute('visible', '');
-    // Request update before notifying controller
-    this.requestUpdate();
-    await this.updateComplete;
-    this.activationController.updateConfig({ isVisible: true });
-  }
-
-  private async hide() {
-    this._visible = false;
-    this.removeAttribute('visible');
-    // Request update before notifying controller
-    this.requestUpdate();
-    await this.updateComplete;
-    this.activationController.updateConfig({ isVisible: false });
+  updated(changedProperties: PropertyValues) {
+    if (changedProperties.has('config')) {
+      const oldController = this.activationController;
+      oldController.hostDisconnected();
+      this.activationController = new ActivationController(this, this.config, this.handleVisibilityChange);
+      this.addController(this.activationController);
+      this.activationController.hostConnected();
+    }
   }
 
   render() {

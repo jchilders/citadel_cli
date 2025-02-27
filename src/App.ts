@@ -39,6 +39,10 @@ export class App extends LitElement {
     }
   `;
 
+  private citadelConfig = {
+    showCitadelKey: '/'
+  };
+
   render() {
     return html`
       <div class="container">
@@ -46,7 +50,7 @@ export class App extends LitElement {
           <p class="text">
             Press <code class="keyCode">/</code> to<br />activate Citadel
           </p>
-          <citadel-cli></citadel-cli>
+          <citadel-cli .config=${this.citadelConfig}></citadel-cli>
         </div>
       </div>
     `;

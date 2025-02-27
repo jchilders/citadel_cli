@@ -2,6 +2,12 @@
 
 ## Phase 1: Context System
 
+### Activation Behavior Refactoring ✓
+- [x] Keep show/hide as internal component state
+- [x] Get showCitadelKey from CitadelConfig
+- [x] Update ActivationController to handle visibility state
+- [x] Update tests to reflect new approach
+
 ### Package and Component Setup
 - [ ] Rename CitadelElement to CitadelCli
 - [ ] Update custom element name to citadel-cli
