@@ -1,7 +1,7 @@
 import { ReactiveController } from 'lit';
 import { ContextProvider } from '@lit/context';
 import { CitadelActivation, activationContext } from '../config/contexts';
-import { CitadelElement } from '../CitadelElement';
+import { CitadelCli } from '../CitadelCli';
 
 export class ActivationController implements ReactiveController {
   private provider: ContextProvider<typeof activationContext>;
@@ -14,7 +14,7 @@ export class ActivationController implements ReactiveController {
   }
 
   constructor(
-    private host: CitadelElement,
+    private host: CitadelCli,
     initialConfig: CitadelActivation
   ) {
     this._config = initialConfig;

@@ -1,14 +1,14 @@
-import { CitadelElement } from '../CitadelElement';
+import { CitadelCli } from '../CitadelCli';
 
 declare global {
   interface HTMLElementTagNameMap {
-    'citadel-element': CitadelElement;
+    'citadel-cli': CitadelCli;
   }
 
   namespace JSX {
     interface IntrinsicElements {
-      'citadel-element': JSX.IntrinsicElements['div'] & {
-        ref?: React.RefObject<CitadelElement>;
+      'citadel-cli': JSX.IntrinsicElements['div'] & {
+        ref?: React.RefObject<CitadelCli>;
       };
     }
   }

@@ -1,4 +1,4 @@
-export { Citadel } from './Citadel';
+export { CitadelCli } from './CitadelCli';
 export { CommandRegistry } from './types/command-registry';
 export type { CitadelConfig } from './config/types';
 export {

@@ -5,6 +5,40 @@ Convert React's context system to Lit's @lit/context implementation, starting wi
 
 ## 1. Activation Key Context
 
+### 1.1.1 Package and Component Naming
+
+Update the component naming and package structure for proper npm distribution:
+
+1. Rename Component:
+   - Rename `CitadelElement` to `CitadelCli`
+   - Update custom element name to `citadel-cli`
+   - Update all related test files
+
+2. Create Package Entry Point:
+```typescript
+// src/index.ts
+export { CitadelCli } from './CitadelCli.js';
+```
+
+3. Update Import Structure:
+   - Move type declarations to proper location
+   - Update import paths in App.tsx
+   - Ensure proper module resolution for npm package usage
+
+4. Example Usage After Changes:
+```html
+<script type="module">
+  import 'citadel-cli/CitadelCli.js';
+</script>
+<citadel-cli />
+```
+
+5. Testing Strategy:
+   - Update all existing tests to use new component name
+   - Test proper module exports
+   - Verify custom element registration
+   - Test component usage in HTML
+
 ### 1.1 Create Initial Context
 ```typescript
 // src/components/Citadel/config/contexts.ts

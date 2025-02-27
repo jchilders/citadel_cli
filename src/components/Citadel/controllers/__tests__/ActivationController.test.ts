@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ActivationController } from '../ActivationController';
 import { CitadelActivation } from '../../config/contexts';
-import { CitadelElement } from '../../CitadelElement';
+import { CitadelCli } from '../../CitadelCli';
 
-// Create a test element class that extends CitadelElement
-class TestElement extends CitadelElement {
+// Create a test element class that extends CitadelCli
+class TestElement extends CitadelCli {
   constructor() {
     super();
     // Disable shadow DOM for tests

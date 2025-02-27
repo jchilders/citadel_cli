@@ -4,22 +4,22 @@ set -e  # Exit immediately if a command exits with a non-zero status
 
 # Define paths
 CITADEL_CLI_DIR="/Users/jchilders/work/jchilders/citadel_cli"
-IMPORTING_DIR="/Users/jchilders/work/jchilders/vite_tailwind_react/importing_citadel_cli"
+IMPORTING_DIR="/Users/jchilders/work/jchilders/vite_tailwind_react/project_b"
 
 # Build and link citadel_cli
 cd "$CITADEL_CLI_DIR"
-echo "Building citadel_cli..."
+echo "-=-=> Building ..."
 npm run build
-echo "Linking citadel_cli..."
+echo "-=-=> Linking ..."
 npm link
 
 # Build and link citadel_cli in the importing project
 cd "$IMPORTING_DIR"
-echo "Linking citadel_cli in importing_citadel_cli..."
+# echo "Building project_b..."
+# npm run build
+echo "-=-=> Linking in project_b..."
 npm link citadel_cli
-echo "Building importing_citadel_cli..."
-npm run build
 
 # Start the Vite development server
-echo "Starting Vite development server..."
-npm run dev
+echo "-=-=> Starting development server..."
+npm run start

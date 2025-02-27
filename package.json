@@ -28,20 +28,23 @@
   "exports": {
     ".": {
       "types": "./dist/components/Citadel/index.d.ts",
-      "import": "./dist/citadel.es.js",
-      "require": "./dist/citadel.umd.cjs"
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.umd.js"
+    },
+    "./CitadelCli.js": {
+      "types": "./dist/components/Citadel/CitadelCli.d.ts",
+      "import": "./dist/index.es.js"
     }
   },
   "types": "./dist/components/Citadel/index.d.ts",
-  "main": "./dist/citadel.umd.cjs",
-  "module": "./dist/citadel.es.js",
+  "main": "./dist/index.umd.js",
+  "module": "./dist/index.es.js",
   "files": [
     "dist"
   ],
   "dependencies": {
-    "lucide-react": "^0.460.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "@lit/context": "^1.1.4",
+    "lit": "^3.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",

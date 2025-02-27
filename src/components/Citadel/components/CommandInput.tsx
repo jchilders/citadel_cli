@@ -95,7 +95,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       segments.push(segment.name);
       const hasNextSegment = commands.hasNextSegment(segments);
       if (segment.type === 'argument') {
-        let argSegment =(segment as ArgumentSegment);
+        const argSegment =(segment as ArgumentSegment);
         return (
           <React.Fragment key={"arg-" + argSegment.name + argSegment.value}>
             <span className="text-gray-200 whitespace-pre">

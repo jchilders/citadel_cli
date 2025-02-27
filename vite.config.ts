@@ -1,12 +1,10 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    react(),
     dts({
       insertTypesEntry: true,
     })
@@ -18,20 +16,15 @@ export default defineConfig({
     },
   },
   build: {
+    minify: false,
     lib: {
-      entry: 'src/components/Citadel/index.ts',
+      entry: 'src/index.ts',
       name: 'Citadel',
       formats: ['es', 'umd'],
     },
     rollupOptions: {
-      external: ['react', 'react-dom'],
       output: {
-        entryFileNames: 'citadel.[format].js',
-        chunkFileNames: 'citadel.[format].js',
-        globals: {
-          react: 'React',
-          'react-dom': 'ReactDOM',
-        },
+        entryFileNames: '[name].[format].js'
       },
     },
     cssCodeSplit: false,

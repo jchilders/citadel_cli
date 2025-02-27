@@ -2,7 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { ActivationController } from './controllers/ActivationController';
 import type { CitadelActivation } from './config/contexts';
 
-export class CitadelElement extends LitElement {
+export class CitadelCli extends LitElement {
   protected activationController: ActivationController;
 
   static styles = css`
@@ -90,4 +90,4 @@ export class CitadelElement extends LitElement {
   }
 }
 
-customElements.define('citadel-element', CitadelElement);
+customElements.define('citadel-cli', CitadelCli);

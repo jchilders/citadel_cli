@@ -2,6 +2,13 @@
 
 ## Phase 1: Context System
 
+### Package and Component Setup
+- [ ] Rename CitadelElement to CitadelCli
+- [ ] Update custom element name to citadel-cli
+- [ ] Create src/index.ts entry point
+- [ ] Update import paths and type declarations
+- [ ] Test npm package usage pattern
+
 ### Activation Key Context
 - [x] Create activation context definition
 - [x] Create ActivationController

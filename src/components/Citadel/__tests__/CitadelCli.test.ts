@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { CitadelElement } from '../CitadelElement';
+import { CitadelCli } from '../CitadelCli';
 
-// Import CitadelElement to ensure it's registered
-import '../CitadelElement';
+// Import CitadelCli to ensure it's registered
+import '../CitadelCli';
 
-describe('CitadelElement', () => {
-  let element: CitadelElement;
+describe('CitadelCli', () => {
+  let element: CitadelCli;
 
   beforeEach(async () => {
-    element = document.createElement('citadel-element') as CitadelElement;
+    element = document.createElement('citadel-cli') as CitadelCli;
     document.body.appendChild(element);
     await element.updateComplete;
     // Wait for element to be fully initialized
