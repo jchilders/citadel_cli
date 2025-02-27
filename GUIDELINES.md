@@ -1,23 +1,33 @@
-# General Development Rules
+# General Development Process
 
 Source code is in the `src/` directory, and tests are in various `__tests__` directories under `src`.
 
 Project-related files, including project description and tasks, are in the `project/<project_name>` directory.
 
-You should do task-based development. For every task, you should write the tests, implement the code, and run the tests to make sure everything works. Do NOT update TODO.md or memory.md until the (a) all tests (via `npm run test`) are passing, (b) the project builds without error.
+You should do task-based development. Each development task should be a self-contained unit of work, such as implementing a feature or fixing a bug. For every task you should:
 
-On test failure:
-* Fix any warnings or errors in the code
+## Main Task Loop
+  1. Check the memory file at `projects/<project_name>/memory.md`
+  2. Write the tests for the task, implement the code, and run the tests for the task (not the whole suite)
+  3. Run the code linter and build the project
+
+## On test failure
+* Fix any warnings, errors, or failures
 * Run the tests again
 
-After tests are passing (and not before):
+## After tests are passing
+* Run `npm run test` and fix any failures or errors
+* Run `npm run build` and fix any errors
+* Run `npm run lint` and fix any errors
+
+## Final steps
+After all tests are passing, all linter errors are fixed, and the project builds without error:
 * Update the TODO list (projects/<project_name>/TODO.md) to reflect the task being completed
-* Update the project memory file (projects/<project_name>/memory.md) to reflect the current state of the project
+* Update the project memory file (projects/<project_name>/memory.md) to reflect lessons learned
 * `git commit` the changes to the repository with a descriptive commit message
-* Update the development guidelines to reflect anything that you've learned while working on the project
 * Stop and we will open a new chat for the next task
 
-# Version Compatibility
+# Coding Standards
 
 All code must be compatible with TypeScript as configured in the project. When generating or modifying code, ensure it adheres to:
 - TypeScript strict mode and type checking
@@ -27,19 +37,19 @@ Method arguments should conform to the types expected by that function. The goal
 
 Check `package.json` for the specific versions of dependencies as needed.
 
-# Building
+DRY up code where possible. Maintainable, testable, readable code is required.
 
-To build the project use `npm run build`.
+Functions should be idempotent where possible.
 
 # Testing
 
-All tests use vitest. See `package.json` for details.
+All tests use vitest.
 
-To run all tests: `npm run test`
+Run all tests: `npm run test`
 
-To run one or more individual tests use `npx vitest --run <test_file1> <test_file2>`
+Run one or more individual tests:  `npx vitest --run <test_file1> <test_file2>`
 
-To run a single test case within a test file use `npx vitest --run <test_file> --testNamePattern 'individual test name'`. For example: if the following test exists in "thing.test.ts":
+Run a single test case within a test file: `npx vitest --run <test_file> --testNamePattern 'individual test name'`. For example: if the following test exists in "thing.test.ts":
 
 ```
 it("does the thing", () => {
@@ -51,10 +61,16 @@ Then this invididual test could be run with `npx vitest --run thing_test.ts" --t
 
 When creating or modifying mock objects, check to see if one already exists in `src/__test-utils__/factories.ts`, and use that mock if so.
 
-# Styling
+# Linting
 
-Prefer using pure CSS over Tailwind. If there are more than around 30 lines of CSS, consider externalizing it into a separate CSS file.
+To run the linter: `npm run lint`
+
+To run the linter for a single file: `npx eslint <file1> <file2>`
 
 # Building
 
-To build the project use `npm run build`
+To build the project use `npm run build`.
+
+# Styling
+
+Prefer using pure CSS over Tailwind. If there are more than around 30 lines of CSS, consider externalizing it into a separate CSS file.
