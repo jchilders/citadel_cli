@@ -19,9 +19,11 @@ if docker ps -aq --filter "name=$CONTAINER_NAME" | grep -q .; then
 fi
 
 echo "🚀 Running container: $CONTAINER_NAME..."
-if ! docker run --name $CONTAINER_NAME -p $PORT:5173 $IMAGE_NAME; then
+if ! docker run -d --name $CONTAINER_NAME -p $PORT:5173 $IMAGE_NAME; then
   echo "❌ Failed to start container"
   exit 1
 fi
 
 echo "✅ Container is running. Access the app at http://localhost:$PORT"
+echo "📋 To view logs: docker logs -f $CONTAINER_NAME"
+echo "🛑 To stop: docker stop $CONTAINER_NAME"

@@ -45,7 +45,9 @@
     "dist"
   ],
   "dependencies": {
-    "lucide-react": "^0.460.0",
+    "lucide-react": "^0.460.0"
+  },
+  "peerDependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

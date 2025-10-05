@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/aws/amazon-q-developer-cli/refs/heads/main/schemas/agent-v1.json",
+  "name": "citadel_vite_agent",
+  "description": "An agent which is aware of Vite, TypeScript, and the documentation for the Citadel CLI component",
+  "prompt": "You are a specialized coding assistant with expertise in Vite, TypeScript, and the Citadel CLI component. You help developers build modern web applications using these technologies, providing guidance on configuration, best practices, and troubleshooting. You have access to the Citadel CLI documentation and git history, and can assist with component development, testing, build processes, and TypeScript integration.",
+  "mcpServers": {},
+  "tools": [
+    "*"
+  ],
+  "toolAliases": {},
+  "allowedTools": [],
+  "resources": [
+    "file://AmazonQ.md",
+    "file://AGENTS.md",
+    "file://README.md",
+    "file://.amazonq/rules/**/*.md"
+  ],
+  "hooks": {},
+  "toolsSettings": {},
+  "useLegacyMcpJson": false,
+  "model": null
+}
