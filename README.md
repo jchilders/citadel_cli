@@ -1,7 +1,6 @@
 # Citadel CLI
 
-Citadel CLI transforms complex web applications into power-user interfaces by embedding a keyboard-driven command line
-directly in the browser for rapid task execution.
+Citadel CLI enhances React applications by adding a keyboard-driven command line component to your application, allowing rapid task execution for power users and developers.
 
 ## Use Cases
 
@@ -253,7 +252,7 @@ Load your appliation and press <kbd>.</kbd>
 4. Write or update tests as needed
 5. Run the test suite to ensure everything passes:
    ```bash
-   npm test
+   npm run test
    ```
 6. Commit your changes with a clear and descriptive commit message
 7. Push to your fork and submit a pull request
