@@ -41,7 +41,7 @@ export const Citadel = ({
     return () => {
       citadelElement.parentElement?.removeChild(citadelElement);
     };
-  }, [commandRegistry, containerId]);
+  }, [commandRegistry, containerId, config]);
 
   return null;
 };
@@ -72,7 +72,7 @@ export class CitadelElement extends HTMLElement {
       });
       
       this.shadow.adoptedStyleSheets = [...sheets];
-    } catch (e) {
+    } catch {
       // Fallback for browsers that don't support constructable stylesheets
       const combinedStyles = [citadelStyles, citadelModuleStyles, mainStyles].join('\n');
       const styleElement = document.createElement('style');
@@ -122,7 +122,7 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
     showCitadelKey: config.showCitadelKey || '.'
   });
 
-  const handleMouseDown = useCallback((_e: React.MouseEvent) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (containerRef.current) {
       isDraggingRef.current = true;
       startYRef.current = e.clientY;
@@ -136,7 +136,7 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     }
-  }, []);
+  }, [handleMouseMove, handleMouseUp]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDraggingRef.current) return;
@@ -157,7 +157,7 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
       containerRef.current.style.bottom = '0';
       setHeight(`${newHeight}px`);
     }
-  }, [config.maxHeight]);
+  }, [config.maxHeight, config.minHeight]);
 
   const handleMouseUp = useCallback(() => {
     isDraggingRef.current = false;
@@ -169,7 +169,7 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
     document.documentElement.style.msUserSelect = '';
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
-  }, []);
+  }, [handleMouseMove]);
 
   useEffect(() => {
     return () => {

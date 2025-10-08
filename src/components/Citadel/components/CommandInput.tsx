@@ -65,8 +65,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     if (inputState !== 'entering_command') {
       setInputStateWithLogging('entering_command');
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [inputState, setInputStateWithLogging]);
 
   // Set the input state hen the segmentStack changes
   useEffect(() => {
