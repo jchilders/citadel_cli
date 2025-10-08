@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { CitadelState, CitadelActions, OutputItem } from '../types/state';
-import { useCitadelConfig, useCitadelCommands, useCitadelStorage, useSegmentStack } from '../config/CitadelConfigContext';
+import { useCitadelConfig, useCitadelCommands, useCitadelStorage, useSegmentStack } from '../config/hooks';
 import { CommandResult, ErrorCommandResult } from '../types/command-results';
 import { useCommandHistory } from './useCommandHistory';
 import { initializeHistoryService } from '../services/HistoryService';

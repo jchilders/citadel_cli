@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { StoredCommand } from '../types/storage';
-import { useCitadelStorage } from '../config/CitadelConfigContext';
+import { useCitadelStorage } from '../config/hooks';
 import { useSegmentStackVersion } from './useSegmentStackVersion';
 import { CommandSegment } from '../types/command-registry';
 

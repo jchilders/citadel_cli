@@ -5,7 +5,7 @@ import { Cursor } from '../Cursor';
 import { CursorType } from '../types/cursor';
 import { defaultConfig } from '../config/defaults';
 import { InputState, useCommandParser } from '../hooks/useCommandParser';
-import { useCitadelConfig, useCitadelCommands, useSegmentStack } from '../config/CitadelConfigContext';
+import { useCitadelConfig, useCitadelCommands, useSegmentStack } from '../config/hooks';
 import { useSegmentStackVersion } from '../hooks/useSegmentStackVersion';
 
 interface CommandInputProps {
@@ -65,6 +65,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     if (inputState !== 'entering_command') {
       setInputStateWithLogging('entering_command');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Set the input state hen the segmentStack changes
@@ -86,7 +87,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
         break;
     }
     setInputStateWithLogging(nextInputState);
-  }, [segmentStackVersion]);
+  }, [segmentStackVersion, inputState, getNextExpectedSegment, setInputStateWithLogging, actions]);
 
   // The CLI is made up of zero or more spans followed up by a div, which in
   // turn contains an input element. Each of those spans contains whatever the
@@ -129,7 +130,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     );
     
     setSegmentNamesAndVals([wrappedElements]);
-  }, [segmentStackVersion]);
+  }, [segmentStackVersion, commands, segmentStack]);
 
   // Placeholder text for the input field
   const [placeholderText, setPlaceholderText] = useState<string>("");
@@ -140,7 +141,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     } else {
       setPlaceholderText("");
     }
-  }, [segmentStackVersion]);
+  }, [segmentStackVersion, getNextExpectedSegment]);
 
   return (
     <div className="flex flex-col w-full bg-gray-900 rounded-lg p-4">

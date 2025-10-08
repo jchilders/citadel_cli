@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useGlobalShortcut } from './hooks/useGlobalShortcut';
 import { useSlideAnimation } from './hooks/useSlideAnimation';
-import { useCitadelConfig } from './config/CitadelConfigContext';
+import { useCitadelConfig } from './config/hooks';
 import { useCitadelState } from './hooks/useCitadelState';
 import { CommandInput } from './components/CommandInput';
 import { CommandOutput } from './components/CommandOutput';

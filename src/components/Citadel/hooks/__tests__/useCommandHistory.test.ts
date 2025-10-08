@@ -8,11 +8,8 @@ import {
 
 const mockStorage = createMockStorage();
 
-// Mock CitadelConfigContext
-vi.mock('../../config/CitadelConfigContext', () => ({
-  useCitadelConfig: () => ({
-    storage: { type: 'memory', maxCommands: 100 }
-  }),
+// Mock hooks
+vi.mock('../../config/hooks', () => ({
   useCitadelStorage: () => mockStorage
 }));
 

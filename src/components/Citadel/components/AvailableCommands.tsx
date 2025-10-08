@@ -1,5 +1,5 @@
 import React from 'react';
-import { useCitadelCommands, useCitadelConfig, useSegmentStack } from '../config/CitadelConfigContext';
+import { useCitadelCommands, useCitadelConfig, useSegmentStack } from '../config/hooks';
 import { Logger } from '../utils/logger';
 import { useSegmentStackVersion } from '../hooks/useSegmentStackVersion';
 

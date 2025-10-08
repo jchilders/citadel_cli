@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { OutputItem } from '../types/state';
 import { CommandOutputLine } from './CommandOutputLine';
-import { useCitadelConfig } from '../config/CitadelConfigContext';
+import { useCitadelConfig } from '../config/hooks';
 
 interface CommandOutputProps {
   output: OutputItem[];

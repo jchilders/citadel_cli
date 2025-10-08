@@ -1,5 +1,6 @@
 import { render, act } from '@testing-library/react';
-import { CitadelConfigProvider, useCitadelCommands, useCitadelConfig, useCitadelStorage } from '../CitadelConfigContext';
+import { CitadelConfigProvider } from '../CitadelConfigContext';
+import { useCitadelCommands, useCitadelConfig, useCitadelStorage } from '../hooks';
 import { CommandRegistry } from '../../types/command-registry';
 import { StorageFactory } from '../../storage/StorageFactory';
 import { defaultConfig } from '../defaults';

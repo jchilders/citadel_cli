@@ -1,7 +1,7 @@
 import { useCallback, useReducer } from 'react';
 import { CommandNode, CommandSegment, ArgumentSegment, NullSegment, WordSegment } from '../types/command-registry';
 import { CitadelState, CitadelActions } from '../types/state';
-import { useCitadelCommands, useSegmentStack } from '../config/CitadelConfigContext';
+import { useCitadelCommands, useSegmentStack } from '../config/hooks';
 import { useCitadelState } from './useCitadelState';
 import { Logger } from '../utils/logger';
 import { useCommandHistory } from './useCommandHistory';
