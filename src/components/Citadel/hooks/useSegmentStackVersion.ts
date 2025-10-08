@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSegmentStack } from '../config/CitadelConfigContext';
+import { useSegmentStack } from '../config/hooks';
 
 export const useSegmentStackVersion = () => {
   const segmentStack = useSegmentStack();

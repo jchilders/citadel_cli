@@ -1,5 +1,6 @@
 import { render, act } from '@testing-library/react';
-import { CitadelConfigProvider, useCitadelCommands, useCitadelConfig, useCitadelStorage } from '../CitadelConfigContext';
+import { CitadelConfigProvider } from '../CitadelConfigContext';
+import { useCitadelCommands, useCitadelConfig, useCitadelStorage } from '../hooks';
 import { CommandRegistry } from '../../types/command-registry';
 import { StorageFactory } from '../../storage/StorageFactory';
 import { defaultConfig } from '../defaults';
@@ -182,7 +183,7 @@ describe('CitadelConfigContext', () => {
 
     beforeEach(() => {
       // Reset StorageFactory singleton between tests
-      (StorageFactory as any)['instance'] = undefined;
+      (StorageFactory as unknown as { instance: undefined })['instance'] = undefined;
     });
 
     it('should initialize storage', async () => {

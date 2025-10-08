@@ -1,5 +1,8 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
+# Run ESLint with auto-fix
+npm run lint:fix
+
 # Run TypeScript type checking
 npx tsc --noEmit

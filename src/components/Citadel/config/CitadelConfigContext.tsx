@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useEffect } from 'react';
 import { createHelpHandler } from '../types/help-command';
 import { CitadelConfig } from './types';
 import { defaultConfig } from './defaults';
@@ -21,6 +21,8 @@ const defaultContextValue: CitadelContextValue = {
 };
 
 const CitadelConfigContext = createContext<CitadelContextValue>(defaultContextValue);
+
+export { CitadelConfigContext };
 
 export const CitadelConfigProvider: React.FC<{
   config?: CitadelConfig;
@@ -50,6 +52,7 @@ export const CitadelConfigProvider: React.FC<{
       mergedConfig.storage ?? defaultConfig.storage!
     );
     setStorage(StorageFactory.getInstance().getStorage());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps array since we only want to initialize once
 
   // Add help command if enabled
@@ -78,36 +81,4 @@ export const CitadelConfigProvider: React.FC<{
       {children}
     </CitadelConfigContext.Provider>
   );
-};
-
-export const useCitadelConfig = () => {
-  const context = useContext(CitadelConfigContext);
-  if (context === undefined) {
-    throw new Error('useCitadelConfig must be used within a CitadelConfigProvider');
-  }
-  return context.config;
-};
-
-export const useCitadelCommands = () => {
-  const context = useContext(CitadelConfigContext);
-  if (context === undefined) {
-    throw new Error('useCitadelCommands must be used within a CitadelConfigProvider');
-  }
-  return context.commands;
-};
-
-export const useCitadelStorage = () => {
-  const context = useContext(CitadelConfigContext);
-  if (context === undefined) {
-    throw new Error('useCitadelStorage must be used within a CitadelConfigProvider');
-  }
-  return context.storage;
-};
-
-export const useSegmentStack = () => {
-  const context = useContext(CitadelConfigContext);
-  if (context === undefined) {
-    throw new Error('useSegmentStack must be used within a CitadelConfigProvider');
-  }
-  return context.segmentStack;
 };

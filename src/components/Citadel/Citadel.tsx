@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useGlobalShortcut } from './hooks/useGlobalShortcut';
 import { useSlideAnimation } from './hooks/useSlideAnimation';
-import { useCitadelConfig } from './config/CitadelConfigContext';
+import { useCitadelConfig } from './config/hooks';
 import { useCitadelState } from './hooks/useCitadelState';
 import { CommandInput } from './components/CommandInput';
 import { CommandOutput } from './components/CommandOutput';
@@ -41,7 +41,7 @@ export const Citadel = ({
     return () => {
       citadelElement.parentElement?.removeChild(citadelElement);
     };
-  }, [commandRegistry, containerId]);
+  }, [commandRegistry, containerId, config]);
 
   return null;
 };
@@ -72,7 +72,7 @@ export class CitadelElement extends HTMLElement {
       });
       
       this.shadow.adoptedStyleSheets = [...sheets];
-    } catch (e) {
+    } catch {
       // Fallback for browsers that don't support constructable stylesheets
       const combinedStyles = [citadelStyles, citadelModuleStyles, mainStyles].join('\n');
       const styleElement = document.createElement('style');
@@ -97,6 +97,7 @@ export class CitadelElement extends HTMLElement {
 
 customElements.define('citadel-element', CitadelElement);
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface CitadelInnerProps {}
 
 const CitadelInner: React.FC<CitadelInnerProps> = () => {
@@ -128,9 +129,9 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
       startHeightRef.current = containerRef.current.offsetHeight;
       document.documentElement.style.userSelect = 'none';
       document.documentElement.style.webkitUserSelect = 'none';
-      // @ts-ignore: Vendor prefixed property
+      // @ts-expect-error: Vendor prefixed property
       document.documentElement.style.mozUserSelect = 'none';
-      // @ts-ignore: Vendor prefixed property
+      // @ts-expect-error: Vendor prefixed property
       document.documentElement.style.msUserSelect = 'none';
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
@@ -156,19 +157,19 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
       containerRef.current.style.bottom = '0';
       setHeight(`${newHeight}px`);
     }
-  }, [config.maxHeight]);
+  }, [config.maxHeight, config.minHeight]);
 
   const handleMouseUp = useCallback(() => {
     isDraggingRef.current = false;
     document.documentElement.style.userSelect = '';
     document.documentElement.style.webkitUserSelect = '';
-    // @ts-ignore: Vendor prefixed property
+    // @ts-expect-error: Vendor prefixed property
     document.documentElement.style.mozUserSelect = '';
-    // @ts-ignore: Vendor prefixed property
+    // @ts-expect-error: Vendor prefixed property
     document.documentElement.style.msUserSelect = '';
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
-  }, []);
+  }, [handleMouseMove]);
 
   useEffect(() => {
     return () => {

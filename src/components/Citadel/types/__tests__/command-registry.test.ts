@@ -9,7 +9,7 @@ describe('CommandRegistry', () => {
 
   beforeEach(() => {
     cmdRegistry = new CommandRegistry();
-    successHandler = async (_args: string[]) => new TextCommandResult('success');
+    successHandler = async () => new TextCommandResult('success');
   });
 
   describe('addCommand', () => {

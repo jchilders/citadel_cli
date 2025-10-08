@@ -1,13 +1,11 @@
 import React from 'react';
-import { useCitadelCommands, useCitadelConfig, useSegmentStack } from '../config/CitadelConfigContext';
+import { useCitadelCommands, useCitadelConfig, useSegmentStack } from '../config/hooks';
 import { Logger } from '../utils/logger';
-import { useSegmentStackVersion } from '../hooks/useSegmentStackVersion';
 
 export const AvailableCommands: React.FC = () => {
   const commands  = useCitadelCommands();
   const config = useCitadelConfig();
   const segmentStack = useSegmentStack();
-  const segmentStackVersion = useSegmentStackVersion();
 
   const containerClasses = "h-12 mt-2 border-t border-gray-700 px-4";
   const contentClasses = "text-gray-300 pt-2";
@@ -23,7 +21,7 @@ export const AvailableCommands: React.FC = () => {
     }
 
     return nextCommandSegments;
-  }, [nextCommandSegments, segmentStackVersion, config.includeHelpCommand]);
+  }, [nextCommandSegments, config.includeHelpCommand]);
 
   const nextSegmentIsArgument = nextCommandSegments.some(seg => seg.type === 'argument');
   const nextSegment = nextCommandSegments[0];

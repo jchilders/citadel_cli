@@ -1,18 +1,16 @@
 import { useState, useCallback, useEffect } from 'react';
 import { CitadelState, CitadelActions, OutputItem } from '../types/state';
-import { useCitadelConfig, useCitadelCommands, useCitadelStorage, useSegmentStack } from '../config/CitadelConfigContext';
+import { useCitadelConfig, useCitadelCommands, useCitadelStorage, useSegmentStack } from '../config/hooks';
 import { CommandResult, ErrorCommandResult } from '../types/command-results';
 import { useCommandHistory } from './useCommandHistory';
 import { initializeHistoryService } from '../services/HistoryService';
 import { Logger } from '../utils/logger';
-import { useSegmentStackVersion } from './useSegmentStackVersion';
 
 export const useCitadelState = () => {
   const config = useCitadelConfig();
   const commands = useCitadelCommands();
   const history = useCommandHistory();
   const segmentStack = useSegmentStack();
-  const segmentStackVersion = useSegmentStackVersion();
   const storage = useCitadelStorage();
 
   const [state, setState] = useState<CitadelState>({
@@ -117,7 +115,7 @@ export const useCitadelState = () => {
           )
         }));
       }
-    }, [commands, config.commandTimeoutMs, segmentStackVersion]),
+    }, [commands, config.commandTimeoutMs, segmentStack]),
 
     clearHistory: useCallback(async () => {
       try {

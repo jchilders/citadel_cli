@@ -15,8 +15,8 @@ import {
 } from '../../../../__test-utils__/factories';
 import { SegmentStack } from '../../types/segment-stack';
 
-// Mock CitadelConfigContext before any tests
-vi.mock('../../config/CitadelConfigContext', () => ({
+// Mock hooks before any tests
+vi.mock('../../config/hooks', () => ({
   useCitadelConfig: () => ({
     storage: { type: 'memory', maxCommands: 100 },
     commandTimeoutMs: 5000

@@ -1,10 +1,9 @@
 import { useCallback, useReducer } from 'react';
 import { CommandNode, CommandSegment, ArgumentSegment, NullSegment, WordSegment } from '../types/command-registry';
 import { CitadelState, CitadelActions } from '../types/state';
-import { useCitadelCommands, useSegmentStack } from '../config/CitadelConfigContext';
+import { useCitadelCommands, useSegmentStack } from '../config/hooks';
 import { useCitadelState } from './useCitadelState';
 import { Logger } from '../utils/logger';
-import { useSegmentStackVersion } from './useSegmentStackVersion';
 import { useCommandHistory } from './useCommandHistory';
 
 export type InputState = 'idle' | 'entering_command' | 'entering_argument';
@@ -29,26 +28,25 @@ export const useCommandParser = () => {
   const commands = useCitadelCommands();
   const history = useCommandHistory();
   const segmentStack = useSegmentStack();
-  const segmentStackVersion = useSegmentStackVersion();
 
   const [inputState, dispatch] = useReducer(inputStateReducer, 'idle');
   const setInputStateWithLogging = (newState: InputState) => {
     dispatch({ type: 'set', state: newState });
   }
 
-  const getNextExpectedSegment = (): CommandSegment => {
+  const getNextExpectedSegment = useCallback((): CommandSegment => {
     const completions = commands.getCompletions(segmentStack.path());
     const nextExpectedSegment = completions[0] || segmentStack.nullSegment; // Return first available completion
     Logger.debug("[getNextExpectedSegment] ", nextExpectedSegment);
     return nextExpectedSegment;
-  }
+  }, [commands, segmentStack]);
 
   const getAvailableNodes = useCallback((): CommandNode[] => {
     const nextSegmentNames = commands.getCompletions_s(segmentStack.path());
     return nextSegmentNames
       .map(segmentName => commands.getCommand([...segmentStack.path(), segmentName]))
       .filter((cmd): cmd is CommandNode => cmd !== undefined);
-  }, [commands]);
+  }, [commands, segmentStack]);
 
   /**
    * Filters available commands to those that match the user's current input.
@@ -69,14 +67,14 @@ export const useCommandParser = () => {
     }, new Map<string, CommandNode>());
 
     // Filter nodes whose next word segment matches the input
-    const matches = Array.from(uniqueFirstSegments.values()).filter(_node => {
+    const matches = Array.from(uniqueFirstSegments.values()).filter(() => {
       const nextSegment = getNextExpectedSegment();
       if (nextSegment.type !== 'word') return false;
       return nextSegment.name.toLowerCase().startsWith(input.toLowerCase());
     });
 
     return matches;
-  }, []);
+  }, [getNextExpectedSegment]);
 
   /**
    * Returns a completion suggestion when there's exactly one unambiguous match.
@@ -101,7 +99,7 @@ export const useCommandParser = () => {
     }
 
     return segmentStack.nullSegment;
-  }, [findMatchingCommands]);
+  }, [commands, segmentStack]);
 
   const isValidCommandInput = useCallback((input: string): boolean => {
     const currentPath = segmentStack.path();
@@ -118,11 +116,13 @@ export const useCommandParser = () => {
     }
 
     // For word segments, check if input matches any available completion
-    return availableSegments.some(segment =>
+    const isValid = availableSegments.some(segment =>
       segment.type === 'word' && 
       segment.name.toLowerCase().startsWith(input.toLowerCase())
     );
-  }, [commands]);
+    
+    return isValid;
+  }, [commands, segmentStack]);
 
   const tryAutocomplete = useCallback((
     input: string
@@ -136,7 +136,7 @@ export const useCommandParser = () => {
 
     Logger.debug("[tryAutoComplete] result: ", suggestion);
     return suggestion;
-  }, [getAvailableNodes, getAutocompleteSuggestion, segmentStack, commands, getNextExpectedSegment]);
+  }, [getAutocompleteSuggestion]);
 
   /**
    * Handles autocompleting word segments, and saving argument values to the
@@ -201,19 +201,27 @@ export const useCommandParser = () => {
         return;
       }
     }
-  }, [tryAutocomplete, segmentStackVersion, state]);
+  }, [tryAutocomplete, state, getNextExpectedSegment, inputState, segmentStack]);
+
+  const resetInputState = useCallback((actions: CitadelActions) => {
+    actions.setCurrentInput('');
+    actions.setIsEnteringArg(false);
+    segmentStack.clear();
+    setInputStateWithLogging('idle');
+  }, [segmentStack]);
 
   /**
    * Handles keyboard events for Backspace, Enter, and regular input.
    * Responsible for:
    * - Command execution
    * - Navigation
+   * Returns false if input was invalid and should trigger animation
    */
-  const handleKeyDown = useCallback(async (
+  const handleKeyDown = useCallback((
     e: KeyboardEvent | React.KeyboardEvent,
     state: CitadelState,
     actions: CitadelActions
-  ) => {
+  ): boolean | Promise<boolean> => {
     // Validate key input first
     const isValidKey = e.key === 'Backspace' || 
                        e.key === 'Enter' ||
@@ -228,7 +236,7 @@ export const useCommandParser = () => {
                        e.key.length === 1;
 
     if (!isValidKey) {
-      return;
+      return true;
     }
 
     const { currentInput, isEnteringArg } = state;
@@ -242,7 +250,7 @@ export const useCommandParser = () => {
           if (segmentStack.size() > 0) segmentStack.pop(); 
           setInputStateWithLogging('idle');
         }
-        return;
+        return true;
       }
 
       case 'Enter': {
@@ -250,7 +258,7 @@ export const useCommandParser = () => {
 
         // Don't execute if quotes aren't closed
         if (parsedInput.isQuoted && !parsedInput.isComplete) {
-          return;
+          return true;
         }
 
         if (inputState === 'entering_argument') {
@@ -268,31 +276,35 @@ export const useCommandParser = () => {
 
         resetInputState(actions);
 
-        return;
+        return true;
       }
 
       case 'ArrowUp': {
         e.preventDefault();
-        const navResult = await history.navigateHistory('up', segmentStack.toArray());
-        if (navResult.segments) {
-          segmentStack.clear();
-          segmentStack.pushAll(navResult.segments);
-          // Set current input to empty since all segments (including arguments) are in the stack
-          actions.setCurrentInput('');
-        }
-        return;
+        return (async () => {
+          const navResult = await history.navigateHistory('up', segmentStack.toArray());
+          if (navResult.segments) {
+            segmentStack.clear();
+            segmentStack.pushAll(navResult.segments);
+            // Set current input to empty since all segments (including arguments) are in the stack
+            actions.setCurrentInput('');
+          }
+          return true;
+        })();
       }
 
       case 'ArrowDown': {
         e.preventDefault();
-        const navResult = await history.navigateHistory('down', segmentStack.toArray());
-        if (navResult.segments) {
-          segmentStack.clear();
-          segmentStack.pushAll(navResult.segments);
-          // Set current input to empty since all segments (including arguments) are in the stack
-          actions.setCurrentInput('');
-        }
-        return;
+        return (async () => {
+          const navResult = await history.navigateHistory('down', segmentStack.toArray());
+          if (navResult.segments) {
+            segmentStack.clear();
+            segmentStack.pushAll(navResult.segments);
+            // Set current input to empty since all segments (including arguments) are in the stack
+            actions.setCurrentInput('');
+          }
+          return true;
+        })();
       }
 
       default: {
@@ -301,27 +313,20 @@ export const useCommandParser = () => {
           const nextInput = (currentInput + e.key);
           if (!isValidCommandInput(nextInput)) {
             e.preventDefault();
-            return;
+            return false; // Invalid input - trigger animation
           }
         }
+        return true;
       }
     }
   }, [
-    commands,
-    findMatchingCommands,
-    getAvailableNodes,
-    getAutocompleteSuggestion,
     inputState,
     isValidCommandInput,
-    segmentStackVersion,
+    getNextExpectedSegment,
+    history,
+    resetInputState,
+    segmentStack,
   ]);
-
-  const resetInputState = useCallback((actions: CitadelActions) => {
-    actions.setCurrentInput('');
-    actions.setIsEnteringArg(false);
-    segmentStack.clear();
-    setInputStateWithLogging('idle');
-  }, []);
 
   return {
     handleInputChange,

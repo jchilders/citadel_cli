@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { StoredCommand } from '../types/storage';
-import { useCitadelStorage } from '../config/CitadelConfigContext';
-import { useSegmentStackVersion } from './useSegmentStackVersion';
+import { useCitadelStorage } from '../config/hooks';
 import { CommandSegment } from '../types/command-registry';
 
 export interface CommandHistory {
@@ -122,12 +121,12 @@ export function useCommandHistory(): CommandHistoryHook {
     }
 
     // Otherwise return the historical command segments
-    let result = { 
+    const result = { 
       segments: newPosition !== null ? history.storedCommands[newPosition].commandSegments : null,
       position: newPosition 
     };
     return result;
-  }, [history, useSegmentStackVersion]);
+  }, [history, getStoredCommands]);
 
   const clear = useCallback(async () => {
     try {

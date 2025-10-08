@@ -5,10 +5,8 @@ import { Cursor } from '../Cursor';
 import { CursorType } from '../types/cursor';
 import { defaultConfig } from '../config/defaults';
 import { InputState, useCommandParser } from '../hooks/useCommandParser';
-import { useCitadelConfig, useCitadelCommands, useSegmentStack } from '../config/CitadelConfigContext';
-import styles from './CommandInput.module.css';
+import { useCitadelConfig, useCitadelCommands, useSegmentStack } from '../config/hooks';
 import { useSegmentStackVersion } from '../hooks/useSegmentStackVersion';
-import { Logger } from '../utils/logger';
 
 interface CommandInputProps {
   state: CitadelState;
@@ -29,12 +27,21 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     setInputStateWithLogging,
     getNextExpectedSegment
   } = useCommandParser();
-  const [showInvalidAnimation ] = useState(false);
+  const [showInvalidAnimation, setShowInvalidAnimation] = useState(false);
   const config = useCitadelConfig();
   const segmentStackVersion = useSegmentStackVersion();
 
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    handleKeyDown(e, state, actions);
+  const onKeyDown = async (e: React.KeyboardEvent) => {
+    const result = handleKeyDown(e, state, actions);
+    
+    // Handle both sync and async returns
+    const finalResult = await Promise.resolve(result);
+    
+    // Trigger animation for invalid input
+    if (finalResult === false) {
+      setShowInvalidAnimation(true);
+      setTimeout(() => setShowInvalidAnimation(false), 500);
+    }
   };
 
   const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,7 +65,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     if (inputState !== 'entering_command') {
       setInputStateWithLogging('entering_command');
     }
-  }, []);
+  }, [inputState, setInputStateWithLogging]);
 
   // Set the input state hen the segmentStack changes
   useEffect(() => {
@@ -78,9 +85,8 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       default:
         break;
     }
-    Logger.debug(`[CommandInput] changing inputState to '${nextInputState}'`);
     setInputStateWithLogging(nextInputState);
-  }, [segmentStackVersion]);
+  }, [segmentStackVersion, inputState, getNextExpectedSegment, setInputStateWithLogging, actions]);
 
   // The CLI is made up of zero or more spans followed up by a div, which in
   // turn contains an input element. Each of those spans contains whatever the
@@ -94,7 +100,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       segments.push(segment.name);
       const hasNextSegment = commands.hasNextSegment(segments);
       if (segment.type === 'argument') {
-        let argSegment =(segment as ArgumentSegment);
+        const argSegment =(segment as ArgumentSegment);
         return (
           <React.Fragment key={"arg-" + argSegment.name + argSegment.value}>
             <span className="text-gray-200 whitespace-pre">
@@ -123,7 +129,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     );
     
     setSegmentNamesAndVals([wrappedElements]);
-  }, [segmentStackVersion]);
+  }, [segmentStackVersion, commands, segmentStack]);
 
   // Placeholder text for the input field
   const [placeholderText, setPlaceholderText] = useState<string>("");
@@ -134,10 +140,27 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     } else {
       setPlaceholderText("");
     }
-  }, [segmentStackVersion]);
+  }, [segmentStackVersion, getNextExpectedSegment]);
 
   return (
     <div className="flex flex-col w-full bg-gray-900 rounded-lg p-4">
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-4px); }
+          75% { transform: translateX(4px); }
+        }
+        @keyframes flashBorder {
+          0%, 100% { border-color: transparent; }
+          50% { border-color: rgb(239, 68, 68); }
+        }
+        .invalid-input-animation {
+          animation: shake 0.2s ease-in-out, flashBorder 0.3s ease-in-out;
+          border-width: 1px;
+          border-style: solid;
+        }
+      `}</style>
+      
       <div className="flex items-center gap-2">
         <div className="text-gray-400 font-mono">&gt;</div>
         <div className="flex-1 font-mono flex items-center">
@@ -152,7 +175,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
               onKeyDown={onKeyDown}
               onPaste={handlePaste}
               data-testid="citadel-command-input"
-              className={`w-full bg-transparent outline-none text-gray-200 caret-transparent ${showInvalidAnimation ? styles.invalidInput : ''}`}
+              className={`w-full bg-transparent outline-none text-gray-200 caret-transparent ${showInvalidAnimation ? 'invalid-input-animation' : ''}`}
               spellCheck={false}
               autoComplete="off"
               placeholder={placeholderText}

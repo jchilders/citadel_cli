@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { OutputItem } from '../types/state';
 import { CommandOutputLine } from './CommandOutputLine';
-import { useCitadelConfig } from '../config/CitadelConfigContext';
+import { useCitadelConfig } from '../config/hooks';
 
 interface CommandOutputProps {
   output: OutputItem[];
@@ -32,7 +32,7 @@ export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef 
         return () => lastImage.removeEventListener('load', scrollToBottom);
       }
     }
-  }, [output, scrollToBottom]);
+  }, [output, scrollToBottom, outputRef]);
 
   return (
     <div 

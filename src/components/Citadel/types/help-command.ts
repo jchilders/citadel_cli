@@ -2,7 +2,7 @@ import { CommandRegistry } from './command-registry';
 import { TextCommandResult } from './command-results';
 
 export const createHelpHandler = (cmdRegistry: CommandRegistry) => {
-  return async function(_args: string[]) {
+  return async function() {
     const commands:string[] = cmdRegistry.commands
       .filter(command => command.fullPath[0] !== 'help')
       .map(command => {

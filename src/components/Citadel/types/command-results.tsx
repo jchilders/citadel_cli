@@ -35,7 +35,7 @@ export abstract class CommandResult {
 
 export class JsonCommandResult extends CommandResult {
   constructor(
-    public readonly data: any,
+    public readonly data: unknown,
     timestamp?: number
   ) {
     super(timestamp);
