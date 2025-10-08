@@ -183,7 +183,7 @@ describe('CitadelConfigContext', () => {
 
     beforeEach(() => {
       // Reset StorageFactory singleton between tests
-      (StorageFactory as any)['instance'] = undefined;
+      (StorageFactory as unknown as { instance: undefined })['instance'] = undefined;
     });
 
     it('should initialize storage', async () => {

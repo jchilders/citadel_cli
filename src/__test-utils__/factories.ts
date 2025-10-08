@@ -33,7 +33,7 @@ export const createMockCommandSegment = (type: 'word' | 'argument', name: string
 };
 
 export const createMockCommand = (name: string, options: MockNodeOptions = {}): CommandNode => {
-  const defaultHandler: CommandHandler = async (_args: string[]) => {
+  const defaultHandler: CommandHandler = async () => {
     const result = new TextCommandResult('Success');
     result.markSuccess();
     return result;

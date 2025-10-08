@@ -32,7 +32,7 @@ export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef 
         return () => lastImage.removeEventListener('load', scrollToBottom);
       }
     }
-  }, [output, scrollToBottom]);
+  }, [output, scrollToBottom, outputRef]);
 
   return (
     <div 

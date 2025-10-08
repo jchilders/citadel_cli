@@ -23,8 +23,7 @@ cmdRegistry.addCommand(
   // The final parameter is the "handler", which is what will get called when the user hits enter.
   // The return type for this handler is `TextCommandResult`. There are other
   // types of command result that we'll cover later.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async (_args: string[]) => new TextCommandResult(`Hello, ${_args[0]}!`) 
+  async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`) 
 );
 
 cmdRegistry.addCommand(
@@ -32,7 +31,7 @@ cmdRegistry.addCommand(
     { type: 'word', name: 'shake' }
   ],
   'Test the shake animation',
-  async (_args: string[]) => {
+  async () => {
     return new TextCommandResult('Earthquake! 🌍');
   }
 );

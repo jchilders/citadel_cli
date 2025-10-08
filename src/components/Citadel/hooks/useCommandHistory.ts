@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { StoredCommand } from '../types/storage';
 import { useCitadelStorage } from '../config/hooks';
-import { useSegmentStackVersion } from './useSegmentStackVersion';
 import { CommandSegment } from '../types/command-registry';
 
 export interface CommandHistory {
@@ -127,7 +126,7 @@ export function useCommandHistory(): CommandHistoryHook {
       position: newPosition 
     };
     return result;
-  }, [history, useSegmentStackVersion]);
+  }, [history, getStoredCommands]);
 
   const clear = useCallback(async () => {
     try {
