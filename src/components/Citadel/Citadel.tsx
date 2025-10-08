@@ -97,6 +97,7 @@ export class CitadelElement extends HTMLElement {
 
 customElements.define('citadel-element', CitadelElement);
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface CitadelInnerProps {}
 
 const CitadelInner: React.FC<CitadelInnerProps> = () => {
@@ -121,16 +122,16 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
     showCitadelKey: config.showCitadelKey || '.'
   });
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  const handleMouseDown = useCallback((_e: React.MouseEvent) => {
     if (containerRef.current) {
       isDraggingRef.current = true;
       startYRef.current = e.clientY;
       startHeightRef.current = containerRef.current.offsetHeight;
       document.documentElement.style.userSelect = 'none';
       document.documentElement.style.webkitUserSelect = 'none';
-      // @ts-ignore: Vendor prefixed property
+      // @ts-expect-error: Vendor prefixed property
       document.documentElement.style.mozUserSelect = 'none';
-      // @ts-ignore: Vendor prefixed property
+      // @ts-expect-error: Vendor prefixed property
       document.documentElement.style.msUserSelect = 'none';
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
@@ -162,9 +163,9 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
     isDraggingRef.current = false;
     document.documentElement.style.userSelect = '';
     document.documentElement.style.webkitUserSelect = '';
-    // @ts-ignore: Vendor prefixed property
+    // @ts-expect-error: Vendor prefixed property
     document.documentElement.style.mozUserSelect = '';
-    // @ts-ignore: Vendor prefixed property
+    // @ts-expect-error: Vendor prefixed property
     document.documentElement.style.msUserSelect = '';
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);

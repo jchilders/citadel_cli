@@ -16,31 +16,31 @@ export class Logger {
     this.prefix = config.prefix || '[Citadel]';
   }
 
-  static trace(...args: any[]) {
+  static trace(...args: unknown[]) {
     if (this.level >= LogLevel.TRACE && process.env.NODE_ENV !== 'production') {
       console.trace(this.prefix, ...args);
     }
   }
 
-  static debug(...args: any[]) {
+  static debug(...args: unknown[]) {
     if (this.level >= LogLevel.DEBUG && process.env.NODE_ENV !== 'production') {
       console.debug(this.prefix, ...args);
     }
   }
 
-  static info(...args: any[]) {
+  static info(...args: unknown[]) {
     if (this.level >= LogLevel.INFO) {
       console.info(this.prefix, ...args);
     }
   }
 
-  static warn(...args: any[]) {
+  static warn(...args: unknown[]) {
     if (this.level >= LogLevel.WARN) {
       console.warn(this.prefix, ...args);
     }
   }
 
-  static error(...args: any[]) {
+  static error(...args: unknown[]) {
     if (this.level >= LogLevel.ERROR) {
       console.error(this.prefix, ...args);
     }

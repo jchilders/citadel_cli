@@ -10,6 +10,7 @@ export function viteShadowDOM(options: ShadowDOMPluginOptions = {}): Plugin {
   const {
     include = ['src/**/*.{ts,tsx}'],
     exclude = ['node_modules/**'],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     injectMethod = 'constructable'
   } = options;
 

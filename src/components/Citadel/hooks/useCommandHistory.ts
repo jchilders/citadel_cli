@@ -122,7 +122,7 @@ export function useCommandHistory(): CommandHistoryHook {
     }
 
     // Otherwise return the historical command segments
-    let result = { 
+    const result = { 
       segments: newPosition !== null ? history.storedCommands[newPosition].commandSegments : null,
       position: newPosition 
     };

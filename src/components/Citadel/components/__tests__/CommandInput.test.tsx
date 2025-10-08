@@ -14,7 +14,7 @@ import {
 const TestWrapper: React.FC<{ 
   children: React.ReactNode;
   commandRegistry?: CommandRegistry;
-  config?: any;
+  config?: Record<string, unknown>;
 }> = ({ 
   children, 
   commandRegistry = new CommandRegistry(),
@@ -67,6 +67,7 @@ describe('CommandInput', () => {
 
     const input = container.querySelector('input');
     if (!input) throw new Error('Input element not found');
+    
     fireEvent.keyDown(input, { key: 'x' }); // 'x' is not a valid command prefix
 
     // The input should be prevented and setCurrentInput should not be called
