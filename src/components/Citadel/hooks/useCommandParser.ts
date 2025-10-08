@@ -118,10 +118,12 @@ export const useCommandParser = () => {
     }
 
     // For word segments, check if input matches any available completion
-    return availableSegments.some(segment =>
+    const isValid = availableSegments.some(segment =>
       segment.type === 'word' && 
       segment.name.toLowerCase().startsWith(input.toLowerCase())
     );
+    
+    return isValid;
   }, [commands]);
 
   const tryAutocomplete = useCallback((
@@ -208,12 +210,13 @@ export const useCommandParser = () => {
    * Responsible for:
    * - Command execution
    * - Navigation
+   * Returns false if input was invalid and should trigger animation
    */
-  const handleKeyDown = useCallback(async (
+  const handleKeyDown = useCallback((
     e: KeyboardEvent | React.KeyboardEvent,
     state: CitadelState,
     actions: CitadelActions
-  ) => {
+  ): boolean | Promise<boolean> => {
     // Validate key input first
     const isValidKey = e.key === 'Backspace' || 
                        e.key === 'Enter' ||
@@ -228,7 +231,7 @@ export const useCommandParser = () => {
                        e.key.length === 1;
 
     if (!isValidKey) {
-      return;
+      return true;
     }
 
     const { currentInput, isEnteringArg } = state;
@@ -242,7 +245,7 @@ export const useCommandParser = () => {
           if (segmentStack.size() > 0) segmentStack.pop(); 
           setInputStateWithLogging('idle');
         }
-        return;
+        return true;
       }
 
       case 'Enter': {
@@ -250,7 +253,7 @@ export const useCommandParser = () => {
 
         // Don't execute if quotes aren't closed
         if (parsedInput.isQuoted && !parsedInput.isComplete) {
-          return;
+          return true;
         }
 
         if (inputState === 'entering_argument') {
@@ -268,31 +271,35 @@ export const useCommandParser = () => {
 
         resetInputState(actions);
 
-        return;
+        return true;
       }
 
       case 'ArrowUp': {
         e.preventDefault();
-        const navResult = await history.navigateHistory('up', segmentStack.toArray());
-        if (navResult.segments) {
-          segmentStack.clear();
-          segmentStack.pushAll(navResult.segments);
-          // Set current input to empty since all segments (including arguments) are in the stack
-          actions.setCurrentInput('');
-        }
-        return;
+        return (async () => {
+          const navResult = await history.navigateHistory('up', segmentStack.toArray());
+          if (navResult.segments) {
+            segmentStack.clear();
+            segmentStack.pushAll(navResult.segments);
+            // Set current input to empty since all segments (including arguments) are in the stack
+            actions.setCurrentInput('');
+          }
+          return true;
+        })();
       }
 
       case 'ArrowDown': {
         e.preventDefault();
-        const navResult = await history.navigateHistory('down', segmentStack.toArray());
-        if (navResult.segments) {
-          segmentStack.clear();
-          segmentStack.pushAll(navResult.segments);
-          // Set current input to empty since all segments (including arguments) are in the stack
-          actions.setCurrentInput('');
-        }
-        return;
+        return (async () => {
+          const navResult = await history.navigateHistory('down', segmentStack.toArray());
+          if (navResult.segments) {
+            segmentStack.clear();
+            segmentStack.pushAll(navResult.segments);
+            // Set current input to empty since all segments (including arguments) are in the stack
+            actions.setCurrentInput('');
+          }
+          return true;
+        })();
       }
 
       default: {
@@ -301,9 +308,10 @@ export const useCommandParser = () => {
           const nextInput = (currentInput + e.key);
           if (!isValidCommandInput(nextInput)) {
             e.preventDefault();
-            return;
+            return false; // Invalid input - trigger animation
           }
         }
+        return true;
       }
     }
   }, [

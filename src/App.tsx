@@ -26,6 +26,16 @@ cmdRegistry.addCommand(
   async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`) 
 );
 
+cmdRegistry.addCommand(
+  [
+    { type: 'word', name: 'shake' }
+  ],
+  'Test the shake animation',
+  async (_args: string[]) => {
+    return new TextCommandResult('Earthquake! 🌍');
+  }
+);
+
 import "./styles/app.css"
 
 function App() {
