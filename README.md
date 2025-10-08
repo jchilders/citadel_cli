@@ -1,15 +1,16 @@
 # Citadel CLI
 
-A hierarchical command-line interface (CLI) for web applications.
+Citadel CLI transforms complex web applications into power-user interfaces by embedding a keyboard-driven command line
+directly in the browser for rapid task execution.
 
-Use cases:
+## Use Cases
 
-- Developers: Perform (multiple) REST API calls & view results, view/modify
-  cookies/localstorage. Do JavaScript things without affecting the application.
-- "Poor man's Postman": execute API calls within the context of your application
-- Devops: Improve how you interface with your existing CI/CD web app
-- Power users: Provide a hook for advanced users of your internal or external
-  applications to quickly perform complex actions
+- **API Testing & Debugging**: Execute REST calls, inspect responses, and manipulate cookies/localStorage without leaving your
+application context
+- **Power User Workflows**: Transform repetitive click-through sequences into fast keyboard commands for advanced users
+- **DevOps Integration**: Add command-line control to CI/CD dashboards and deployment tools for rapid operations
+- **Internal Tool Enhancement**: Give your team's web applications the speed and efficiency of terminal interfaces
+- Perform (multiple) REST API calls & view results, view/modify cookies/localstorage. Do JavaScript things without affecting the application.
 
 ![Animated screenshot of Citadel CLI](https://github.com/user-attachments/assets/b64da0f7-a4a0-4f76-bc03-c0e40c0e14e5)
 
@@ -44,17 +45,15 @@ following:
 
 ![screenshot_help_cmd](https://github.com/user-attachments/assets/1cc6fd58-7591-45f1-980a-46da15a1843a)
 
-When you execute a command the result is displayed in the output area. It shows
-the command that was executed, a timestamp, whether the command succesfully
-executed, and the command's output.
+## Adding Commands
 
-Adding your own commands is pretty straightforward. There are three steps to doing so.
+To add your own commands:
 
-1. Create a `CommandRegistry`
-2. Add commands to the registry
+1. Create a `CommandRegistry` object
+2. Add commands to the registry object via the `addCommand` function
 3. Pass the registry to the `Citadel` component
 
-Let's add a simple `greet` command to demonstrate this. 
+For example, let's add a simple `greet` command. 
 
 ```
 import { Citadel, CommandRegistry, TextCommandResult } from "citadel_cli";
