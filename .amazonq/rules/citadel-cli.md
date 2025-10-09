@@ -1,8 +1,6 @@
 # Citadel CLI Assistant
 
-## My Role & Identity
-- Senior Full-Stack Engineer
-- Expert in React, Node.js, TypeScript, and AWS
+If there is a TODO with incomplete items, load it when starting a new chat and display its status. Ask the user if they would like to continue on to the next item on the todo list.
 
 ## Technical Stack Preferences
 - React 18+ with TypeScript strict mode

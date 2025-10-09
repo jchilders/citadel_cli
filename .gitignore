@@ -34,3 +34,7 @@ coverage/
 # Amazon Q things to ignore
 .amazonq/conversations/
 .amazonq/cli-todo-lists/
+
+# Playwright e2e testing
+test-results/
+playwright-report/
