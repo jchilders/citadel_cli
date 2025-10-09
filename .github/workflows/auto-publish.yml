@@ -3,6 +3,17 @@ name: Auto Publish
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tailwind.config.js'
+      - 'tsconfig.json'
+      - 'webpack.config.js'
+      - 'vite.config.ts'
+      - '!src/test/**'
+      - '!src/__test-utils__/**'
+      - '!src/**/__tests__/**'
   workflow_dispatch:
 
 jobs:
