@@ -152,9 +152,23 @@ export class CommandRegistry {
    */
   getCommand(path: string[]): CommandNode | undefined {
     return this._commands.find((command) => {
+      // For exact matches (when all arguments are provided)
       const fullPath = command.fullPath.join(' ');
       const searchPath = path.join(' ');
-      return fullPath === searchPath;
+      if (fullPath === searchPath) {
+        return true;
+      }
+      
+      // For partial matches (when looking up command template)
+      // Check if the provided path matches the word segments of the command
+      const wordSegments = command.segments.filter(seg => seg.type === 'word');
+      const wordPath = wordSegments.map(seg => seg.name);
+      
+      if (wordPath.length === path.length && wordPath.join(' ') === searchPath) {
+        return true;
+      }
+      
+      return false;
     });
   }
 

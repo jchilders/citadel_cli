@@ -346,4 +346,51 @@ describe('CommandRegistry', () => {
       expect(arg.toString()).toBe('testArg');
     });
   });
+
+  describe('command execution with arguments', () => {
+    it('should execute command with arguments and pass values to handler', async () => {
+      const mockHandler = vi.fn().mockResolvedValue(new TextCommandResult('success'));
+      
+      cmdRegistry.addCommand(
+        [
+          { type: 'word', name: 'greet' },
+          { type: 'argument', name: 'name', description: 'Enter your name' }
+        ],
+        'Greet someone',
+        mockHandler
+      );
+
+      // Get the command using the full template path
+      const command = cmdRegistry.getCommand(['greet', 'name']);
+      expect(command).toBeDefined();
+      
+      // Execute the handler with argument values
+      await command!.handler(['John']);
+      
+      // Verify the handler was called with the correct arguments
+      expect(mockHandler).toHaveBeenCalledWith(['John']);
+    });
+
+    it('should handle commands with multiple arguments', async () => {
+      const mockHandler = vi.fn().mockResolvedValue(new TextCommandResult('success'));
+      
+      cmdRegistry.addCommand(
+        [
+          { type: 'word', name: 'send' },
+          { type: 'argument', name: 'message', description: 'Message to send' },
+          { type: 'word', name: 'to' },
+          { type: 'argument', name: 'recipient', description: 'Recipient name' }
+        ],
+        'Send a message',
+        mockHandler
+      );
+
+      const command = cmdRegistry.getCommand(['send', 'message', 'to', 'recipient']);
+      expect(command).toBeDefined();
+      
+      await command!.handler(['Hello World', 'Alice']);
+      
+      expect(mockHandler).toHaveBeenCalledWith(['Hello World', 'Alice']);
+    });
+  });
 });

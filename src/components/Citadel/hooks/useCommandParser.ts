@@ -261,12 +261,25 @@ export const useCommandParser = () => {
           return true;
         }
 
-        if (inputState === 'entering_argument') {
+        if (inputState === 'entering_argument' || (isEnteringArg && currentInput.trim())) {
           const nextSegment = getNextExpectedSegment();
           const argumentSegment = (nextSegment as ArgumentSegment);
           argumentSegment.value = currentInput;
           Logger.debug("[handleKeyDown][Enter]['entering_argument'] pushing: ", argumentSegment);
           segmentStack.push(argumentSegment);
+        }
+
+        // Validate that all required arguments are provided
+        const path = segmentStack.path();
+        const command = commands.getCommand(path);
+        if (command) {
+          const requiredArgs = command.segments.filter(seg => seg.type === 'argument');
+          const providedArgs = segmentStack.arguments;
+          
+          if (requiredArgs.length > providedArgs.length) {
+            // Missing required arguments - trigger invalid input animation
+            return false;
+          }
         }
 
         Logger.debug("[handleKeyDown][Enter] calling actions.executeCommand. segmentStack: ", segmentStack);
