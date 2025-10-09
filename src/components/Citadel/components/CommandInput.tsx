@@ -145,19 +145,12 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   return (
     <div className="flex flex-col w-full bg-gray-900 rounded-lg p-4">
       <style>{`
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-4px); }
-          75% { transform: translateX(4px); }
-        }
-        @keyframes flashBorder {
-          0%, 100% { border-color: transparent; }
-          50% { border-color: rgb(239, 68, 68); }
+        @keyframes subtleGlow {
+          0%, 100% { box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
+          50% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
         }
         .invalid-input-animation {
-          animation: shake 0.2s ease-in-out, flashBorder 0.3s ease-in-out;
-          border-width: 1px;
-          border-style: solid;
+          animation: subtleGlow 0.4s ease-in-out;
         }
       `}</style>
       
