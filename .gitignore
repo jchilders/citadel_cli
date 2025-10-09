@@ -30,3 +30,7 @@ coverage/
 *.sw?
 .aider*
 .env
+
+# Amazon Q things to ignore
+.amazonq/conversations/
+.amazonq/cli-todo-lists/

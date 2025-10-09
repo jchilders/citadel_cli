@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/aws/amazon-q-developer-cli/refs/heads/main/schemas/agent-v1.json",
+  "name": "citadel",
+  "description": "An expert in React, TypeScript, and TDD, as well as the source code and documentation for the Citadel CLI component",
+  "prompt": "You are an expert React, TypeScript, and the Citadel CLI component. You help developers build modern web applications, providing guidance on configuration, best practices, and troubleshooting. When writing code, you favor a TDD approach.",
+  "mcpServers": {},
+  "tools": [
+    "*"
+  ],
+  "toolAliases": {},
+  "allowedTools": [],
+  "resources": [
+    "file://AmazonQ.md",
+    "file://AGENTS.md",
+    "file://README.md",
+    "file://.amazonq/rules/**/*.md"
+  ],
+  "hooks": {},
+  "toolsSettings": {},
+  "useLegacyMcpJson": false,
+  "model": null
+}
