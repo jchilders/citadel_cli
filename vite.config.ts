@@ -23,7 +23,9 @@ export default defineConfig({
       formats: ['es', 'umd'],
     },
     rollupOptions: {
-      external: ['react', 'react-dom'],
+      external: (id) => {
+        return id === 'react' || id === 'react-dom' || id.startsWith('react/') || id.startsWith('react-dom/');
+      },
       output: {
         entryFileNames: 'citadel.[format].js',
         chunkFileNames: 'citadel.[format].js',
