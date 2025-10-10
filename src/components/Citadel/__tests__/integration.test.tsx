@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, fireEvent, act, waitFor } from '@testing-library/react';
 import { Citadel } from '../Citadel';
-import { CommandRegistry, WordSegment, ArgumentSegment } from '../types/command-registry';
+import { CommandRegistry, WordSegment } from '../types/command-registry';
 import { TextCommandResult, JsonCommandResult, ErrorCommandResult } from '../types/command-results';
 
 describe('Citadel Integration Tests', () => {

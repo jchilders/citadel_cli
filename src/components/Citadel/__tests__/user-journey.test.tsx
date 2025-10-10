@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, fireEvent, waitFor, act } from '@testing-library/react';
 import { Citadel } from '../Citadel';
-import { CommandRegistry, WordSegment, ArgumentSegment } from '../types/command-registry';
+import { CommandRegistry, WordSegment } from '../types/command-registry';
 import { TextCommandResult } from '../types/command-results';
 
 describe('Citadel User Journey Tests', () => {

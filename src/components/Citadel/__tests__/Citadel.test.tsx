@@ -40,7 +40,7 @@ describe('Citadel', () => {
     
     // Now it should be there - check shadow DOM
     await waitFor(() => {
-      const citadelElement = document.querySelector('citadel-element') as any;
+      const citadelElement = document.querySelector('citadel-element') as HTMLElement & { shadowRoot: ShadowRoot };
       expect(citadelElement).toBeTruthy();
       expect(citadelElement.shadowRoot).toBeTruthy();
       const shadowRoot = citadelElement.shadowRoot;
@@ -65,7 +65,7 @@ describe('Citadel', () => {
       await user.keyboard('/');
     });
     await waitFor(() => {
-      const citadelElement = document.querySelector('citadel-element') as any;
+      const citadelElement = document.querySelector('citadel-element') as HTMLElement & { shadowRoot: ShadowRoot };
       expect(citadelElement).toBeTruthy();
       const shadowRoot = citadelElement.shadowRoot;
       expect(shadowRoot.getElementById('citadel-root')).toBeTruthy();
@@ -90,7 +90,7 @@ describe('Citadel', () => {
     });
     
     await waitFor(() => {
-      const citadelElement = document.querySelector('citadel-element') as any;
+      const citadelElement = document.querySelector('citadel-element') as HTMLElement & { shadowRoot: ShadowRoot };
       expect(citadelElement).toBeTruthy();
       const shadowRoot = citadelElement.shadowRoot;
       expect(shadowRoot.getElementById('citadel-root')).toBeTruthy();
@@ -98,11 +98,11 @@ describe('Citadel', () => {
 
     // Verify help command is available when enabled
     await waitFor(() => {
-      const citadelElement = document.querySelector('citadel-element') as any;
+      const citadelElement = document.querySelector('citadel-element') as HTMLElement & { shadowRoot: ShadowRoot };
       const shadowRoot = citadelElement.shadowRoot;
       const availableCommands = shadowRoot.querySelector('[data-testid="available-commands"]');
       expect(availableCommands).toBeTruthy();
-      expect(availableCommands.textContent).toContain('help');
+      expect(availableCommands?.textContent).toContain('help');
     });
   });
 
@@ -118,11 +118,11 @@ describe('Citadel', () => {
     
     // Verify help command is available in the command palette
     await waitFor(() => {
-      const citadelElement = document.querySelector('citadel-element') as any;
+      const citadelElement = document.querySelector('citadel-element') as HTMLElement & { shadowRoot: ShadowRoot };
       const shadowRoot = citadelElement.shadowRoot;
       const availableCommands = shadowRoot.querySelector('[data-testid="available-commands"]');
       expect(availableCommands).toBeTruthy();
-      expect(availableCommands.textContent).toContain('help');
+      expect(availableCommands?.textContent).toContain('help');
     }, { timeout: 2000 });
   });
 
@@ -138,7 +138,7 @@ describe('Citadel', () => {
     
     // Verify command input and available commands are shown
     await waitFor(() => {
-      const citadelElement = document.querySelector('citadel-element') as any;
+      const citadelElement = document.querySelector('citadel-element') as HTMLElement & { shadowRoot: ShadowRoot };
       const shadowRoot = citadelElement.shadowRoot;
       
       const inputElement = shadowRoot.querySelector('[data-testid="citadel-command-input"]');
@@ -146,7 +146,7 @@ describe('Citadel', () => {
       
       const availableCommands = shadowRoot.querySelector('[data-testid="available-commands"]');
       expect(availableCommands).toBeTruthy();
-      expect(availableCommands.textContent).toContain('help');
+      expect(availableCommands?.textContent).toContain('help');
     }, { timeout: 2000 });
   });
 });
