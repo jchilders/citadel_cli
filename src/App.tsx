@@ -1,4 +1,5 @@
-import { Citadel, CommandRegistry, TextCommandResult } from "citadel_cli";
+import { Citadel } from "./index";
+import { createBasicCommandRegistry } from "./examples/basicCommands";
 
 // import { CitadelConfig } from './components/Citadel/config/types';
 // export const config: CitadelConfig = {
@@ -9,32 +10,8 @@ import { Citadel, CommandRegistry, TextCommandResult } from "citadel_cli";
 //   maxHeight: '80vh'
 // };
 
-// 1. Create the registry where commands will be stored
-const cmdRegistry = new CommandRegistry();
-
-// 2. Add a command to the registry. This can be called as many times as you like.
-cmdRegistry.addCommand(
-  [
-    { type: 'word', name: 'greet' },
-    { type: 'argument', name: 'name', description: 'Enter your name' }
-  ],
-  'Say hello to the world', // The description of this command. Used by "help".
-
-  // The final parameter is the "handler", which is what will get called when the user hits enter.
-  // The return type for this handler is `TextCommandResult`. There are other
-  // types of command result that we'll cover later.
-  async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`) 
-);
-
-cmdRegistry.addCommand(
-  [
-    { type: 'word', name: 'shake' }
-  ],
-  'Test the shake animation',
-  async () => {
-    return new TextCommandResult('Earthquake! 🌍');
-  }
-);
+// Seed the demo app with the shared basic command registry
+const cmdRegistry = createBasicCommandRegistry();
 
 import "./styles/app.css"
 

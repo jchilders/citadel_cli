@@ -269,17 +269,21 @@ export const useCommandParser = () => {
           segmentStack.push(argumentSegment);
         }
 
-        // Validate that all required arguments are provided
+        // Validate that we have a concrete command to execute
         const path = segmentStack.path();
         const command = commands.getCommand(path);
-        if (command) {
-          const requiredArgs = command.segments.filter(seg => seg.type === 'argument');
-          const providedArgs = segmentStack.arguments;
-          
-          if (requiredArgs.length > providedArgs.length) {
-            // Missing required arguments - trigger invalid input animation
-            return false;
-          }
+        if (!command) {
+          // Command path incomplete; keep stack & input so user can continue typing
+          return false;
+        }
+
+        // Validate that all required arguments are provided
+        const requiredArgs = command.segments.filter(seg => seg.type === 'argument');
+        const providedArgs = segmentStack.arguments;
+        
+        if (requiredArgs.length > providedArgs.length) {
+          // Missing required arguments - trigger invalid input animation
+          return false;
         }
 
         Logger.debug("[handleKeyDown][Enter] calling actions.executeCommand. segmentStack: ", segmentStack);
@@ -338,6 +342,7 @@ export const useCommandParser = () => {
     getNextExpectedSegment,
     history,
     resetInputState,
+    commands,
     segmentStack,
   ]);
 

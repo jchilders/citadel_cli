@@ -122,22 +122,6 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
     showCitadelKey: config.showCitadelKey || '.'
   });
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (containerRef.current) {
-      isDraggingRef.current = true;
-      startYRef.current = e.clientY;
-      startHeightRef.current = containerRef.current.offsetHeight;
-      document.documentElement.style.userSelect = 'none';
-      document.documentElement.style.webkitUserSelect = 'none';
-      // @ts-expect-error: Vendor prefixed property
-      document.documentElement.style.mozUserSelect = 'none';
-      // @ts-expect-error: Vendor prefixed property
-      document.documentElement.style.msUserSelect = 'none';
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-  }, []);
-
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDraggingRef.current) return;
     
@@ -170,6 +154,22 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
   }, [handleMouseMove]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (containerRef.current) {
+      isDraggingRef.current = true;
+      startYRef.current = e.clientY;
+      startHeightRef.current = containerRef.current.offsetHeight;
+      document.documentElement.style.userSelect = 'none';
+      document.documentElement.style.webkitUserSelect = 'none';
+      // @ts-expect-error: Vendor prefixed property
+      document.documentElement.style.mozUserSelect = 'none';
+      // @ts-expect-error: Vendor prefixed property
+      document.documentElement.style.msUserSelect = 'none';
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+  }, [handleMouseMove, handleMouseUp]);
 
   useEffect(() => {
     return () => {
@@ -215,4 +215,3 @@ const CitadelInner: React.FC<CitadelInnerProps> = () => {
     </div>
   );
 };
-
