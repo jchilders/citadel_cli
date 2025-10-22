@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, waitFor } from '@testing-library/react';
 import { CommandInput } from '../CommandInput';
 import { CommandRegistry } from '../../types/command-registry';
 import { TextCommandResult } from '../../types/command-results';
@@ -30,6 +30,10 @@ const TestWrapper: React.FC<{
       </div>
     </CitadelConfigProvider>
   );
+};
+
+type MockFn<T extends (...args: any[]) => any> = T & {
+  mock: { calls: Parameters<T>[] };
 };
 
 describe('CommandInput', () => {
@@ -167,6 +171,45 @@ describe('CommandInput', () => {
     );
 
     expect(document.activeElement).toStrictEqual(input);
+  });
+
+  it('shows invalid state when submitting an incomplete command', async () => {
+    const registry = new CommandRegistry();
+    registry.addCommand(
+      [
+        { type: 'word', name: 'user' },
+        { type: 'word', name: 'show' }
+      ],
+      'Show user details',
+      async () => new TextCommandResult('details')
+    );
+
+    const mockActions = createMockCitadelActions();
+    const state = createMockCitadelState();
+
+    const { getByTestId } = render(
+      <TestWrapper commandRegistry={registry}>
+        <CommandInput state={state} actions={mockActions} />
+      </TestWrapper>
+    );
+
+    const input = getByTestId('citadel-command-input') as HTMLInputElement;
+
+    const setCurrentInputMock = mockActions.setCurrentInput as MockFn<typeof mockActions.setCurrentInput>;
+
+    fireEvent.change(input, { target: { value: 'u' } });
+    expect(setCurrentInputMock).toHaveBeenCalledWith('u');
+
+    const callsBeforeEnter = setCurrentInputMock.mock.calls.length;
+
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(input.className).toContain('invalid-input-animation');
+    });
+
+    expect(mockActions.executeCommand).not.toHaveBeenCalled();
+    expect(setCurrentInputMock.mock.calls.length).toBe(callsBeforeEnter);
   });
 });
 

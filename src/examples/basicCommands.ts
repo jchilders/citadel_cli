@@ -87,7 +87,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
       { type: 'word', name: 'timeout' },
     ],
     'This command intentionally times out after 11 seconds',
-    async (_args: string[]) => {
+    async () => {
       await new Promise((resolve) => setTimeout(resolve, 11000))
       return new JsonCommandResult({ status: 'done' })
     },
@@ -99,7 +99,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
       { type: 'word', name: 'raise' },
     ],
     'This command intentionally raises an error',
-    async (_args: string[]) => {
+    async () => {
       throw new Error('This is an intentional error')
     },
   )
@@ -111,7 +111,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
     ],
     'This command returns an invalid type',
     // @ts-expect-error - intentionally returning invalid type
-    async (_args: string[]) => 'whoops',
+    async () => 'whoops',
   )
 
   // Image commands
@@ -122,7 +122,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
       { type: 'word', name: 'picsum' },
     ],
     'Get a random image from Picsum Photos',
-    async (_args: string[]) => {
+    async () => {
       const width = 400
       const height = 300
       const url = `https://picsum.photos/${width}/${height}`
@@ -137,7 +137,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
       { type: 'word', name: 'dog' },
     ],
     'Get a random dog image',
-    async (_args: string[]) => {
+    async () => {
       const response = await fetch('https://dog.ceo/api/breeds/image/random')
       const data = await response.json()
       return new ImageCommandResult(data.message)
@@ -151,7 +151,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
       { type: 'word', name: 'cat' },
     ],
     'Get a random cat image',
-    async (_args: string[]) => {
+    async () => {
       const response = await fetch('https://api.thecatapi.com/v1/images/search')
       const data = await response.json()
       return new ImageCommandResult(data[0].url)
@@ -190,7 +190,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
       { type: 'word', name: 'show' },
     ],
     'Show all items in localStorage',
-    async (_args: string[]) => {
+    async () => {
       const storage: Record<string, string> = {}
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i)
@@ -208,7 +208,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
       { type: 'word', name: 'clear' },
     ],
     'Clear all items from localStorage',
-    async (_args: string[]) => {
+    async () => {
       localStorage.clear()
       return new TextCommandResult('localStorage cleared')
     },
