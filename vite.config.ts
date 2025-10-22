@@ -47,11 +47,10 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: 'node',
-    browser: {
-      enabled: true,
-      name: 'chromium',
-      provider: 'playwright',
-    },
+    environment: 'jsdom',
+    setupFiles: ['src/test/setup.ts'],
+    css: true,
+    include: ['src/**/*.test.{ts,tsx}'],
+    exclude: ['**/node_modules/**'],
   },
 })

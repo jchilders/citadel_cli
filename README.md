@@ -44,6 +44,27 @@ following:
 
 ![screenshot_help_cmd](https://github.com/user-attachments/assets/1cc6fd58-7591-45f1-980a-46da15a1843a)
 
+## Command Expansion Behavior
+
+Citadel CLI uses **auto-expansion** to make command entry fast and efficient. When you type the first letter(s) of a command, it automatically expands to the full command name:
+
+- Type <kbd>h</kbd> → expands to `help `
+- Type <kbd>g</kbd> → expands to `greet ` (if you have a greet command)
+
+### How It Works
+
+1. **Single Letter Expansion**: Type the first letter of any command and it expands in-place with a trailing space
+2. **Ready for Arguments**: After expansion, you can immediately type arguments
+3. **Quick Execution**: Press <kbd>Enter</kbd> to execute
+
+### Examples
+
+- **Help command**: <kbd>h</kbd><kbd>Enter</kbd> executes the help command
+- **Command with arguments**: <kbd>g</kbd> `World` <kbd>Enter</kbd> executes `greet World`
+- **Quoted arguments**: <kbd>s</kbd> `"Hello World"` <kbd>Enter</kbd> for arguments with spaces
+
+This expansion behavior makes Citadel extremely fast for power users who can execute commands with just a few keystrokes.
+
 ## Adding Commands
 
 To add your own commands:

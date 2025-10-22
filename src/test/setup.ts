@@ -1,5 +1,10 @@
 import { beforeAll, afterAll, vi } from 'vitest'
 
+// Mock CSS modules
+vi.mock('../components/Citadel/Citadel.module.css?raw', () => ({
+  default: '.container { position: fixed; }'
+}))
+
 // Mock window properties and methods
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

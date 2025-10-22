@@ -13,23 +13,47 @@ import { TextCommandResult, ErrorCommandResult } from '../../types/command-resul
 import { useCommandHistory } from '../useCommandHistory';
 
 // Mock hooks
+const {
+  mockUseCitadelConfig,
+  mockUseCitadelStorage,
+  mockUseCitadelCommands,
+  mockUseSegmentStack,
+  mockUseSegmentStackVersion
+} = vi.hoisted(() => ({
+  mockUseCitadelConfig: vi.fn(),
+  mockUseCitadelStorage: vi.fn(),
+  mockUseCitadelCommands: vi.fn(),
+  mockUseSegmentStack: vi.fn(),
+  mockUseSegmentStackVersion: vi.fn(() => 1)
+}));
+
 vi.mock('../../config/hooks', () => ({
-  useCitadelConfig: () => ({
-    storage: { type: 'memory', maxCommands: 100 },
-    commandTimeoutMs: 5000
-  }),
-  useCitadelStorage: () => ({
-    addStoredCommand: vi.fn().mockResolvedValue(undefined),
-    getStoredCommands: vi.fn().mockResolvedValue([]),
-    clear: vi.fn().mockResolvedValue(undefined)
-  }),
-  useCitadelCommands: () => createMockCommandRegistry(),
-  useSegmentStack: () => createMockSegmentStack(),
-  useSegmentStackVersion: () => 1
+  useCitadelConfig: mockUseCitadelConfig,
+  useCitadelStorage: mockUseCitadelStorage,
+  useCitadelCommands: mockUseCitadelCommands,
+  useSegmentStack: mockUseSegmentStack,
+  useSegmentStackVersion: mockUseSegmentStackVersion
 }));
 
 // Mock useCommandHistory before any test runs
+let mockCommands: ReturnType<typeof createMockCommandRegistry>;
+let mockSegmentStack: ReturnType<typeof createMockSegmentStack>;
+
 beforeEach(() => {
+  vi.clearAllMocks();
+
+  mockCommands = createMockCommandRegistry();
+  mockSegmentStack = createMockSegmentStack();
+
+  mockUseCitadelConfig.mockReturnValue({
+    storage: { type: 'memory', maxCommands: 100 },
+    commandTimeoutMs: 5000
+  });
+  mockUseCitadelStorage.mockReturnValue(undefined);
+  mockUseCitadelCommands.mockReturnValue(mockCommands);
+  mockUseSegmentStack.mockReturnValue(mockSegmentStack);
+  mockUseSegmentStackVersion.mockReturnValue(1);
+
   const mockHistory = createMockCommandHistory();
   const mockActions = createMockCommandHistoryActions();
   vi.mocked(useCommandHistory).mockReturnValue({
@@ -40,7 +64,7 @@ beforeEach(() => {
 
 vi.mock('../useCommandHistory');
 
-describe.skip('useCitadelState', () => {
+describe('useCitadelState', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -100,7 +124,7 @@ describe.skip('useCitadelState', () => {
       const { hook } = setupCitadelStateHook();
       const mockResult = new TextCommandResult('Success');
       
-      vi.mocked(createMockCommandRegistry().getCommand).mockReturnValue(
+      vi.mocked(mockCommands.getCommand).mockReturnValue(
         createMockCommand('test', { 
           handler: async () => mockResult 
         })
@@ -117,7 +141,7 @@ describe.skip('useCitadelState', () => {
       const { hook } = setupCitadelStateHook();
       const mockError = new Error('Test error');
       
-      vi.mocked(createMockCommandRegistry().getCommand).mockReturnValue(
+      vi.mocked(mockCommands.getCommand).mockReturnValue(
         createMockCommand('test', { 
           handler: async () => { throw mockError; }
         })

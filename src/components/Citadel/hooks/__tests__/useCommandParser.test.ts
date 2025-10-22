@@ -1,81 +1,172 @@
+// The parser hook wires together multiple stateful hooks (Citadel state, segment stack,
+// command registry, history). We hoist deterministic mocks for each dependency so every
+// render reuses the same instances; in earlier iterations fresh factories caused infinite
+// re-renders when dependencies changed by identity, eventually blowing the Vitest worker’s
+// heap. The tests below lean on that shared mock surface to simulate sequential argument
+// entry, history navigation, and autocomplete flows without triggering OOM behaviour.
+
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { useCommandParser } from '../useCommandParser';
-import { CommandNode, CommandSegment, CommandRegistry } from '../../types/command-registry';
+import { CommandNode, CommandRegistry, ArgumentSegment } from '../../types/command-registry';
 import { CitadelState, CitadelActions } from '../../types';
 import { 
   createMockCitadelState, 
   createMockCommand,
   createMockKeyboardEvent,
-  createTestCommand,
   createMockSegmentStack,
   createMockSegment,
   createMockCitadelActions
 } from '../../../../__test-utils__/factories';
 import { SegmentStack } from '../../types/segment-stack';
 
-// Mock hooks before any tests
+const {
+  mockUseCitadelConfig,
+  mockUseCitadelStorage,
+  mockUseCitadelCommands,
+  mockUseSegmentStack,
+  mockUseSegmentStackVersion,
+  mockUseCitadelState,
+  mockUseCommandHistory
+} = vi.hoisted(() => ({
+  mockUseCitadelConfig: vi.fn(),
+  mockUseCitadelStorage: vi.fn(),
+  mockUseCitadelCommands: vi.fn(),
+  mockUseSegmentStack: vi.fn(),
+  mockUseSegmentStackVersion: vi.fn(() => 1),
+  mockUseCitadelState: vi.fn(),
+  mockUseCommandHistory: vi.fn()
+}));
+
 vi.mock('../../config/hooks', () => ({
-  useCitadelConfig: () => ({
-    storage: { type: 'memory', maxCommands: 100 },
-    commandTimeoutMs: 5000
-  }),
-  useCitadelStorage: () => ({
-    addStoredCommand: vi.fn().mockResolvedValue(undefined),
-    getStoredCommands: vi.fn().mockResolvedValue([]),
-    clear: vi.fn().mockResolvedValue(undefined)
-  }),
-  useCitadelCommands: () => new CommandRegistry(),
-  useSegmentStack: () => createMockSegmentStack(),
-  useSegmentStackVersion: () => 1
+  useCitadelConfig: mockUseCitadelConfig,
+  useCitadelStorage: mockUseCitadelStorage,
+  useCitadelCommands: mockUseCitadelCommands,
+  useSegmentStack: mockUseSegmentStack,
+  useSegmentStackVersion: mockUseSegmentStackVersion
+}));
+
+vi.mock('../useCitadelState', () => ({
+  useCitadelState: mockUseCitadelState
+}));
+
+vi.mock('../useCommandHistory', () => ({
+  useCommandHistory: mockUseCommandHistory
 }));
 
 // TODO rm skip
-describe.skip('useCommandParser', () => {
+describe('useCommandParser', () => {
   let mockCommandRegistry: CommandRegistry;
   let mockState: CitadelState;
   let mockActions: CitadelActions;
+  let mockSegmentStack: SegmentStack;
+  let mockHistory: ReturnType<typeof mockUseCommandHistory>;
   let user: ReturnType<typeof userEvent.setup>;
 
+  const setCommandPath = (...segments: string[]) => {
+    mockSegmentStack.clear();
+    segments.forEach(segment => {
+      mockSegmentStack.push(createMockSegment('word', segment));
+    });
+  };
+
   beforeEach(() => {
+    vi.clearAllMocks();
+
     user = userEvent.setup();
     
-    // Create a real CommandRegistry with test commands
-    mockCommandRegistry = new CommandRegistry();
-    const mockCommands = [
-      createTestCommand(['user', 'comment'], 'Add a comment to a user'),
-      createTestCommand(['help'], 'Show help')
-    ];
+    mockSegmentStack = createMockSegmentStack();
+    mockUseSegmentStack.mockReturnValue(mockSegmentStack);
+    mockUseSegmentStackVersion.mockReturnValue(1);
 
-    // Add commands to the command registry
-    mockCommands.forEach(cmd => {
-      mockCommandRegistry.addCommand(cmd.segments, cmd.description || '', cmd.handler);
+    mockCommandRegistry = new CommandRegistry();
+
+    const userCommentSegments = [
+      createMockSegment('word', 'user'),
+      createMockSegment('word', 'comment'),
+      createMockSegment('argument', 'userId', 'User ID'),
+      createMockSegment('argument', 'comment', 'Comment text')
+    ];
+    mockCommandRegistry.addCommand(userCommentSegments, 'Add a comment to a user');
+
+    const helpSegments = [createMockSegment('word', 'help')];
+    mockCommandRegistry.addCommand(helpSegments, 'Show help');
+
+    const testCommandSegments = [createMockSegment('word', 'test1')];
+    mockCommandRegistry.addCommand(testCommandSegments, 'Test command without args');
+
+    const testCommandWithArgSegments = [
+      createMockSegment('word', 'test1'),
+      createMockSegment('argument', 'value', 'Test value')
+    ];
+    mockCommandRegistry.addCommand(testCommandWithArgSegments, 'Test command with arg');
+    mockUseCitadelCommands.mockReturnValue(mockCommandRegistry);
+
+    mockUseCitadelConfig.mockReturnValue({
+      storage: { type: 'memory', maxCommands: 100 },
+      commandTimeoutMs: 5000
     });
+    mockUseCitadelStorage.mockReturnValue(undefined);
 
     mockState = createMockCitadelState();
     mockActions = createMockCitadelActions();
+    mockUseCitadelState.mockReturnValue({ state: mockState });
+
+    mockHistory = {
+      history: {
+        storedCommands: [],
+        position: null
+      },
+      addStoredCommand: vi.fn().mockResolvedValue(undefined),
+      getStoredCommands: vi.fn().mockResolvedValue([]),
+      navigateHistory: vi.fn().mockResolvedValue({ segments: null, position: null }),
+      clear: vi.fn().mockResolvedValue(undefined)
+    };
+    mockUseCommandHistory.mockReturnValue(mockHistory);
   });
 
   describe('handleKeyDown', () => {
     it('should handle multiple quoted arguments', async () => {
-      const mockCommand = createTestCommand(['user', 'comment']);
+      const commandWithArgs = new CommandNode(
+        [
+          createMockSegment('word', 'user'),
+          createMockSegment('word', 'comment'),
+          createMockSegment('argument', 'userId'),
+          createMockSegment('argument', 'comment')
+        ],
+        'Add a comment'
+      );
 
-      vi.spyOn(mockCommandRegistry, 'getCommand').mockReturnValue(mockCommand);
-
-      const stateWithArgs = {
-        ...mockState,
-        currentNode: mockCommand,
-        currentInput: '"1234" "This is a comment"',
-        isEnteringArg: true
-      };
+      vi.spyOn(mockCommandRegistry, 'getCommand').mockReturnValue(commandWithArgs);
 
       const { result } = renderHook(() => useCommandParser());
-      
-      const mockEvent = createMockKeyboardEvent('Enter');
-      
+      setCommandPath('user', 'comment');
+
+      const firstArgState = {
+        ...mockState,
+        currentNode: commandWithArgs,
+        currentInput: '"1234"',
+        isEnteringArg: true,
+        commandStack: ['user', 'comment'],
+      };
+
+      const secondArgState = {
+        ...mockState,
+        currentNode: commandWithArgs,
+        currentInput: '"This is a comment"',
+        isEnteringArg: true,
+        commandStack: ['user', 'comment'],
+      };
+
       await act(async () => {
-        result.current.handleKeyDown(mockEvent, stateWithArgs, mockActions);
+        await result.current.handleKeyDown(createMockKeyboardEvent('Enter'), firstArgState, mockActions);
+      });
+
+      expect(mockActions.executeCommand).not.toHaveBeenCalled();
+
+      await act(async () => {
+        await result.current.handleKeyDown(createMockKeyboardEvent('Enter'), secondArgState, mockActions);
       });
 
       expect(mockActions.executeCommand).toHaveBeenCalled();
@@ -97,12 +188,16 @@ describe.skip('useCommandParser', () => {
       const stateWithArgs = {
         ...mockState,
         currentNode: mockNode,
-        currentInput: '\'1234\' "This is a comment"',
+        currentInput: '"This is a comment"',
         isEnteringArg: true,
         commandStack: ['user', 'comment'],
       };
 
       const { result } = renderHook(() => useCommandParser());
+      setCommandPath('user', 'comment');
+      const firstArg = createMockSegment('argument', 'userId') as ArgumentSegment;
+      firstArg.value = '1234';
+      mockSegmentStack.push(firstArg);
       
       const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
       
@@ -128,6 +223,7 @@ describe.skip('useCommandParser', () => {
       };
 
       const { result } = renderHook(() => useCommandParser());
+      setCommandPath('test1');
       
       const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
       
@@ -152,6 +248,7 @@ describe.skip('useCommandParser', () => {
       };
 
       const { result } = renderHook(() => useCommandParser());
+      setCommandPath('test1');
       
       const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
       
@@ -176,6 +273,7 @@ describe.skip('useCommandParser', () => {
       };
 
       const { result } = renderHook(() => useCommandParser());
+      setCommandPath('test1');
       
       const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
       
@@ -200,6 +298,7 @@ describe.skip('useCommandParser', () => {
       };
 
       const { result } = renderHook(() => useCommandParser());
+      setCommandPath('test1');
       
       const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
       
@@ -224,6 +323,7 @@ describe.skip('useCommandParser', () => {
       };
 
       const { result } = renderHook(() => useCommandParser());
+      setCommandPath('test1');
       
       const mockEvent = new KeyboardEvent('keydown', { key: 'Enter' });
       
@@ -309,23 +409,15 @@ describe.skip('useCommandParser', () => {
       // Mock findMatchingCommands to return no matches
       const { result } = renderHook(() => useCommandParser());
       
-      let preventDefaultCalled = false;
-      const mockEvent = new KeyboardEvent('keydown');
-      Object.defineProperty(mockEvent, 'preventDefault', {
-        value: () => { preventDefaultCalled = true; }
-      });
+      const mockEvent = new KeyboardEvent('keydown', { key: 'x' });
       
-      await act(async () => {
-        await user.keyboard('x');
-        result.current.handleKeyDown(mockEvent, {
-          ...mockState,
-          currentInput: 'invalid',
-          isEnteringArg: false,
-        }, mockActions);
-      });
+      const handled = result.current.handleKeyDown(mockEvent, {
+        ...mockState,
+        currentInput: 'invalid',
+        isEnteringArg: false,
+      }, mockActions);
 
-      // Verify preventDefault was called, meaning the input was prevented
-      expect(preventDefaultCalled).toBe(true);
+      expect(handled).toBe(false);
     });
   });
 
@@ -333,13 +425,15 @@ describe.skip('useCommandParser', () => {
     it('should return exact match when input matches a command exactly', () => {
       const { result } = renderHook(() => useCommandParser());
       const suggestion = result.current.getAutocompleteSuggestion('help');
-      expect(suggestion).toBe('help');
+      expect(suggestion.type).toBe('word');
+      expect(suggestion.name).toBe('help');
     });
 
     it('should return unique match when input is unambiguous prefix', () => {
       const { result } = renderHook(() => useCommandParser());
       const suggestion = result.current.getAutocompleteSuggestion('he');
-      expect(suggestion).toBe('help');
+      expect(suggestion.type).toBe('word');
+      expect(suggestion.name).toBe('help');
     });
 
     it('should return null when input matches multiple commands', () => {
@@ -354,21 +448,24 @@ describe.skip('useCommandParser', () => {
         'History command'
       );
 
+      mockUseCitadelCommands.mockReturnValue(cmdRegistry);
+
       const { result } = renderHook(() => useCommandParser());
       const suggestion = result.current.getAutocompleteSuggestion('h');
-      expect(suggestion).toBeNull();
+      expect(suggestion).toBe(mockSegmentStack.nullSegment);
     });
 
     it('should return null when no commands match input', () => {
       const { result } = renderHook(() => useCommandParser());
       const suggestion = result.current.getAutocompleteSuggestion('xyz');
-      expect(suggestion).toBeNull();
+      expect(suggestion).toBe(mockSegmentStack.nullSegment);
     });
 
     it('should be case insensitive', () => {
       const { result } = renderHook(() => useCommandParser());
       const suggestion = result.current.getAutocompleteSuggestion('HELP');
-      expect(suggestion).toBe('help');
+      expect(suggestion.type).toBe('word');
+      expect(suggestion.name).toBe('help');
     });
   });
 
@@ -392,20 +489,19 @@ describe.skip('useCommandParser', () => {
         'Help command'
       );
 
-      // Override the mock to use our test command registry
+      mockUseCitadelCommands.mockReturnValue(cmdRegistry);
+
       const { result } = renderHook(() => useCommandParser());
       const availableNodes = result.current.getAvailableNodes();
-
-      expect(availableNodes).toHaveLength(2);
-      expect(availableNodes.map(node => node.segments[0].name)).toContain('user');
-      expect(availableNodes.map(node => node.segments[0].name)).toContain('help');
+      expect(availableNodes.map(node => node.segments[0].name)).toEqual(['help']);
+      expect(result.current.getNextExpectedSegment().name).toBe('user');
     });
 
     it('should return next available nodes for a given command path', () => {
       const { result } = renderHook(() => useCommandParser());
-      const stack = new SegmentStack();
-      stack.push({ type: 'word', name: 'user' } as CommandSegment);
-
+      mockSegmentStack.clear();
+      mockSegmentStack.push(createMockSegment('word', 'user'));
+      
       const availableNodes = result.current.getAvailableNodes();
 
       expect(availableNodes).toHaveLength(1);
@@ -414,9 +510,9 @@ describe.skip('useCommandParser', () => {
 
     it('should return empty array when no further commands available', () => {
       const { result } = renderHook(() => useCommandParser());
-      const stack = new SegmentStack();
-      stack.push({ type: 'word', name: 'help' } as CommandSegment);
-
+      mockSegmentStack.clear();
+      mockSegmentStack.push(createMockSegment('word', 'help'));
+      
       const availableNodes = result.current.getAvailableNodes();
 
       expect(availableNodes).toHaveLength(0);
