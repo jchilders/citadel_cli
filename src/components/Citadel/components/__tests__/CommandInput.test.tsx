@@ -32,6 +32,7 @@ const TestWrapper: React.FC<{
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MockFn<T extends (...args: any[]) => any> = T & {
   mock: { calls: Parameters<T>[] };
 };
