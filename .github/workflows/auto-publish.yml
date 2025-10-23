@@ -49,7 +49,30 @@ jobs:
           
       - name: Bump version and publish
         run: |
-          npm version patch
+          set -euo pipefail
+
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          IFS='.' read -r major minor patch <<<"$CURRENT_VERSION"
+
+          while true; do
+            patch=$((patch + 1))
+            CANDIDATE_VERSION="$major.$minor.$patch"
+
+            if git rev-parse --verify "refs/tags/v$CANDIDATE_VERSION" >/dev/null 2>&1; then
+              echo "Tag v$CANDIDATE_VERSION already exists; bumping patch again."
+              continue
+            fi
+
+            break
+          done
+
+          echo "Bumping version to $CANDIDATE_VERSION"
+          npm version "$CANDIDATE_VERSION" --no-git-tag-version
+
+          git add package.json package-lock.json
+          git commit -m "chore: release v$CANDIDATE_VERSION"
+          git tag -a "v$CANDIDATE_VERSION" -m "v$CANDIDATE_VERSION"
+
           git push --follow-tags
           npm publish
         env:
