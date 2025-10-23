@@ -149,4 +149,28 @@ describe('Citadel', () => {
       expect(availableCommands?.textContent).toContain('help');
     }, { timeout: 2000 });
   });
+
+  it('renders inline mode immediately inside specified container', async () => {
+    const mount = document.createElement('div');
+    mount.id = 'inline-mount';
+    document.body.appendChild(mount);
+
+    await act(async () => {
+      render(
+        <Citadel
+          containerId="inline-mount"
+          config={{ displayMode: 'inline' }}
+        />
+      );
+    });
+
+    const citadelElement = mount.querySelector('citadel-element') as HTMLElement & { shadowRoot: ShadowRoot | null };
+    expect(citadelElement).toBeTruthy();
+    expect(citadelElement.getAttribute('data-display-mode')).toBe('inline');
+
+    await waitFor(() => {
+      const inlineContainer = citadelElement.shadowRoot?.querySelector('[data-testid="citadel-inline-container"]');
+      expect(inlineContainer).toBeTruthy();
+    });
+  });
 });

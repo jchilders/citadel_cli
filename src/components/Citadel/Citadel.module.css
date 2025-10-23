@@ -1,6 +1,6 @@
 /* Keep only component-specific styles here */
 
-.container {
+.panelContainer {
   position: fixed;
   height: var(--citadel-default-height);
   min-height: var(--citadel-min-height);
@@ -67,4 +67,13 @@
 
 .citadel_slideDown {
   animation: citadel_slideDown 0.2s ease-out forwards;
+}
+
+.inlineContainer {
+  position: relative;
+  width: 100%;
+  background-color: var(--citadel-bg);
+  overflow: hidden;
+  box-sizing: border-box;
+  min-height: var(--citadel-min-height);
 }
