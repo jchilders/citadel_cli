@@ -1,8 +1,8 @@
 # Citadel CLI
 
-Citadel CLI enhances React applications by adding a keyboard-driven command line component to your application, allowing rapid task execution for power users and developers.
+A smart CLI component for your React applications for developers and power users.
 
-## Use Cases
+# Use Cases
 
 - **API Testing & Debugging**: Execute REST calls, inspect responses, and manipulate cookies/localStorage without leaving your
 application context
@@ -16,125 +16,94 @@ application context
 # Installation
 
 ```bash
-npm install citadel_cli
+npm i citadel_cli
 ```
 
-## Quick Start
+## "Hello world" Example
 
-In your application:
+A core concept in Citadel are commands. Commands are things like "user add 1234"
+or "qa1 deploy my_feature_branch". To initialize and add commands:
+
+1. Create a `CommandRegistry` instance
+2. Add one or more commands to that registry
+3. Pass the registry to `Citadel`
 
 ```typescript
+import {
+  Citadel,
+  CommandRegistry,
+  TextCommandResult,
+} from "citadel_cli";
 
-import { Citadel } from "citadel_cli";
+// 1. Create the registry
+const registry = new CommandRegistry();
 
+// 2. Add commands
+registry.addCommand(
+  [
+    { type: "word", name: "greet" },
+    { type: "argument", name: "name", description: "Who are we greeting?" },
+  ],
+  "Say hello to someone", // Description used by the built-in `help` command
+  async (args: string[]) => new TextCommandResult(`Hello ${args[0]} world!`)
+);
+
+// 3. Pass the registry to the component
 function App() {
-  return (
-    <>
-      <Citadel />
-    </>
-  );
+  return <Citadel commandRegistry={registry} />;
 }
 ```
 
-Press <kbd>.</kbd> (period) to activate Citadel.
+![screenshot_greeting_cmd](https://github.com/user-attachments/assets/a3c1acad-69b3-4079-87af-0425aea3980a)
 
-Now this doesn't do much, yet: it just shows the "help" command. You can
-execute it by pressing <kbd>h[Enter]</kbd>. If you do then you should see the
-following:
+## Command Expansion
 
-![screenshot_help_cmd](https://github.com/user-attachments/assets/1cc6fd58-7591-45f1-980a-46da15a1843a)
+Citadel CLI uses **auto-expansion** to make entering commands as fast as
+possible. When you type the first letter of a command it automatically expands
+to the full word. For the above example, typing <kbd>g</kbd> would expand
+in-place to `greet ` (with a trailing space) whereupon you can enter in a value
+for the `name` argument.
 
-## Command Expansion Behavior
+## `addCommand` Details
 
-Citadel CLI uses **auto-expansion** to make command entry fast and efficient. When you type the first letter(s) of a command, it automatically expands to the full command name:
+The `addCommand` method has the following signature:
 
-- Type <kbd>h</kbd> → expands to `help `
-- Type <kbd>g</kbd> → expands to `greet ` (if you have a greet command)
-
-### How It Works
-
-1. **Single Letter Expansion**: Type the first letter of any command and it expands in-place with a trailing space
-2. **Ready for Arguments**: After expansion, you can immediately type arguments
-3. **Quick Execution**: Press <kbd>Enter</kbd> to execute
-
-### Examples
-
-- **Help command**: <kbd>h</kbd><kbd>Enter</kbd> executes the help command
-- **Command with arguments**: <kbd>g</kbd> `World` <kbd>Enter</kbd> executes `greet World`
-- **Quoted arguments**: <kbd>s</kbd> `"Hello World"` <kbd>Enter</kbd> for arguments with spaces
-
-This expansion behavior makes Citadel extremely fast for power users who can execute commands with just a few keystrokes.
-
-## Adding Commands
-
-To add your own commands:
-
-1. Create a `CommandRegistry` object
-2. Add commands to the registry object via the `addCommand` function
-3. Pass the registry to the `Citadel` component
-
-For example, let's add a simple `greet` command. 
-
-```
-import { Citadel, CommandRegistry, TextCommandResult } from "citadel_cli";
-
-// 1. Create the registry where your commands will be stored
-const cmdRegistry = new CommandRegistry();
-
-// 2. Add a command to the registry. This can be called as many times as you like.
-cmdRegistry.addCommand(
-  [
-    { type: 'word', name: 'greet' },
-    { type: 'argument', name: 'name', description: 'Enter your name' }
-  ],
-  'Say hello to the world', // The description of this command. Used by "help".
-
-  // Next comes the "handler", which is what will get called when the user hits enter.
-  // The return type for this handler is `TextCommandResult`. There are other
-  // types of command result that we'll cover later.
-  async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`) 
-);
-```
-The first argument to the `addCommand` function is an array of "command
-segments". There are two types of command segments: `word`s and `argument`s.
-Here we are defining a command with two segments named `greet` and `name`.
-`greet` being a `word` segment and `name` being an `argument`. 
-
-Word segments are autocompleted, whereas argument segments are used to store
-user-entered values. 
-
-A few notes on arguments:
-
-1. You can have zero or more arguments in a command, and they can appear in any
-   order.
-2. The arguments the user enters will be passed to the handler as an array of
-   strings.
-3. Arguments can be single- or double-quoted. This allows users to enter in
-   values that have spaces or other special characters.
-
-Continuing on with our `greet` example, after the segments are defined is a
-description ("Say hello..."). This is the text that will be shown by the help
-command.
-
-The final argument to `addCommand` is the *handler*. Let's go over that:
-
-```
-  async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`)
+```typescript
+addCommand(segments: CommandSegment[], description: string, handler: CommandHandler): void
 ```
 
-As mentioned before this is what will be called after the user hits Enter. The
-values for the arguments entered by the user (if any) are passed in to the
-handler as `args: string[]`. What you do inside the handler is completely up to
-your imagination. For example, say you wanted to clear the localstorage:
+`segments[]` - Each `CommandSegment` in this array consists of a `type` (one of
+"word" or "argument"), a `name`, and an optional `description`
+
+`description` - Description of the command itself. Used by the built-in help
+command
+
+`handler` - What gets executed when <kbd>Enter</kbd> is pressed. The handler
+must return one of the following:
+
+- `TextCommandResult`
+- `JsonCommandResult`
+- `ImageCommandResult`
+- `ErrorCommandResult`
+
+### Arguments
+
+1. Each command can have zero or more arguments
+2. Argument values are passed to the handler as a `String[]`
+3. Arguments can be single- or double-quoted
+
+### Example Handlers
+
+Clearing localstorage:
 
 ```
-  async (_args: string[]) => {
+  async () => {
     localStorage.clear();
     return new TextCommandResult('localStorage cleared!');
   }
 ```
 
-Or perhaps make an HTTP POST and return the result as JSON:
+Make an HTTP POST with a body containing a given `name`:
 
 ```
 async (args: string[]) => {
@@ -149,42 +118,6 @@ async (args: string[]) => {
 }
 ```
 
-At the time of this writing the following command result types are available:
-
-- `ErrorCommandResult`
-- `ImageCommandResult`
-- `JsonCommandResult`
-- `TextCommandResult`
-
-Back to our `greeting` command. The final code for it (without comments) should
-now look like this:
-
-```
-import { CommandRegistry, TextCommandResult } from "citadel_cli";
-
-const cmdRegistry = new CommandRegistry();
-
-cmdRegistry.addCommand(
-  [
-    { type: 'word', name: 'greet' },
-    { type: 'argument', name: 'name', description: 'Enter your name' }
-  ],
-  'Say hello to the world',
-  async (args: string[]) => new TextCommandResult(`Hello, ${args[0]}!`) 
-);
-```
-Now that the command has been added all that is left is to pass the registry to
-the `Citadel` component:
-
-```
-<Citadel commandRegistry={cmdRegistry} />
-```
-
-The result of this should look like this:
-
-![screenshot_greeting_cmd](https://github.com/user-attachments/assets/a3c1acad-69b3-4079-87af-0425aea3980a)
-
-Go forth and make your application experience better!
 
 ## Configuration
 
@@ -201,7 +134,7 @@ const config = {
   outputFontSize: '0.875rem',
   resetStateOnHide: false,
   showCitadelKey: '.',
-  cursorType: 'bbs', // 'blink', 'spin', 'solid', or 'bbs'
+  cursorType: 'blink', // 'blink', 'spin', 'solid', or 'bbs'
   cursorSpeed: 530,
   storage: {
     type: 'localStorage',
@@ -294,4 +227,3 @@ Load your appliation and press <kbd>.</kbd>
 - Comment complex logic or non-obvious code
 - Keep functions focused and modular
 - Use consistent formatting (the project uses ESLint and Prettier)
-

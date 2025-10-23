@@ -113,11 +113,15 @@ export class CommandRegistry {
   }
 
   /**
-   * Registers a new command
-   * 
-   * @param newCommandNode The new command to add
-   * @throws {Error} If attempting to add a duplicate leaf command or a subcommand to a leaf
-   * 
+   * Registers a new command composed of ordered segments.
+   *
+   * Each segment describes either a literal word or an argument placeholder. The resulting
+   * path must be unique across the registry once argument placeholders are normalized.
+   *
+   * @param segments Ordered command path definition.
+   * @param description Human-readable summary surfaced by help and search results.
+   * @param handler Async handler executed when the command is submitted; defaults to `NoopHandler`.
+   * @throws {Error} If the segment list is empty or the path collides with an existing command.
    */
   addCommand(segments: CommandSegment[], description: string, handler: CommandHandler = NoopHandler) {
     if (segments === undefined || segments.length === 0) {

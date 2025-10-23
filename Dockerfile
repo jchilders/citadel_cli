@@ -8,7 +8,7 @@ WORKDIR /app
 RUN npm install -g create-vite
 
 # Create a new Vite-based React+TS app first
-RUN create-vite my-app --template react-ts
+RUN create-vite citadel-demo --template react-ts
 
 # Copy library source
 COPY package.json package-lock.json ./
@@ -19,11 +19,11 @@ COPY tailwind.config.js postcss.config.cjs ./
 COPY plugins ./plugins
 
 # Install library deps using the same React version as test app
-RUN cd my-app && REACT_VERSION=$(npm list react --depth=0 | grep react@ | sed 's/.*react@//' | sed 's/ .*//')  && cd .. && npm install && npm install --save-dev react@$REACT_VERSION react-dom@$REACT_VERSION
+RUN cd citadel-demo && REACT_VERSION=$(npm list react --depth=0 | grep react@ | sed 's/.*react@//' | sed 's/ .*//')  && cd .. && npm install && npm install --save-dev react@$REACT_VERSION react-dom@$REACT_VERSION
 RUN npm run build
 
 # Change working directory to the test app
-WORKDIR /app/my-app
+WORKDIR /app/citadel-demo
 
 # Install dependencies and add local citadel_cli
 RUN npm install && npm install file:../
@@ -41,8 +41,7 @@ body {
 }
 EOF
 
-# Copy the custom App.tsx file and create styles directory
-COPY src/App.tsx src/App.tsx
+# Create styles directory and shared demo styles
 RUN mkdir -p src/styles
 RUN cat > src/styles/app.css << 'EOF'
 .container {
@@ -70,9 +69,66 @@ code {
 }
 EOF
 
-# Update App.tsx to use regular CSS classes
-RUN sed -i 's/className="min-h-screen bg-gray-800 flex items-center justify-center"/className="container"/' src/App.tsx
-RUN sed -i 's/className="bg-white rounded-lg shadow-lg p-6"/className="card"/' src/App.tsx
+# Create a demo App that exercises the published package build
+RUN cat > src/App.tsx <<'EOF'
+import {
+  Citadel,
+  CommandRegistry,
+  JsonCommandResult,
+  TextCommandResult,
+} from 'citadel_cli';
+import 'citadel_cli/citadel.css';
+import './styles/app.css';
+import { useMemo } from 'react';
+
+function buildDemoRegistry() {
+  const registry = new CommandRegistry();
+
+  registry.addCommand(
+    [
+      { type: 'word', name: 'demo' },
+      { type: 'word', name: 'hello' },
+    ],
+    'Display a welcome message',
+    async () => {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return new TextCommandResult('Welcome to the Citadel CLI demo!');
+    },
+  );
+
+  registry.addCommand(
+    [
+      { type: 'word', name: 'demo' },
+      { type: 'word', name: 'status' },
+    ],
+    'Show a simple status payload',
+    async () =>
+      new JsonCommandResult({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+      }),
+  );
+
+  return registry;
+}
+
+function App() {
+  const commandRegistry = useMemo(() => buildDemoRegistry(), []);
+
+  return (
+    <div className="container">
+      <div className="card">
+        <p>
+          Press <code>.</code> to<br />activate Citadel
+        </p>
+        <Citadel commandRegistry={commandRegistry} />
+      </div>
+    </div>
+  );
+}
+
+export default App;
+EOF
 
 # Expose Vite's default port
 EXPOSE 5173
