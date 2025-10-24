@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useCitadelConfig } from './config/hooks';
 import { CitadelConfig } from './config/types';
@@ -14,20 +14,44 @@ import citadelModuleStyles from './Citadel.module.css?raw';
 import mainStyles from '../../styles/styles.css?raw';
 import tailwindStyles from '../../styles/tailwind.css?raw';
 
-export const Citadel = ({ 
-  config = defaultConfig, 
+/**
+ * Top-level entry point for embedding Citadel.
+ *
+ * @param config Optional `CitadelConfig` describing runtime behaviour (keyboard shortcuts, logging, sizing)
+ *               with `defaultConfig` used when omitted.
+ * @param commandRegistry Optional pre-populated registry. A fresh instance is created by default so consumers
+ *                        can register commands before mounting.
+ * @param containerId Optional DOM id where the custom element should be appended. When not supplied the
+ *                    component appends to `document.body` in panel mode and to an internal host in inline mode.
+ */
+export const Citadel = ({
+  config = defaultConfig,
   commandRegistry = new CommandRegistry(),
   containerId = null
 }) => {
+  // Used only for inline mode (no containerId) so the custom element can attach to a DOM node
+  // provisioned by React instead of falling back to document.body.
+  const inlineHostRef = useRef<HTMLDivElement | null>(null);
+  const displayMode = config.displayMode ?? defaultConfig.displayMode ?? 'panel';
+
   useEffect(() => {
     Logger.configure({
       level: config.logLevel || defaultConfig.logLevel || LogLevel.ERROR,
       prefix: '[Citadel]'
     });
     const citadelElement = new CitadelElement(commandRegistry, config);
-    const container = containerId ? document.getElementById(containerId) : document.body;
-    
+    const isInlineWithoutContainer = displayMode === 'inline' && !containerId;
+    const container = isInlineWithoutContainer
+      ? inlineHostRef.current
+      : containerId
+        ? document.getElementById(containerId)
+        : document.body;
+
     if (!container) {
+      if (isInlineWithoutContainer) {
+        console.warn('[Citadel] No host available for inline mode; skipping mount.');
+        return;
+      }
       console.warn(`Container with id "${containerId}" not found, falling back to body`);
       document.body.appendChild(citadelElement);
     } else {
@@ -37,7 +61,11 @@ export const Citadel = ({
     return () => {
       citadelElement.parentElement?.removeChild(citadelElement);
     };
-  }, [commandRegistry, containerId, config]);
+  }, [commandRegistry, containerId, config, displayMode]);
+
+  if (displayMode === 'inline' && !containerId) {
+    return <div ref={inlineHostRef} style={{ width: '100%', height: '100%' }} />;
+  }
 
   return null;
 };
@@ -81,6 +109,8 @@ export class CitadelElement extends HTMLElement {
     // Create container for React component
     const container = document.createElement('div');
     container.id = 'citadel-root';
+    container.style.width = '100%';
+    container.style.height = '100%';
     this.shadow.appendChild(container);
 
     // Initialize React within shadow DOM

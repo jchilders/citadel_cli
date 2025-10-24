@@ -173,4 +173,18 @@ describe('Citadel', () => {
       expect(inlineContainer).toBeTruthy();
     });
   });
+
+  it('renders inline mode into a local host when no containerId is provided', async () => {
+    await act(async () => {
+      render(<Citadel config={{ displayMode: 'inline' }} />);
+    });
+
+    await waitFor(() => {
+      const citadelElement = document.querySelector('citadel-element') as HTMLElement & { shadowRoot: ShadowRoot };
+      expect(citadelElement).toBeTruthy();
+      expect(citadelElement.parentElement).not.toBe(document.body);
+      const inlineContainer = citadelElement.shadowRoot?.querySelector('[data-testid="citadel-inline-container"]');
+      expect(inlineContainer).toBeTruthy();
+    });
+  });
 });

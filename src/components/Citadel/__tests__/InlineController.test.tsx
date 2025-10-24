@@ -11,7 +11,12 @@ describe('InlineController', () => {
     await act(async () => {
       result = render(
         <CitadelConfigProvider
-          config={{ ...defaultConfig, displayMode: 'inline' }}
+          config={{ 
+            ...defaultConfig, 
+            displayMode: 'inline',
+            initialHeight: '123px',
+            maxHeight: '456px'
+          }}
           commandRegistry={new CommandRegistry()}
         >
           <InlineController />
@@ -26,5 +31,12 @@ describe('InlineController', () => {
 
     expect(getByTestId('citadel-inline-container')).toBeTruthy();
     expect(getByTestId('citadel-command-input')).toBeTruthy();
+    const container = getByTestId('citadel-inline-container') as HTMLDivElement;
+    expect(container.className).toContain('inlineContainer');
+    expect(container.style.height).toBe('');
+    expect(container.style.maxHeight).toBe('');
+
+    const inner = container.querySelector('.innerContainer');
+    expect(inner).toBeTruthy();
   });
 });

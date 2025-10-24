@@ -76,8 +76,8 @@ export interface CitadelConfig {
 
   /**
    * Presentation mode for rendering the Citadel interface.
-   * - 'panel': Renders as an overlay panel anchored to the viewport bottom.
-   * - 'inline': Renders directly within the host container.
+   * - 'panel': Renders as an overlay panel anchored to the viewport bottom and toggled via keyboard shortcuts.
+   * - 'inline': Renders directly within the host container and remains visible at all times.
    */
   displayMode?: 'panel' | 'inline';
 

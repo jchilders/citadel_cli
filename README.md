@@ -1,6 +1,6 @@
 # Citadel CLI
 
-A smart CLI component for your React applications for developers and power users.
+A keyboard-first command console for the power users of your web apps.
 
 # Use Cases
 
