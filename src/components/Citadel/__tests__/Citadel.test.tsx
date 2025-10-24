@@ -164,12 +164,16 @@ describe('Citadel', () => {
       );
     });
 
-    const citadelElement = mount.querySelector('citadel-element') as HTMLElement & { shadowRoot: ShadowRoot | null };
+    const citadelElement = mount.querySelector('citadel-element');
     expect(citadelElement).toBeTruthy();
+    if (!citadelElement) {
+      throw new Error('citadel-element not found');
+    }
     expect(citadelElement.getAttribute('data-display-mode')).toBe('inline');
 
     await waitFor(() => {
-      const inlineContainer = citadelElement.shadowRoot?.querySelector('[data-testid="citadel-inline-container"]');
+      const host = citadelElement as HTMLElement & { shadowRoot: ShadowRoot | null };
+      const inlineContainer = host.shadowRoot?.querySelector('[data-testid="citadel-inline-container"]');
       expect(inlineContainer).toBeTruthy();
     });
   });

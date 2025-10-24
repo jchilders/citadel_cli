@@ -14,6 +14,12 @@ import citadelModuleStyles from './Citadel.module.css?raw';
 import mainStyles from '../../styles/styles.css?raw';
 import tailwindStyles from '../../styles/tailwind.css?raw';
 
+interface CitadelProps {
+  config?: CitadelConfig;
+  commandRegistry?: CommandRegistry;
+  containerId?: string | null;
+}
+
 /**
  * Top-level entry point for embedding Citadel.
  *
@@ -24,7 +30,7 @@ import tailwindStyles from '../../styles/tailwind.css?raw';
  * @param containerId Optional DOM id where the custom element should be appended. When not supplied the
  *                    component appends to `document.body` in panel mode and to an internal host in inline mode.
  */
-export const Citadel = ({
+export const Citadel: React.FC<CitadelProps> = ({
   config = defaultConfig,
   commandRegistry = new CommandRegistry(),
   containerId = null

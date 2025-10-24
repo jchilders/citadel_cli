@@ -1,5 +1,4 @@
 import { render, act } from '@testing-library/react';
-import React from 'react';
 import { InlineController } from '../controllers/InlineController';
 import { CitadelConfigProvider } from '../config/CitadelConfigContext';
 import { CommandRegistry } from '../types/command-registry';

@@ -1,6 +1,5 @@
 import { render, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import React from 'react';
 import { PanelController } from '../controllers/PanelController';
 import { CitadelConfigProvider } from '../config/CitadelConfigContext';
 import { CommandRegistry } from '../types/command-registry';
