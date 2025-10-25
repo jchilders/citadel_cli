@@ -1,37 +1,63 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
-import { useGlobalShortcut } from './hooks/useGlobalShortcut';
-import { useSlideAnimation } from './hooks/useSlideAnimation';
 import { useCitadelConfig } from './config/hooks';
-import { useCitadelState } from './hooks/useCitadelState';
-import { CommandInput } from './components/CommandInput';
-import { CommandOutput } from './components/CommandOutput';
-import { AvailableCommands } from './components/AvailableCommands';
 import { CitadelConfig } from './config/types';
 import { CitadelConfigProvider } from './config/CitadelConfigContext';
 import { CommandRegistry } from './types/command-registry';
 import { defaultConfig } from './config/defaults';
 import { Logger, LogLevel } from './utils/logger';
+import { PanelController } from './controllers/PanelController';
+import { InlineController } from './controllers/InlineController';
 
 import citadelStyles from '../../styles/citadel.css?raw';
 import citadelModuleStyles from './Citadel.module.css?raw';
 import mainStyles from '../../styles/styles.css?raw';
 import tailwindStyles from '../../styles/tailwind.css?raw';
 
-export const Citadel = ({ 
-  config = defaultConfig, 
+interface CitadelProps {
+  config?: CitadelConfig;
+  commandRegistry?: CommandRegistry;
+  containerId?: string | null;
+}
+
+/**
+ * Top-level entry point for embedding Citadel.
+ *
+ * @param config Optional `CitadelConfig` describing runtime behaviour (keyboard shortcuts, logging, sizing)
+ *               with `defaultConfig` used when omitted.
+ * @param commandRegistry Optional pre-populated registry. A fresh instance is created by default so consumers
+ *                        can register commands before mounting.
+ * @param containerId Optional DOM id where the custom element should be appended. When not supplied the
+ *                    component appends to `document.body` in panel mode and to an internal host in inline mode.
+ */
+export const Citadel: React.FC<CitadelProps> = ({
+  config = defaultConfig,
   commandRegistry = new CommandRegistry(),
   containerId = null
 }) => {
+  // Used only for inline mode (no containerId) so the custom element can attach to a DOM node
+  // provisioned by React instead of falling back to document.body.
+  const inlineHostRef = useRef<HTMLDivElement | null>(null);
+  const displayMode = config.displayMode ?? defaultConfig.displayMode ?? 'panel';
+
   useEffect(() => {
     Logger.configure({
       level: config.logLevel || defaultConfig.logLevel || LogLevel.ERROR,
       prefix: '[Citadel]'
     });
     const citadelElement = new CitadelElement(commandRegistry, config);
-    const container = containerId ? document.getElementById(containerId) : document.body;
-    
+    const isInlineWithoutContainer = displayMode === 'inline' && !containerId;
+    const container = isInlineWithoutContainer
+      ? inlineHostRef.current
+      : containerId
+        ? document.getElementById(containerId)
+        : document.body;
+
     if (!container) {
+      if (isInlineWithoutContainer) {
+        console.warn('[Citadel] No host available for inline mode; skipping mount.');
+        return;
+      }
       console.warn(`Container with id "${containerId}" not found, falling back to body`);
       document.body.appendChild(citadelElement);
     } else {
@@ -41,7 +67,11 @@ export const Citadel = ({
     return () => {
       citadelElement.parentElement?.removeChild(citadelElement);
     };
-  }, [commandRegistry, containerId, config]);
+  }, [commandRegistry, containerId, config, displayMode]);
+
+  if (displayMode === 'inline' && !containerId) {
+    return <div ref={inlineHostRef} style={{ width: '100%', height: '100%' }} />;
+  }
 
   return null;
 };
@@ -60,6 +90,8 @@ export class CitadelElement extends HTMLElement {
     this.shadow = this.attachShadow({ mode: 'open' });
     this.commandRegistry = commandRegistry;
     this.config = config;
+    const displayMode = this.config?.displayMode ?? 'panel';
+    this.setAttribute('data-display-mode', displayMode);
   }
 
   connectedCallback() {
@@ -83,13 +115,15 @@ export class CitadelElement extends HTMLElement {
     // Create container for React component
     const container = document.createElement('div');
     container.id = 'citadel-root';
+    container.style.width = '100%';
+    container.style.height = '100%';
     this.shadow.appendChild(container);
 
     // Initialize React within shadow DOM
     this.root = createRoot(container);
     this.root.render(
       <CitadelConfigProvider config={this.config || defaultConfig} commandRegistry={this.commandRegistry}>
-        <CitadelInner />
+        <CitadelRoot />
       </CitadelConfigProvider>
     );
   }
@@ -97,121 +131,11 @@ export class CitadelElement extends HTMLElement {
 
 customElements.define('citadel-element', CitadelElement);
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface CitadelInnerProps {}
-
-const CitadelInner: React.FC<CitadelInnerProps> = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
+const CitadelRoot: React.FC = () => {
   const config = useCitadelConfig();
-  const [height, setHeight] = useState<string | null>(() => {
-    return config.initialHeight || null;
-  });
-  const outputRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isDraggingRef = useRef(false);
-  const startYRef = useRef(0);
-  const startHeightRef = useRef(0);
-  const { state, actions } = useCitadelState();
+  const mode = config.displayMode ?? 'panel';
 
-  // Set the key used to show Citadel
-  useGlobalShortcut({
-    onOpen: () => setIsVisible(true),
-    onClose: () => setIsClosing(true),
-    isVisible,
-    showCitadelKey: config.showCitadelKey || '.'
-  });
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDraggingRef.current) return;
-    
-    const delta = e.clientY - startYRef.current;
-    
-    const maxHeightValue = config.maxHeight?.endsWith('vh') 
-      ? (window.innerHeight * parseInt(config.maxHeight, 10) / 100)
-      : parseInt(config.maxHeight || '80vh', 10);
-
-    const newHeight = Math.min(
-      Math.max(startHeightRef.current - delta, parseInt(config.minHeight || '200', 10)),
-      maxHeightValue
-    );
-    
-    if (containerRef.current) {
-      containerRef.current.style.height = `${newHeight}px`;
-      containerRef.current.style.bottom = '0';
-      setHeight(`${newHeight}px`);
-    }
-  }, [config.maxHeight, config.minHeight]);
-
-  const handleMouseUp = useCallback(() => {
-    isDraggingRef.current = false;
-    document.documentElement.style.userSelect = '';
-    document.documentElement.style.webkitUserSelect = '';
-    // @ts-expect-error: Vendor prefixed property
-    document.documentElement.style.mozUserSelect = '';
-    // @ts-expect-error: Vendor prefixed property
-    document.documentElement.style.msUserSelect = '';
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
-  }, [handleMouseMove]);
-
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (containerRef.current) {
-      isDraggingRef.current = true;
-      startYRef.current = e.clientY;
-      startHeightRef.current = containerRef.current.offsetHeight;
-      document.documentElement.style.userSelect = 'none';
-      document.documentElement.style.webkitUserSelect = 'none';
-      // @ts-expect-error: Vendor prefixed property
-      document.documentElement.style.mozUserSelect = 'none';
-      // @ts-expect-error: Vendor prefixed property
-      document.documentElement.style.msUserSelect = 'none';
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-  }, [handleMouseMove, handleMouseUp]);
-
-  useEffect(() => {
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [handleMouseMove, handleMouseUp]);
-
-  const handleAnimationComplete = useCallback(() => {
-    if (isClosing) {
-      setIsVisible(false);
-      setIsClosing(false);
-    }
-  }, [isClosing]);
-
-  useSlideAnimation({
-    isVisible,
-    isClosing,
-    onAnimationComplete: handleAnimationComplete
-  });
-
-  if (!isVisible) return null;
-
-  return (
-    <div 
-      ref={containerRef}
-      className={`container ${isVisible ? 'citadel_slideUp' : ''} ${isClosing ? 'citadel_slideDown' : ''}`}
-      style={{
-        ...height ? { height } : undefined,
-        maxHeight: config.maxHeight
-      }}
-    >
-      <div className="resizeHandle" onMouseDown={handleMouseDown} />
-      <div className="innerContainer">
-        <div className="flex-1 min-h-0 pt-3 px-4">
-          <CommandOutput output={state.output} outputRef={outputRef} />
-        </div>
-        <div>
-          <CommandInput state={state} actions={actions} />
-          <AvailableCommands />
-        </div>
-      </div>
-    </div>
-  );
+  return mode === 'inline'
+    ? <InlineController />
+    : <PanelController />;
 };

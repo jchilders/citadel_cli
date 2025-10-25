@@ -149,4 +149,46 @@ describe('Citadel', () => {
       expect(availableCommands?.textContent).toContain('help');
     }, { timeout: 2000 });
   });
+
+  it('renders inline mode immediately inside specified container', async () => {
+    const mount = document.createElement('div');
+    mount.id = 'inline-mount';
+    document.body.appendChild(mount);
+
+    await act(async () => {
+      render(
+        <Citadel
+          containerId="inline-mount"
+          config={{ displayMode: 'inline' }}
+        />
+      );
+    });
+
+    const citadelElement = mount.querySelector('citadel-element');
+    expect(citadelElement).toBeTruthy();
+    if (!citadelElement) {
+      throw new Error('citadel-element not found');
+    }
+    expect(citadelElement.getAttribute('data-display-mode')).toBe('inline');
+
+    await waitFor(() => {
+      const host = citadelElement as HTMLElement & { shadowRoot: ShadowRoot | null };
+      const inlineContainer = host.shadowRoot?.querySelector('[data-testid="citadel-inline-container"]');
+      expect(inlineContainer).toBeTruthy();
+    });
+  });
+
+  it('renders inline mode into a local host when no containerId is provided', async () => {
+    await act(async () => {
+      render(<Citadel config={{ displayMode: 'inline' }} />);
+    });
+
+    await waitFor(() => {
+      const citadelElement = document.querySelector('citadel-element') as HTMLElement & { shadowRoot: ShadowRoot };
+      expect(citadelElement).toBeTruthy();
+      expect(citadelElement.parentElement).not.toBe(document.body);
+      const inlineContainer = citadelElement.shadowRoot?.querySelector('[data-testid="citadel-inline-container"]');
+      expect(inlineContainer).toBeTruthy();
+    });
+  });
 });

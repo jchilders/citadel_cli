@@ -46,6 +46,7 @@ export const defaultConfig: CitadelConfig = {
   outputFontSize: '0.875rem',
   resetStateOnHide: false,
   showCitadelKey: '.',
+  displayMode: 'panel',
   storage: {
     type: 'localStorage',
     maxCommands: 100

@@ -75,6 +75,13 @@ export interface CitadelConfig {
   showCitadelKey?: string;
 
   /**
+   * Presentation mode for rendering the Citadel interface.
+   * - 'panel': Renders as an overlay panel anchored to the viewport bottom and toggled via keyboard shortcuts.
+   * - 'inline': Renders directly within the host container and remains visible at all times.
+   */
+  displayMode?: 'panel' | 'inline';
+
+  /**
    * Configuration for command history storage
    */
   storage?: StorageConfig;

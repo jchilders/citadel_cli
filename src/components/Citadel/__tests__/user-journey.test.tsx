@@ -23,7 +23,7 @@ describe('Citadel User Journey Tests', () => {
   // Helper function to check if Citadel is visible
   const isCitadelVisible = (): boolean => {
     const citadelElement = document.querySelector('citadel-element');
-    return citadelElement?.shadowRoot?.querySelector('.container') !== null;
+    return citadelElement?.shadowRoot?.querySelector('.panelContainer') !== null;
   };
 
   beforeEach(() => {
