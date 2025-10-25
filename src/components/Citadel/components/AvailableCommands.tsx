@@ -14,13 +14,24 @@ export const AvailableCommands: React.FC = () => {
   Logger.debug("[AvailableCommands] nextCommandSegments: ", nextCommandSegments);
   
   const sortedCommands = React.useMemo(() => {
-    if (config.includeHelpCommand) {
-      const nonHelpCommands = nextCommandSegments.filter(segment => segment.name !== 'help');
-      const helpCommand = nextCommandSegments.find(segment => segment.name === 'help');
-      return [...nonHelpCommands, ...(helpCommand ? [helpCommand] : [])];
+    const segments = [...nextCommandSegments];
+    const isHelpSegment = (segment: typeof segments[number]) =>
+      segment.name.toLowerCase() === 'help';
+
+    const helpSegments = segments.filter(isHelpSegment);
+    const nonHelpSegments = segments.filter(segment => !isHelpSegment(segment));
+
+    const sortedNonHelpSegments = [...nonHelpSegments].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    );
+
+    if (!config.includeHelpCommand) {
+      return sortedNonHelpSegments;
     }
 
-    return nextCommandSegments;
+    return helpSegments.length
+      ? [...sortedNonHelpSegments, helpSegments[0]]
+      : sortedNonHelpSegments;
   }, [nextCommandSegments, config.includeHelpCommand]);
 
   const nextSegmentIsArgument = nextCommandSegments.some(seg => seg.type === 'argument');

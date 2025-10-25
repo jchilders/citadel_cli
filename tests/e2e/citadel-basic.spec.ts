@@ -27,4 +27,33 @@ test.describe('Citadel CLI E2E Tests', () => {
     // Note: We can't easily test invisibility due to shadow DOM, so we just verify it was activated
     await expect(citadelElement).toBeVisible();
   });
+
+  test('lists commands alphabetically with help last', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('citadel-element');
+    await page.keyboard.press('.');
+
+    const citadelElement = page.locator('citadel-element').first();
+    await expect(citadelElement).toBeVisible();
+
+    const commandNamesHandle = await page.waitForFunction(() => {
+      const host = document.querySelector('citadel-element');
+      if (!host) return null;
+      const shadow = host.shadowRoot;
+      if (!shadow) return null;
+      const chips = shadow.querySelectorAll('[data-testid="available-commands"] .font-mono');
+      if (!chips.length) return null;
+      return Array.from(chips).map((chip) => chip.textContent?.trim() ?? '').filter(Boolean);
+    });
+
+    const commandNames = await commandNamesHandle.jsonValue<string[]>();
+
+    expect(commandNames.length).toBeGreaterThan(0);
+    expect(commandNames[commandNames.length - 1]).toBe('help');
+
+    const nonHelpCommands = commandNames.slice(0, -1);
+    const sortedCommands = [...nonHelpCommands].sort((a, b) => a.localeCompare(b));
+
+    expect(nonHelpCommands).toEqual(sortedCommands);
+  });
 });
