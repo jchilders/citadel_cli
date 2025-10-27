@@ -149,6 +149,24 @@ export class CommandRegistry {
   }
 
   /**
+   * Removes a command that exactly matches the provided path.
+   *
+   * @param path The command path to remove.
+   * @returns True if a command was removed; otherwise false.
+   */
+  removeCommand(path: string[]): boolean {
+    const targetPath = path.join(' ');
+    const index = this._commands.findIndex(command => command.fullPath.join(' ') === targetPath);
+
+    if (index === -1) {
+      return false;
+    }
+
+    this._commands.splice(index, 1);
+    return true;
+  }
+
+  /**
    * Retrieves a command from the registry for the given path.
    * 
    * @param path The path of the command.

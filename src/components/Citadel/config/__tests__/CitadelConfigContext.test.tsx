@@ -1,4 +1,4 @@
-import { render, act } from '@testing-library/react';
+import { render, act, waitFor } from '@testing-library/react';
 import { CitadelConfigProvider } from '../CitadelConfigContext';
 import { useCitadelCommands, useCitadelConfig, useCitadelStorage } from '../hooks';
 import { CommandRegistry } from '../../types/command-registry';
@@ -172,6 +172,34 @@ describe('CitadelConfigContext', () => {
                                                 cmd.segments[0].name === 'help'
                                                );
                                                expect(commands).toHaveLength(1);
+    });
+
+    it('should remove help command when includeHelpCommand is disabled', async () => {
+      const testCmdRegistry = new CommandRegistry();
+
+      const { rerender } = render(
+        <CitadelConfigProvider
+          config={{ includeHelpCommand: true }}
+          commandRegistry={testCmdRegistry}
+        >
+          <div>Test</div>
+        </CitadelConfigProvider>
+      );
+
+      expect(testCmdRegistry.commands.some(cmd => cmd.segments[0].name === 'help')).toBe(true);
+
+      rerender(
+        <CitadelConfigProvider
+          config={{ includeHelpCommand: false }}
+          commandRegistry={testCmdRegistry}
+        >
+          <div>Test</div>
+        </CitadelConfigProvider>
+      );
+
+      await waitFor(() => {
+        expect(testCmdRegistry.commands.some(cmd => cmd.segments[0].name === 'help')).toBe(false);
+      });
     });
   });
 

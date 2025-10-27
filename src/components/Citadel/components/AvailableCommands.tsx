@@ -7,20 +7,30 @@ export const AvailableCommands: React.FC = () => {
   const config = useCitadelConfig();
   const segmentStack = useSegmentStack();
 
-  const containerClasses = "h-12 mt-2 border-t border-gray-700 px-4";
-  const contentClasses = "text-gray-300 pt-2";
+  const containerClasses = "mt-2 border-t border-gray-700 px-4 py-2";
+  const contentClasses = "text-gray-300";
 
   const nextCommandSegments = commands.getCompletions(segmentStack.path());
   Logger.debug("[AvailableCommands] nextCommandSegments: ", nextCommandSegments);
   
   const sortedCommands = React.useMemo(() => {
-    if (config.includeHelpCommand) {
-      const nonHelpCommands = nextCommandSegments.filter(segment => segment.name !== 'help');
-      const helpCommand = nextCommandSegments.find(segment => segment.name === 'help');
-      return [...nonHelpCommands, ...(helpCommand ? [helpCommand] : [])];
+    const segments = [...nextCommandSegments];
+    const isHelpSegment = (segment: typeof segments[number]) =>
+      segment.name.toLowerCase() === 'help';
+
+    const nonHelpSegments = segments.filter(segment => !isHelpSegment(segment));
+    const sortedNonHelpSegments = nonHelpSegments.sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    );
+
+    if (!config.includeHelpCommand) {
+      return sortedNonHelpSegments;
     }
 
-    return nextCommandSegments;
+    const helpSegment = segments.find(isHelpSegment);
+    return helpSegment
+      ? [...sortedNonHelpSegments, helpSegment]
+      : sortedNonHelpSegments;
   }, [nextCommandSegments, config.includeHelpCommand]);
 
   const nextSegmentIsArgument = nextCommandSegments.some(seg => seg.type === 'argument');
