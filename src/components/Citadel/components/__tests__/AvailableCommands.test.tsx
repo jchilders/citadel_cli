@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import { AvailableCommands } from '../AvailableCommands';
 import { CitadelConfigProvider } from '../../config/CitadelConfigContext';
@@ -27,6 +27,10 @@ describe('AvailableCommands', () => {
 
   beforeEach(() => {
     cmdRegistry = new CommandRegistry();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe('command display', () => {
@@ -113,18 +117,16 @@ describe('AvailableCommands', () => {
 
   describe('command sorting', () => {
     it('sorts commands alphabetically and keeps help last when included', async () => {
-      cmdRegistry.addCommand(
-        [createMockSegment('word', 'zeta')],
-        'Zeta command'
+      const segments = ['zeta', 'alpha', 'eta', 'help'].map((name) =>
+        createMockSegment('word', name)
       );
-      cmdRegistry.addCommand(
-        [createMockSegment('word', 'alpha')],
-        'Alpha command'
+
+      vi.spyOn(cmdRegistry, 'getCompletions').mockReturnValue(segments);
+      vi.spyOn(cmdRegistry, 'getCompletions_s').mockReturnValue(
+        segments.map((segment) => segment.name)
       );
-      cmdRegistry.addCommand(
-        [createMockSegment('word', 'eta')],
-        'Eta command'
-      );
+      vi.spyOn(cmdRegistry, 'commandExistsForPath').mockReturnValue(true);
+      vi.spyOn(cmdRegistry, 'addCommand').mockImplementation(() => {});
 
       const { container } = renderWithConfig({
         ...defaultConfig,
@@ -139,13 +141,12 @@ describe('AvailableCommands', () => {
     });
 
     it('omits help and sorts alphabetically when help is excluded', async () => {
-      cmdRegistry.addCommand(
-        [createMockSegment('word', 'gamma')],
-        'Gamma command'
+      const segments = ['gamma', 'beta'].map((name) =>
+        createMockSegment('word', name)
       );
-      cmdRegistry.addCommand(
-        [createMockSegment('word', 'beta')],
-        'Beta command'
+      vi.spyOn(cmdRegistry, 'getCompletions').mockReturnValue(segments);
+      vi.spyOn(cmdRegistry, 'getCompletions_s').mockReturnValue(
+        segments.map((segment) => segment.name)
       );
 
       const { container } = renderWithConfig({
@@ -157,6 +158,24 @@ describe('AvailableCommands', () => {
         const commandChips = Array.from(container.querySelectorAll('.font-mono'));
         const commandNames = commandChips.map((node) => node.textContent?.trim());
         expect(commandNames).toEqual(['beta', 'gamma']);
+      });
+    });
+  });
+
+  describe('layout', () => {
+    it('does not enforce a fixed height when multiple rows are needed', async () => {
+      ['cowsay', 'error', 'image', 'localstorage', 'thing', 'fnord', 'user'].forEach((name) => {
+        cmdRegistry.addCommand([createMockSegment('word', name)], `${name} command`);
+      });
+
+      const { getByTestId } = renderWithConfig({
+        ...defaultConfig,
+        includeHelpCommand: true
+      });
+
+      await waitFor(() => {
+        const container = getByTestId('available-commands');
+        expect(container.className.split(' ')).not.toContain('h-12');
       });
     });
   });

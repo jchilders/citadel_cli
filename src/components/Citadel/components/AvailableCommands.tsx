@@ -7,8 +7,8 @@ export const AvailableCommands: React.FC = () => {
   const config = useCitadelConfig();
   const segmentStack = useSegmentStack();
 
-  const containerClasses = "h-12 mt-2 border-t border-gray-700 px-4";
-  const contentClasses = "text-gray-300 pt-2";
+  const containerClasses = "mt-2 border-t border-gray-700 px-4 py-2";
+  const contentClasses = "text-gray-300";
 
   const nextCommandSegments = commands.getCompletions(segmentStack.path());
   Logger.debug("[AvailableCommands] nextCommandSegments: ", nextCommandSegments);
@@ -18,10 +18,8 @@ export const AvailableCommands: React.FC = () => {
     const isHelpSegment = (segment: typeof segments[number]) =>
       segment.name.toLowerCase() === 'help';
 
-    const helpSegments = segments.filter(isHelpSegment);
     const nonHelpSegments = segments.filter(segment => !isHelpSegment(segment));
-
-    const sortedNonHelpSegments = [...nonHelpSegments].sort((a, b) =>
+    const sortedNonHelpSegments = nonHelpSegments.sort((a, b) =>
       a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
     );
 
@@ -29,8 +27,9 @@ export const AvailableCommands: React.FC = () => {
       return sortedNonHelpSegments;
     }
 
-    return helpSegments.length
-      ? [...sortedNonHelpSegments, helpSegments[0]]
+    const helpSegment = segments.find(isHelpSegment);
+    return helpSegment
+      ? [...sortedNonHelpSegments, helpSegment]
       : sortedNonHelpSegments;
   }, [nextCommandSegments, config.includeHelpCommand]);
 

@@ -78,6 +78,11 @@ test.describe('Citadel CLI E2E Tests', () => {
     await page.keyboard.press('Escape');
     await page.click('[data-testid="toggle-help-command"]');
 
+    await page.waitForFunction(() => {
+      const toggle = document.querySelector('[data-testid="toggle-help-command"]');
+      return toggle?.textContent?.includes('Enable help command');
+    });
+
     await page.keyboard.press('.');
     namesHandle = await page.waitForFunction(() => {
       const host = document.querySelector('citadel-element');
@@ -91,5 +96,41 @@ test.describe('Citadel CLI E2E Tests', () => {
     names = await namesHandle.jsonValue<string[]>();
 
     expect(names).not.toContain('help');
+  });
+
+  test('wraps available commands when viewport is narrow', async ({ page }) => {
+    await page.setViewportSize({ width: 520, height: 700 });
+    await page.goto('/');
+    await page.waitForSelector('citadel-element');
+    await page.keyboard.press('.');
+
+    const metricsHandle = await page.waitForFunction(() => {
+      const host = document.querySelector('citadel-element');
+      if (!host) return null;
+      const shadow = host.shadowRoot;
+      if (!shadow) return null;
+      const container = shadow.querySelector('[data-testid="available-commands"]') as HTMLElement | null;
+      if (!container) return null;
+      const chips = Array.from(container.querySelectorAll('.font-mono')) as HTMLElement[];
+      if (!chips.length) return null;
+      const helpChip = chips.find((chip) => chip.textContent?.trim() === 'help');
+      if (!helpChip) return null;
+      const containerRect = container.getBoundingClientRect();
+      const helpRect = helpChip.getBoundingClientRect();
+      return {
+        clientHeight: container.clientHeight,
+        scrollHeight: container.scrollHeight,
+        helpVisible: helpRect.bottom <= containerRect.bottom
+      };
+    });
+
+    const metrics = await metricsHandle.jsonValue<{
+      clientHeight: number;
+      scrollHeight: number;
+      helpVisible: boolean;
+    }>();
+
+    expect(metrics.helpVisible).toBe(true);
+    expect(metrics.scrollHeight).toBeLessThanOrEqual(metrics.clientHeight);
   });
 });
