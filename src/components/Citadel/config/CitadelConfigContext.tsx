@@ -57,7 +57,11 @@ export const CitadelConfigProvider: React.FC<{
 
   // Add help command if enabled
   useEffect(() => {
-    if (commands && mergedConfig.includeHelpCommand) {
+    if (!commands) {
+      return;
+    }
+
+    if (mergedConfig.includeHelpCommand) {
       if (!commands.commandExistsForPath(['help'])) {
         const helpHandler = createHelpHandler(commands);
         commands.addCommand(
@@ -66,7 +70,10 @@ export const CitadelConfigProvider: React.FC<{
           helpHandler
         );
       }
+      return;
     }
+
+    commands.removeCommand(['help']);
   }, [commands, mergedConfig.includeHelpCommand]);
 
   const contextValue: CitadelContextValue = {

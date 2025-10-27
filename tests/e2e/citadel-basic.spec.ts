@@ -56,4 +56,40 @@ test.describe('Citadel CLI E2E Tests', () => {
 
     expect(nonHelpCommands).toEqual(sortedCommands);
   });
+
+  test('omits help command when configuration disables it', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('[data-testid="toggle-help-command"]');
+
+    // Verify baseline includes help
+    await page.keyboard.press('.');
+    let namesHandle = await page.waitForFunction(() => {
+      const host = document.querySelector('citadel-element');
+      if (!host) return null;
+      const shadow = host.shadowRoot;
+      if (!shadow) return null;
+      const chips = shadow.querySelectorAll('[data-testid="available-commands"] .font-mono');
+      if (!chips.length) return null;
+      return Array.from(chips).map((chip) => chip.textContent?.trim() ?? '').filter(Boolean);
+    });
+    let names = await namesHandle.jsonValue<string[]>();
+    expect(names).toContain('help');
+
+    await page.keyboard.press('Escape');
+    await page.click('[data-testid="toggle-help-command"]');
+
+    await page.keyboard.press('.');
+    namesHandle = await page.waitForFunction(() => {
+      const host = document.querySelector('citadel-element');
+      if (!host) return null;
+      const shadow = host.shadowRoot;
+      if (!shadow) return null;
+      const chips = shadow.querySelectorAll('[data-testid="available-commands"] .font-mono');
+      const names = Array.from(chips).map((chip) => chip.textContent?.trim() ?? '').filter(Boolean);
+      return names.length ? names : null;
+    });
+    names = await namesHandle.jsonValue<string[]>();
+
+    expect(names).not.toContain('help');
+  });
 });

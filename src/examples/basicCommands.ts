@@ -226,25 +226,5 @@ export function createBasicCommandRegistry(): CommandRegistry {
     },
   )
 
-  // Command to dynamically add new commands
-  cmdRegistry.addCommand(
-    [
-      { type: 'word', name: 'command' },
-      { type: 'word', name: 'add' },
-      { type: 'argument', name: 'name', description: 'Name of the command to add' },
-    ],
-    'Dynamically add a new command',
-    async (args: string[]) => {
-      const newCommandName = args[0]
-      cmdRegistry.addCommand(
-        [{ type: 'word', name: newCommandName }],
-        `Dynamically added command "${newCommandName}"`,
-        async () =>
-          new TextCommandResult(`Executed dynamic command "${newCommandName}"`),
-      )
-      return new TextCommandResult(`Successfully added command "${newCommandName}"`)
-    },
-  )
-
   return cmdRegistry
 }
