@@ -1,3 +1,4 @@
+/* c8 ignore start */
 import { CommandRegistry } from '../components/Citadel/types/command-registry'
 import {
   ImageCommandResult,
@@ -228,3 +229,4 @@ export function createBasicCommandRegistry(): CommandRegistry {
 
   return cmdRegistry
 }
+/* c8 ignore stop */

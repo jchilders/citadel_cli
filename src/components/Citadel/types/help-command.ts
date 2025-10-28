@@ -16,12 +16,16 @@ export const createHelpHandler = (cmdRegistry: CommandRegistry) => {
       })
       .sort();
 
+    if (commands.length === 0) {
+      return new TextCommandResult(
+        'No commands available yet. Add some commands to get started!'
+      );
+    }
+
     commands.push('help - Show available commands');
 
     return new TextCommandResult(
-      commands.length > 0
-        ? 'Available Commands:\n' + commands.join('\n')
-        : 'No commands available yet. Add some commands to get started!'
+      'Available Commands:\n' + commands.join('\n')
     );
   };
 };
