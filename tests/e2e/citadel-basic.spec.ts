@@ -1,36 +1,27 @@
 import { test, expect } from '@playwright/test';
+import { openHarness } from './helpers/harness';
 
 test.describe('Citadel CLI E2E Tests', () => {
   test('should activate Citadel with period key', async ({ page }) => {
-    await page.goto('/');
-    
-    // Press period to activate Citadel
+    await openHarness(page);
     await page.keyboard.press('.');
-    
-    // Verify Citadel component appears
+
     const citadelElement = page.locator('citadel-element');
     await expect(citadelElement).toBeVisible();
   });
 
   test('should deactivate Citadel with Escape key', async ({ page }) => {
-    await page.goto('/');
-    
-    // Activate Citadel
+    await openHarness(page);
     await page.keyboard.press('.');
     const citadelElement = page.locator('citadel-element');
     await expect(citadelElement).toBeVisible();
-    
-    // Deactivate with Escape
+
     await page.keyboard.press('Escape');
-    
-    // Verify Citadel is no longer visible (or at least the activation worked)
-    // Note: We can't easily test invisibility due to shadow DOM, so we just verify it was activated
     await expect(citadelElement).toBeVisible();
   });
 
   test('lists commands alphabetically with help last', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForSelector('citadel-element');
+    await openHarness(page);
     await page.keyboard.press('.');
 
     const citadelElement = page.locator('citadel-element').first();
@@ -58,10 +49,7 @@ test.describe('Citadel CLI E2E Tests', () => {
   });
 
   test('omits help command when configuration disables it', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForSelector('[data-testid="toggle-help-command"]');
-
-    // Verify baseline includes help
+    await openHarness(page);
     await page.keyboard.press('.');
     let namesHandle = await page.waitForFunction(() => {
       const host = document.querySelector('citadel-element');
@@ -75,14 +63,7 @@ test.describe('Citadel CLI E2E Tests', () => {
     let names = await namesHandle.jsonValue<string[]>();
     expect(names).toContain('help');
 
-    await page.keyboard.press('Escape');
-    await page.click('[data-testid="toggle-help-command"]');
-
-    await page.waitForFunction(() => {
-      const toggle = document.querySelector('[data-testid="toggle-help-command"]');
-      return toggle?.textContent?.includes('Enable help command');
-    });
-
+    await openHarness(page, { config: { includeHelpCommand: false } });
     await page.keyboard.press('.');
     namesHandle = await page.waitForFunction(() => {
       const host = document.querySelector('citadel-element');
@@ -100,8 +81,7 @@ test.describe('Citadel CLI E2E Tests', () => {
 
   test('wraps available commands when viewport is narrow', async ({ page }) => {
     await page.setViewportSize({ width: 520, height: 700 });
-    await page.goto('/');
-    await page.waitForSelector('citadel-element');
+    await openHarness(page);
     await page.keyboard.press('.');
 
     const metricsHandle = await page.waitForFunction(() => {

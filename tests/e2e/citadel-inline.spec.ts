@@ -1,12 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { openHarness } from './helpers/harness';
 
 test.describe('Citadel inline mode', () => {
   test('renders inline console with dominant output area', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-
-    const inlineToggle = page.locator('[data-testid="mode-toggle-inline"]');
-    await inlineToggle.click();
+    await openHarness(page, { config: { displayMode: 'inline' } });
 
     const citadelElement = page.locator('citadel-element').first();
     await expect(citadelElement).toBeVisible({ timeout: 10000 });
