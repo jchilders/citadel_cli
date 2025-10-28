@@ -1,19 +1,9 @@
-name: Auto Publish
+name: Release
 
 on:
   push:
-    branches: [main]
-    paths:
-      - 'src/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'tailwind.config.js'
-      - 'tsconfig.json'
-      - 'webpack.config.js'
-      - 'vite.config.ts'
-      - '!src/test/**'
-      - '!src/__test-utils__/**'
-      - '!src/**/__tests__/**'
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -35,45 +25,29 @@ jobs:
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
           
       - name: Install dependencies
         run: npm ci
         
       - name: Build
         run: npm run build
-        
-      - name: Configure Git
-        run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
-          
-      - name: Bump version and publish
+      
+      - name: Verify tag matches package.json version
+        id: version
         run: |
           set -euo pipefail
-
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-          IFS='.' read -r major minor patch <<<"$CURRENT_VERSION"
-
-          while true; do
-            patch=$((patch + 1))
-            CANDIDATE_VERSION="$major.$minor.$patch"
-
-            if git rev-parse --verify "refs/tags/v$CANDIDATE_VERSION" >/dev/null 2>&1; then
-              echo "Tag v$CANDIDATE_VERSION already exists; bumping patch again."
-              continue
-            fi
-
-            break
-          done
-
-          echo "Bumping version to $CANDIDATE_VERSION"
-          npm version "$CANDIDATE_VERSION" --no-git-tag-version
-
-          git add package.json package-lock.json
-          git commit -m "chore: release v$CANDIDATE_VERSION"
-          git tag -a "v$CANDIDATE_VERSION" -m "v$CANDIDATE_VERSION"
-
-          git push --follow-tags
-          npm publish
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          
+          if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
+            echo "package.json version ($PACKAGE_VERSION) does not match tag version ($TAG_VERSION)"
+            exit 1
+          fi
+          
+          echo "version=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
+      
+      - name: Publish to npm
+        run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
