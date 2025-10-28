@@ -52,5 +52,14 @@ export default defineConfig({
     css: true,
     include: ['src/**/*.test.{ts,tsx}'],
     exclude: ['**/node_modules/**'],
+    coverage: {
+      provider: 'v8',
+      exclude: [
+        '**/src/examples/**',
+        '**/basicCommands.ts',
+        '**/tests/e2e/**',
+        '**/tests/harness/**'
+      ]
+    }
   },
 })

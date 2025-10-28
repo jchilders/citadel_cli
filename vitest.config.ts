@@ -12,9 +12,20 @@ export default defineConfig({
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', 'tests/**', 'e2e/**'],
     silent: false,
     coverage: {
-      exclude: ['node_modules', 'dist', 'command_examples', 'prompts', '.cache',
-        '*.js', '*.cjs', '*.ts', // exclude config files in project root
-        'src/App.tsx', 'src/index.ts', 'src/main.tsx', // exclude entry files
+      exclude: [
+        'node_modules',
+        'dist',
+        'examples',
+        'prompts',
+        '.cache',
+        '*.js',
+        '*.cjs',
+        '*.ts', // exclude root config files
+        'tests/**',
+        'src/examples/**',
+        'src/App.tsx',
+        'src/index.ts',
+        'src/main.tsx',
         'src/components/Citadel/index.ts',
         'src/components/Citadel/types/index.ts',
       ],
