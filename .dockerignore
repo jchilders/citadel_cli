@@ -1,0 +1,15 @@
+node_modules
+dist
+coverage
+playwright-report
+test-results
+*.tgz
+.git
+.github
+.husky
+Dockerfile
+dockerbuildrun
+vitest.config.ts
+playwright.config.ts
+tsconfig.node.tsbuildinfo
+*.log

@@ -3,6 +3,16 @@ import { defineConfig, devices } from '@playwright/test';
 const HOST = process.env.PLAYWRIGHT_HOST || '0.0.0.0';
 const PORT = process.env.PLAYWRIGHT_PORT || '5173';
 const BASE_URL_HOST = process.env.PLAYWRIGHT_BASEURL_HOST || '127.0.0.1';
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || `http://${BASE_URL_HOST}:${PORT}`;
+const USE_EXTERNAL_SERVER = process.env.PLAYWRIGHT_EXTERNAL === 'true';
+
+const webServer = USE_EXTERNAL_SERVER
+  ? undefined
+  : {
+      command: `npm run dev -- --host ${HOST} --port ${PORT}`,
+      url: BASE_URL,
+      reuseExistingServer: !process.env.CI,
+    };
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -12,7 +22,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: `http://${BASE_URL_HOST}:${PORT}`,
+    baseURL: BASE_URL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -31,9 +41,5 @@ export default defineConfig({
       use: { ...devices['Desktop Edge'], channel: 'msedge' },
     },
   ],
-  webServer: {
-    command: `npm run dev -- --host ${HOST} --port ${PORT}`,
-    url: `http://${BASE_URL_HOST}:${PORT}`,
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer,
 });
