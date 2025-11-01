@@ -20,9 +20,41 @@ const defaultContextValue: CitadelContextValue = {
   segmentStack: new SegmentStack()
 };
 
-const CitadelConfigContext = createContext<CitadelContextValue>(defaultContextValue);
+let internalContext: React.Context<CitadelContextValue> | null = null;
 
-export { CitadelConfigContext };
+export const getCitadelConfigContext = () => {
+  if (internalContext) {
+    return internalContext;
+  }
+
+  if (typeof createContext !== 'function') {
+    throw new Error(
+      'Citadel can only be rendered in a Client Component. Add the `"use client"` directive to the module that imports it.'
+    );
+  }
+
+  internalContext = createContext(defaultContextValue);
+  return internalContext;
+};
+
+export const CitadelConfigContext = new Proxy(
+  {} as React.Context<CitadelContextValue>,
+  {
+    get: (_target, property) => {
+      const context = getCitadelConfigContext();
+      return (context as unknown as Record<PropertyKey, unknown>)[property];
+    },
+    set: (_target, property, value) => {
+      const context = getCitadelConfigContext();
+      (context as unknown as Record<PropertyKey, unknown>)[property] = value;
+      return true;
+    },
+    has: (_target, property) => {
+      const context = getCitadelConfigContext();
+      return property in (context as unknown as Record<PropertyKey, unknown>);
+    },
+  }
+);
 
 export const CitadelConfigProvider: React.FC<{
   config?: CitadelConfig;
@@ -83,9 +115,11 @@ export const CitadelConfigProvider: React.FC<{
     segmentStack: new SegmentStack()
   };
 
+  const Context = getCitadelConfigContext();
+
   return (
-    <CitadelConfigContext.Provider value={contextValue}>
+    <Context.Provider value={contextValue}>
       {children}
-    </CitadelConfigContext.Provider>
+    </Context.Provider>
   );
 };

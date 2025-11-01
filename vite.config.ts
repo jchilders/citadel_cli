@@ -20,21 +20,34 @@ export default defineConfig({
     lib: {
       entry: 'src/index.ts',
       name: 'Citadel',
-      formats: ['es', 'umd'],
     },
     rollupOptions: {
       external: (id) => {
         return id === 'react' || id === 'react-dom' || id.startsWith('react/') || id.startsWith('react-dom/');
       },
-      output: {
-        entryFileNames: 'citadel.[format].js',
-        chunkFileNames: 'citadel.[format].js',
-        assetFileNames: 'citadel.[ext]',
-        globals: {
-          react: 'React',
-          'react-dom': 'ReactDOM',
+      output: [
+        {
+          format: 'es',
+          entryFileNames: 'citadel.es.js',
+          chunkFileNames: 'citadel.es.[hash].js',
+          assetFileNames: 'citadel.[ext]',
+          banner: `'use client';`,
         },
-      },
+        {
+          format: 'umd',
+          name: 'Citadel',
+          entryFileNames: 'citadel.umd.cjs',
+          chunkFileNames: 'citadel.umd.[hash].cjs',
+          assetFileNames: 'citadel.[ext]',
+          banner: `'use client';`,
+          globals: {
+            react: 'React',
+            'react-dom': 'ReactDOM',
+            'react/jsx-runtime': 'jsxRuntime',
+            'react-dom/client': 'ReactDOMClient',
+          },
+        },
+      ],
     },
     emptyOutDir: false,  // need to preserve the generated stylesheet; without this it gets deleted from dist/
     cssCodeSplit: false,
