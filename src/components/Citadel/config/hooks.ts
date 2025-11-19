@@ -1,8 +1,8 @@
 import { useContext } from 'react';
-import { CitadelConfigContext } from './CitadelConfigContext';
+import { getCitadelConfigContext } from './CitadelConfigContext';
 
 export const useCitadelConfig = () => {
-  const context = useContext(CitadelConfigContext);
+  const context = useContext(getCitadelConfigContext());
   if (context === undefined) {
     throw new Error('useCitadelConfig must be used within a CitadelConfigProvider');
   }
@@ -10,7 +10,7 @@ export const useCitadelConfig = () => {
 };
 
 export const useCitadelCommands = () => {
-  const context = useContext(CitadelConfigContext);
+  const context = useContext(getCitadelConfigContext());
   if (context === undefined) {
     throw new Error('useCitadelCommands must be used within a CitadelConfigProvider');
   }
@@ -18,7 +18,7 @@ export const useCitadelCommands = () => {
 };
 
 export const useCitadelStorage = () => {
-  const context = useContext(CitadelConfigContext);
+  const context = useContext(getCitadelConfigContext());
   if (context === undefined) {
     throw new Error('useCitadelStorage must be used within a CitadelConfigProvider');
   }
@@ -26,7 +26,7 @@ export const useCitadelStorage = () => {
 };
 
 export const useSegmentStack = () => {
-  const context = useContext(CitadelConfigContext);
+  const context = useContext(getCitadelConfigContext());
   if (context === undefined) {
     throw new Error('useSegmentStack must be used within a CitadelConfigProvider');
   }
