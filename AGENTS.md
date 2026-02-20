@@ -1,19 +1,84 @@
-# Repository Guidelines
+# CLAUDE.md
 
-## Project Structure & Module Organization
-Core TypeScript sources live in `src/`. The `components/` directory holds the React UI primitives for the in-app console, while `styles/` contains Tailwind-backed utility exports. Shared testing helpers live under `src/__test-utils__/`, and the Vitest setup sits in `src/test/setup.ts`. End-to-end suites are organized in `tests/e2e`, and runnable examples live in `examples/`. Build artifacts populate `dist/`; do not edit generated files there.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Build, Test, and Development Commands
-Use `npm run dev` to launch the Vite dev server against `index.html`. `npm run build` compiles TypeScript and bundles the library (tsc + vite). Serve a production snapshot with `npm run preview`. Run `npm run lint` to apply the ESLint ruleset, and `npm run lint:fix` for safe auto-fixes. Execute `npm test` for Vitest unit suites, `npm run coverage` to review coverage reports, and `npm run test:e2e` for Playwright browser checks; `npm run test:e2e:ui` opens the Playwright inspector.
+## What This Is
 
-## Coding Style & Naming Conventions
-Follow the TypeScript ESLint configuration in `eslint.config.js`; favor 2-space indentation and trailing commas per the default formatter. Components and exported hooks use PascalCase (`CommandPalette.tsx`, `useKeyboard.ts`), while CSS assets remain kebab-case (`citadel.css`). Keep React code functional, colocate component-specific assets, and centralize reusable registry logic under `src/components/commands`.
+`citadel_cli` is a React component library published to npm. It provides a keyboard-driven command console (like a dev-tools terminal overlay) that can be embedded in web apps. Users trigger it with a configurable key (default: `.`), type hierarchical commands with auto-expansion, and see results rendered inline.
 
-## Testing Guidelines
-Vitest with Testing Library powers unit and interaction coverage; place specs beside their implementations (`Citadel.test.tsx`). Use helpers in `src/__test-utils__/` for command registry scaffolding. Validate browser flows with Playwright specs in `tests/e2e` (e.g., `command-expansion.spec.ts`). Run `npm run coverage` before publishing to ensure regressions are caught early, and prefer descriptive test names that mirror the command being exercised.
+## Commands
 
-## Commit & Pull Request Guidelines
-Mirror the existing history that blends emoji prefixes with Conventional Commit semantics (`🧪 Fix…`, `feat:`). Keep commits focused on one logical change and include a rationale. Pull requests should outline motivation, implementation notes, and testing evidence (command logs, screenshots, or recordings when the console UI shifts). Link related issues and confirm linting and test runs in the description.
+```bash
+npm run dev          # Start Vite dev server (demo app in src/App.tsx)
+npm run build        # TypeScript compile + Vite library build → dist/
+npm run lint         # ESLint
+npm run lint:fix     # ESLint with auto-fix
+npm test             # Vitest unit tests (run once)
+npm run test:e2e     # Playwright end-to-end tests
+npm run coverage     # Vitest with coverage report
+```
 
-## Security & Configuration Tips
-Command handlers can touch external systems—never hardcode credentials or tokens. Leverage environment-driven configuration and document any required variables in PRs. Review generated assets before publishing to ensure no sensitive data is bundled, and keep Playwright storage state or fixtures with secrets out of version control.
+To run a single test file:
+```bash
+npx vitest --run src/components/Citadel/hooks/__tests__/useCommandParser.test.ts
+```
+
+**Note:** A pre-commit hook runs the full test suite before every commit. This takes ~10–15 seconds.
+
+## Releasing
+
+Releases are tag-driven via GitHub Actions — no manual `npm publish`:
+```bash
+npm version <patch|minor|major>   # bumps package.json + creates git tag
+git push && git push --tags        # triggers CI publish to npm
+```
+
+## Architecture
+
+### Library vs. Dev App
+
+- **Library entry point**: `src/index.ts` — exports `Citadel`, `CommandRegistry`, `CitadelConfig`, and result types
+- **Dev app**: `src/App.tsx` — Vite dev server demo, not included in the build
+- **Build output**: `dist/citadel.es.js` and `dist/citadel.umd.cjs`, plus `dist/citadel.css`
+
+### Shadow DOM Isolation
+
+The `Citadel` React component mounts a **Web Component** (`<citadel-element>`) that hosts a Shadow DOM. All React rendering happens inside that shadow root. CSS is injected as `CSSStyleSheet` via `adoptedStyleSheets`. This means Tailwind and component styles are fully isolated from the host app.
+
+The custom Vite plugin `plugins/vite-shadow-dom.ts` handles CSS-in-JS bundling for this pattern.
+
+### Data Flow
+
+1. **`CommandRegistry`** — holds `CommandNode[]`, each with ordered `CommandSegment[]` (words + arguments), a description, and an async handler. Users build this externally and pass it to `<Citadel>`.
+
+2. **`CitadelConfigContext`** (`src/components/Citadel/config/CitadelConfigContext.tsx`) — React context wrapping the entire component tree inside the shadow DOM. Provides merged config, the command registry, storage, and a shared `SegmentStack`.
+
+3. **`SegmentStack`** (`src/components/Citadel/types/segment-stack.ts`) — observer-pattern stack that tracks the user's current command path (e.g., `["user", "show"]`). Lives in context so all hooks share one instance.
+
+4. **`useCommandParser`** (`src/components/Citadel/hooks/useCommandParser.ts`) — the central input-handling hook. Manages `InputState` (`idle` | `entering_command` | `entering_argument`), auto-expansion logic (`tryAutocomplete`), key event handling, and command execution dispatch.
+
+5. **`useCitadelState`** (`src/components/Citadel/hooks/useCitadelState.ts`) — manages output history (`OutputItem[]`), command execution with timeout, and history navigation.
+
+### Display Modes
+
+`CitadelRoot` renders either:
+- **`PanelController`** — slide-up overlay anchored to viewport bottom, toggleable via `showCitadelKey`. Supports drag-to-resize.
+- **`InlineController`** — always-visible, fills its host container. Useful for embedding in dashboards.
+
+Both delegate to `CitadelTty` for the actual terminal UI.
+
+### Command Result Types
+
+Handlers must return one of these (all extend `CommandResult`):
+- `TextCommandResult` — plain text
+- `JsonCommandResult` — JSON tree
+- `ImageCommandResult` — image display
+- `ErrorCommandResult` — error styling
+
+### Storage
+
+Command history is persisted via `StorageFactory`, which returns either `LocalStorage` or `MemoryStorage` based on `config.storage.type`. The `HistoryService` and `useCommandHistory` hook manage navigation (arrow keys) and persistence.
+
+### Path Alias
+
+`tsconfig.app.json` configures `@/` as an alias for `src/`. Use `@/components/...` for imports within the library source.
