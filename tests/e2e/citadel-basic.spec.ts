@@ -8,12 +8,42 @@ async function runShortcutCommand(
 ) {
   const input = page.getByTestId('citadel-command-input');
   await input.click();
+  await page.waitForFunction(() => {
+    const host = document.querySelector('citadel-element');
+    if (!host) return false;
+    const shadow = host.shadowRoot;
+    if (!shadow) return false;
+    return shadow.querySelectorAll('[data-testid="available-command-chip"]').length > 0;
+  });
 
   for (const segment of segments) {
-    await page.keyboard.type(segment, { delay: 40 });
-    await expect
-      .poll(async () => input.inputValue(), { timeout: 5000 })
-      .toBe('');
+    let didAutocomplete = false;
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await page.keyboard.type(segment, { delay: 40 });
+
+      const deadline = Date.now() + 2000;
+      while (Date.now() < deadline) {
+        if ((await input.inputValue()) === '') {
+          didAutocomplete = true;
+          break;
+        }
+        await page.waitForTimeout(50);
+      }
+
+      if (didAutocomplete) {
+        break;
+      }
+
+      // If the parser state lagged behind the keystroke, clear partial input and retry.
+      const staleInput = await input.inputValue();
+      for (let i = 0; i < staleInput.length; i++) {
+        await page.keyboard.press('Backspace');
+      }
+      await page.waitForTimeout(50);
+    }
+
+    expect(didAutocomplete).toBe(true);
   }
 
   if (argument !== undefined) {

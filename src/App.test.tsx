@@ -5,7 +5,7 @@ import { CommandRegistry } from './components/Citadel/types/command-registry';
 import { defaultConfig } from './components/Citadel/config/defaults';
 
 const mockCitadel = vi.fn();
-const mockCreateDevOpsCommandRegistry = vi.fn();
+const mockCreateBasicCommandRegistry = vi.fn();
 
 vi.mock('./index', () => ({
   Citadel: (props: unknown) => {
@@ -14,19 +14,19 @@ vi.mock('./index', () => ({
   }
 }));
 
-vi.mock('./examples/devopsCommands', () => ({
-  createDevOpsCommandRegistry: () => mockCreateDevOpsCommandRegistry()
+vi.mock('./examples/basicCommands.ts', () => ({
+  createBasicCommandRegistry: () => mockCreateBasicCommandRegistry()
 }));
 
 describe('App', () => {
   beforeEach(() => {
     mockCitadel.mockClear();
-    mockCreateDevOpsCommandRegistry.mockReset();
+    mockCreateBasicCommandRegistry.mockReset();
   });
 
-  it('passes devops command registry and default config to Citadel', () => {
+  it('passes basic command registry and default config to Citadel', () => {
     const commandRegistry = new CommandRegistry();
-    mockCreateDevOpsCommandRegistry.mockReturnValue(commandRegistry);
+    mockCreateBasicCommandRegistry.mockReturnValue(commandRegistry);
 
     render(<App />);
 
