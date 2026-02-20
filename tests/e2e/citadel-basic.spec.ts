@@ -68,7 +68,7 @@ test.describe('Citadel CLI E2E Tests', () => {
       if (!host) return null;
       const shadow = host.shadowRoot;
       if (!shadow) return null;
-      const chips = shadow.querySelectorAll('[data-testid="available-commands"] .font-mono');
+      const chips = shadow.querySelectorAll('[data-testid="available-commands"] [data-testid="available-command-chip"]');
       if (!chips.length) return null;
       return Array.from(chips).map((chip) => chip.textContent?.trim() ?? '').filter(Boolean);
     });
@@ -92,7 +92,7 @@ test.describe('Citadel CLI E2E Tests', () => {
       if (!host) return null;
       const shadow = host.shadowRoot;
       if (!shadow) return null;
-      const chips = shadow.querySelectorAll('[data-testid="available-commands"] .font-mono');
+      const chips = shadow.querySelectorAll('[data-testid="available-commands"] [data-testid="available-command-chip"]');
       if (!chips.length) return null;
       return Array.from(chips).map((chip) => chip.textContent?.trim() ?? '').filter(Boolean);
     });
@@ -106,7 +106,7 @@ test.describe('Citadel CLI E2E Tests', () => {
       if (!host) return null;
       const shadow = host.shadowRoot;
       if (!shadow) return null;
-      const chips = shadow.querySelectorAll('[data-testid="available-commands"] .font-mono');
+      const chips = shadow.querySelectorAll('[data-testid="available-commands"] [data-testid="available-command-chip"]');
       const names = Array.from(chips).map((chip) => chip.textContent?.trim() ?? '').filter(Boolean);
       return names.length ? names : null;
     });
@@ -127,7 +127,9 @@ test.describe('Citadel CLI E2E Tests', () => {
       if (!shadow) return null;
       const container = shadow.querySelector('[data-testid="available-commands"]') as HTMLElement | null;
       if (!container) return null;
-      const chips = Array.from(container.querySelectorAll('.font-mono')) as HTMLElement[];
+      const chips = Array.from(
+        container.querySelectorAll('[data-testid="available-command-chip"]')
+      ) as HTMLElement[];
       if (!chips.length) return null;
       const helpChip = chips.find((chip) => chip.textContent?.trim() === 'help');
       if (!helpChip) return null;
