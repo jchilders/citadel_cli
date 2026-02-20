@@ -3,10 +3,14 @@ import { LocalStorage } from "./LocalStorage";
 import { MemoryStorage } from "./MemoryStorage";
 
 export class StorageFactory {
-  private static instance: StorageFactory;
+  private static instance: StorageFactory | undefined;
   private currentStorage?: CommandStorage;
 
   private constructor() {}
+
+  static reset(): void {
+    StorageFactory.instance = undefined;
+  }
 
   static getInstance(): StorageFactory {
     if (!StorageFactory.instance) {

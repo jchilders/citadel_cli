@@ -1,4 +1,4 @@
-import React, { createContext, useEffect } from 'react';
+import React, { createContext, useEffect, useMemo, useState } from 'react';
 import { createHelpHandler } from '../types/help-command';
 import { CitadelConfig } from './types';
 import { defaultConfig } from './defaults';
@@ -30,6 +30,7 @@ export const CitadelConfigProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ config = defaultConfig, commandRegistry: commands, children }) => {
   const [storage, setStorage] = React.useState<CommandStorage>();
+  const [segmentStack] = useState(() => new SegmentStack());
 
   const mergedConfig = {
     ...defaultConfig,
@@ -76,12 +77,12 @@ export const CitadelConfigProvider: React.FC<{
     commands.removeCommand(['help']);
   }, [commands, mergedConfig.includeHelpCommand]);
 
-  const contextValue: CitadelContextValue = {
+  const contextValue = useMemo<CitadelContextValue>(() => ({
     config: mergedConfig,
     commands: commands || new CommandRegistry(),
     storage,
-    segmentStack: new SegmentStack()
-  };
+    segmentStack,
+  }), [mergedConfig, commands, storage, segmentStack]);
 
   return (
     <CitadelConfigContext.Provider value={contextValue}>

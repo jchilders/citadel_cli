@@ -122,7 +122,7 @@ describe('AvailableCommands', () => {
       );
 
       vi.spyOn(cmdRegistry, 'getCompletions').mockReturnValue(segments);
-      vi.spyOn(cmdRegistry, 'getCompletions_s').mockReturnValue(
+      vi.spyOn(cmdRegistry, 'getCompletionNames').mockReturnValue(
         segments.map((segment) => segment.name)
       );
       vi.spyOn(cmdRegistry, 'commandExistsForPath').mockReturnValue(true);
@@ -145,7 +145,7 @@ describe('AvailableCommands', () => {
         createMockSegment('word', name)
       );
       vi.spyOn(cmdRegistry, 'getCompletions').mockReturnValue(segments);
-      vi.spyOn(cmdRegistry, 'getCompletions_s').mockReturnValue(
+      vi.spyOn(cmdRegistry, 'getCompletionNames').mockReturnValue(
         segments.map((segment) => segment.name)
       );
 

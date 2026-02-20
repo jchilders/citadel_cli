@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { CommandNode, CommandRegistry, CommandHandler, WordSegment, ArgumentSegment, CommandSegment, NullSegment } from '../components/Citadel/types/command-registry';
 import { TextCommandResult } from '../components/Citadel/types/command-results';
 import { CitadelState, CitadelActions, OutputItem } from '../components/Citadel/types';
@@ -57,7 +58,7 @@ export const createMockCommandRegistry = (): CommandRegistry => {
   // Mock the public methods
   vi.spyOn(commands, 'getCommand').mockReturnValue(mockNode);
   vi.spyOn(commands, 'addCommand').mockImplementation(() => {});
-  vi.spyOn(commands, 'getCompletions_s').mockReturnValue([]);
+  vi.spyOn(commands, 'getCompletionNames').mockReturnValue([]);
 
   return commands;
 };

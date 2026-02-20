@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { ArgumentSegment } from '../types/command-registry';
 import { CitadelState, CitadelActions } from '../types/state';
 import { Cursor } from '../Cursor';
@@ -38,9 +38,10 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     const finalResult = await Promise.resolve(result);
     
     // Trigger animation for invalid input
+    const INVALID_INPUT_ANIMATION_MS = 500;
     if (finalResult === false) {
       setShowInvalidAnimation(true);
-      setTimeout(() => setShowInvalidAnimation(false), 500);
+      setTimeout(() => setShowInvalidAnimation(false), INVALID_INPUT_ANIMATION_MS);
     }
   };
 
@@ -60,8 +61,6 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       inputRef.current.focus();
     }
 
-    // TODO: Set this based on nextExpectedSegment()
-    // TODO: make nextExpectedSegment stateful?
     if (inputState !== 'entering_command') {
       setInputStateWithLogging('entering_command');
     }
@@ -93,14 +92,13 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   // user has previously entered, either an argument or a word. The code below
   // builds those spans. For word segments it shows the name (i.e. "show"), for
   // argument segments, the value (i.e. "1234").
-  const [segmentNamesAndVals, setSegmentNamesAndVals] = useState<JSX.Element[]>([]);
-  useEffect(() => {
+  const segmentNamesAndVals = useMemo<JSX.Element[]>(() => {
     const segments: string[] = [];
     const elements = segmentStack.toArray().map((segment, index) => {
       segments.push(segment.name);
       const hasNextSegment = commands.hasNextSegment(segments);
       if (segment.type === 'argument') {
-        const argSegment =(segment as ArgumentSegment);
+        const argSegment = (segment as ArgumentSegment);
         return (
           <React.Fragment key={"arg-" + argSegment.name + argSegment.value}>
             <span className="text-gray-200 whitespace-pre">
@@ -121,14 +119,12 @@ export const CommandInput: React.FC<CommandInputProps> = ({
         </React.Fragment>
       );
     });
-    
-    const wrappedElements = (
+
+    return [(
       <div className="flex items-center gap-1" data-testid="user-input-area" key="{segmentStackVersion}">
         {elements}
       </div>
-    );
-    
-    setSegmentNamesAndVals([wrappedElements]);
+    )];
   }, [segmentStackVersion, commands, segmentStack]);
 
   // Placeholder text for the input field

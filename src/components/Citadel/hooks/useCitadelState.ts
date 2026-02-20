@@ -126,19 +126,5 @@ export const useCitadelState = () => {
     }, [history])
   };
 
-  const getAvailableCommands_s = useCallback(() => {
-    const completions = commands.getCompletions_s(segmentStack.path());
-    return completions;
-  }, [segmentStack, commands]);
-
-  const getAvailableCommandSegments = useCallback(() => {
-    return commands.getCompletions(segmentStack.path());
-  }, [segmentStack, commands]);
-
-  return { 
-    state, 
-    actions, 
-    getAvailableCommands_s, 
-    getAvailableCommandSegments 
-  };
+  return { state, actions };
 };

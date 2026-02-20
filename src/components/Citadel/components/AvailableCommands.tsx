@@ -33,6 +33,26 @@ export const AvailableCommands: React.FC = () => {
       : sortedNonHelpSegments;
   }, [nextCommandSegments, config.includeHelpCommand]);
 
+  const boldLengths = React.useMemo(() => {
+    const map = new Map<string, number>();
+    for (const segment of sortedCommands) {
+      const boldLen = sortedCommands.reduce((length, other) => {
+        if (other === segment) return length;
+        let commonPrefix = 0;
+        while (
+          commonPrefix < segment.name.length &&
+          commonPrefix < other.name.length &&
+          segment.name[commonPrefix].toLowerCase() === other.name[commonPrefix].toLowerCase()
+        ) {
+          commonPrefix++;
+        }
+        return Math.max(length, commonPrefix + 1);
+      }, 1);
+      map.set(segment.name, boldLen);
+    }
+    return map;
+  }, [sortedCommands]);
+
   const nextSegmentIsArgument = nextCommandSegments.some(seg => seg.type === 'argument');
   const nextSegment = nextCommandSegments[0];
   return (
@@ -41,18 +61,7 @@ export const AvailableCommands: React.FC = () => {
         {!nextSegmentIsArgument ? (
           <div className="flex flex-wrap gap-2">
             {sortedCommands?.map((segment) => {
-              const boldLength = sortedCommands?.reduce((length, other) => {
-                if (other === segment) return length;
-                let commonPrefix = 0;
-                while (
-                  commonPrefix < segment.name.length &&
-                  commonPrefix < other.name.length &&
-                  segment.name[commonPrefix].toLowerCase() === other.name[commonPrefix].toLowerCase()
-                ) {
-                  commonPrefix++;
-                }
-                return Math.max(length, commonPrefix + 1);
-              }, 1);
+              const boldLength = boldLengths.get(segment.name) ?? 1;
 
               return (
                 <div

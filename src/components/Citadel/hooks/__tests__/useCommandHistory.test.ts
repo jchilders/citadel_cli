@@ -62,7 +62,7 @@ describe('useCommandHistory', () => {
       const { result } = await setupHistory();
       
       const navigation = await act(async () => {
-        return await result.current.navigateHistory('up', mockSegments);
+        return await result.current.navigateHistory('up');
       });
 
       expect(navigation).toEqual({
@@ -76,12 +76,12 @@ describe('useCommandHistory', () => {
       
       // First navigate up
       await act(async () => {
-        await result.current.navigateHistory('up', mockSegments);
+        await result.current.navigateHistory('up');
       });
 
       // Then navigate down
       const navigation = await act(async () => {
-        return await result.current.navigateHistory('down', mockSegments);
+        return await result.current.navigateHistory('down');
       });
 
       expect(navigation).toEqual({
@@ -95,11 +95,11 @@ describe('useCommandHistory', () => {
       
       // Navigate up twice
       await act(async () => {
-        await result.current.navigateHistory('up', mockSegments);
+        await result.current.navigateHistory('up');
       });
       
       const navigation = await act(async () => {
-        return await result.current.navigateHistory('up', mockSegments);
+        return await result.current.navigateHistory('up');
       });
 
       expect(navigation).toEqual({

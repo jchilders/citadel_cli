@@ -167,17 +167,4 @@ describe('useCitadelState', () => {
     });
   });
 
-  describe('command completion', () => {
-    it('should return available commands', () => {
-      const { hook } = setupCitadelStateHook();
-      const completions = hook.result.current.getAvailableCommands_s();
-      expect(completions).toEqual([]);
-    });
-
-    it('should return available command segments', () => {
-      const { hook } = setupCitadelStateHook();
-      const segments = hook.result.current.getAvailableCommandSegments();
-      expect(segments).toEqual([]);
-    });
-  });
 });

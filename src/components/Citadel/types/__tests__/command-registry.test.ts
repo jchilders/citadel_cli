@@ -177,7 +177,7 @@ describe('CommandRegistry', () => {
     });
   });
 
-  describe('getCompletions_s', () => {
+  describe('getCompletionNames', () => {
     describe('no arguments', () => {
       beforeEach(() => {
         cmdRegistry.addCommand(
@@ -204,22 +204,22 @@ describe('CommandRegistry', () => {
       });
 
       it('should return root level string completions', () => {
-        const completions = cmdRegistry.getCompletions_s([]);
+        const completions = cmdRegistry.getCompletionNames([]);
         expect(completions).toEqual(['help', 'user']);
       });
 
       it('should return nested completions', () => {
-        const completions = cmdRegistry.getCompletions_s(['user']);
+        const completions = cmdRegistry.getCompletionNames(['user']);
         expect(completions).toEqual(['create', 'delete']);
       });
 
       it('should return empty array for invalid path', () => {
-        const completions = cmdRegistry.getCompletions_s(['invalid', 'path']);
+        const completions = cmdRegistry.getCompletionNames(['invalid', 'path']);
         expect(completions).toEqual([]);
       });
 
       it('should return empty array for leaf command', () => {
-        const completions = cmdRegistry.getCompletions_s(['help']);
+        const completions = cmdRegistry.getCompletionNames(['help']);
         expect(completions).toEqual([]);
       });
     });
@@ -252,12 +252,12 @@ describe('CommandRegistry', () => {
       });
 
       it('should return argument name for word segment', () => {
-        const completions = cmdRegistry.getCompletions_s(['user'])
+        const completions = cmdRegistry.getCompletionNames(['user'])
         expect(completions).toEqual(['userId']);
       });
 
       it('should return children node names for word and argument segments', () => {
-        const completions = cmdRegistry.getCompletions_s(['user', 'userId'])
+        const completions = cmdRegistry.getCompletionNames(['user', 'userId'])
         expect(completions).toEqual(['deactivate', 'delete']);
       });
 

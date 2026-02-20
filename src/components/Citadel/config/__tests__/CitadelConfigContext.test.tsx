@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { render, act, waitFor } from '@testing-library/react';
 import { CitadelConfigProvider } from '../CitadelConfigContext';
 import { useCitadelCommands, useCitadelConfig, useCitadelStorage } from '../hooks';
@@ -211,7 +212,7 @@ describe('CitadelConfigContext', () => {
 
     beforeEach(() => {
       // Reset StorageFactory singleton between tests
-      (StorageFactory as unknown as { instance: undefined })['instance'] = undefined;
+      StorageFactory.reset();
     });
 
     it('should initialize storage', async () => {

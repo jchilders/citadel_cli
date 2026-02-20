@@ -11,7 +11,7 @@ export interface CommandHistory {
 export interface CommandHistoryActions {
   addStoredCommand: (segments: CommandSegment[]) => Promise<void>;
   getStoredCommands: () => Promise<StoredCommand[]>;
-  navigateHistory: (direction: 'up' | 'down', currentSegments: CommandSegment[]) => Promise<{
+  navigateHistory: (direction: 'up' | 'down') => Promise<{
     segments: CommandSegment[] | null;
     position: number | null;
   }>;
@@ -29,7 +29,7 @@ export interface CommandHistoryHook {
   history: CommandHistory;
   addStoredCommand: (segments: CommandSegment[]) => Promise<void>;
   getStoredCommands: () => Promise<StoredCommand[]>;
-  navigateHistory: (direction: 'up' | 'down', currentSegments: CommandSegment[]) => Promise<{
+  navigateHistory: (direction: 'up' | 'down') => Promise<{
     segments: CommandSegment[] | null;
     position: number | null;
   }>;

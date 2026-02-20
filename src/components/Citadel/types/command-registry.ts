@@ -219,8 +219,7 @@ export class CommandRegistry {
    * @param path The path to get completions for.
    * @returns An array of completion strings.
    */
-  // used by AvailableCommands
-  getCompletions_s(path: string[]): string[] {
+  getCompletionNames(path: string[]): string[] {
     return this.getCompletions(path).map(segment => segment.name);
   }
 

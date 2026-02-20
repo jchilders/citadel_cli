@@ -28,7 +28,7 @@ export interface CitadelConfig {
   cursorType?: CursorType;
 
   /**
-   * Whether to include the default help command in the command regsitry.
+   * Whether to include the default help command in the command registry.
    */
   includeHelpCommand?: boolean;
 

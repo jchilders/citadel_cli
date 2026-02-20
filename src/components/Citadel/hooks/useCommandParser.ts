@@ -42,7 +42,7 @@ export const useCommandParser = () => {
   }, [commands, segmentStack]);
 
   const getAvailableNodes = useCallback((): CommandNode[] => {
-    const nextSegmentNames = commands.getCompletions_s(segmentStack.path());
+    const nextSegmentNames = commands.getCompletionNames(segmentStack.path());
     return nextSegmentNames
       .map(segmentName => commands.getCommand([...segmentStack.path(), segmentName]))
       .filter((cmd): cmd is CommandNode => cmd !== undefined);
@@ -57,24 +57,14 @@ export const useCommandParser = () => {
    */
   const findMatchingCommands = useCallback((input: string, availableNodes: CommandNode[]): CommandNode[] => {
     if (!input) return availableNodes;
-    
-    const uniqueFirstSegments = availableNodes.reduce((acc, node) => {
-      const segment = getNextExpectedSegment();
-      if (segment?.type === 'word') {
-        acc.set(segment.name, node);
-      }
-      return acc;
-    }, new Map<string, CommandNode>());
 
-    // Filter nodes whose next word segment matches the input
-    const matches = Array.from(uniqueFirstSegments.values()).filter(() => {
-      const nextSegment = getNextExpectedSegment();
-      if (nextSegment.type !== 'word') return false;
-      return nextSegment.name.toLowerCase().startsWith(input.toLowerCase());
+    const depth = segmentStack.path().length;
+    return availableNodes.filter(node => {
+      const segment = node.segments[depth];
+      if (!segment || segment.type !== 'word') return false;
+      return segment.name.toLowerCase().startsWith(input.toLowerCase());
     });
-
-    return matches;
-  }, [getNextExpectedSegment]);
+  }, [segmentStack]);
 
   /**
    * Returns a completion suggestion when there's exactly one unambiguous match.
@@ -159,26 +149,25 @@ export const useCommandParser = () => {
       if (parsedInput.isQuoted) {
         if (parsedInput.isComplete) { // `"hello"`
           const nextSegment = getNextExpectedSegment();
-          if (nextSegment.type === 'argument') {
-            const argumentSegment = (nextSegment as ArgumentSegment);
-            argumentSegment.value = newValue.trim() || '';
-            Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", argumentSegment);
-            segmentStack.push(argumentSegment);
-            actions.setCurrentInput('');
-            setInputStateWithLogging('idle');
+          if (!(nextSegment instanceof ArgumentSegment)) return;
+          nextSegment.value = newValue.trim() || '';
+          Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", nextSegment);
+          segmentStack.push(nextSegment);
+          actions.setCurrentInput('');
+          setInputStateWithLogging('idle');
 
-            return;
-          }
+          return;
         } else { // `"hello`
           // User is still entering an argument. Do nothing
           return;
         }
       } else { // unquoted input
         if (parsedInput.isComplete) { // `hello `
-          const argumentSegment = (getNextExpectedSegment() as ArgumentSegment);
-          argumentSegment.value = newValue.trim() || '';
-          Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", argumentSegment);
-          segmentStack.push(argumentSegment);
+          const nextSegment = getNextExpectedSegment();
+          if (!(nextSegment instanceof ArgumentSegment)) return;
+          nextSegment.value = newValue.trim() || '';
+          Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", nextSegment);
+          segmentStack.push(nextSegment);
           actions.setCurrentInput('');
           setInputStateWithLogging('idle');
 
@@ -190,7 +179,7 @@ export const useCommandParser = () => {
       }
     }
 
-    if (inputState == 'entering_command') {
+    if (inputState === 'entering_command') {
       const suggestedSegment = tryAutocomplete(newValue);
       if (suggestedSegment.type === 'word') {
         Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", suggestedSegment);
@@ -263,10 +252,11 @@ export const useCommandParser = () => {
 
         if (inputState === 'entering_argument' || (isEnteringArg && currentInput.trim())) {
           const nextSegment = getNextExpectedSegment();
-          const argumentSegment = (nextSegment as ArgumentSegment);
-          argumentSegment.value = currentInput;
-          Logger.debug("[handleKeyDown][Enter]['entering_argument'] pushing: ", argumentSegment);
-          segmentStack.push(argumentSegment);
+          if (nextSegment instanceof ArgumentSegment) {
+            nextSegment.value = currentInput;
+            Logger.debug("[handleKeyDown][Enter]['entering_argument'] pushing: ", nextSegment);
+            segmentStack.push(nextSegment);
+          }
         }
 
         // Validate that we have a concrete command to execute
@@ -299,7 +289,7 @@ export const useCommandParser = () => {
       case 'ArrowUp': {
         e.preventDefault();
         return (async () => {
-          const navResult = await history.navigateHistory('up', segmentStack.toArray());
+          const navResult = await history.navigateHistory('up');
           if (navResult.segments) {
             segmentStack.clear();
             segmentStack.pushAll(navResult.segments);
@@ -313,7 +303,7 @@ export const useCommandParser = () => {
       case 'ArrowDown': {
         e.preventDefault();
         return (async () => {
-          const navResult = await history.navigateHistory('down', segmentStack.toArray());
+          const navResult = await history.navigateHistory('down');
           if (navResult.segments) {
             segmentStack.clear();
             segmentStack.pushAll(navResult.segments);
