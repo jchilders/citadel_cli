@@ -31,9 +31,9 @@ coverage/
 .aider*
 .env
 
-# Amazon Q things to ignore
 .amazonq/conversations/
 .amazonq/cli-todo-lists/
+.claude/
 
 # Playwright e2e testing
 test-results/

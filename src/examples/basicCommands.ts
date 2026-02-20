@@ -11,12 +11,12 @@ import {
  * Used by the demo app and example bundles.
  */
 export function createBasicCommandRegistry(): CommandRegistry {
-  const cmdRegistry = new CommandRegistry()
+  const commandRegistry = new CommandRegistry()
 
   // User commands
-  cmdRegistry.addCommand(
+  commandRegistry.addCommand(
     [
-      { type: 'word', name: 'user' },
+      { type: 'word', name: 'user', description: 'User operations' },
       { type: 'word', name: 'show' },
       { type: 'argument', name: 'userId', description: 'Enter user ID' },
     ],
@@ -33,7 +33,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
     },
   )
 
-  cmdRegistry.addCommand(
+  commandRegistry.addCommand(
     [
       { type: 'word', name: 'user' },
       { type: 'word', name: 'deactivate' },
@@ -47,7 +47,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
       }),
   )
 
-  cmdRegistry.addCommand(
+  commandRegistry.addCommand(
     [
       { type: 'word', name: 'user' },
       { type: 'word', name: 'query' },
@@ -64,7 +64,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
       }),
   )
 
-  cmdRegistry.addCommand(
+  commandRegistry.addCommand(
     [
       { type: 'word', name: 'user' },
       { type: 'word', name: 'query' },
@@ -82,7 +82,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
   )
 
   // Error commands
-  cmdRegistry.addCommand(
+  commandRegistry.addCommand(
     [
       { type: 'word', name: 'error' },
       { type: 'word', name: 'timeout' },
@@ -94,7 +94,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
     },
   )
 
-  cmdRegistry.addCommand(
+  commandRegistry.addCommand(
     [
       { type: 'word', name: 'error' },
       { type: 'word', name: 'raise' },
@@ -105,7 +105,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
     },
   )
 
-  cmdRegistry.addCommand(
+  commandRegistry.addCommand(
     [
       { type: 'word', name: 'error' },
       { type: 'word', name: 'returnval' },
@@ -116,7 +116,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
   )
 
   // Image commands
-  cmdRegistry.addCommand(
+  commandRegistry.addCommand(
     [
       { type: 'word', name: 'image' },
       { type: 'word', name: 'random' },
@@ -131,7 +131,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
     },
   )
 
-  cmdRegistry.addCommand(
+  commandRegistry.addCommand(
     [
       { type: 'word', name: 'image' },
       { type: 'word', name: 'random' },
@@ -145,7 +145,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
     },
   )
 
-  cmdRegistry.addCommand(
+  commandRegistry.addCommand(
     [
       { type: 'word', name: 'image' },
       { type: 'word', name: 'random' },
@@ -160,7 +160,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
   )
 
   // Cowsay command
-  cmdRegistry.addCommand(
+  commandRegistry.addCommand(
     [
       { type: 'word', name: 'cowsay' },
       { type: 'argument', name: 'message', description: 'What should the cow say?' },
@@ -185,7 +185,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
   )
 
   // LocalStorage commands
-  cmdRegistry.addCommand(
+  commandRegistry.addCommand(
     [
       { type: 'word', name: 'localstorage' },
       { type: 'word', name: 'show' },
@@ -203,7 +203,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
     },
   )
 
-  cmdRegistry.addCommand(
+  commandRegistry.addCommand(
     [
       { type: 'word', name: 'localstorage' },
       { type: 'word', name: 'clear' },
@@ -215,7 +215,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
     },
   )
 
-  cmdRegistry.addCommand(
+  commandRegistry.addCommand(
     [
       { type: 'word', name: 'thing fnord' },
       { type: 'argument', name: 'arg1', description: 'Arg 1' },
@@ -227,6 +227,6 @@ export function createBasicCommandRegistry(): CommandRegistry {
     },
   )
 
-  return cmdRegistry
+  return commandRegistry
 }
 /* c8 ignore stop */

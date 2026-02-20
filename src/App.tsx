@@ -1,10 +1,9 @@
-import { useMemo } from "react";
 import { Citadel } from "./index";
-import { createBasicCommandRegistry } from "./examples/basicCommands";
+import { useRuntimeConfigDemo } from "./examples/runtimeConfigDemo";
 import "./styles/app.css";
 
 function App() {
-  const commandRegistry = useMemo(() => createBasicCommandRegistry(), []);
+  const { commandRegistry } = useRuntimeConfigDemo();
 
   return (
     <div className="min-h-screen bg-gray-800 flex items-center justify-center p-8">
