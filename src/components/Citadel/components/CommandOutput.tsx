@@ -1,7 +1,8 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { OutputItem } from '../types/state';
 import { CommandOutputLine } from './CommandOutputLine';
 import { useCitadelConfig } from '../config/hooks';
+import { resolveTypography } from '../utils/typography';
 
 interface CommandOutputProps {
   output: OutputItem[];
@@ -10,6 +11,11 @@ interface CommandOutputProps {
 
 export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef }) => {
   const config = useCitadelConfig();
+  const outputTypography = useMemo(
+    () => resolveTypography(config.fontFamily, config.outputFontSize ?? config.fontSize),
+    [config.fontFamily, config.fontSize, config.outputFontSize]
+  );
+
   const scrollToBottom = useCallback(() => {
     if (outputRef.current) {
       const scrollContainer = outputRef.current;
@@ -46,8 +52,13 @@ export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef 
             command={item.command.join(' ')}
             timestamp={new Date(item.timestamp).toLocaleTimeString()}
             status={item.result.status}
+            fontFamily={config.fontFamily}
+            fontSize={config.fontSize}
           />
-          <pre className={`text-gray-200 whitespace-pre font-mono ${config.outputFontSize}`}>
+          <pre
+            className={`text-gray-200 whitespace-pre ${outputTypography.className ?? ''}`.trim()}
+            style={outputTypography.style}
+          >
             {item.result.render()}
           </pre>
         </div>

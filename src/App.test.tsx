@@ -2,9 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import App from './App';
 import { CommandRegistry } from './components/Citadel/types/command-registry';
+import { defaultConfig } from './components/Citadel/config/defaults';
 
 const mockCitadel = vi.fn();
-const mockUseRuntimeConfigDemo = vi.fn();
+const mockCreateDevOpsCommandRegistry = vi.fn();
 
 vi.mock('./index', () => ({
   Citadel: (props: unknown) => {
@@ -13,29 +14,19 @@ vi.mock('./index', () => ({
   }
 }));
 
-vi.mock('./examples/runtimeConfigDemo', () => ({
-  useRuntimeConfigDemo: () => mockUseRuntimeConfigDemo()
+vi.mock('./examples/devopsCommands', () => ({
+  createDevOpsCommandRegistry: () => mockCreateDevOpsCommandRegistry()
 }));
 
 describe('App', () => {
   beforeEach(() => {
     mockCitadel.mockClear();
-    mockUseRuntimeConfigDemo.mockReset();
+    mockCreateDevOpsCommandRegistry.mockReset();
   });
 
-  it('passes both command registry and runtime config to Citadel', () => {
+  it('passes devops command registry and default config to Citadel', () => {
     const commandRegistry = new CommandRegistry();
-    const config = {
-      cursorColor: 'aqua',
-      displayMode: 'panel' as const,
-      includeHelpCommand: true
-    };
-
-    mockUseRuntimeConfigDemo.mockReturnValue({
-      commandRegistry,
-      config,
-      mode: 'panel'
-    });
+    mockCreateDevOpsCommandRegistry.mockReturnValue(commandRegistry);
 
     render(<App />);
 
@@ -43,11 +34,11 @@ describe('App', () => {
     expect(calls.length).toBeGreaterThan(0);
     const props = calls[calls.length - 1][0] as {
       commandRegistry: CommandRegistry;
-      config: typeof config;
+      config: typeof defaultConfig;
     };
 
     expect(props.commandRegistry).toBe(commandRegistry);
-    expect(props.config).toBe(config);
+    expect(props.config).toBe(defaultConfig);
     expect(screen.getByTestId('citadel-mock')).toBeTruthy();
   });
 });

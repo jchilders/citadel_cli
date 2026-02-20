@@ -1,9 +1,12 @@
+import { useMemo } from "react";
 import { Citadel } from "./index";
-import { useRuntimeConfigDemo } from "./examples/runtimeConfigDemo";
+import { createBasicCommandRegistry } from "./examples/basicCommands.ts";
+// import { createDevOpsCommandRegistry } from "./examples/devopsCommands";
+import { defaultConfig } from "./components/Citadel/config/defaults";
 import "./styles/app.css";
 
 function App() {
-  const { commandRegistry, config } = useRuntimeConfigDemo();
+  const commandRegistry = useMemo(() => createBasicCommandRegistry(), []);
 
   return (
     <div className="min-h-screen bg-gray-800 flex items-center justify-center p-8">
@@ -17,7 +20,7 @@ function App() {
           </p>
           <p className="text-sm text-gray-500">Press Escape to hide.</p>
         </div>
-        <Citadel commandRegistry={commandRegistry} config={config} />
+        <Citadel commandRegistry={commandRegistry} config={defaultConfig} />
       </div>
     </div>
   );

@@ -33,6 +33,20 @@ export interface CitadelConfig {
   includeHelpCommand?: boolean;
 
   /**
+   * The font family used by the interface.
+   * Accepts any valid CSS `font-family` value.
+   * Example: '"JetBrains Mono", monospace'
+   */
+  fontFamily?: string;
+
+  /**
+   * The default font size used by the interface.
+   * Accepts either a CSS font-size value (e.g. '14px', '0.875rem')
+   * or a Tailwind text size class (e.g. 'text-sm').
+   */
+  fontSize?: string;
+
+  /**
    * The initial height of the command interface.
    * Accepts any valid CSS height value.
    * Example: '400px' or '50vh'
@@ -59,8 +73,10 @@ export interface CitadelConfig {
   minHeight?: string;
 
   /**
-   * The font size for the command output text.
-   * Accepts Tailwind text size classes: 'text-xs', 'text-sm', 'text-base', 'text-lg', etc.
+   * The font size for command output text.
+   * Accepts either a CSS font-size value (e.g. '14px', '0.875rem')
+   * or a Tailwind text size class (e.g. 'text-sm').
+   * If omitted, output uses `fontSize`.
    */
   outputFontSize?: string;
 

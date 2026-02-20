@@ -60,7 +60,7 @@ export class TextCommandResult extends CommandResult {
 
   render(): React.ReactNode {
     return (
-      <div className="text-gray-200 whitespace-pre font-mono">{this.text}</div>
+      <div className="text-gray-200 whitespace-pre">{this.text}</div>
     );
   }
 }

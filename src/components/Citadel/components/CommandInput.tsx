@@ -7,6 +7,7 @@ import { defaultConfig } from '../config/defaults';
 import { InputState, useCommandParser } from '../hooks/useCommandParser';
 import { useCitadelConfig, useCitadelCommands, useSegmentStack } from '../config/hooks';
 import { useSegmentStackVersion } from '../hooks/useSegmentStackVersion';
+import { resolveTypography } from '../utils/typography';
 
 interface CommandInputProps {
   state: CitadelState;
@@ -30,6 +31,10 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   const [showInvalidAnimation, setShowInvalidAnimation] = useState(false);
   const config = useCitadelConfig();
   const segmentStackVersion = useSegmentStackVersion();
+  const inputTypography = useMemo(
+    () => resolveTypography(config.fontFamily, config.fontSize),
+    [config.fontFamily, config.fontSize]
+  );
 
   const onKeyDown = async (e: React.KeyboardEvent) => {
     const result = handleKeyDown(e, state, actions);
@@ -150,9 +155,12 @@ export const CommandInput: React.FC<CommandInputProps> = ({
         }
       `}</style>
       
-      <div className="flex items-center gap-2">
-        <div className="text-gray-400 font-mono">&gt;</div>
-        <div className="flex-1 font-mono flex items-center">
+      <div
+        className={`flex items-center gap-2 ${inputTypography.className ?? ''}`.trim()}
+        style={inputTypography.style}
+      >
+        <div className="text-gray-400">&gt;</div>
+        <div className="flex-1 flex items-center">
           {segmentNamesAndVals}
           <div className="relative flex-1">
             <input

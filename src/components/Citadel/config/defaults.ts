@@ -18,6 +18,10 @@ const isProduction = import.meta.env.PROD;
  * @property includeHelpCommand - When true, automatically adds a 'help' command that displays all available commands.
  *                               When false, no help command will be shown. Default: true.
  * 
+ * @property fontFamily - The font family used by the interface. Default: 'monospace'.
+ * 
+ * @property fontSize - The default font size used by the interface. Default: '0.875rem'.
+ * 
  * @property initialHeight - The initial CSS height of the interface. Default: '40vh'.
  * 
  * @property logLevel - The logging level for the Citadel interface. Default: DEBUG in development, ERROR in production.
@@ -26,7 +30,7 @@ const isProduction = import.meta.env.PROD;
  * 
  * @property minHeight - The minimum CSS height of the interface. Default: '200'.
  * 
- * @property outputFontSize - The TailwindCSS class for the font size of the output text. Default: 'text-sm'.
+ * @property outputFontSize - The output font size as CSS value or Tailwind text size class. Default: '0.875rem'.
  * 
  * @property resetStateOnHide - When true, hiding the interface (via Escape key or other means) will clear the command input.
  *                             When false, the interface preserves the last input when hidden. Default: false.
@@ -41,6 +45,8 @@ export const defaultConfig: CitadelConfig = {
   cursorSpeed: 530,
   cursorType: 'blink',
   includeHelpCommand: true,
+  fontFamily: 'monospace',
+  fontSize: '0.875rem',
   initialHeight: '40vh',
   logLevel: isProduction ? LogLevel.ERROR : LogLevel.DEBUG,
   maxHeight: '80vh',

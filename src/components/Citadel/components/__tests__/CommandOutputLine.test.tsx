@@ -45,4 +45,19 @@ describe('CommandOutputLine', () => {
     const successIndicator = screen.getByTestId('success-indicator');
     expect(successIndicator.className).includes('bg-red-500');
   });
+
+  it('applies custom typography props', () => {
+    render(
+      <CommandOutputLine
+        {...defaultProps}
+        status={CommandStatus.Success}
+        fontFamily='"Fira Code", monospace'
+        fontSize="16px"
+      />
+    );
+
+    const line = screen.getByText('10:00:00 AM').parentElement;
+    expect(line?.style.fontFamily).toContain('Fira Code');
+    expect(line?.style.fontSize).toBe('16px');
+  });
 });

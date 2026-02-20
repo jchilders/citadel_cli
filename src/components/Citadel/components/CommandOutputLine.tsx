@@ -1,20 +1,33 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Spinner } from './Spinner';
 import { CommandStatus } from '../types/command-results';
+import { resolveTypography } from '../utils/typography';
 
 interface CommandOutputLineProps {
   command: string;
   timestamp: string;
   status: CommandStatus;
+  fontFamily?: string;
+  fontSize?: string;
 }
 
 export const CommandOutputLine: React.FC<CommandOutputLineProps> = ({
   command,
   timestamp,
-  status
+  status,
+  fontFamily,
+  fontSize
 }) => {
+  const typography = useMemo(
+    () => resolveTypography(fontFamily, fontSize ?? 'text-sm'),
+    [fontFamily, fontSize]
+  );
+
   return (
-    <div className="flex items-center gap-2 font-mono text-sm">
+    <div
+      className={`flex items-center gap-2 ${typography.className ?? ''}`.trim()}
+      style={typography.style}
+    >
       <span className="text-gray-200">
         &gt; {command.split(' ').map((part, i) => {
           const isArg = part.startsWith('<') && part.endsWith('>');
