@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, waitFor, act } from '@testing-library/react';
-import { Citadel } from '../Citadel';
+import { Citadel, CitadelElement } from '../Citadel';
 import userEvent from '@testing-library/user-event';
 import type { UserEvent } from '@testing-library/user-event';
 import { StorageType } from '../types/storage';
+import { CommandRegistry } from '../types/command-registry';
 import { defaultConfig } from '../config/defaults'
 
 describe('Citadel', () => {
@@ -189,6 +190,22 @@ describe('Citadel', () => {
       expect(citadelElement.parentElement).not.toBe(document.body);
       const inlineContainer = citadelElement.shadowRoot?.querySelector('[data-testid="citadel-inline-container"]');
       expect(inlineContainer).toBeTruthy();
+    });
+  });
+
+  it('unmounts root and clears shadow content on disconnect', async () => {
+    const element = new CitadelElement(new CommandRegistry());
+    document.body.appendChild(element);
+
+    await waitFor(() => {
+      expect(element.shadowRoot?.getElementById('citadel-root')).toBeTruthy();
+    });
+
+    document.body.removeChild(element);
+
+    await waitFor(() => {
+      expect(element.shadowRoot?.childElementCount).toBe(0);
+      expect(element.shadowRoot?.getElementById('citadel-root')).toBeNull();
     });
   });
 });

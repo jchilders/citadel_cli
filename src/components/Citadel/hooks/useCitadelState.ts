@@ -99,7 +99,7 @@ export const useCitadelState = () => {
         setState(prev => ({
           ...prev,
           output: prev.output.map(item => 
-            item.timestamp === outputItem.timestamp ? { ...item, result } : item
+            item.id === outputItem.id ? { ...item, result } : item
           )
         }));
       } catch (error) {
@@ -111,7 +111,7 @@ export const useCitadelState = () => {
         setState(prev => ({
           ...prev,
           output: prev.output.map(item => 
-            item.timestamp === outputItem.timestamp ? { ...item, result } : item
+            item.id === outputItem.id ? { ...item, result } : item
           )
         }));
       }

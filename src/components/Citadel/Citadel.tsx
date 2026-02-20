@@ -82,7 +82,7 @@ export class CitadelElement extends HTMLElement {
   private shadow: ShadowRoot;
   private root: ReturnType<typeof createRoot> | null = null;
   private commandRegistry?: CommandRegistry;
-  
+
   private config?: CitadelConfig;
 
   constructor(commandRegistry: CommandRegistry, config?: CitadelConfig) {
@@ -127,9 +127,26 @@ export class CitadelElement extends HTMLElement {
       </CitadelConfigProvider>
     );
   }
+
+  disconnectedCallback() {
+    const root = this.root;
+    this.root = null;
+
+    if (!root) {
+      this.shadow.replaceChildren();
+      return;
+    }
+
+    queueMicrotask(() => {
+      root.unmount();
+      this.shadow.replaceChildren();
+    });
+  }
 }
 
-customElements.define('citadel-element', CitadelElement);
+if (typeof window !== 'undefined' && window.customElements && !window.customElements.get('citadel-element')) {
+  window.customElements.define('citadel-element', CitadelElement);
+}
 
 const CitadelRoot: React.FC = () => {
   const config = useCitadelConfig();

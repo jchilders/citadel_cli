@@ -58,6 +58,35 @@ describe('useCommandHistory', () => {
       mockStorage.getStoredCommands.mockResolvedValue([mockStoredCommand]);
     });
 
+    it('should navigate using loaded commands before state hydration completes', async () => {
+      let resolveInitialLoad: ((value: (typeof mockStoredCommand)[]) => void) | null = null;
+      const pendingInitialLoad = new Promise<(typeof mockStoredCommand)[]>((resolve) => {
+        resolveInitialLoad = resolve;
+      });
+
+      mockStorage.getStoredCommands
+        .mockImplementationOnce(async () => pendingInitialLoad)
+        .mockImplementationOnce(async () => [mockStoredCommand]);
+
+      const { result } = renderHook(() => useCommandHistory());
+
+      const navigation = await act(async () => {
+        return await result.current.navigateHistory('up');
+      });
+
+      expect(navigation).toEqual({
+        segments: mockStoredCommand.commandSegments,
+        position: 0
+      });
+
+      if (resolveInitialLoad) {
+        await act(async () => {
+          resolveInitialLoad?.([mockStoredCommand]);
+          await pendingInitialLoad;
+        });
+      }
+    });
+
     it('should navigate up to previous command', async () => {
       const { result } = await setupHistory();
       

@@ -23,11 +23,15 @@ export interface CitadelActions {
 }
 
 export class OutputItem {
+  private static idCounter = 0;
+
+  readonly id: string;
   readonly timestamp: number;
   readonly command: string[];
   result: CommandResult;
 
   constructor(segmentStack: SegmentStack, result?: CommandResult) {
+    this.id = `output-${Date.now()}-${OutputItem.idCounter++}`;
     this.command = segmentStack.toArray().map((segment): string => {
       if (segment.type === 'argument') {
         return (segment as ArgumentSegment).value || '';
@@ -38,4 +42,3 @@ export class OutputItem {
     this.result = result ?? new PendingCommandResult();
   }
 }
-
