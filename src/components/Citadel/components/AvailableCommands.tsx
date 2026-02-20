@@ -1,13 +1,19 @@
 import React from 'react';
-import { useCitadelCommands, useSegmentStack } from '../config/hooks';
+import { useCitadelCommands, useCitadelConfig, useSegmentStack } from '../config/hooks';
 import { Logger } from '../utils/logger';
+import { resolveTypography } from '../utils/typography';
 
 export const AvailableCommands: React.FC = () => {
   const commands  = useCitadelCommands();
+  const config = useCitadelConfig();
   const segmentStack = useSegmentStack();
+  const commandTypography = React.useMemo(
+    () => resolveTypography(config.fontFamily, config.fontSize),
+    [config.fontFamily, config.fontSize]
+  );
 
   const containerClasses = "mt-2 border-t border-gray-700 px-4 py-2";
-  const contentClasses = "text-gray-300";
+  const contentClasses = `text-gray-300 ${commandTypography.className ?? ''}`.trim();
 
   const nextCommandSegments = commands.getCompletions(segmentStack.path());
   Logger.debug("[AvailableCommands] nextCommandSegments: ", nextCommandSegments);
@@ -50,7 +56,7 @@ export const AvailableCommands: React.FC = () => {
   const nextSegment = nextCommandSegments[0];
   return (
     <div className={containerClasses} data-testid="available-commands">
-      <div className={contentClasses}>
+      <div className={contentClasses} style={commandTypography.style}>
         {!nextSegmentIsArgument ? (
           <div className="flex flex-wrap gap-2">
             {sortedCommands?.map((segment) => {
@@ -59,9 +65,10 @@ export const AvailableCommands: React.FC = () => {
               return (
                 <div
                   key={segment.name}
+                  data-testid="available-command-chip"
                   className="px-2 py-1 rounded bg-gray-800 mr-2 last:mr-0"
                 >
-                  <span className="font-mono text-white">
+                  <span className="text-white">
                     <strong className="underline">{segment.name.slice(0, boldLength)}</strong>
                     {segment.name.slice(boldLength)}
                   </span>

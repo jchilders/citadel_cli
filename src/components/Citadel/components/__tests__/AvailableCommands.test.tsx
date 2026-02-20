@@ -134,7 +134,7 @@ describe('AvailableCommands', () => {
       });
 
       await waitFor(() => {
-        const commandChips = Array.from(container.querySelectorAll('.font-mono'));
+        const commandChips = Array.from(container.querySelectorAll('[data-testid="available-command-chip"]'));
         const commandNames = commandChips.map((node) => node.textContent?.trim());
         expect(commandNames).toEqual(['alpha', 'eta', 'zeta', 'help']);
       });
@@ -155,7 +155,7 @@ describe('AvailableCommands', () => {
       });
 
       await waitFor(() => {
-        const commandChips = Array.from(container.querySelectorAll('.font-mono'));
+        const commandChips = Array.from(container.querySelectorAll('[data-testid="available-command-chip"]'));
         const commandNames = commandChips.map((node) => node.textContent?.trim());
         expect(commandNames).toEqual(['beta', 'gamma']);
       });
@@ -176,7 +176,7 @@ describe('AvailableCommands', () => {
       });
 
       await waitFor(() => {
-        const commandChips = Array.from(container.querySelectorAll('.font-mono'));
+        const commandChips = Array.from(container.querySelectorAll('[data-testid="available-command-chip"]'));
         const commandNames = commandChips.map((node) => node.textContent?.trim());
         expect(commandNames).toEqual(['mode', 'help']);
       });

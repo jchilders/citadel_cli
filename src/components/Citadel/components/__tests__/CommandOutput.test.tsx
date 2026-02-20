@@ -45,7 +45,7 @@ describe('CommandOutput', () => {
   it('renders with default font size', () => {
     renderWithConfig();
     const preElement = screen.getByText('Test output').parentElement;
-    expect(preElement?.className).includes('0.875rem');
+    expect(preElement?.style.fontSize).toBe('0.875rem');
   });
 
   it('uses custom font size from config', () => {
@@ -55,7 +55,21 @@ describe('CommandOutput', () => {
     };
     renderWithConfig(defaultProps, customConfig);
     const preElement = screen.getByText('Test output').parentElement;
-    expect(preElement?.className).includes('text-xs');
+    expect(preElement?.className).toContain('text-xs');
+  });
+
+  it('falls back to global font settings when outputFontSize is omitted', () => {
+    const customConfig = {
+      ...defaultConfig,
+      fontFamily: '"Fira Code", monospace',
+      fontSize: '15px',
+      outputFontSize: undefined
+    };
+
+    renderWithConfig(defaultProps, customConfig);
+    const preElement = screen.getByText('Test output').parentElement;
+    expect(preElement?.style.fontSize).toBe('15px');
+    expect(preElement?.style.fontFamily).toContain('Fira Code');
   });
 
   it('renders multiple output items', () => {

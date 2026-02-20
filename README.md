@@ -128,10 +128,12 @@ given below, along with their default values.
 const config = {
   commandTimeoutMs: 10000,
   includeHelpCommand: true,
+  fontFamily: '"JetBrains Mono", monospace',
+  fontSize: '0.875rem', // CSS size (e.g. '14px') or Tailwind class (e.g. 'text-sm')
   maxHeight: '80vh',
   initialHeight: '40vh',
   minHeight: '200',
-  outputFontSize: '0.875rem',
+  outputFontSize: 'text-xs', // optional override for output text only
   resetStateOnHide: false,
   showCitadelKey: '.',
   cursorType: 'blink', // 'blink', 'spin', 'solid', or 'bbs'
