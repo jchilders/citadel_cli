@@ -7,6 +7,8 @@ export enum LogLevel {
   TRACE = 5
 }
 
+const isProduction = import.meta.env.PROD;
+
 export class Logger {
   private static level: LogLevel = LogLevel.NONE;
   private static prefix = '';
@@ -17,13 +19,13 @@ export class Logger {
   }
 
   static trace(...args: unknown[]) {
-    if (this.level >= LogLevel.TRACE && process.env.NODE_ENV !== 'production') {
+    if (this.level >= LogLevel.TRACE && !isProduction) {
       console.trace(this.prefix, ...args);
     }
   }
 
   static debug(...args: unknown[]) {
-    if (this.level >= LogLevel.DEBUG && process.env.NODE_ENV !== 'production') {
+    if (this.level >= LogLevel.DEBUG && !isProduction) {
       console.debug(this.prefix, ...args);
     }
   }

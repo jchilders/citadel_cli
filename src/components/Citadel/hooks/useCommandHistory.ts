@@ -87,20 +87,25 @@ export function useCommandHistory(): CommandHistoryHook {
   const navigateHistory = useCallback(async (direction: 'up' | 'down'): Promise<{ segments: CommandSegment[] | null; position: number | null }> => {
     const commands = await getStoredCommands();
     if (commands.length === 0) {
+      setHistory(prev => ({
+        ...prev,
+        storedCommands: [],
+        position: null
+      }));
       return { segments: null, position: null };
     }
 
     let newPosition: number | null = null;
     if (direction === 'up') {
       if (history.position === null) {
-        newPosition = history.storedCommands.length - 1;
+        newPosition = commands.length - 1;
       } else if (history.position > 0) {
         newPosition = history.position - 1;
       } else {
         newPosition = 0;
       }
     } else {
-      if (history.position === null || history.position >= history.storedCommands.length - 1) {
+      if (history.position === null || history.position >= commands.length - 1) {
         newPosition = null;
       } else {
         newPosition = history.position + 1;
@@ -109,24 +114,30 @@ export function useCommandHistory(): CommandHistoryHook {
 
     setHistory(prev => ({
       ...prev,
+      storedCommands: commands,
       position: newPosition
     }));
 
-    // If we've returned to the original position or navigated down past the end, clear the input
     if (newPosition === null) {
-      return { 
+      return {
         segments: [],
-        position: null 
+        position: null
       };
     }
 
-    // Otherwise return the historical command segments
-    const result = { 
-      segments: newPosition !== null ? history.storedCommands[newPosition].commandSegments : null,
-      position: newPosition 
+    const selectedCommand = commands[newPosition];
+    if (!selectedCommand) {
+      return {
+        segments: [],
+        position: null
+      };
+    }
+
+    return {
+      segments: selectedCommand.commandSegments,
+      position: newPosition
     };
-    return result;
-  }, [history, getStoredCommands]);
+  }, [history.position, getStoredCommands]);
 
   const clear = useCallback(async () => {
     try {

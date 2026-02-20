@@ -41,7 +41,7 @@ export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef 
       data-testid="citadel-command-output"
     >
       {output.map((item) => (
-        <div key={item.timestamp} className="mb-4 last:mb-0">
+        <div key={item.id} className="mb-4 last:mb-0">
           <CommandOutputLine
             command={item.command.join(' ')}
             timestamp={new Date(item.timestamp).toLocaleTimeString()}

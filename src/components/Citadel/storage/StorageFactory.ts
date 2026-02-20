@@ -20,13 +20,15 @@ export class StorageFactory {
   }
 
   initializeStorage(config: StorageConfig): void {
-    if (!this.currentStorage) {
-      try {
-        this.currentStorage = new LocalStorage(config);
-      } catch (error) {
-        console.warn('Failed to create storage, falling back to memory storage:', error);
+    try {
+      if (config.type === 'memory') {
         this.currentStorage = new MemoryStorage(config);
+      } else {
+        this.currentStorage = new LocalStorage(config);
       }
+    } catch (error) {
+      console.warn('Failed to create storage, falling back to memory storage:', error);
+      this.currentStorage = new MemoryStorage(config);
     }
   }
 

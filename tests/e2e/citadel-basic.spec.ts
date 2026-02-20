@@ -1,5 +1,41 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import { openHarness } from './helpers/harness';
+
+async function runShortcutCommand(
+  page: Page,
+  segments: string[],
+  argument?: string,
+) {
+  const input = page.getByTestId('citadel-command-input');
+  await input.click();
+
+  for (const segment of segments) {
+    await page.keyboard.type(segment, { delay: 40 });
+    await expect
+      .poll(async () => input.inputValue(), { timeout: 5000 })
+      .toBe('');
+  }
+
+  if (argument !== undefined) {
+    await page.keyboard.type(argument, { delay: 20 });
+  }
+  await page.keyboard.press('Enter');
+}
+
+async function waitForOutputToContain(
+  page: Page,
+  expectedText: string,
+) {
+  await page.waitForFunction((text) => {
+    const host = document.querySelector('citadel-element');
+    if (!host) return false;
+    const shadow = host.shadowRoot;
+    if (!shadow) return false;
+    const output = shadow.querySelector('[data-testid="citadel-command-output"]');
+    if (!output) return false;
+    return output.textContent?.includes(text) ?? false;
+  }, expectedText);
+}
 
 test.describe('Citadel CLI E2E Tests', () => {
   test('should activate Citadel with period key', async ({ page }) => {
@@ -112,5 +148,23 @@ test.describe('Citadel CLI E2E Tests', () => {
 
     expect(metrics.helpVisible).toBe(true);
     expect(metrics.scrollHeight).toBeLessThanOrEqual(metrics.clientHeight);
+  });
+
+  test('executes user show command and renders JSON output', async ({ page }) => {
+    await openHarness(page);
+    await page.keyboard.press('.');
+
+    await runShortcutCommand(page, ['u', 's'], '42');
+
+    await waitForOutputToContain(page, '"name": "John Doe"');
+  });
+
+  test('renders an error message when command handler throws', async ({ page }) => {
+    await openHarness(page);
+    await page.keyboard.press('.');
+
+    await runShortcutCommand(page, ['e', 'ra']);
+
+    await waitForOutputToContain(page, 'This is an intentional error');
   });
 });

@@ -1,6 +1,8 @@
 import { CitadelConfig } from './types';
 import { LogLevel } from '../utils/logger';
 
+const isProduction = import.meta.env.PROD;
+
 /**
  * Default configuration for Citadel command interface
  * 
@@ -40,7 +42,7 @@ export const defaultConfig: CitadelConfig = {
   cursorType: 'blink',
   includeHelpCommand: true,
   initialHeight: '40vh',
-  logLevel: process.env.NODE_ENV === 'production' ? LogLevel.ERROR : LogLevel.DEBUG,
+  logLevel: isProduction ? LogLevel.ERROR : LogLevel.DEBUG,
   maxHeight: '80vh',
   minHeight: '200',
   outputFontSize: '0.875rem',
