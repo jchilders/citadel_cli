@@ -1,11 +1,12 @@
 import { useMemo } from "react";
 import { Citadel } from "./index";
-import { createDevOpsCommandRegistry } from "./examples/devopsCommands";
+import { createBasicCommandRegistry } from "./examples/basicCommands.ts";
+// import { createDevOpsCommandRegistry } from "./examples/devopsCommands";
 import { defaultConfig } from "./components/Citadel/config/defaults";
 import "./styles/app.css";
 
 function App() {
-  const commandRegistry = useMemo(() => createDevOpsCommandRegistry(), []);
+  const commandRegistry = useMemo(() => createBasicCommandRegistry(), []);
 
   return (
     <div className="min-h-screen bg-gray-800 flex items-center justify-center p-8">
@@ -16,9 +17,6 @@ function App() {
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center text-gray-700">
           <p className="mb-4">
             Press <code className="px-2 border border-gray-300 rounded">.</code> to activate Citadel.
-          </p>
-          <p className="text-sm mb-2 text-gray-600">
-            Try: <code>deploy production 1.2.3</code>, <code>monitor logs</code>, <code>infra scale 10</code>
           </p>
           <p className="text-sm text-gray-500">Press Escape to hide.</p>
         </div>

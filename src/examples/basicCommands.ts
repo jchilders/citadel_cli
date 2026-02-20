@@ -215,18 +215,6 @@ export function createBasicCommandRegistry(): CommandRegistry {
     },
   )
 
-  commandRegistry.addCommand(
-    [
-      { type: 'word', name: 'thing fnord' },
-      { type: 'argument', name: 'arg1', description: 'Arg 1' },
-      { type: 'word', name: 'thing2' },
-    ],
-    'Test cmd w/ arg in middle',
-    async (args: string[]) => {
-      return new TextCommandResult(`args[0]: ${args[0]}`)
-    },
-  )
-
   return commandRegistry
 }
 /* c8 ignore stop */
