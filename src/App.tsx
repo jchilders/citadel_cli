@@ -3,7 +3,7 @@ import { useRuntimeConfigDemo } from "./examples/runtimeConfigDemo";
 import "./styles/app.css";
 
 function App() {
-  const { commandRegistry } = useRuntimeConfigDemo();
+  const { commandRegistry, config } = useRuntimeConfigDemo();
 
   return (
     <div className="min-h-screen bg-gray-800 flex items-center justify-center p-8">
@@ -17,7 +17,7 @@ function App() {
           </p>
           <p className="text-sm text-gray-500">Press Escape to hide.</p>
         </div>
-        <Citadel commandRegistry={commandRegistry} />
+        <Citadel commandRegistry={commandRegistry} config={config} />
       </div>
     </div>
   );

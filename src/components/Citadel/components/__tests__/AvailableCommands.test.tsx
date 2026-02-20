@@ -140,7 +140,7 @@ describe('AvailableCommands', () => {
       });
     });
 
-    it('omits help and sorts alphabetically when help is excluded', async () => {
+    it('sorts alphabetically when help is excluded and no help segment exists', async () => {
       const segments = ['gamma', 'beta'].map((name) =>
         createMockSegment('word', name)
       );
@@ -158,6 +158,27 @@ describe('AvailableCommands', () => {
         const commandChips = Array.from(container.querySelectorAll('.font-mono'));
         const commandNames = commandChips.map((node) => node.textContent?.trim());
         expect(commandNames).toEqual(['beta', 'gamma']);
+      });
+    });
+
+    it('keeps nested help suggestions visible when built-in help is disabled', async () => {
+      const segments = ['help', 'mode'].map((name) =>
+        createMockSegment('word', name)
+      );
+      vi.spyOn(cmdRegistry, 'getCompletions').mockReturnValue(segments);
+      vi.spyOn(cmdRegistry, 'getCompletionNames').mockReturnValue(
+        segments.map((segment) => segment.name)
+      );
+
+      const { container } = renderWithConfig({
+        ...defaultConfig,
+        includeHelpCommand: false
+      });
+
+      await waitFor(() => {
+        const commandChips = Array.from(container.querySelectorAll('.font-mono'));
+        const commandNames = commandChips.map((node) => node.textContent?.trim());
+        expect(commandNames).toEqual(['mode', 'help']);
       });
     });
   });

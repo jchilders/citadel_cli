@@ -1,10 +1,9 @@
 import React from 'react';
-import { useCitadelCommands, useCitadelConfig, useSegmentStack } from '../config/hooks';
+import { useCitadelCommands, useSegmentStack } from '../config/hooks';
 import { Logger } from '../utils/logger';
 
 export const AvailableCommands: React.FC = () => {
   const commands  = useCitadelCommands();
-  const config = useCitadelConfig();
   const segmentStack = useSegmentStack();
 
   const containerClasses = "mt-2 border-t border-gray-700 px-4 py-2";
@@ -18,20 +17,14 @@ export const AvailableCommands: React.FC = () => {
     const isHelpSegment = (segment: typeof segments[number]) =>
       segment.name.toLowerCase() === 'help';
 
+    const helpSegments = segments.filter(isHelpSegment);
     const nonHelpSegments = segments.filter(segment => !isHelpSegment(segment));
     const sortedNonHelpSegments = nonHelpSegments.sort((a, b) =>
       a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
     );
 
-    if (!config.includeHelpCommand) {
-      return sortedNonHelpSegments;
-    }
-
-    const helpSegment = segments.find(isHelpSegment);
-    return helpSegment
-      ? [...sortedNonHelpSegments, helpSegment]
-      : sortedNonHelpSegments;
-  }, [nextCommandSegments, config.includeHelpCommand]);
+    return [...sortedNonHelpSegments, ...helpSegments];
+  }, [nextCommandSegments]);
 
   const boldLengths = React.useMemo(() => {
     const map = new Map<string, number>();
