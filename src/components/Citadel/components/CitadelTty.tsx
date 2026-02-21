@@ -22,7 +22,7 @@ export const CitadelTty: React.FC<CitadelTtyProps> = ({
       </div>
       <div>
         <CommandInput state={state} actions={actions} />
-        <AvailableCommands />
+        <AvailableCommands currentInput={state.isEnteringArg ? '' : state.currentInput} />
       </div>
     </div>
   );
