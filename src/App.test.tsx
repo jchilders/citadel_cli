@@ -63,7 +63,7 @@ describe('App', () => {
     expect(props.commandRegistry).not.toBeNull();
     expect(props.config).toBe(defaultConfig);
     expect(screen.getByTestId('citadel-mock')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Basic' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Basic/i })).toBeTruthy();
   });
 
   it('switches to runtime example via UI and uses runtime config', () => {
@@ -81,7 +81,7 @@ describe('App', () => {
 
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Runtime Config' }));
+    fireEvent.click(screen.getByRole('button', { name: /Runtime Config/i }));
 
     const calls = mockCitadel.mock.calls;
     expect(calls.length).toBeGreaterThan(0);
