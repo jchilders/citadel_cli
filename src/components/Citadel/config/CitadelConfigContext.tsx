@@ -53,7 +53,7 @@ export const CitadelConfigProvider: React.FC<{
       mergedConfig.storage ?? defaultConfig.storage!
     );
     setStorage(StorageFactory.getInstance().getStorage());
-  }, [mergedConfig.storage?.type, mergedConfig.storage?.maxCommands]);
+  }, [mergedConfig.storage]);
 
   // Add help command if enabled
   useEffect(() => {

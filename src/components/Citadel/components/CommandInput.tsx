@@ -126,7 +126,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     });
 
     return [(
-      <div className="flex items-center gap-1" data-testid="user-input-area" key="{segmentStackVersion}">
+      <div className="flex items-center gap-1" data-testid="user-input-area" key={segmentStackVersion}>
         {elements}
       </div>
     )];

@@ -197,7 +197,7 @@ export const useCommandParser = () => {
 
       return;
     }
-  }, [tryAutocomplete, state, getNextExpectedSegment, inputState, segmentStack]);
+  }, [tryAutocomplete, state, getNextExpectedSegment, inputState, segmentStack, commands]);
 
   const resetInputState = useCallback((actions: CitadelActions) => {
     actions.setCurrentInput('');
