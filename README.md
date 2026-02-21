@@ -64,6 +64,13 @@ to the full word. For the above example, typing <kbd>g</kbd> would expand
 in-place to `greet ` (with a trailing space) whereupon you can enter in a value
 for the `name` argument.
 
+For hierarchical commands, expansion is prefix-based and unambiguous:
+
+- `us` can resolve to `user show`
+- `ud` can resolve to `user deactivate`
+- If two options share a prefix (`show` and `search`), continue until unique:
+  `ush` => `user show`, `use` => `user search`
+
 ## `addCommand` Details
 
 The `addCommand` method has the following signature:
@@ -77,6 +84,14 @@ addCommand(segments: CommandSegment[], description: string, handler: CommandHand
 
 `description` - Description of the command itself. Used by the built-in help
 command
+
+Argument segment `description` values are shown as argument-level help text.
+Example built-in help output:
+
+```text
+user show <userId> - Show user details
+  <userId>: Enter user ID
+```
 
 `handler` - What gets executed when <kbd>Enter</kbd> is pressed. The handler
 must return one of the following:
