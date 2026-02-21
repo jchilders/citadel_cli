@@ -86,4 +86,22 @@ describe('LocalStorage', () => {
     const commands = await localStorage.getStoredCommands();
     expect(commands).toHaveLength(0);
   });
+
+  it('should not allow mutating returned segment objects', async () => {
+    const command: StoredCommand = {
+      commandSegments: [
+        new WordSegment('test'),
+        new ArgumentSegment('arg1', 'First arg', 'one')
+      ],
+      timestamp: Date.now()
+    };
+
+    await localStorage.addStoredCommand(command);
+    const commands = await localStorage.getStoredCommands();
+    const arg = commands[0].commandSegments[1] as ArgumentSegment;
+    arg.value = 'mutated';
+
+    const fresh = await localStorage.getStoredCommands();
+    expect((fresh[0].commandSegments[1] as ArgumentSegment).value).toBe('one');
+  });
 });

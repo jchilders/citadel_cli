@@ -61,6 +61,27 @@ export class ArgumentSegment extends BaseSegment {
    }
  }
 
+export const cloneCommandSegment = (segment: CommandSegment): CommandSegment => {
+  if (segment.type === 'word') {
+    return new WordSegment(segment.name, segment.description);
+  }
+
+  if (segment.type === 'argument') {
+    const argumentLike = segment as ArgumentSegment;
+    return new ArgumentSegment(
+      argumentLike.name,
+      argumentLike.description,
+      argumentLike.value,
+      argumentLike.valid
+    );
+  }
+
+  return new NullSegment();
+};
+
+export const cloneCommandSegments = (segments: CommandSegment[]): CommandSegment[] =>
+  segments.map((segment) => cloneCommandSegment(segment));
+
 /** Defines a complete command with its path and behavior */
 export class CommandNode {
   private readonly _segments: CommandSegment[];

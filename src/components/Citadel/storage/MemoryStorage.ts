@@ -1,4 +1,5 @@
 import { StorageConfig, StoredCommand } from '../types/storage';
+import { cloneCommandSegments } from '../types/command-registry';
 import { BaseStorage } from './BaseStorage';
 
 /**
@@ -14,7 +15,7 @@ export class MemoryStorage extends BaseStorage {
   async getStoredCommands(): Promise<StoredCommand[]> {
     // Return a deep copy to prevent external mutations
     return this.storedCommands.map(cmd => ({
-      commandSegments: Array.isArray(cmd.commandSegments) ? [...cmd.commandSegments] : [],
+      commandSegments: Array.isArray(cmd.commandSegments) ? cloneCommandSegments(cmd.commandSegments) : [],
       timestamp: cmd.timestamp
     }));
   }
@@ -26,7 +27,7 @@ export class MemoryStorage extends BaseStorage {
   protected async saveCommands(commands: StoredCommand[]): Promise<void> {
     // Create a deep copy to prevent external mutations
     this.storedCommands = commands.map(cmd => ({
-      commandSegments: Array.isArray(cmd.commandSegments) ? [...cmd.commandSegments] : [],
+      commandSegments: Array.isArray(cmd.commandSegments) ? cloneCommandSegments(cmd.commandSegments) : [],
       timestamp: cmd.timestamp
     }));
   }

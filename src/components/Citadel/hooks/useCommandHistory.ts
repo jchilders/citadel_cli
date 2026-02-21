@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { StoredCommand } from '../types/storage';
 import { useCitadelStorage } from '../config/hooks';
-import { CommandSegment } from '../types/command-registry';
+import { CommandSegment, cloneCommandSegments } from '../types/command-registry';
 
 export interface CommandHistory {
   storedCommands: StoredCommand[];
@@ -20,7 +20,7 @@ export interface CommandHistoryActions {
 
 export function createStoredCommand(segments: CommandSegment[]): StoredCommand {
   return {
-    commandSegments: segments,
+    commandSegments: cloneCommandSegments(segments),
     timestamp: Date.now()
   };
 }
@@ -52,7 +52,10 @@ export function useCommandHistory(): CommandHistoryHook {
       await storage.addStoredCommand(storedCommand);
       setHistory(prev => ({
         ...prev,
-        storedCommands: [...prev.storedCommands, storedCommand],
+        storedCommands: [...prev.storedCommands, {
+          ...storedCommand,
+          commandSegments: cloneCommandSegments(storedCommand.commandSegments),
+        }],
         position: null
       }));
     } catch (error) {
@@ -62,7 +65,11 @@ export function useCommandHistory(): CommandHistoryHook {
 
   const getStoredCommands = useCallback(async () => {
     if (!storage) return [];
-    return await storage.getStoredCommands();
+    const storedCommands = await storage.getStoredCommands();
+    return storedCommands.map((storedCommand) => ({
+      ...storedCommand,
+      commandSegments: cloneCommandSegments(storedCommand.commandSegments),
+    }));
   }, [storage]);
 
   // Load command history from storage on mount
@@ -72,11 +79,15 @@ export function useCommandHistory(): CommandHistoryHook {
     const loadHistory = async () => {
       try {
         const storedCommands = await storage.getStoredCommands();
+        const clonedStoredCommands = storedCommands.map((storedCommand) => ({
+          ...storedCommand,
+          commandSegments: cloneCommandSegments(storedCommand.commandSegments),
+        }));
         setHistory(prev => ({
           ...prev,
-          storedCommands: storedCommands
+          storedCommands: clonedStoredCommands
         }));
-        return storedCommands;
+        return clonedStoredCommands;
       } catch (error) {
         console.warn('Failed to load command history:', error);
       }
@@ -114,7 +125,10 @@ export function useCommandHistory(): CommandHistoryHook {
 
     setHistory(prev => ({
       ...prev,
-      storedCommands: commands,
+      storedCommands: commands.map((storedCommand) => ({
+        ...storedCommand,
+        commandSegments: cloneCommandSegments(storedCommand.commandSegments),
+      })),
       position: newPosition
     }));
 
@@ -134,7 +148,7 @@ export function useCommandHistory(): CommandHistoryHook {
     }
 
     return {
-      segments: selectedCommand.commandSegments,
+      segments: cloneCommandSegments(selectedCommand.commandSegments),
       position: newPosition
     };
   }, [history.position, getStoredCommands]);

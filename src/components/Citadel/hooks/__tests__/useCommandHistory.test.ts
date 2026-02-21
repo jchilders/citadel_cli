@@ -47,7 +47,7 @@ describe('useCommandHistory', () => {
 
     expect(mockStorage.addStoredCommand).toHaveBeenCalledWith(
       expect.objectContaining({
-        commandSegments: mockSegments,
+        commandSegments: expect.arrayContaining(mockSegments),
         timestamp: expect.any(Number)
       })
     );
@@ -163,5 +163,17 @@ describe('useCommandHistory', () => {
       'Failed to load command history:',
       expect.any(Error)
     );
+  });
+
+  it('returns cloned segments from navigateHistory to prevent mutations', async () => {
+    mockStorage.getStoredCommands.mockResolvedValue([mockStoredCommand]);
+    const { result } = await setupHistory();
+
+    const navigation = await act(async () => {
+      return await result.current.navigateHistory('up');
+    });
+
+    expect(navigation.segments).toEqual(mockStoredCommand.commandSegments);
+    expect(navigation.segments).not.toBe(mockStoredCommand.commandSegments);
   });
 });

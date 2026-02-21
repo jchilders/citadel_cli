@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { CommandRegistry, NoopHandler, CommandHandler, ArgumentSegment } from '../command-registry';
+import { CommandRegistry, NoopHandler, CommandHandler, ArgumentSegment, WordSegment, cloneCommandSegments } from '../command-registry';
 import { TextCommandResult } from '../command-results';
 
 describe('CommandRegistry', () => {
@@ -447,6 +447,21 @@ describe('CommandRegistry', () => {
       await command!.handler(['Hello World', 'Alice']);
       
       expect(mockHandler).toHaveBeenCalledWith(['Hello World', 'Alice']);
+    });
+  });
+
+  describe('segment cloning', () => {
+    it('clones word and argument segments without shared references', () => {
+      const original = [
+        new WordSegment('user'),
+        new ArgumentSegment('userId', 'ID', '42')
+      ];
+
+      const cloned = cloneCommandSegments(original);
+
+      expect(cloned).toEqual(original);
+      expect(cloned[0]).not.toBe(original[0]);
+      expect(cloned[1]).not.toBe(original[1]);
     });
   });
 });
