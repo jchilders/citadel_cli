@@ -32,9 +32,12 @@ interface CitadelProps {
  */
 export const Citadel: React.FC<CitadelProps> = ({
   config = defaultConfig,
-  commandRegistry = new CommandRegistry(),
+  commandRegistry,
   containerId = null
 }) => {
+  const fallbackRegistryRef = useRef<CommandRegistry>(new CommandRegistry());
+  const resolvedRegistry = commandRegistry ?? fallbackRegistryRef.current;
+
   // Used only for inline mode (no containerId) so the custom element can attach to a DOM node
   // provisioned by React instead of falling back to document.body.
   const inlineHostRef = useRef<HTMLDivElement | null>(null);
@@ -45,7 +48,7 @@ export const Citadel: React.FC<CitadelProps> = ({
       level: config.logLevel || defaultConfig.logLevel || LogLevel.ERROR,
       prefix: '[Citadel]'
     });
-    const citadelElement = new CitadelElement(commandRegistry, config);
+    const citadelElement = new CitadelElement(resolvedRegistry, config);
     const isInlineWithoutContainer = displayMode === 'inline' && !containerId;
     const container = isInlineWithoutContainer
       ? inlineHostRef.current
@@ -67,7 +70,7 @@ export const Citadel: React.FC<CitadelProps> = ({
     return () => {
       citadelElement.parentElement?.removeChild(citadelElement);
     };
-  }, [commandRegistry, containerId, config, displayMode]);
+  }, [resolvedRegistry, containerId, config, displayMode]);
 
   if (displayMode === 'inline' && !containerId) {
     return <div ref={inlineHostRef} style={{ width: '100%', height: '100%' }} />;
