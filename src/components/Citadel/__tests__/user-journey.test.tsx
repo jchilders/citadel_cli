@@ -39,9 +39,46 @@ describe('Citadel User Journey Tests', () => {
   });
 
   describe('Power User Command Sequences', () => {
-    it.skip('should handle rapid command execution for power users', async () => {
-      // This test is skipped because auto-expansion with multiple commands
-      // starting with the same letter is not yet fully implemented.
+    it('should handle rapid command execution for power users', async () => {
+      const showMock = vi.fn();
+      const deactivateMock = vi.fn();
+
+      registry.addCommand(
+        [new WordSegment('user'), new WordSegment('show')],
+        'Show user',
+        async () => {
+          showMock();
+          return new TextCommandResult('Show user');
+        }
+      );
+      registry.addCommand(
+        [new WordSegment('user'), new WordSegment('deactivate')],
+        'Deactivate user',
+        async () => {
+          deactivateMock();
+          return new TextCommandResult('Deactivate user');
+        }
+      );
+
+      render(<Citadel commandRegistry={registry} />);
+      const input = await activateCitadel();
+
+      const sequence = ['s', 'd', 's', 'd', 's'];
+      const startTime = performance.now();
+
+      for (const secondKey of sequence) {
+        await act(async () => {
+          fireEvent.change(input, { target: { value: 'u' } });
+          fireEvent.change(input, { target: { value: secondKey } });
+          fireEvent.keyDown(input, { key: 'Enter' });
+        });
+      }
+
+      const totalTime = performance.now() - startTime;
+
+      expect(showMock).toHaveBeenCalledTimes(3);
+      expect(deactivateMock).toHaveBeenCalledTimes(2);
+      expect(totalTime).toBeLessThan(1000);
     });
 
     it.skip('should support command chaining with complex arguments', async () => {
