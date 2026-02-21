@@ -19,12 +19,20 @@
    npm run test:e2e
    ```
 
-3. **Run the linter**
+4. **Install local git hooks (recommended)**
+   ```bash
+   ./scripts/install-git-hooks.sh
+   ```
+   This installs:
+   - `pre-push` to run `npm test` and `npm run build`
+   - `pre-merge-commit` to run the same checks when merging into `main`
+
+5. **Run the linter**
    ```bash
    npm run lint
    ```
 
-4. **Optional: build the package**
+6. **Optional: build the package**
    ```bash
    npm run build
    ```

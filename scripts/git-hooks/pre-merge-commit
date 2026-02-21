@@ -1,0 +1,20 @@
+#!/bin/sh
+
+CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
+
+if [ "$CURRENT_BRANCH" != "main" ]; then
+  exit 0
+fi
+
+echo "Running checks before merge into main..."
+HOOK_DIR="$(CDPATH='' cd -- "$(dirname "$0")" && pwd)"
+"$HOOK_DIR/run-preflight-checks.sh"
+RESULT=$?
+
+if [ $RESULT -ne 0 ]; then
+  echo "Pre-merge checks failed. Merge into main aborted."
+  exit 1
+fi
+
+echo "Pre-merge checks passed. Proceeding with merge into main."
+exit 0
