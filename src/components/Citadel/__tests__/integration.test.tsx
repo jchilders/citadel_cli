@@ -218,6 +218,36 @@ describe('Citadel Integration Tests', () => {
       });
     });
 
+    it('does not execute command while next segment is still ambiguous', async () => {
+      const searchHandler = vi.fn().mockResolvedValue(new TextCommandResult('Search'));
+      const showHandler = vi.fn().mockResolvedValue(new TextCommandResult('Show'));
+
+      registry.addCommand(
+        [new WordSegment('user'), new WordSegment('show')],
+        'Show user',
+        showHandler
+      );
+      registry.addCommand(
+        [new WordSegment('user'), new WordSegment('search')],
+        'Search users',
+        searchHandler
+      );
+
+      render(<Citadel commandRegistry={registry} />);
+      const input = await activateCitadel();
+
+      await act(async () => {
+        fireEvent.change(input, { target: { value: 'u' } });
+        fireEvent.change(input, { target: { value: 's' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+      });
+
+      await waitFor(() => {
+        expect(searchHandler).toHaveBeenCalledTimes(0);
+        expect(showHandler).toHaveBeenCalledTimes(0);
+      });
+    });
+
     // Note: Commands with arguments require more complex interaction patterns
     // that are difficult to simulate in the current test environment.
     // These are better tested through E2E tests or manual testing.
