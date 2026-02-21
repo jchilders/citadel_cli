@@ -12,8 +12,22 @@ export interface RuntimeConfigControls {
   setCursorColor: (color: string) => void;
   setDisplayMode: (mode: DisplayMode) => void;
   setIncludeHelpCommand: (enabled: boolean) => void;
+  setMaxHeight: (value: string) => void;
   resetConfig: () => void;
 }
+
+const normalizeCssLength = (rawValue: string | undefined): string | null => {
+  const value = rawValue?.trim();
+  if (!value) {
+    return null;
+  }
+
+  if (/^\d+(\.\d+)?$/.test(value)) {
+    return `${value}px`;
+  }
+
+  return value;
+};
 
 export function registerRuntimeConfigCommands(
   registry: CommandRegistry,
@@ -81,6 +95,21 @@ export function createRuntimeConfigCommandDefinitions(
         return text('Help command disabled.');
       }) as CommandDefinition,
 
+    command('config.maxHeight')
+      .describe('Set the maximum Citadel height')
+      .arg('value', (arg) =>
+        arg.describe('CSS size (e.g., 360px, 70vh, or 360)')
+      )
+      .handle(async ({ namedArgs }) => {
+        const normalizedValue = normalizeCssLength(namedArgs.value);
+        if (!normalizedValue) {
+          throw new Error('Max height requires a value, such as "360px" or "70vh".');
+        }
+
+        controls.setMaxHeight(normalizedValue);
+        return text(`Max height updated to "${normalizedValue}".`);
+      }) as CommandDefinition,
+
     command('reset')
       .describe('Reset configuration values back to their defaults')
       .handle(async () => {
@@ -89,9 +118,11 @@ export function createRuntimeConfigCommandDefinitions(
         const defaults = DEFAULT_CURSOR_CONFIGS[baseCursorType];
         const defaultMode = (defaultConfig.displayMode === 'inline' ? 'inline' : 'panel') as DisplayMode;
         const includeHelp = defaultConfig.includeHelpCommand ?? true;
+        const defaultMaxHeight = defaultConfig.maxHeight ?? '80vh';
         return text(
           `Configuration reset. Cursor type "${baseCursorType}" with color "${defaultConfig.cursorColor ?? defaults.color}". ` +
-          `Display mode "${defaultMode}". Help command ${includeHelp ? 'enabled' : 'disabled'}.`
+          `Display mode "${defaultMode}". Max height "${defaultMaxHeight}". ` +
+          `Help command ${includeHelp ? 'enabled' : 'disabled'}.`
         );
       }) as CommandDefinition
   );

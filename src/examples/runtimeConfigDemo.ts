@@ -11,6 +11,7 @@ const DEFAULT_CURSOR_COLOR =
   defaultConfig.cursorColor ?? DEFAULT_CURSOR_CONFIGS[DEFAULT_CURSOR_TYPE].color;
 const DEFAULT_MODE: DisplayMode = defaultConfig.displayMode === 'inline' ? 'inline' : 'panel';
 const DEFAULT_INCLUDE_HELP = defaultConfig.includeHelpCommand ?? true;
+const DEFAULT_MAX_HEIGHT = defaultConfig.maxHeight ?? '80vh';
 
 interface UseRuntimeConfigDemoResult {
   commandRegistry: CommandRegistry;
@@ -27,6 +28,7 @@ export const useRuntimeConfigDemo = (
   );
   const [cursorType, setCursorType] = useState<CursorType>(DEFAULT_CURSOR_TYPE);
   const [cursorColor, setCursorColor] = useState<string>(DEFAULT_CURSOR_COLOR);
+  const [maxHeight, setMaxHeight] = useState<string>(DEFAULT_MAX_HEIGHT);
 
   const handleSetCursorType = useCallback((type: CursorType) => {
     setCursorType(type);
@@ -44,11 +46,16 @@ export const useRuntimeConfigDemo = (
     setIncludeHelpCommand(enabled);
   }, []);
 
+  const handleSetMaxHeight = useCallback((value: string) => {
+    setMaxHeight(value);
+  }, []);
+
   const resetConfig = useCallback(() => {
     setCursorType(DEFAULT_CURSOR_TYPE);
     setCursorColor(DEFAULT_CURSOR_COLOR);
     setMode(DEFAULT_MODE);
     setIncludeHelpCommand(DEFAULT_INCLUDE_HELP);
+    setMaxHeight(DEFAULT_MAX_HEIGHT);
   }, []);
 
   const commandRegistry = useMemo(() => {
@@ -57,6 +64,7 @@ export const useRuntimeConfigDemo = (
       setCursorColor: handleSetCursorColor,
       setDisplayMode: handleSetDisplayMode,
       setIncludeHelpCommand: handleSetIncludeHelp,
+      setMaxHeight: handleSetMaxHeight,
       resetConfig
     }));
   }, [
@@ -64,6 +72,7 @@ export const useRuntimeConfigDemo = (
     handleSetCursorColor,
     handleSetDisplayMode,
     handleSetIncludeHelp,
+    handleSetMaxHeight,
     resetConfig
   ]);
 
@@ -74,9 +83,10 @@ export const useRuntimeConfigDemo = (
       cursorType,
       cursorColor,
       cursorSpeed: defaults.speed,
-      displayMode: mode
+      displayMode: mode,
+      maxHeight
     };
-  }, [cursorColor, cursorType, includeHelpCommand, mode]);
+  }, [cursorColor, cursorType, includeHelpCommand, maxHeight, mode]);
 
   return {
     commandRegistry,
