@@ -32,8 +32,9 @@ describe('InlineController', () => {
     expect(getByTestId('citadel-command-input')).toBeTruthy();
     const container = getByTestId('citadel-inline-container') as HTMLDivElement;
     expect(container.className).toContain('inlineContainer');
-    expect(container.style.height).toBe('');
-    expect(container.style.maxHeight).toBe('');
+    expect(container.style.height).toBe('123px');
+    expect(container.style.maxHeight).toBe('456px');
+    expect(container.style.minHeight).toBe('200px');
 
     const inner = container.querySelector('.innerContainer');
     expect(inner).toBeTruthy();

@@ -22,7 +22,7 @@ node skills/citadel-browser-screenshots/scripts/capture_citadel_screenshot.mjs \
   --url http://127.0.0.1:5173 \
   --tab "Basic" \
   --keys "u s 1234 Enter" \
-  --out /tmp/citadel-basic-user-show.png \
+  --out /Users/jchilders/work/jchilders/citadel_cli/test-results/screenshots/citadel-basic-user-show.png \
   --clip-citadel
 ```
 

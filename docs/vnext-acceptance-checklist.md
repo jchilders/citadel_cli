@@ -113,6 +113,7 @@ At a high level, vNext is an expansion-first state machine with deterministic ma
 - [x] Panel mode is hidden by default.
 - [x] Panel mode opens via configured activation key.
 - [x] Inline mode renders command input and suggestions immediately.
+- [x] Inline mode enforces configured height bounds and scrolls output within the pane (no output bleed behind input/suggestions).
 - [x] Focus remains stable across command stack/input updates.
 
 ## 7. History and Persistence

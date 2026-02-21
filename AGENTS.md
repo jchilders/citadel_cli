@@ -98,6 +98,6 @@ node skills/citadel-browser-screenshots/scripts/capture_citadel_screenshot.mjs \
   --url http://127.0.0.1:4173 \
   --tab "Basic" \
   --keys "u s 1234 Enter" \
-  --out /tmp/citadel-basic.png \
+  --out /Users/jchilders/work/jchilders/citadel_cli/test-results/screenshots/citadel-basic.png \
   --clip-citadel
 ```
