@@ -86,6 +86,39 @@ must return one of the following:
 - `ImageCommandResult`
 - `ErrorCommandResult`
 
+## Typed DSL (vNext Direction)
+
+For clearer command authoring, you can define commands with a DSL and compile
+them into a `CommandRegistry`:
+
+```typescript
+import {
+  Citadel,
+  command,
+  createCommandRegistry,
+  text,
+} from "citadel_cli";
+
+const registry = createCommandRegistry([
+  command("user.show")
+    .describe("Show user details")
+    .arg("userId", (arg) => arg.describe("Enter user ID"))
+    .handle(async ({ namedArgs }) => {
+      return text(`Showing user ${namedArgs.userId}`);
+    }),
+]);
+
+function App() {
+  return <Citadel commandRegistry={registry} />;
+}
+```
+
+DSL handlers receive:
+
+- `rawArgs`: positional values (`string[]`)
+- `namedArgs`: argument-name map (`Record<string, string | undefined>`)
+- `commandPath`: dot-delimited path string
+
 ### Arguments
 
 1. Each command can have zero or more arguments
