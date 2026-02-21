@@ -158,6 +158,66 @@ describe('Citadel Integration Tests', () => {
       });
     });
 
+    it('keeps inline text committed while narrowing ambiguous next segments', async () => {
+      const searchHandler = vi.fn().mockResolvedValue(new TextCommandResult('Search'));
+      const showHandler = vi.fn().mockResolvedValue(new TextCommandResult('Show'));
+
+      registry.addCommand(
+        [new WordSegment('user'), new WordSegment('show')],
+        'Show user',
+        showHandler
+      );
+      registry.addCommand(
+        [new WordSegment('user'), new WordSegment('search')],
+        'Search users',
+        searchHandler
+      );
+      registry.addCommand(
+        [new WordSegment('user'), new WordSegment('deactivate')],
+        'Deactivate user',
+        async () => new TextCommandResult('Deactivate')
+      );
+
+      render(<Citadel commandRegistry={registry} />);
+      const input = await activateCitadel();
+
+      await act(async () => {
+        fireEvent.change(input, { target: { value: 'u' } });
+      });
+
+      const shadowRoot = document.querySelector('citadel-element')?.shadowRoot;
+      expect(shadowRoot).toBeTruthy();
+
+      await waitFor(() => {
+        const userInput = shadowRoot?.querySelector('[data-testid="user-input-area"]');
+        expect(userInput?.textContent?.trim()).toBe('user');
+      });
+
+      await act(async () => {
+        fireEvent.change(input, { target: { value: 's' } });
+      });
+
+      await waitFor(() => {
+        const commandChips = Array.from(
+          shadowRoot?.querySelectorAll('[data-testid="available-command-chip"]') ?? []
+        ).map((chip) => chip.textContent?.trim());
+
+        expect(commandChips).toContain('search');
+        expect(commandChips).toContain('show');
+        expect(commandChips).not.toContain('deactivate');
+      });
+
+      await act(async () => {
+        fireEvent.change(input, { target: { value: 'se' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+      });
+
+      await waitFor(() => {
+        expect(searchHandler).toHaveBeenCalledTimes(1);
+        expect(showHandler).toHaveBeenCalledTimes(0);
+      });
+    });
+
     // Note: Commands with arguments require more complex interaction patterns
     // that are difficult to simulate in the current test environment.
     // These are better tested through E2E tests or manual testing.
