@@ -74,20 +74,10 @@ export const useCommandParser = () => {
    * returns "user". But if input is "u", returns null since it's ambiguous.
    */
   const getAutocompleteSuggestion = useCallback((input: string): CommandSegment => {
-    // Get available word segments
-    const availableSegments = commands.getCompletions(segmentStack.path())
-      .filter(segment => segment.type === 'word');
-    
-    // Find segments that match the input
-    const matchingSegments = availableSegments.filter(segment =>
-      segment.name.toLowerCase().startsWith(input.toLowerCase())
-    );
-    
-    // Only return a suggestion if we have exactly one match
-    if (matchingSegments.length === 1) {
-      return matchingSegments[0];
+    const uniqueMatch = commands.getUniqueCompletion(segmentStack.path(), input);
+    if (uniqueMatch && uniqueMatch.type === 'word') {
+      return uniqueMatch;
     }
-
     return segmentStack.nullSegment;
   }, [commands, segmentStack]);
 
@@ -106,10 +96,8 @@ export const useCommandParser = () => {
     }
 
     // For word segments, check if input matches any available completion
-    const isValid = availableSegments.some(segment =>
-      segment.type === 'word' && 
-      segment.name.toLowerCase().startsWith(input.toLowerCase())
-    );
+    const isValid = commands.getMatchingCompletions(currentPath, input)
+      .some((segment) => segment.type === 'word');
     
     return isValid;
   }, [commands, segmentStack]);

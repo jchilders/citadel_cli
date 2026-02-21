@@ -224,6 +224,36 @@ export class CommandRegistry {
   }
 
   /**
+   * Returns completion segments whose names start with the given prefix.
+   * Matching is case-insensitive.
+   */
+  getMatchingCompletions(path: string[], prefix: string): CommandSegment[] {
+    const normalizedPrefix = prefix.trim().toLowerCase();
+    const completions = this.getCompletions(path);
+
+    if (!normalizedPrefix) {
+      return completions;
+    }
+
+    return completions.filter((segment) =>
+      segment.name.toLowerCase().startsWith(normalizedPrefix)
+    );
+  }
+
+  /**
+   * Returns a single completion when prefix matching is unambiguous.
+   * Returns undefined for ambiguous or no-match prefixes.
+   */
+  getUniqueCompletion(path: string[], prefix: string): CommandSegment | undefined {
+    const matches = this.getMatchingCompletions(path, prefix);
+    if (matches.length !== 1) {
+      return undefined;
+    }
+
+    return matches[0];
+  }
+
+  /**
    * Gets an array of segments reachable from a given path
    * 
    * @param path The path to get completions for.

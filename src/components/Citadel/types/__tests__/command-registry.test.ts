@@ -264,6 +264,62 @@ describe('CommandRegistry', () => {
     });
   });
 
+  describe('matching helpers', () => {
+    beforeEach(() => {
+      cmdRegistry.addCommand(
+        [
+          { type: 'word', name: 'user' },
+          { type: 'word', name: 'show' }
+        ],
+        'Show user',
+        successHandler
+      );
+      cmdRegistry.addCommand(
+        [
+          { type: 'word', name: 'user' },
+          { type: 'word', name: 'search' }
+        ],
+        'Search users',
+        successHandler
+      );
+      cmdRegistry.addCommand(
+        [
+          { type: 'word', name: 'user' },
+          { type: 'word', name: 'deactivate' }
+        ],
+        'Deactivate user',
+        successHandler
+      );
+    });
+
+    it('returns matching completions by case-insensitive prefix', () => {
+      const matches = cmdRegistry.getMatchingCompletions(['user'], 'S');
+      expect(matches).toEqual([
+        { type: 'word', name: 'show' },
+        { type: 'word', name: 'search' }
+      ]);
+    });
+
+    it('returns all completions when prefix is empty', () => {
+      const matches = cmdRegistry.getMatchingCompletions(['user'], '');
+      expect(matches).toEqual([
+        { type: 'word', name: 'show' },
+        { type: 'word', name: 'search' },
+        { type: 'word', name: 'deactivate' }
+      ]);
+    });
+
+    it('returns unique completion when prefix resolves unambiguously', () => {
+      const unique = cmdRegistry.getUniqueCompletion(['user'], 'se');
+      expect(unique).toEqual({ type: 'word', name: 'search' });
+    });
+
+    it('returns undefined when prefix is ambiguous', () => {
+      const unique = cmdRegistry.getUniqueCompletion(['user'], 's');
+      expect(unique).toBeUndefined();
+    });
+  });
+
   describe('CommandNode', () => {
     describe('fullPath', () => {
       it('should return correct path for single-level command', () => {

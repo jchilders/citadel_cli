@@ -19,17 +19,11 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({ currentInp
   const containerClasses = "mt-2 border-t border-gray-700 px-4 py-2";
   const contentClasses = `text-gray-300 ${commandTypography.className ?? ''}`.trim();
 
-  const nextCommandSegments = commands.getCompletions(segmentStack.path());
   const normalizedInput = currentInput.trim().toLowerCase();
-  const filteredCommandSegments = React.useMemo(() => {
-    if (!normalizedInput) {
-      return nextCommandSegments;
-    }
-
-    return nextCommandSegments.filter((segment) =>
-      segment.name.toLowerCase().startsWith(normalizedInput)
-    );
-  }, [nextCommandSegments, normalizedInput]);
+  const filteredCommandSegments = commands.getMatchingCompletions(
+    segmentStack.path(),
+    normalizedInput
+  );
 
   Logger.debug("[AvailableCommands] nextCommandSegments: ", filteredCommandSegments);
   
