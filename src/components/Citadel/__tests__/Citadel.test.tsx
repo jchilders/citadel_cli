@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, waitFor, act } from '@testing-library/react';
+import { render, waitFor, act, fireEvent } from '@testing-library/react';
 import { Citadel, CitadelElement } from '../Citadel';
 import userEvent from '@testing-library/user-event';
 import type { UserEvent } from '@testing-library/user-event';
 import { StorageType } from '../types/storage';
-import { CommandRegistry } from '../types/command-registry';
+import { CommandRegistry, WordSegment } from '../types/command-registry';
+import { TextCommandResult } from '../types/command-results';
 import { defaultConfig } from '../config/defaults'
 
 describe('Citadel', () => {
@@ -207,5 +208,61 @@ describe('Citadel', () => {
       expect(element.shadowRoot?.childElementCount).toBe(0);
       expect(element.shadowRoot?.getElementById('citadel-root')).toBeNull();
     });
+  });
+
+  it('isolates command execution between multiple instances', async () => {
+    const mountA = document.createElement('div');
+    mountA.id = 'inline-mount-a';
+    const mountB = document.createElement('div');
+    mountB.id = 'inline-mount-b';
+    document.body.appendChild(mountA);
+    document.body.appendChild(mountB);
+
+    const registryA = new CommandRegistry();
+    const registryB = new CommandRegistry();
+    const handlerA = vi.fn().mockResolvedValue(new TextCommandResult('A'));
+    const handlerB = vi.fn().mockResolvedValue(new TextCommandResult('B'));
+
+    registryA.addCommand([new WordSegment('alpha')], 'Alpha command', handlerA);
+    registryB.addCommand([new WordSegment('beta')], 'Beta command', handlerB);
+
+    await act(async () => {
+      render(
+        <>
+          <Citadel
+            containerId="inline-mount-a"
+            commandRegistry={registryA}
+            config={{ displayMode: 'inline' }}
+          />
+          <Citadel
+            containerId="inline-mount-b"
+            commandRegistry={registryB}
+            config={{ displayMode: 'inline' }}
+          />
+        </>
+      );
+    });
+
+    const citadelA = mountA.querySelector('citadel-element') as HTMLElement & { shadowRoot: ShadowRoot | null };
+    const citadelB = mountB.querySelector('citadel-element') as HTMLElement & { shadowRoot: ShadowRoot | null };
+    expect(citadelA).toBeTruthy();
+    expect(citadelB).toBeTruthy();
+
+    const inputA = citadelA.shadowRoot?.querySelector('[data-testid="citadel-command-input"]') as HTMLInputElement;
+    expect(inputA).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.change(inputA, { target: { value: 'a' } });
+      fireEvent.keyDown(inputA, { key: 'Enter' });
+    });
+
+    await waitFor(() => {
+      expect(handlerA).toHaveBeenCalledTimes(1);
+      expect(handlerB).toHaveBeenCalledTimes(0);
+    });
+
+    const textB = citadelB.shadowRoot?.textContent ?? '';
+    expect(textB).toContain('beta');
+    expect(textB).not.toContain('alpha');
   });
 });

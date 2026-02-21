@@ -127,12 +127,12 @@ At a high level, vNext is an expansion-first state machine with deterministic ma
 
 - [x] Successful handler results render correctly for text and JSON payloads.
 - [x] Thrown handler errors render as error output, without crashing the TTY.
-- [ ] Invalid handler return types produce explicit error results.
-- [ ] Output entries have unique IDs even when timestamps are identical.
+- [x] Invalid handler return types produce explicit error results.
+- [x] Output entries have unique IDs even when timestamps are identical.
 
 ## 9. Multi-Instance and Lifecycle Safety
 
-- [ ] Multiple Citadel instances do not leak command state across instances.
+- [x] Multiple Citadel instances do not leak command state across instances.
 - [x] Built-in command injection does not duplicate across rerenders.
 - [x] Config-driven behavior changes are predictable across rerenders/remounts.
 
