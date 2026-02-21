@@ -46,6 +46,12 @@ const EXAMPLE_TRY_EXPLANATION: Record<ExampleId, string> = {
   devops: "Shows a live-style metrics payload.",
   runtime: "Switches Citadel into inline mode in the page.",
 };
+const EXAMPLE_SOURCE_URL: Record<ExampleId, string> = {
+  basic: "https://github.com/jchilders/citadel_cli/blob/main/src/examples/basicCommands.ts",
+  localdev: "https://github.com/jchilders/citadel_cli/blob/main/src/examples/localDevCommands.ts",
+  devops: "https://github.com/jchilders/citadel_cli/blob/main/src/examples/devopsCommands.ts",
+  runtime: "https://github.com/jchilders/citadel_cli/blob/main/src/examples/runtimeConfigDemo.ts",
+};
 
 const VALID_EXAMPLE_IDS: ExampleId[] = ["basic", "localdev", "devops", "runtime"];
 
@@ -99,73 +105,108 @@ function App() {
   const commandRegistry = activeBaseRegistry;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center p-6 md:p-8">
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl p-6 md:p-8 border border-slate-200">
-        <div className="mb-6">
-          <p className="text-xs font-medium tracking-wider uppercase text-sky-700 mb-2">
-            Citadel Demo Workspace
-          </p>
-          <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 leading-tight">
-            Explore example configurations and see what Citadel can do.
+    <div className="min-h-screen bg-slate-950 flex items-start justify-center p-6 md:p-10 pt-12 md:pt-16">
+      <div className="w-full max-w-4xl">
+
+        {/* Header */}
+        <div className="mb-10 text-center">
+          <div className="mb-4">
+            <span className="font-mono text-emerald-400 text-xs font-bold tracking-[0.25em] uppercase">
+              ▶ citadel
+            </span>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight tracking-tight">
+            Keyboard-driven command console
+            <br />
+            <span className="text-slate-500 font-medium">for your web app</span>
           </h1>
-          <p className="mt-3 text-sm md:text-base text-slate-600 max-w-3xl">
-            This page is a hands-on preview of Citadel in action. Each tab loads a different example configuration so
-            you can compare workflows, command sets, and interaction patterns.
+          <p className="mt-4 text-slate-500 text-sm leading-relaxed max-w-md mx-auto">
+            Press <kbd>.</kbd>, type fast-expand shortcuts, see results inline.
+            These tabs show four different command registry setups.
           </p>
         </div>
 
-        <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-3">
-            Example Configurations
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        {/* Card */}
+        <div className="rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden">
+
+          {/* Tab bar */}
+          <div className="flex items-end gap-1 px-4 border-b border-slate-800 bg-slate-950/60">
             {VALID_EXAMPLE_IDS.map((exampleId) => {
               const isActive = selectedExample === exampleId;
               return (
                 <button
                   key={exampleId}
                   type="button"
-                  className={`text-left px-4 py-3 rounded-lg border text-sm transition ${
-                    isActive
-                      ? "bg-slate-900 text-white border-slate-900 shadow-sm"
-                      : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
-                  }`}
                   onClick={() => setSelectedExample(exampleId)}
+                  className={`px-4 py-3 text-sm font-medium -mb-px border-b-2 transition-all ${
+                    isActive
+                      ? "text-emerald-400 border-emerald-400"
+                      : "text-slate-500 border-transparent hover:text-slate-300 hover:border-slate-600"
+                  }`}
                 >
-                  <div className="font-medium">{EXAMPLE_LABELS[exampleId]}</div>
-                  <div className={`mt-1 text-xs ${isActive ? "text-slate-200" : "text-slate-500"}`}>
-                    Example setup
-                  </div>
+                  {EXAMPLE_LABELS[exampleId]}
                 </button>
               );
             })}
           </div>
+
+          {/* Content */}
+          <div className="p-6 md:p-8">
+
+            {/* Example info */}
+            <div className="flex gap-4 mb-6 pb-6 border-b border-slate-800">
+              <div className="mt-2 w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
+              <div>
+                <div className="flex items-baseline gap-3">
+                  <p className="text-white font-semibold text-base">
+                    {EXAMPLE_LABELS[selectedExample]}
+                  </p>
+                  <a
+                    href={EXAMPLE_SOURCE_URL[selectedExample]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                  >
+                    view source ↗
+                  </a>
+                </div>
+                <p className="text-slate-400 text-sm mt-1.5 leading-relaxed">
+                  {EXAMPLE_DESCRIPTIONS[selectedExample]}
+                </p>
+                <p className="text-slate-600 text-xs mt-2">
+                  {EXAMPLE_HINTS[selectedExample]}
+                </p>
+              </div>
+            </div>
+
+            {/* Try it */}
+            <div className="rounded-xl bg-slate-800/40 border border-slate-700/50 p-5">
+              <p className="text-slate-200 text-sm font-semibold mb-3 flex items-center gap-2">
+                <span className="text-emerald-400">▸</span> Try it now
+              </p>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                Press <kbd>.</kbd> to open Citadel, then type{" "}
+                {EXAMPLE_TRY_KEYS[selectedExample].split(" ").map((k, i, arr) => (
+                  <span key={i}>
+                    <kbd>{k}</kbd>
+                    {i < arr.length - 1 && " "}
+                  </span>
+                ))}
+                {" "}— Citadel auto-expands to{" "}
+                <code className="font-mono text-emerald-400 text-xs bg-emerald-950/30 px-1.5 py-0.5 rounded border border-emerald-900/50">
+                  {EXAMPLE_TRY_COMMAND[selectedExample]}
+                </code>
+                . {EXAMPLE_TRY_EXPLANATION[selectedExample]}
+              </p>
+            </div>
+
+          </div>
         </div>
 
-        <div className="mb-5 rounded-xl border border-sky-200 bg-sky-50 p-4">
-          <p className="text-sm font-semibold text-slate-900 mb-1">
-            Active Example: {EXAMPLE_LABELS[selectedExample]}
-          </p>
-          <p className="text-sm text-slate-700">{EXAMPLE_DESCRIPTIONS[selectedExample]}</p>
-          <p className="text-xs text-slate-500 mt-2">{EXAMPLE_HINTS[selectedExample]}</p>
-        </div>
+        <p className="text-center text-slate-700 text-xs mt-8">
+          citadel_cli · a keyboard-driven command surface for React apps
+        </p>
 
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 text-slate-700">
-          <p className="font-medium mb-2">
-            Try it now
-          </p>
-          <p className="text-sm">
-            Press <code className="px-2 border border-slate-300 rounded bg-white">.</code> to open Citadel, then run
-            commands from the selected example.
-          </p>
-          <p className="text-sm text-slate-500 mt-2">
-            Quick try: press initials{" "}
-            <code className="px-2 border border-slate-300 rounded bg-white">{EXAMPLE_TRY_KEYS[selectedExample]}</code>{" "}
-            and Citadel will expand to{" "}
-            <code className="px-2 border border-slate-300 rounded bg-white">{EXAMPLE_TRY_COMMAND[selectedExample]}</code>.{" "}
-            {EXAMPLE_TRY_EXPLANATION[selectedExample]}
-          </p>
-        </div>
         <Citadel
           key={selectedExample}
           commandRegistry={commandRegistry}

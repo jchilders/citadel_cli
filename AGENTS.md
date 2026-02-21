@@ -79,6 +79,10 @@ Handlers must return one of these (all extend `CommandResult`):
 
 Command history is persisted via `StorageFactory`, which returns either `LocalStorage` or `MemoryStorage` based on `config.storage.type`. The `HistoryService` and `useCommandHistory` hook manage navigation (arrow keys) and persistence.
 
+### Styling (CSS)
+
+- Prefer oklch for defining colors over HCL or RGB.
+
 ### Path Alias
 
 `tsconfig.app.json` configures `@/` as an alias for `src/`. Use `@/components/...` for imports within the library source.
