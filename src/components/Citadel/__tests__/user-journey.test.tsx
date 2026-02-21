@@ -81,6 +81,103 @@ describe('Citadel User Journey Tests', () => {
       expect(totalTime).toBeLessThan(1000);
     });
 
+    it('should allow disambiguation when one child command is a prefix of another', async () => {
+      const demoExampleMock = vi.fn();
+      const demoExamplesMock = vi.fn();
+
+      registry.addCommand(
+        [
+          new WordSegment('demo'),
+          new WordSegment('example'),
+          { type: 'argument', name: 'name' },
+        ],
+        'Switch active demo example',
+        async () => {
+          demoExampleMock();
+          return new TextCommandResult('Switched demo');
+        }
+      );
+      registry.addCommand(
+        [
+          new WordSegment('demo'),
+          new WordSegment('examples'),
+        ],
+        'List demo examples',
+        async () => {
+          demoExamplesMock();
+          return new TextCommandResult('Available demos');
+        }
+      );
+
+      render(<Citadel commandRegistry={registry} />);
+      const input = await activateCitadel();
+
+      fireEvent.change(input, { target: { value: 'd' } });
+
+      const eEvent = new KeyboardEvent('keydown', { key: 'e', cancelable: true });
+      const wasAccepted = input.dispatchEvent(eEvent);
+      expect(wasAccepted).toBe(true);
+      expect(eEvent.defaultPrevented).toBe(false);
+
+      fireEvent.change(input, { target: { value: 'e' } });
+      fireEvent.change(input, { target: { value: 'ex' } });
+      fireEvent.change(input, { target: { value: 'exa' } });
+      fireEvent.change(input, { target: { value: 'exam' } });
+      fireEvent.change(input, { target: { value: 'examp' } });
+      fireEvent.change(input, { target: { value: 'exampl' } });
+      fireEvent.change(input, { target: { value: 'example' } });
+      fireEvent.change(input, { target: { value: 'examples' } });
+
+      fireEvent.keyDown(input, { key: 'Enter' });
+
+      await waitFor(() => {
+        expect(demoExamplesMock).toHaveBeenCalledTimes(1);
+      });
+      expect(demoExampleMock).toHaveBeenCalledTimes(0);
+    });
+
+    it('should commit exact segment on trailing space and enter argument mode', async () => {
+      const demoExampleMock = vi.fn();
+
+      registry.addCommand(
+        [
+          new WordSegment('demo'),
+          new WordSegment('example'),
+          { type: 'argument', name: 'name' },
+        ],
+        'Switch active demo example',
+        async () => {
+          demoExampleMock();
+          return new TextCommandResult('Switched demo');
+        }
+      );
+      registry.addCommand(
+        [
+          new WordSegment('demo'),
+          new WordSegment('examples'),
+        ],
+        'List demo examples',
+        async () => new TextCommandResult('Available demos')
+      );
+
+      render(<Citadel commandRegistry={registry} />);
+      const input = await activateCitadel();
+
+      // Commit root `demo`.
+      fireEvent.change(input, { target: { value: 'd' } });
+
+      // Explicitly select `example` via delimiter, not `examples`.
+      fireEvent.change(input, { target: { value: 'example ' } });
+
+      // Enter the argument and execute.
+      fireEvent.change(input, { target: { value: 'basic' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+
+      await waitFor(() => {
+        expect(demoExampleMock).toHaveBeenCalledTimes(1);
+      });
+    });
+
     it.skip('should support command chaining with complex arguments', async () => {
       // This test is skipped because complex argument parsing with quotes
       // is not yet fully implemented in the test environment.

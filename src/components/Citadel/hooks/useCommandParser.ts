@@ -108,7 +108,7 @@ export const useCommandParser = () => {
     Logger.debug("[tryAutoComplete] input: ", input);
     const suggestion = getAutocompleteSuggestion(input);
     
-    if (!suggestion || suggestion.name === input) {
+    if (!suggestion || suggestion.type === 'null') {
       return new NullSegment;
     }
 
@@ -165,6 +165,26 @@ export const useCommandParser = () => {
           // User is still entering an argument. Do nothing
           return;
         }
+      }
+    }
+
+    // If the user typed a delimiter after a word token, treat it as an explicit
+    // selection for exact segment names (e.g. "example " should pick `example`
+    // even if `examples` also exists).
+    if (newValue.endsWith(' ')) {
+      const token = newValue.trim().toLowerCase();
+      const exactWordMatches = commands
+        .getCompletions(segmentStack.path())
+        .filter(
+          (segment): segment is WordSegment =>
+            segment.type === 'word' && segment.name.toLowerCase() === token
+        );
+
+      if (exactWordMatches.length === 1) {
+        segmentStack.push(exactWordMatches[0]);
+        actions.setCurrentInput('');
+        setInputStateWithLogging('idle');
+        return;
       }
     }
 

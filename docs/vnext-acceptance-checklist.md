@@ -72,7 +72,7 @@ At a high level, vNext is an expansion-first state machine with deterministic ma
 
 - [x] Typing a unique root initial commits in place (example: `u` renders `user` inline).
 - [x] Full-word command entry is not required for normal flow; fast abbreviated entry remains primary.
-- [x] Inline input only shows committed segments.
+- [x] Inline input reflects typed command characters while disambiguating segments.
 - [x] Ambiguous partial next segments do not commit inline.
 - [x] Ambiguity is shown via narrowed suggestion chips (not inline partial tokens).
 - [x] Command matching is case-insensitive.

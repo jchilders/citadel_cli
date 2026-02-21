@@ -144,7 +144,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   }, [segmentStackVersion, getNextExpectedSegment]);
 
   const isCommandEntryMode = !state.isEnteringArg;
-  const cursorInputLength = isCommandEntryMode ? 0 : state.currentInput.length;
+  const cursorInputLength = state.currentInput.length;
 
   return (
     <div className="flex flex-col w-full bg-gray-900 rounded-lg p-4">
@@ -175,7 +175,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
               onKeyDown={onKeyDown}
               onPaste={handlePaste}
               data-testid="citadel-command-input"
-              className={`w-full bg-transparent outline-none caret-transparent ${isCommandEntryMode ? 'text-transparent' : 'text-gray-200'} ${showInvalidAnimation ? 'invalid-input-animation' : ''}`}
+              className={`w-full bg-transparent outline-none caret-transparent ${isCommandEntryMode ? 'text-blue-400' : 'text-gray-200'} ${showInvalidAnimation ? 'invalid-input-animation' : ''}`}
               spellCheck={false}
               autoComplete="off"
               placeholder={placeholderText}

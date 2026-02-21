@@ -213,7 +213,7 @@ describe('CommandInput', () => {
     expect(setCurrentInputMock.mock.calls.length).toBe(callsBeforeEnter);
   });
 
-  it('hides inline uncommitted command fragments while entering commands', () => {
+  it('shows inline command text while entering commands', () => {
     const mockActions = createMockCitadelActions();
     const state = createMockCitadelState({ currentInput: 's', isEnteringArg: false });
     const { getByTestId } = render(
@@ -223,7 +223,7 @@ describe('CommandInput', () => {
     );
 
     const input = getByTestId('citadel-command-input');
-    expect(input.className).toContain('text-transparent');
+    expect(input.className).toContain('text-blue-400');
   });
 
   it('shows argument input text while entering arguments', () => {
@@ -237,7 +237,7 @@ describe('CommandInput', () => {
 
     const input = getByTestId('citadel-command-input');
     expect(input.className).toContain('text-gray-200');
-    expect(input.className).not.toContain('text-transparent');
+    expect(input.className).not.toContain('text-blue-400');
   });
 });
 

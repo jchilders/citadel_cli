@@ -378,6 +378,47 @@ describe('useCommandParser', () => {
       expect(preventDefaultCalled).toBe(false);
     });
 
+    it('should allow continuing input for overlapping child commands (demo.example vs demo.examples)', async () => {
+      const cmdRegistry = new CommandRegistry();
+      cmdRegistry.addCommand(
+        [
+          createMockSegment('word', 'demo'),
+          createMockSegment('word', 'example'),
+          createMockSegment('argument', 'name'),
+        ],
+        'Switch example'
+      );
+      cmdRegistry.addCommand(
+        [
+          createMockSegment('word', 'demo'),
+          createMockSegment('word', 'examples'),
+        ],
+        'List examples'
+      );
+      mockUseCitadelCommands.mockReturnValue(cmdRegistry);
+
+      const { result } = renderHook(() => useCommandParser());
+      setCommandPath('demo');
+
+      const stateWithInput = {
+        ...mockState,
+        currentInput: '',
+      };
+
+      const mockEvent = new KeyboardEvent('keydown', { key: 'e' });
+      let preventDefaultCalled = false;
+      Object.defineProperty(mockEvent, 'preventDefault', {
+        value: () => { preventDefaultCalled = true; }
+      });
+
+      await act(async () => {
+        result.current.handleKeyDown(mockEvent, stateWithInput, mockActions);
+      });
+
+      expect(preventDefaultCalled).toBe(false);
+      expect(result.current.isValidCommandInput('e')).toBe(true);
+    });
+
     it('should allow any input when entering arguments', async () => {
       const mockNode = createMockCommand('test1');
 
