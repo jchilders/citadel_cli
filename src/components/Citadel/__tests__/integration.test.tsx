@@ -248,6 +248,95 @@ describe('Citadel Integration Tests', () => {
       });
     });
 
+    it('executes user.show and user.deactivate from two-keystroke shorthand (us and ud)', async () => {
+      const showHandler = vi.fn().mockResolvedValue(new TextCommandResult('Show'));
+      const deactivateHandler = vi.fn().mockResolvedValue(new TextCommandResult('Deactivate'));
+
+      registry.addCommand(
+        [new WordSegment('user'), new WordSegment('show')],
+        'Show user',
+        showHandler
+      );
+      registry.addCommand(
+        [new WordSegment('user'), new WordSegment('deactivate')],
+        'Deactivate user',
+        deactivateHandler
+      );
+      registry.addCommand(
+        [new WordSegment('user'), new WordSegment('query')],
+        'Query users',
+        async () => new TextCommandResult('Query')
+      );
+
+      render(<Citadel commandRegistry={registry} />);
+      const input = await activateCitadel();
+
+      await act(async () => {
+        fireEvent.change(input, { target: { value: 'u' } });
+        fireEvent.change(input, { target: { value: 's' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+      });
+
+      await waitFor(() => {
+        expect(showHandler).toHaveBeenCalledTimes(1);
+        expect(deactivateHandler).toHaveBeenCalledTimes(0);
+      });
+
+      await act(async () => {
+        fireEvent.change(input, { target: { value: 'u' } });
+        fireEvent.change(input, { target: { value: 'd' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+      });
+
+      await waitFor(() => {
+        expect(showHandler).toHaveBeenCalledTimes(1);
+        expect(deactivateHandler).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it('resolves user.show and user.search with shortest unique continuation (ush and use)', async () => {
+      const showHandler = vi.fn().mockResolvedValue(new TextCommandResult('Show'));
+      const searchHandler = vi.fn().mockResolvedValue(new TextCommandResult('Search'));
+
+      registry.addCommand(
+        [new WordSegment('user'), new WordSegment('show')],
+        'Show user',
+        showHandler
+      );
+      registry.addCommand(
+        [new WordSegment('user'), new WordSegment('search')],
+        'Search users',
+        searchHandler
+      );
+
+      render(<Citadel commandRegistry={registry} />);
+      const input = await activateCitadel();
+
+      await act(async () => {
+        fireEvent.change(input, { target: { value: 'u' } });
+        fireEvent.change(input, { target: { value: 's' } });
+        fireEvent.change(input, { target: { value: 'sh' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+      });
+
+      await waitFor(() => {
+        expect(showHandler).toHaveBeenCalledTimes(1);
+        expect(searchHandler).toHaveBeenCalledTimes(0);
+      });
+
+      await act(async () => {
+        fireEvent.change(input, { target: { value: 'u' } });
+        fireEvent.change(input, { target: { value: 's' } });
+        fireEvent.change(input, { target: { value: 'se' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+      });
+
+      await waitFor(() => {
+        expect(showHandler).toHaveBeenCalledTimes(1);
+        expect(searchHandler).toHaveBeenCalledTimes(1);
+      });
+    });
+
     // Note: Commands with arguments require more complex interaction patterns
     // that are difficult to simulate in the current test environment.
     // These are better tested through E2E tests or manual testing.

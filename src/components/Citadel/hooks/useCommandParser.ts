@@ -131,16 +131,18 @@ export const useCommandParser = () => {
     actions.setCurrentInput(newValue);
     Logger.debug("[useCommandParser][handleInputChange] newValue: ", newValue);
 
-    if (inputState === 'entering_argument') {
+    const nextExpectedSegment = getNextExpectedSegment();
+    const expectingArgument = nextExpectedSegment.type === 'argument' || inputState === 'entering_argument';
+
+    if (expectingArgument) {
       const parsedInput = parseInput(newValue);
         
       if (parsedInput.isQuoted) {
         if (parsedInput.isComplete) { // `"hello"`
-          const nextSegment = getNextExpectedSegment();
-          if (!(nextSegment instanceof ArgumentSegment)) return;
-          nextSegment.value = newValue.trim() || '';
-          Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", nextSegment);
-          segmentStack.push(nextSegment);
+          if (!(nextExpectedSegment instanceof ArgumentSegment)) return;
+          nextExpectedSegment.value = newValue.trim() || '';
+          Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", nextExpectedSegment);
+          segmentStack.push(nextExpectedSegment);
           actions.setCurrentInput('');
           setInputStateWithLogging('idle');
 
@@ -151,11 +153,10 @@ export const useCommandParser = () => {
         }
       } else { // unquoted input
         if (parsedInput.isComplete) { // `hello `
-          const nextSegment = getNextExpectedSegment();
-          if (!(nextSegment instanceof ArgumentSegment)) return;
-          nextSegment.value = newValue.trim() || '';
-          Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", nextSegment);
-          segmentStack.push(nextSegment);
+          if (!(nextExpectedSegment instanceof ArgumentSegment)) return;
+          nextExpectedSegment.value = newValue.trim() || '';
+          Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", nextExpectedSegment);
+          segmentStack.push(nextExpectedSegment);
           actions.setCurrentInput('');
           setInputStateWithLogging('idle');
 
@@ -167,16 +168,14 @@ export const useCommandParser = () => {
       }
     }
 
-    if (inputState === 'entering_command') {
-      const suggestedSegment = tryAutocomplete(newValue);
-      if (suggestedSegment.type === 'word') {
-        Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", suggestedSegment);
-        segmentStack.push(suggestedSegment as WordSegment);
-        actions.setCurrentInput('');
-        setInputStateWithLogging('idle');
+    const suggestedSegment = tryAutocomplete(newValue);
+    if (suggestedSegment.type === 'word') {
+      Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", suggestedSegment);
+      segmentStack.push(suggestedSegment as WordSegment);
+      actions.setCurrentInput('');
+      setInputStateWithLogging('idle');
 
-        return;
-      }
+      return;
     }
   }, [tryAutocomplete, state, getNextExpectedSegment, inputState, segmentStack]);
 
