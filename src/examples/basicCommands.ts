@@ -120,26 +120,6 @@ export function createBasicCommandRegistry(): CommandRegistry {
              ||     ||`
         return text(bubble + cow)
       }),
-
-    command('localstorage.show')
-      .describe('Show all items in localStorage')
-      .handle(async () => {
-        const storage: Record<string, string> = {}
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i)
-          if (key) {
-            storage[key] = localStorage.getItem(key) || ''
-          }
-        }
-        return json(storage)
-      }),
-
-    command('localstorage.clear')
-      .describe('Clear all items from localStorage')
-      .handle(async () => {
-        localStorage.clear()
-        return text('localStorage cleared')
-      }),
   ])
 }
 /* c8 ignore stop */

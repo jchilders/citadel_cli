@@ -17,7 +17,7 @@ const EXAMPLE_LABELS: Record<ExampleId, string> = {
   runtime: "Runtime Config",
 };
 const EXAMPLE_DESCRIPTIONS: Record<ExampleId, string> = {
-  basic: "A broad starter setup with user operations, error handling, media output, and local storage utilities.",
+  basic: "A broad starter setup with user operations, error handling, and media output.",
   localdev: "A local development setup for API checks, quick DB queries, seeding, and full-stack log inspection.",
   devops: "An operations-flavored setup focused on deploy, logs, metrics, and infrastructure actions.",
   runtime: "A live configuration setup that changes Citadel behavior while you use it.",
