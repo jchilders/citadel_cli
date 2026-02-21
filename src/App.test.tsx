@@ -7,6 +7,7 @@ import { CitadelConfig } from './components/Citadel/config/types';
 
 const mockCitadel = vi.fn();
 const mockCreateBasicCommandRegistry = vi.fn();
+const mockCreateLocalDevCommandRegistry = vi.fn();
 const mockCreateDevOpsCommandRegistry = vi.fn();
 const mockUseRuntimeConfigDemo = vi.fn();
 
@@ -25,6 +26,10 @@ vi.mock('./examples/devopsCommands', () => ({
   createDevOpsCommandRegistry: () => mockCreateDevOpsCommandRegistry()
 }));
 
+vi.mock('./examples/localDevCommands', () => ({
+  createLocalDevCommandRegistry: () => mockCreateLocalDevCommandRegistry()
+}));
+
 vi.mock('./examples/runtimeConfigDemo', () => ({
   useRuntimeConfigDemo: () => mockUseRuntimeConfigDemo()
 }));
@@ -33,6 +38,7 @@ describe('App', () => {
   beforeEach(() => {
     mockCitadel.mockClear();
     mockCreateBasicCommandRegistry.mockReset();
+    mockCreateLocalDevCommandRegistry.mockReset();
     mockCreateDevOpsCommandRegistry.mockReset();
     mockUseRuntimeConfigDemo.mockReset();
     window.localStorage.clear();
@@ -40,10 +46,12 @@ describe('App', () => {
 
   it('defaults to basic example and passes default config to Citadel', () => {
     const basicRegistry = new CommandRegistry();
+    const localDevRegistry = new CommandRegistry();
     const devopsRegistry = new CommandRegistry();
     const runtimeRegistry = new CommandRegistry();
     const runtimeConfig: CitadelConfig = { displayMode: 'inline' };
     mockCreateBasicCommandRegistry.mockReturnValue(basicRegistry);
+    mockCreateLocalDevCommandRegistry.mockReturnValue(localDevRegistry);
     mockCreateDevOpsCommandRegistry.mockReturnValue(devopsRegistry);
     mockUseRuntimeConfigDemo.mockReturnValue({
       commandRegistry: runtimeRegistry,
@@ -68,10 +76,12 @@ describe('App', () => {
 
   it('switches to runtime example via UI and uses runtime config', () => {
     const basicRegistry = new CommandRegistry();
+    const localDevRegistry = new CommandRegistry();
     const devopsRegistry = new CommandRegistry();
     const runtimeRegistry = new CommandRegistry();
     const runtimeConfig: CitadelConfig = { displayMode: 'inline' };
     mockCreateBasicCommandRegistry.mockReturnValue(basicRegistry);
+    mockCreateLocalDevCommandRegistry.mockReturnValue(localDevRegistry);
     mockCreateDevOpsCommandRegistry.mockReturnValue(devopsRegistry);
     mockUseRuntimeConfigDemo.mockReturnValue({
       commandRegistry: runtimeRegistry,

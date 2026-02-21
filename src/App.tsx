@@ -2,40 +2,52 @@ import { useEffect, useMemo, useState } from "react";
 import { Citadel } from "./index";
 import { createBasicCommandRegistry } from "./examples/basicCommands.ts";
 import { createDevOpsCommandRegistry } from "./examples/devopsCommands";
+import { createLocalDevCommandRegistry } from "./examples/localDevCommands";
 import { defaultConfig } from "./components/Citadel/config/defaults";
 import { useRuntimeConfigDemo } from "./examples/runtimeConfigDemo";
 import "./styles/app.css";
 
-type ExampleId = "basic" | "devops" | "runtime";
+type ExampleId = "basic" | "localdev" | "devops" | "runtime";
 
 const EXAMPLE_STORAGE_KEY = "citadel-demo-example";
 const EXAMPLE_LABELS: Record<ExampleId, string> = {
   basic: "Basic",
+  localdev: "Local Full-Stack",
   devops: "DevOps",
   runtime: "Runtime Config",
 };
 const EXAMPLE_DESCRIPTIONS: Record<ExampleId, string> = {
   basic: "A broad starter setup with user operations, error handling, media output, and local storage utilities.",
+  localdev: "A local development setup for API checks, quick DB queries, seeding, and full-stack log inspection.",
   devops: "An operations-flavored setup focused on deploy, logs, metrics, and infrastructure actions.",
   runtime: "A live configuration setup that changes Citadel behavior while you use it.",
 };
 const EXAMPLE_HINTS: Record<ExampleId, string> = {
   basic: "Great first stop to understand command structure and result types.",
+  localdev: "Use this when building locally and jumping between frontend, API, and database checks.",
   devops: "Shows how Citadel can power fast operational workflows in internal tools.",
   runtime: "Shows Citadel acting as a control surface, not just a command runner.",
 };
 const EXAMPLE_TRY_COMMAND: Record<ExampleId, string> = {
   basic: "user.show 1234",
+  localdev: "stack.status",
   devops: "monitor.metrics",
-  runtime: "cursor.type.spin",
+  runtime: "display.mode.inline",
 };
 const EXAMPLE_TRY_KEYS: Record<ExampleId, string> = {
   basic: "u s 1234",
+  localdev: "s s",
   devops: "m m",
-  runtime: "cu t sp",
+  runtime: "d m i",
+};
+const EXAMPLE_TRY_EXPLANATION: Record<ExampleId, string> = {
+  basic: "Shows a single user result.",
+  localdev: "Shows the current local stack health snapshot.",
+  devops: "Shows a live-style metrics payload.",
+  runtime: "Switches Citadel into inline mode in the page.",
 };
 
-const VALID_EXAMPLE_IDS: ExampleId[] = ["basic", "devops", "runtime"];
+const VALID_EXAMPLE_IDS: ExampleId[] = ["basic", "localdev", "devops", "runtime"];
 
 const isExampleId = (value: string): value is ExampleId =>
   VALID_EXAMPLE_IDS.includes(value as ExampleId);
@@ -56,6 +68,7 @@ const getInitialExample = (): ExampleId => {
 function App() {
   const [selectedExample, setSelectedExample] = useState<ExampleId>(getInitialExample);
   const basicRegistry = useMemo(() => createBasicCommandRegistry(), []);
+  const localDevRegistry = useMemo(() => createLocalDevCommandRegistry(), []);
   const devopsRegistry = useMemo(() => createDevOpsCommandRegistry(), []);
   const runtimeDemo = useRuntimeConfigDemo();
 
@@ -70,12 +83,16 @@ function App() {
       return devopsRegistry;
     }
 
+    if (selectedExample === "localdev") {
+      return localDevRegistry;
+    }
+
     if (selectedExample === "runtime") {
       return runtimeDemo.commandRegistry;
     }
 
     return basicRegistry;
-  }, [basicRegistry, devopsRegistry, runtimeDemo.commandRegistry, selectedExample]);
+  }, [basicRegistry, localDevRegistry, devopsRegistry, runtimeDemo.commandRegistry, selectedExample]);
 
   const activeConfig = selectedExample === "runtime" ? runtimeDemo.config : defaultConfig;
 
@@ -145,7 +162,8 @@ function App() {
             Quick try: press initials{" "}
             <code className="px-2 border border-slate-300 rounded bg-white">{EXAMPLE_TRY_KEYS[selectedExample]}</code>{" "}
             and Citadel will expand to{" "}
-            <code className="px-2 border border-slate-300 rounded bg-white">{EXAMPLE_TRY_COMMAND[selectedExample]}</code>.
+            <code className="px-2 border border-slate-300 rounded bg-white">{EXAMPLE_TRY_COMMAND[selectedExample]}</code>.{" "}
+            {EXAMPLE_TRY_EXPLANATION[selectedExample]}
           </p>
         </div>
         <Citadel
