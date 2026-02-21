@@ -3,7 +3,8 @@ import { CitadelConfig } from '../components/Citadel/config/types';
 import { defaultConfig } from '../components/Citadel/config/defaults';
 import { CursorType, DEFAULT_CURSOR_CONFIGS } from '../components/Citadel/types/cursor';
 import { CommandRegistry } from '../components/Citadel/types/command-registry';
-import { registerRuntimeConfigCommands, type DisplayMode } from './runtimeConfigCommands';
+import { createCommandRegistry } from '../components/Citadel/types/command-dsl';
+import { createRuntimeConfigCommandDefinitions, type DisplayMode } from './runtimeConfigCommands';
 
 const DEFAULT_CURSOR_TYPE = (defaultConfig.cursorType ?? 'blink') as CursorType;
 const DEFAULT_CURSOR_COLOR =
@@ -51,15 +52,13 @@ export const useRuntimeConfigDemo = (
   }, []);
 
   const commandRegistry = useMemo(() => {
-    const registry = new CommandRegistry()
-    registerRuntimeConfigCommands(registry, {
+    return createCommandRegistry(createRuntimeConfigCommandDefinitions({
       setCursorType: handleSetCursorType,
       setCursorColor: handleSetCursorColor,
       setDisplayMode: handleSetDisplayMode,
       setIncludeHelpCommand: handleSetIncludeHelp,
       resetConfig
-    });
-    return registry;
+    }));
   }, [
     handleSetCursorType,
     handleSetCursorColor,

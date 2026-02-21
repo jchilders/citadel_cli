@@ -139,6 +139,7 @@ At a high level, vNext is an expansion-first state machine with deterministic ma
 ## 10. Migration and Test Coverage Gates
 
 - [x] Existing non-skipped unit/integration tests pass.
+- [x] Public examples (README + sample registries) use the typed DSL as the primary command authoring path.
 - [x] New tests cover ambiguous inline rendering (committed-only input rule).
 - [x] New tests cover `ush`/`use` disambiguation behavior.
 - [x] New tests cover help metadata coexistence (command + argument descriptions).
