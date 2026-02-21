@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  background-color: oklch(12.9% 0.042 264.7);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+kbd {
+  display: inline-block;
+  padding: 1px 7px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.7;
+  color: oklch(86.9% 0.022 264.5);
+  background: oklch(27.9% 0.041 260.0);
+  border: 1px solid oklch(44.6% 0.043 257.3);
+  border-bottom-width: 3px;
+  border-radius: 5px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
