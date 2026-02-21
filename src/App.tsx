@@ -46,6 +46,12 @@ const EXAMPLE_TRY_EXPLANATION: Record<ExampleId, string> = {
   devops: "Shows a live-style metrics payload.",
   runtime: "Switches Citadel into inline mode in the page.",
 };
+const EXAMPLE_SOURCE_URL: Record<ExampleId, string> = {
+  basic: "https://github.com/jchilders/citadel_cli/blob/main/src/examples/basicCommands.ts",
+  localdev: "https://github.com/jchilders/citadel_cli/blob/main/src/examples/localDevCommands.ts",
+  devops: "https://github.com/jchilders/citadel_cli/blob/main/src/examples/devopsCommands.ts",
+  runtime: "https://github.com/jchilders/citadel_cli/blob/main/src/examples/runtimeConfigDemo.ts",
+};
 
 const VALID_EXAMPLE_IDS: ExampleId[] = ["basic", "localdev", "devops", "runtime"];
 
@@ -151,9 +157,19 @@ function App() {
             <div className="flex gap-4 mb-6 pb-6 border-b border-slate-800">
               <div className="mt-2 w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
               <div>
-                <p className="text-white font-semibold text-base">
-                  {EXAMPLE_LABELS[selectedExample]}
-                </p>
+                <div className="flex items-baseline gap-3">
+                  <p className="text-white font-semibold text-base">
+                    {EXAMPLE_LABELS[selectedExample]}
+                  </p>
+                  <a
+                    href={EXAMPLE_SOURCE_URL[selectedExample]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                  >
+                    view source ↗
+                  </a>
+                </div>
                 <p className="text-slate-400 text-sm mt-1.5 leading-relaxed">
                   {EXAMPLE_DESCRIPTIONS[selectedExample]}
                 </p>

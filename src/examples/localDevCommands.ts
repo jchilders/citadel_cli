@@ -110,8 +110,8 @@ export function createLocalDevCommandRegistry(): CommandRegistry {
         return text(lines.join('\n'));
       }),
 
-    command('localstorage.key.get')
-      .describe('Read a single localStorage key')
+    command('localstorage.get')
+      .describe('Read a localStorage key')
       .arg('key', (arg) => arg.describe('Storage key name'))
       .handle(async ({ namedArgs }) => {
         const key = (namedArgs.key || '').trim();
@@ -127,8 +127,8 @@ export function createLocalDevCommandRegistry(): CommandRegistry {
         });
       }),
 
-    command('localstorage.key.set')
-      .describe('Set a single localStorage key')
+    command('localstorage.set')
+      .describe('Set a localStorage key')
       .arg('key', (arg) => arg.describe('Storage key name'))
       .arg('value', (arg) => arg.describe('Value to store'))
       .handle(async ({ namedArgs }) => {
@@ -142,8 +142,8 @@ export function createLocalDevCommandRegistry(): CommandRegistry {
         return text(`Set localStorage key "${key}".`);
       }),
 
-    command('localstorage.key.remove')
-      .describe('Remove a single localStorage key')
+    command('localstorage.remove')
+      .describe('Remove a localStorage key')
       .arg('key', (arg) => arg.describe('Storage key name'))
       .handle(async ({ namedArgs }) => {
         const key = (namedArgs.key || '').trim();
@@ -157,6 +157,23 @@ export function createLocalDevCommandRegistry(): CommandRegistry {
           existed
             ? `Removed localStorage key "${key}".`
             : `Key "${key}" was not set.`
+        );
+      }),
+
+    command('localstorage.list')
+      .describe('List all localStorage keys and values')
+      .handle(async () => {
+        const entries: Record<string, string | null> = {};
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key !== null) {
+            entries[key] = localStorage.getItem(key);
+          }
+        }
+        return json(
+          Object.keys(entries).length > 0
+            ? entries
+            : { message: 'localStorage is empty' }
         );
       }),
   ]);
