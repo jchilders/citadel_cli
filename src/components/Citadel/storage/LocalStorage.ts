@@ -1,4 +1,5 @@
 import { StorageConfig, StoredCommand } from '../types/storage';
+import { ArgumentSegment, cloneCommandSegments } from '../types/command-registry';
 import { BaseStorage } from './BaseStorage';
 
 /**
@@ -17,7 +18,9 @@ export class LocalStorage extends BaseStorage {
       if (!data) return [];
       const commands = JSON.parse(data) as StoredCommand[];
       return commands.map(cmd => ({
-        commandSegments: cmd.commandSegments || [],
+        commandSegments: Array.isArray(cmd.commandSegments)
+          ? cloneCommandSegments(cmd.commandSegments)
+          : [],
         timestamp: cmd.timestamp
       }));
     } catch (error) {
@@ -37,7 +40,14 @@ export class LocalStorage extends BaseStorage {
   protected async saveCommands(commands: StoredCommand[]): Promise<void> {
     try {
       const serializedCommands = commands.map(cmd => ({
-        commandSegments: Array.isArray(cmd.commandSegments) ? [...cmd.commandSegments] : [],
+        commandSegments: Array.isArray(cmd.commandSegments)
+          ? cloneCommandSegments(cmd.commandSegments).map((segment) => ({
+            type: segment.type,
+            name: segment.name,
+            description: segment.description,
+            ...(segment instanceof ArgumentSegment ? { value: segment.value } : {}),
+          }))
+          : [],
         timestamp: cmd.timestamp
       }));
       window.localStorage.setItem(this.storageKey, JSON.stringify(serializedCommands));

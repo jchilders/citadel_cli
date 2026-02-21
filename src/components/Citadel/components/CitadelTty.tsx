@@ -3,6 +3,7 @@ import { CommandOutput } from './CommandOutput';
 import { CommandInput } from './CommandInput';
 import { AvailableCommands } from './AvailableCommands';
 import { CitadelState, CitadelActions } from '../types/state';
+import { useCitadelConfig } from '../config/hooks';
 
 interface CitadelTtyProps {
   state: CitadelState;
@@ -15,14 +16,21 @@ export const CitadelTty: React.FC<CitadelTtyProps> = ({
   actions,
   outputRef
 }) => {
+  const config = useCitadelConfig();
+  const isInline = config.displayMode === 'inline';
+
   return (
     <div className="innerContainer">
-      <div className="flex-1 min-h-0 pt-3 px-4">
+      <div
+        className="flex-1 min-h-0 pt-3 px-4"
+        data-testid="citadel-output-pane"
+        style={isInline ? { overflow: 'hidden' } : undefined}
+      >
         <CommandOutput output={state.output} outputRef={outputRef} />
       </div>
-      <div>
+      <div className="shrink-0">
         <CommandInput state={state} actions={actions} />
-        <AvailableCommands />
+        <AvailableCommands currentInput={state.isEnteringArg ? '' : state.currentInput} />
       </div>
     </div>
   );

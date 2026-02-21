@@ -4,6 +4,8 @@ import { CitadelConfigProvider } from '../CitadelConfigContext';
 import { useCitadelCommands, useCitadelConfig, useCitadelStorage } from '../hooks';
 import { CommandRegistry } from '../../types/command-registry';
 import { StorageFactory } from '../../storage/StorageFactory';
+import { MemoryStorage } from '../../storage/MemoryStorage';
+import { LocalStorage } from '../../storage/LocalStorage';
 import { defaultConfig } from '../defaults';
 import { CitadelElement } from '../../Citadel';
 import { createHelpHandler } from '../../types/help-command';
@@ -251,6 +253,36 @@ describe('CitadelConfigContext', () => {
 
       const storageElement = getByTestId('storage');
       expect(storageElement.textContent).toBe('initialized');
+    });
+
+    it('reinitializes storage when storage config changes', async () => {
+      const { rerender } = render(
+        <CitadelConfigProvider
+          config={{ storage: { type: 'memory', maxCommands: 10 } }}
+        >
+          <StorageTestComponent />
+        </CitadelConfigProvider>
+      );
+
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
+
+      expect(StorageFactory.getInstance().getStorage()).toBeInstanceOf(MemoryStorage);
+
+      rerender(
+        <CitadelConfigProvider
+          config={{ storage: { type: 'localStorage', maxCommands: 10 } }}
+        >
+          <StorageTestComponent />
+        </CitadelConfigProvider>
+      );
+
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
+
+      expect(StorageFactory.getInstance().getStorage()).toBeInstanceOf(LocalStorage);
     });
   });
 });

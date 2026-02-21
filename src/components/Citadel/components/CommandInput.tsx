@@ -126,7 +126,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     });
 
     return [(
-      <div className="flex items-center gap-1" data-testid="user-input-area" key="{segmentStackVersion}">
+      <div className="flex items-center gap-1" data-testid="user-input-area" key={segmentStackVersion}>
         {elements}
       </div>
     )];
@@ -142,6 +142,9 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       setPlaceholderText("");
     }
   }, [segmentStackVersion, getNextExpectedSegment]);
+
+  const isCommandEntryMode = !state.isEnteringArg;
+  const cursorInputLength = state.currentInput.length;
 
   return (
     <div className="flex flex-col w-full bg-gray-900 rounded-lg p-4">
@@ -172,7 +175,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
               onKeyDown={onKeyDown}
               onPaste={handlePaste}
               data-testid="citadel-command-input"
-              className={`w-full bg-transparent outline-none text-gray-200 caret-transparent ${showInvalidAnimation ? 'invalid-input-animation' : ''}`}
+              className={`w-full bg-transparent outline-none caret-transparent ${isCommandEntryMode ? 'text-blue-400' : 'text-gray-200'} ${showInvalidAnimation ? 'invalid-input-animation' : ''}`}
               spellCheck={false}
               autoComplete="off"
               placeholder={placeholderText}
@@ -180,7 +183,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
             <div 
               className="absolute top-0 pointer-events-none"
               style={{
-                left: `${state.currentInput.length}ch`,
+                left: `${cursorInputLength}ch`,
                 transition: 'left 0.05s ease-out'
               }}
             >

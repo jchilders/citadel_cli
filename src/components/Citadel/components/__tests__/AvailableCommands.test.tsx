@@ -14,13 +14,13 @@ describe('AvailableCommands', () => {
     showCitadelKey: '.'
   };
 
-  const renderWithConfig = (config = defaultConfig) => {
+  const renderWithConfig = (config = defaultConfig, currentInput = '') => {
     return render(
       <CitadelConfigProvider 
         config={config}
         commandRegistry={cmdRegistry}
       >
-        <AvailableCommands />
+        <AvailableCommands currentInput={currentInput} />
       </CitadelConfigProvider>
     );
   };
@@ -112,6 +112,24 @@ describe('AvailableCommands', () => {
       const elements = container.getElementsByClassName('underline');
       expect(elements.length).toBeGreaterThan(0);
       expect(elements[0].textContent).toBeTruthy();
+    });
+
+    it('narrows command chips by current input prefix', async () => {
+      const segments = ['show', 'search', 'deactivate'].map((name) =>
+        createMockSegment('word', name)
+      );
+      vi.spyOn(cmdRegistry, 'getCompletions').mockReturnValue(segments);
+      vi.spyOn(cmdRegistry, 'getCompletionNames').mockReturnValue(
+        segments.map((segment) => segment.name)
+      );
+
+      const { container } = renderWithConfig(defaultConfig, 's');
+
+      await waitFor(() => {
+        const commandChips = Array.from(container.querySelectorAll('[data-testid="available-command-chip"]'));
+        const commandNames = commandChips.map((node) => node.textContent?.trim());
+        expect(commandNames).toEqual(['search', 'show']);
+      });
     });
   });
 

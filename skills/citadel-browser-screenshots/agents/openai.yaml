@@ -1,0 +1,4 @@
+interface:
+  display_name: "Citadel Browser Screenshots"
+  short_description: "Automate Citadel browser flows and capture screenshots."
+  default_prompt: "Use this skill to run Citadel command key sequences in a browser and capture deterministic screenshots for docs, regressions, and UI verification."

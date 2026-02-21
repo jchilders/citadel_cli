@@ -82,3 +82,22 @@ Command history is persisted via `StorageFactory`, which returns either `LocalSt
 ### Path Alias
 
 `tsconfig.app.json` configures `@/` as an alias for `src/`. Use `@/components/...` for imports within the library source.
+
+## Repository Skills
+
+### citadel-browser-screenshots
+
+- **Skill path**: `skills/citadel-browser-screenshots/SKILL.md`
+- **Use when**: You need deterministic browser screenshots of Citadel behavior (command expansion, suggestions, output, inline/panel UI).
+- **Script**: `skills/citadel-browser-screenshots/scripts/capture_citadel_screenshot.mjs`
+- **Sequence reference**: `skills/citadel-browser-screenshots/references/citadel_sequences.md`
+
+Example:
+```bash
+node skills/citadel-browser-screenshots/scripts/capture_citadel_screenshot.mjs \
+  --url http://127.0.0.1:4173 \
+  --tab "Basic" \
+  --keys "u s 1234 Enter" \
+  --out /Users/jchilders/work/jchilders/citadel_cli/test-results/screenshots/citadel-basic.png \
+  --clip-citadel
+```

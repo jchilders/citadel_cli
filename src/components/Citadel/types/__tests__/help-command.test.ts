@@ -7,7 +7,7 @@ describe('createHelpHandler', () => {
   it('lists commands alphabetically, formats arguments, and appends help entry', async () => {
     const registry = new CommandRegistry();
     registry.addCommand(
-      [new WordSegment('deploy'), new ArgumentSegment('environment')],
+      [new WordSegment('deploy'), new ArgumentSegment('environment', 'Choose target environment')],
       'Deploy the current build'
     );
     registry.addCommand(
@@ -28,9 +28,29 @@ describe('createHelpHandler', () => {
     expect(lines[0]).toBe('Available Commands:');
     expect(lines.slice(1)).toEqual([
       'deploy <environment> - Deploy the current build',
+      '  <environment>: Choose target environment',
       'status - Check current status',
       'help - Show available commands'
     ]);
+  });
+
+  it('shows command help and argument help text as separate lines', async () => {
+    const registry = new CommandRegistry();
+    registry.addCommand(
+      [
+        new WordSegment('user'),
+        new WordSegment('show'),
+        new ArgumentSegment('userId', 'Enter user ID'),
+      ],
+      'Show user details'
+    );
+
+    const handler = createHelpHandler(registry);
+    const result = await handler();
+    const lines = result.text.split('\n');
+
+    expect(lines).toContain('user show <userId> - Show user details');
+    expect(lines).toContain('  <userId>: Enter user ID');
   });
 
   it('returns fallback message when no commands exist', async () => {

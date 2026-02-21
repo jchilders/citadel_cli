@@ -74,20 +74,10 @@ export const useCommandParser = () => {
    * returns "user". But if input is "u", returns null since it's ambiguous.
    */
   const getAutocompleteSuggestion = useCallback((input: string): CommandSegment => {
-    // Get available word segments
-    const availableSegments = commands.getCompletions(segmentStack.path())
-      .filter(segment => segment.type === 'word');
-    
-    // Find segments that match the input
-    const matchingSegments = availableSegments.filter(segment =>
-      segment.name.toLowerCase().startsWith(input.toLowerCase())
-    );
-    
-    // Only return a suggestion if we have exactly one match
-    if (matchingSegments.length === 1) {
-      return matchingSegments[0];
+    const uniqueMatch = commands.getUniqueCompletion(segmentStack.path(), input);
+    if (uniqueMatch && uniqueMatch.type === 'word') {
+      return uniqueMatch;
     }
-
     return segmentStack.nullSegment;
   }, [commands, segmentStack]);
 
@@ -106,10 +96,8 @@ export const useCommandParser = () => {
     }
 
     // For word segments, check if input matches any available completion
-    const isValid = availableSegments.some(segment =>
-      segment.type === 'word' && 
-      segment.name.toLowerCase().startsWith(input.toLowerCase())
-    );
+    const isValid = commands.getMatchingCompletions(currentPath, input)
+      .some((segment) => segment.type === 'word');
     
     return isValid;
   }, [commands, segmentStack]);
@@ -120,7 +108,7 @@ export const useCommandParser = () => {
     Logger.debug("[tryAutoComplete] input: ", input);
     const suggestion = getAutocompleteSuggestion(input);
     
-    if (!suggestion || suggestion.name === input) {
+    if (!suggestion || suggestion.type === 'null') {
       return new NullSegment;
     }
 
@@ -143,16 +131,18 @@ export const useCommandParser = () => {
     actions.setCurrentInput(newValue);
     Logger.debug("[useCommandParser][handleInputChange] newValue: ", newValue);
 
-    if (inputState === 'entering_argument') {
+    const nextExpectedSegment = getNextExpectedSegment();
+    const expectingArgument = nextExpectedSegment.type === 'argument' || inputState === 'entering_argument';
+
+    if (expectingArgument) {
       const parsedInput = parseInput(newValue);
         
       if (parsedInput.isQuoted) {
         if (parsedInput.isComplete) { // `"hello"`
-          const nextSegment = getNextExpectedSegment();
-          if (!(nextSegment instanceof ArgumentSegment)) return;
-          nextSegment.value = newValue.trim() || '';
-          Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", nextSegment);
-          segmentStack.push(nextSegment);
+          if (!(nextExpectedSegment instanceof ArgumentSegment)) return;
+          nextExpectedSegment.value = newValue.trim() || '';
+          Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", nextExpectedSegment);
+          segmentStack.push(nextExpectedSegment);
           actions.setCurrentInput('');
           setInputStateWithLogging('idle');
 
@@ -163,11 +153,10 @@ export const useCommandParser = () => {
         }
       } else { // unquoted input
         if (parsedInput.isComplete) { // `hello `
-          const nextSegment = getNextExpectedSegment();
-          if (!(nextSegment instanceof ArgumentSegment)) return;
-          nextSegment.value = newValue.trim() || '';
-          Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", nextSegment);
-          segmentStack.push(nextSegment);
+          if (!(nextExpectedSegment instanceof ArgumentSegment)) return;
+          nextExpectedSegment.value = newValue.trim() || '';
+          Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", nextExpectedSegment);
+          segmentStack.push(nextExpectedSegment);
           actions.setCurrentInput('');
           setInputStateWithLogging('idle');
 
@@ -179,18 +168,36 @@ export const useCommandParser = () => {
       }
     }
 
-    if (inputState === 'entering_command') {
-      const suggestedSegment = tryAutocomplete(newValue);
-      if (suggestedSegment.type === 'word') {
-        Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", suggestedSegment);
-        segmentStack.push(suggestedSegment as WordSegment);
+    // If the user typed a delimiter after a word token, treat it as an explicit
+    // selection for exact segment names (e.g. "example " should pick `example`
+    // even if `examples` also exists).
+    if (newValue.endsWith(' ')) {
+      const token = newValue.trim().toLowerCase();
+      const exactWordMatches = commands
+        .getCompletions(segmentStack.path())
+        .filter(
+          (segment): segment is WordSegment =>
+            segment.type === 'word' && segment.name.toLowerCase() === token
+        );
+
+      if (exactWordMatches.length === 1) {
+        segmentStack.push(exactWordMatches[0]);
         actions.setCurrentInput('');
         setInputStateWithLogging('idle');
-
         return;
       }
     }
-  }, [tryAutocomplete, state, getNextExpectedSegment, inputState, segmentStack]);
+
+    const suggestedSegment = tryAutocomplete(newValue);
+    if (suggestedSegment.type === 'word') {
+      Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", suggestedSegment);
+      segmentStack.push(suggestedSegment as WordSegment);
+      actions.setCurrentInput('');
+      setInputStateWithLogging('idle');
+
+      return;
+    }
+  }, [tryAutocomplete, state, getNextExpectedSegment, inputState, segmentStack, commands]);
 
   const resetInputState = useCallback((actions: CitadelActions) => {
     actions.setCurrentInput('');

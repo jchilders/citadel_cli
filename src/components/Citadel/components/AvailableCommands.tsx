@@ -3,7 +3,11 @@ import { useCitadelCommands, useCitadelConfig, useSegmentStack } from '../config
 import { Logger } from '../utils/logger';
 import { resolveTypography } from '../utils/typography';
 
-export const AvailableCommands: React.FC = () => {
+interface AvailableCommandsProps {
+  currentInput?: string;
+}
+
+export const AvailableCommands: React.FC<AvailableCommandsProps> = ({ currentInput = '' }) => {
   const commands  = useCitadelCommands();
   const config = useCitadelConfig();
   const segmentStack = useSegmentStack();
@@ -15,11 +19,16 @@ export const AvailableCommands: React.FC = () => {
   const containerClasses = "mt-2 border-t border-gray-700 px-4 py-2";
   const contentClasses = `text-gray-300 ${commandTypography.className ?? ''}`.trim();
 
-  const nextCommandSegments = commands.getCompletions(segmentStack.path());
-  Logger.debug("[AvailableCommands] nextCommandSegments: ", nextCommandSegments);
+  const normalizedInput = currentInput.trim().toLowerCase();
+  const filteredCommandSegments = commands.getMatchingCompletions(
+    segmentStack.path(),
+    normalizedInput
+  );
+
+  Logger.debug("[AvailableCommands] nextCommandSegments: ", filteredCommandSegments);
   
   const sortedCommands = React.useMemo(() => {
-    const segments = [...nextCommandSegments];
+    const segments = [...filteredCommandSegments];
     const isHelpSegment = (segment: typeof segments[number]) =>
       segment.name.toLowerCase() === 'help';
 
@@ -30,7 +39,7 @@ export const AvailableCommands: React.FC = () => {
     );
 
     return [...sortedNonHelpSegments, ...helpSegments];
-  }, [nextCommandSegments]);
+  }, [filteredCommandSegments]);
 
   const boldLengths = React.useMemo(() => {
     const map = new Map<string, number>();
@@ -52,8 +61,8 @@ export const AvailableCommands: React.FC = () => {
     return map;
   }, [sortedCommands]);
 
-  const nextSegmentIsArgument = nextCommandSegments.some(seg => seg.type === 'argument');
-  const nextSegment = nextCommandSegments[0];
+  const nextSegmentIsArgument = filteredCommandSegments.some(seg => seg.type === 'argument');
+  const nextSegment = filteredCommandSegments[0];
   return (
     <div className={containerClasses} data-testid="available-commands">
       <div className={contentClasses} style={commandTypography.style}>
@@ -76,7 +85,7 @@ export const AvailableCommands: React.FC = () => {
               );
             })}
           </div>
-        ) : nextCommandSegments.length > 0 ? (
+        ) : filteredCommandSegments.length > 0 ? (
           <>
             <span className="text-blue-400">{nextSegment.name}</span>
             {nextSegment.description && (

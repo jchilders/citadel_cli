@@ -85,6 +85,24 @@ describe('MemoryStorage', () => {
     ]);
   });
 
+  it('should not allow mutating returned segment objects', async () => {
+    const command1: StoredCommand = {
+      commandSegments: [
+        new WordSegment('test1'),
+        new ArgumentSegment('first', 'First arg', 'one')
+      ],
+      timestamp: Date.now()
+    };
+
+    await memoryStorage.addStoredCommand(command1);
+    const commands = await memoryStorage.getStoredCommands();
+    const arg = commands[0].commandSegments[1] as ArgumentSegment;
+    arg.value = 'mutated';
+
+    const fresh = await memoryStorage.getStoredCommands();
+    expect((fresh[0].commandSegments[1] as ArgumentSegment).value).toBe('one');
+  });
+
   it('should clear storage', async () => {
     const command1: StoredCommand = {
       commandSegments: [

@@ -24,31 +24,27 @@ npm i citadel_cli
 A core concept in Citadel are commands. Commands are things like "user add 1234"
 or "qa1 deploy my_feature_branch". To initialize and add commands:
 
-1. Create a `CommandRegistry` instance
-2. Add one or more commands to that registry
+1. Define commands with the typed DSL
+2. Build a `CommandRegistry` from those definitions
 3. Pass the registry to `Citadel`
 
 ```typescript
 import {
   Citadel,
-  CommandRegistry,
-  TextCommandResult,
+  command,
+  createCommandRegistry,
+  text,
 } from "citadel_cli";
 
-// 1. Create the registry
-const registry = new CommandRegistry();
+// 1. Define and register commands
+const registry = createCommandRegistry([
+  command("greet")
+    .describe("Say hello to someone")
+    .arg("name", (arg) => arg.describe("Who are we greeting?"))
+    .handle(async ({ namedArgs }) => text(`Hello ${namedArgs.name} world!`)),
+]);
 
-// 2. Add commands
-registry.addCommand(
-  [
-    { type: "word", name: "greet" },
-    { type: "argument", name: "name", description: "Who are we greeting?" },
-  ],
-  "Say hello to someone", // Description used by the built-in `help` command
-  async (args: string[]) => new TextCommandResult(`Hello ${args[0]} world!`)
-);
-
-// 3. Pass the registry to the component
+// 2. Pass the registry to the component
 function App() {
   return <Citadel commandRegistry={registry} />;
 }
@@ -64,27 +60,67 @@ to the full word. For the above example, typing <kbd>g</kbd> would expand
 in-place to `greet ` (with a trailing space) whereupon you can enter in a value
 for the `name` argument.
 
-## `addCommand` Details
+For hierarchical commands, expansion is prefix-based and unambiguous:
 
-The `addCommand` method has the following signature:
+- `us` can resolve to `user show`
+- `ud` can resolve to `user deactivate`
+- If two options share a prefix (`show` and `search`), continue until unique:
+  `ush` => `user show`, `use` => `user search`
 
-```typescript
-addCommand(segments: CommandSegment[], description: string, handler: CommandHandler): void
+## Help Text
+
+Argument segment `description` values are shown as argument-level help text.
+Example built-in help output:
+
+```text
+user show <userId> - Show user details
+  <userId>: Enter user ID
 ```
 
-`segments[]` - Each `CommandSegment` in this array consists of a `type` (one of
-"word" or "argument"), a `name`, and an optional `description`
-
-`description` - Description of the command itself. Used by the built-in help
-command
-
-`handler` - What gets executed when <kbd>Enter</kbd> is pressed. The handler
-must return one of the following:
+Handlers must return one of the following:
 
 - `TextCommandResult`
 - `JsonCommandResult`
 - `ImageCommandResult`
 - `ErrorCommandResult`
+
+## Typed DSL
+
+For clearer command authoring, you can define commands with a DSL and compile
+them into a `CommandRegistry`:
+
+```typescript
+import {
+  Citadel,
+  command,
+  createCommandRegistry,
+  text,
+} from "citadel_cli";
+
+const registry = createCommandRegistry([
+  command("user.show")
+    .describe("Show user details")
+    .arg("userId", (arg) => arg.describe("Enter user ID"))
+    .handle(async ({ namedArgs }) => {
+      return text(`Showing user ${namedArgs.userId}`);
+    }),
+]);
+
+function App() {
+  return <Citadel commandRegistry={registry} />;
+}
+```
+
+DSL handlers receive:
+
+- `rawArgs`: positional values (`string[]`)
+- `namedArgs`: argument-name map (`Record<string, string | undefined>`)
+- `commandPath`: dot-delimited path string
+
+## Legacy `addCommand` API
+
+`CommandRegistry#addCommand` still works and is fully supported. The DSL is now
+the recommended authoring path for new command definitions.
 
 ### Arguments
 

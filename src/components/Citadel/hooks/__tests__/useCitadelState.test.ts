@@ -156,6 +156,24 @@ describe('useCitadelState', () => {
       expect((output.result as ErrorCommandResult).error).toBe('Test error');
     });
 
+    it('should convert invalid handler return types into explicit error results', async () => {
+      const { hook } = setupCitadelStateHook();
+
+      vi.mocked(mockCommands.getCommand).mockReturnValue(
+        createMockCommand('test', {
+          handler: async () => 'not-a-command-result' as unknown as TextCommandResult
+        })
+      );
+
+      await act(async () => {
+        await hook.result.current.actions.executeCommand();
+      });
+
+      const output = hook.result.current.state.output[0];
+      expect(output.result).toBeInstanceOf(ErrorCommandResult);
+      expect((output.result as ErrorCommandResult).error).toContain('invalid result type');
+    });
+
     it('should handle clearHistory action', async () => {
       const { hook, mockActions } = setupCitadelStateHook();
       

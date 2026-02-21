@@ -61,6 +61,27 @@ export class ArgumentSegment extends BaseSegment {
    }
  }
 
+export const cloneCommandSegment = (segment: CommandSegment): CommandSegment => {
+  if (segment.type === 'word') {
+    return new WordSegment(segment.name, segment.description);
+  }
+
+  if (segment.type === 'argument') {
+    const argumentLike = segment as ArgumentSegment;
+    return new ArgumentSegment(
+      argumentLike.name,
+      argumentLike.description,
+      argumentLike.value,
+      argumentLike.valid
+    );
+  }
+
+  return new NullSegment();
+};
+
+export const cloneCommandSegments = (segments: CommandSegment[]): CommandSegment[] =>
+  segments.map((segment) => cloneCommandSegment(segment));
+
 /** Defines a complete command with its path and behavior */
 export class CommandNode {
   private readonly _segments: CommandSegment[];
@@ -221,6 +242,36 @@ export class CommandRegistry {
    */
   getCompletionNames(path: string[]): string[] {
     return this.getCompletions(path).map(segment => segment.name);
+  }
+
+  /**
+   * Returns completion segments whose names start with the given prefix.
+   * Matching is case-insensitive.
+   */
+  getMatchingCompletions(path: string[], prefix: string): CommandSegment[] {
+    const normalizedPrefix = prefix.trim().toLowerCase();
+    const completions = this.getCompletions(path);
+
+    if (!normalizedPrefix) {
+      return completions;
+    }
+
+    return completions.filter((segment) =>
+      segment.name.toLowerCase().startsWith(normalizedPrefix)
+    );
+  }
+
+  /**
+   * Returns a single completion when prefix matching is unambiguous.
+   * Returns undefined for ambiguous or no-match prefixes.
+   */
+  getUniqueCompletion(path: string[], prefix: string): CommandSegment | undefined {
+    const matches = this.getMatchingCompletions(path, prefix);
+    if (matches.length !== 1) {
+      return undefined;
+    }
+
+    return matches[0];
   }
 
   /**

@@ -212,6 +212,33 @@ describe('CommandInput', () => {
     expect(mockActions.executeCommand).not.toHaveBeenCalled();
     expect(setCurrentInputMock.mock.calls.length).toBe(callsBeforeEnter);
   });
+
+  it('shows inline command text while entering commands', () => {
+    const mockActions = createMockCitadelActions();
+    const state = createMockCitadelState({ currentInput: 's', isEnteringArg: false });
+    const { getByTestId } = render(
+      <TestWrapper commandRegistry={cmdRegistry}>
+        <CommandInput state={state} actions={mockActions} />
+      </TestWrapper>
+    );
+
+    const input = getByTestId('citadel-command-input');
+    expect(input.className).toContain('text-blue-400');
+  });
+
+  it('shows argument input text while entering arguments', () => {
+    const mockActions = createMockCitadelActions();
+    const state = createMockCitadelState({ currentInput: '1234', isEnteringArg: true });
+    const { getByTestId } = render(
+      <TestWrapper commandRegistry={cmdRegistry}>
+        <CommandInput state={state} actions={mockActions} />
+      </TestWrapper>
+    );
+
+    const input = getByTestId('citadel-command-input');
+    expect(input.className).toContain('text-gray-200');
+    expect(input.className).not.toContain('text-blue-400');
+  });
 });
 
 describe('CommandInput Animation', () => {
