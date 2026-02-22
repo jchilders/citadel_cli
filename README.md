@@ -1,28 +1,43 @@
 # Citadel CLI
 
-A keyboard-first command console for the power users of your web apps.
+Embed a terminal-style command console directly inside your React app.
 
-# Use Cases
+Citadel helps you turn repetitive UI workflows into fast keyboard commands for
+developers, support engineers, and power users, without sending them to a
+separate admin tool.
 
-- **API Testing & Debugging**: Execute REST calls, inspect responses, and manipulate cookies/localStorage without leaving your
-application context
-- **Power User Workflows**: Transform repetitive click-through sequences into fast keyboard commands for advanced users
-- **DevOps Integration**: Add command-line control to CI/CD dashboards and deployment tools for rapid operations
-- **Internal Tool Enhancement**: Give your team's web applications the speed and efficiency of terminal interfaces
-- Perform (multiple) REST API calls & view results, view/modify cookies/localstorage. Do JavaScript things without affecting the application.
+## Why Developers Add Citadel
+
+- **Move faster in existing apps**: expose internal actions as commands instead
+  of building more buttons and forms
+- **Debug in context**: call APIs, inspect JSON, clear storage, and run app
+  actions without leaving the page
+- **Keep UI clean**: hidden-by-default overlay (toggle key is configurable;
+  default is `.`)
+- **Scale safely**: typed command DSL with argument help, async handlers, and
+  structured result rendering (`text`, `json`, `image`, `error`)
+
+## Common Use Cases
+
+- **Internal Tools**: replace repetitive click paths with direct commands
+- **Support & Operations**: add safe operational commands to admin dashboards
+- **API Testing & Debugging**: execute REST calls and inspect responses inline
+- **Power User Workflows**: give advanced users terminal speed in web UI
 
 ![Animated screenshot of Citadel CLI](https://github.com/user-attachments/assets/b64da0f7-a4a0-4f76-bc03-c0e40c0e14e5)
 
-# Installation
+## Installation
 
 ```bash
 npm i citadel_cli
 ```
 
-## "Hello world" Example
+## Quick Start (Hello World)
 
-A core concept in Citadel are commands. Commands are things like "user add 1234"
-or "qa1 deploy my_feature_branch". To initialize and add commands:
+Commands are the core concept in Citadel. Think `user add 1234` or
+`qa deploy my_feature_branch`.
+
+To get running:
 
 1. Define commands with the typed DSL
 2. Build a `CommandRegistry` from those definitions
