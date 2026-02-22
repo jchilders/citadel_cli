@@ -16,9 +16,6 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({ currentInp
     [config.fontFamily, config.fontSize]
   );
 
-  const containerClasses = "mt-2 border-t border-gray-700 px-4 py-2";
-  const contentClasses = `text-gray-300 ${commandTypography.className ?? ''}`.trim();
-
   const normalizedInput = currentInput.trim().toLowerCase();
   const filteredCommandSegments = commands.getMatchingCompletions(
     segmentStack.path(),
@@ -64,10 +61,10 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({ currentInp
   const nextSegmentIsArgument = filteredCommandSegments.some(seg => seg.type === 'argument');
   const nextSegment = filteredCommandSegments[0];
   return (
-    <div className={containerClasses} data-testid="available-commands">
-      <div className={contentClasses} style={commandTypography.style}>
+    <div className="citadel-available-commands" data-testid="available-commands">
+      <div className="citadel-available-commands-content" style={commandTypography.style}>
         {!nextSegmentIsArgument ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="citadel-available-chip-list">
             {sortedCommands?.map((segment) => {
               const boldLength = boldLengths.get(segment.name) ?? 1;
 
@@ -75,10 +72,10 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({ currentInp
                 <div
                   key={segment.name}
                   data-testid="available-command-chip"
-                  className="px-2 py-1 rounded bg-gray-800 mr-2 last:mr-0"
+                  className="citadel-available-chip"
                 >
-                  <span className="text-white">
-                    <strong className="underline">{segment.name.slice(0, boldLength)}</strong>
+                  <span className="citadel-available-chip-text">
+                    <strong className="citadel-available-chip-prefix">{segment.name.slice(0, boldLength)}</strong>
                     {segment.name.slice(boldLength)}
                   </span>
                 </div>
@@ -87,9 +84,9 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({ currentInp
           </div>
         ) : filteredCommandSegments.length > 0 ? (
           <>
-            <span className="text-blue-400">{nextSegment.name}</span>
+            <span className="citadel-available-next-arg">{nextSegment.name}</span>
             {nextSegment.description && (
-              <span className="text-gray-400 ml-2">- {nextSegment.description}</span>
+              <span className="citadel-available-next-desc">- {nextSegment.description}</span>
             )}
           </>
         ) : null}

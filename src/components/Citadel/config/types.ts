@@ -41,8 +41,7 @@ export interface CitadelConfig {
 
   /**
    * The default font size used by the interface.
-   * Accepts either a CSS font-size value (e.g. '14px', '0.875rem')
-   * or a Tailwind text size class (e.g. 'text-sm').
+   * Accepts any valid CSS `font-size` value (e.g. '14px', '0.875rem').
    */
   fontSize?: string;
 
@@ -74,8 +73,7 @@ export interface CitadelConfig {
 
   /**
    * The font size for command output text.
-   * Accepts either a CSS font-size value (e.g. '14px', '0.875rem')
-   * or a Tailwind text size class (e.g. 'text-sm').
+   * Accepts any valid CSS `font-size` value (e.g. '14px', '0.875rem').
    * If omitted, output uses `fontSize`.
    */
   outputFontSize?: string;

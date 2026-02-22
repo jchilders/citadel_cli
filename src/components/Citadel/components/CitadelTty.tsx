@@ -20,15 +20,15 @@ export const CitadelTty: React.FC<CitadelTtyProps> = ({
   const isInline = config.displayMode === 'inline';
 
   return (
-    <div className="innerContainer">
+    <div className="innerContainer citadel-tty">
       <div
-        className="flex-1 min-h-0 pt-3 px-4"
+        className="citadel-tty-output-pane"
         data-testid="citadel-output-pane"
         style={isInline ? { overflow: 'hidden' } : undefined}
       >
         <CommandOutput output={state.output} outputRef={outputRef} />
       </div>
-      <div className="shrink-0">
+      <div className="citadel-tty-input-region">
         <CommandInput state={state} actions={actions} />
         <AvailableCommands currentInput={state.isEnteringArg ? '' : state.currentInput} />
       </div>

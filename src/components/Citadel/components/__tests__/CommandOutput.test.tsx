@@ -51,11 +51,11 @@ describe('CommandOutput', () => {
   it('uses custom font size from config', () => {
     const customConfig = {
       ...defaultConfig,
-      outputFontSize: 'text-xs'
+      outputFontSize: '12px'
     };
     renderWithConfig(defaultProps, customConfig);
     const preElement = screen.getByText('Test output').parentElement;
-    expect(preElement?.className).toContain('text-xs');
+    expect(preElement?.style.fontSize).toBe('12px');
   });
 
   it('falls back to global font settings when outputFontSize is omitted', () => {

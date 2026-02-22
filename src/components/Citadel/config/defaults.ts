@@ -30,7 +30,7 @@ const isProduction = import.meta.env.PROD;
  * 
  * @property minHeight - The minimum CSS height of the interface. Default: '200'.
  * 
- * @property outputFontSize - The output font size as CSS value or Tailwind text size class. Default: '0.875rem'.
+ * @property outputFontSize - The output font size as a CSS value. Default: '0.875rem'.
  * 
  * @property resetStateOnHide - When true, hiding the interface (via Escape key or other means) will clear the command input.
  *                             When false, the interface preserves the last input when hidden. Default: false.

@@ -223,7 +223,7 @@ describe('CommandInput', () => {
     );
 
     const input = getByTestId('citadel-command-input');
-    expect(input.className).toContain('text-blue-400');
+    expect(input.className).toContain('is-command-mode');
   });
 
   it('shows argument input text while entering arguments', () => {
@@ -236,8 +236,8 @@ describe('CommandInput', () => {
     );
 
     const input = getByTestId('citadel-command-input');
-    expect(input.className).toContain('text-gray-200');
-    expect(input.className).not.toContain('text-blue-400');
+    expect(input.className).toContain('is-argument-mode');
+    expect(input.className).not.toContain('is-command-mode');
   });
 });
 
@@ -257,7 +257,7 @@ describe('CommandInput Animation', () => {
           </button>
           <input
             data-testid="test-input"
-            className={`w-full bg-transparent outline-none text-gray-200 caret-transparent ${showInvalidAnimation ? 'invalid-input-animation' : ''}`}
+            className={`citadel-input-field is-argument-mode ${showInvalidAnimation ? 'invalid-input-animation' : ''}`}
           />
         </div>
       );

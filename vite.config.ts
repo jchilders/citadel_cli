@@ -42,9 +42,6 @@ export default defineConfig({
     manifest: true,
     assetsDir: 'dist',
   },
-  optimizeDeps: {
-    include: ['./src/styles/citadel.css', './src/styles/styles.css']
-  },
   test: {
     globals: true,
     environment: 'jsdom',

@@ -15,7 +15,6 @@ COPY package.json package-lock.json ./
 COPY src ./src
 COPY tsconfig.json tsconfig.app.json tsconfig.node.json ./
 COPY vite.config.ts ./
-COPY tailwind.config.js postcss.config.cjs ./
 COPY plugins ./plugins
 
 # Install library deps using the same React version as test app

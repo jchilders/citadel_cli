@@ -165,11 +165,11 @@ const config = {
   commandTimeoutMs: 10000,
   includeHelpCommand: true,
   fontFamily: '"JetBrains Mono", monospace',
-  fontSize: '0.875rem', // CSS size (e.g. '14px') or Tailwind class (e.g. 'text-sm')
+  fontSize: '0.875rem', // CSS font-size value (e.g. '14px', '0.875rem')
   maxHeight: '80vh',
   initialHeight: '40vh',
   minHeight: '200',
-  outputFontSize: 'text-xs', // optional override for output text only
+  outputFontSize: '0.75rem', // optional CSS font-size override for output text
   resetStateOnHide: false,
   showCitadelKey: '.',
   cursorType: 'blink', // 'blink', 'spin', 'solid', or 'bbs'

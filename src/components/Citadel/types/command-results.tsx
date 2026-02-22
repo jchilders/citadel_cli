@@ -43,7 +43,7 @@ export class JsonCommandResult extends CommandResult {
 
   render(): React.ReactNode {
     return (
-      <pre className="text-gray-200">
+      <pre className="citadel-result-json">
         {JSON.stringify(this.data, null, 2)}
       </pre>
     );
@@ -60,7 +60,7 @@ export class TextCommandResult extends CommandResult {
 
   render(): React.ReactNode {
     return (
-      <div className="text-gray-200 whitespace-pre">{this.text}</div>
+      <div className="citadel-result-text">{this.text}</div>
     );
   }
 }
@@ -75,13 +75,13 @@ export class ErrorCommandResult extends CommandResult {
   }
 
   render(): React.ReactNode {
-    return <div className="mt-1 text-red-400">{this.error}</div>;
+    return <div className="citadel-result-error">{this.error}</div>;
   }
 }
 
 export class PendingCommandResult extends CommandResult {
   render(): React.ReactNode {
-    return <div className="text-gray-400">...</div>;
+    return <div className="citadel-result-pending">...</div>;
   }
 }
 
@@ -96,11 +96,11 @@ export class ImageCommandResult extends CommandResult {
 
   render(): React.ReactNode {
     return (
-      <div className="my-2">
+      <div className="citadel-result-image-wrap">
         <img
           src={this.imageUrl}
           alt={this.altText}
-          className="max-w-[400px] max-h-[300px] h-auto rounded-lg object-contain"
+          className="citadel-result-image"
         />
       </div>
     );

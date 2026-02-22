@@ -106,27 +106,27 @@ export const CommandInput: React.FC<CommandInputProps> = ({
         const argSegment = (segment as ArgumentSegment);
         return (
           <React.Fragment key={"arg-" + argSegment.name + argSegment.value}>
-            <span className="text-gray-200 whitespace-pre">
+            <span className="citadel-input-segment-arg">
               {argSegment.value}
             </span>
             { (index < segmentStack.size() && hasNextSegment) &&
-              <span className="text-gray-200 whitespace-pre"> </span>
+              <span className="citadel-input-segment-space"> </span>
             }
           </React.Fragment>
         );
       }
       return (
         <React.Fragment key={"word-" + segment.name}>
-          <span className="text-blue-400 whitespace-pre">{segment.name}</span>
+          <span className="citadel-input-segment-word">{segment.name}</span>
           { (index < segmentStack.size() && hasNextSegment) &&
-            <span className="text-blue-400 whitespace-pre"> </span>
+            <span className="citadel-input-segment-space citadel-input-segment-space-command"> </span>
           }
         </React.Fragment>
       );
     });
 
     return [(
-      <div className="flex items-center gap-1" data-testid="user-input-area" key={segmentStackVersion}>
+      <div className="citadel-input-segments" data-testid="user-input-area" key={segmentStackVersion}>
         {elements}
       </div>
     )];
@@ -145,27 +145,18 @@ export const CommandInput: React.FC<CommandInputProps> = ({
 
   const isCommandEntryMode = !state.isEnteringArg;
   const cursorInputLength = state.currentInput.length;
+  const inputModeClass = isCommandEntryMode ? 'is-command-mode' : 'is-argument-mode';
 
   return (
-    <div className="flex flex-col w-full bg-gray-900 rounded-lg p-4">
-      <style>{`
-        @keyframes subtleGlow {
-          0%, 100% { box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
-          50% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
-        }
-        .invalid-input-animation {
-          animation: subtleGlow 0.4s ease-in-out;
-        }
-      `}</style>
-      
+    <div className="citadel-input-shell">
       <div
-        className={`flex items-center gap-2 ${inputTypography.className ?? ''}`.trim()}
+        className="citadel-input-line"
         style={inputTypography.style}
       >
-        <div className="text-gray-400">&gt;</div>
-        <div className="flex-1 flex items-center">
+        <div className="citadel-input-prompt">&gt;</div>
+        <div className="citadel-input-row">
           {segmentNamesAndVals}
-          <div className="relative flex-1">
+          <div className="citadel-input-control">
             <input
               ref={inputRef}
               type="text"
@@ -175,13 +166,13 @@ export const CommandInput: React.FC<CommandInputProps> = ({
               onKeyDown={onKeyDown}
               onPaste={handlePaste}
               data-testid="citadel-command-input"
-              className={`w-full bg-transparent outline-none caret-transparent ${isCommandEntryMode ? 'text-blue-400' : 'text-gray-200'} ${showInvalidAnimation ? 'invalid-input-animation' : ''}`}
+              className={`citadel-input-field ${inputModeClass} ${showInvalidAnimation ? 'invalid-input-animation' : ''}`.trim()}
               spellCheck={false}
               autoComplete="off"
               placeholder={placeholderText}
             />
             <div 
-              className="absolute top-0 pointer-events-none"
+              className="citadel-input-cursor"
               style={{
                 left: `${cursorInputLength}ch`,
                 transition: 'left 0.05s ease-out'

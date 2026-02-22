@@ -10,9 +10,6 @@ import { PanelController } from './controllers/PanelController';
 import { InlineController } from './controllers/InlineController';
 
 import citadelStyles from '../../styles/citadel.css?raw';
-import citadelModuleStyles from './Citadel.module.css?raw';
-import mainStyles from '../../styles/styles.css?raw';
-import tailwindStyles from '../../styles/tailwind.css?raw';
 
 interface CitadelProps {
   config?: CitadelConfig;
@@ -100,7 +97,7 @@ export class CitadelElement extends HTMLElement {
   connectedCallback() {
     // Create and inject styles
     try {
-      const sheets = [citadelStyles, citadelModuleStyles, mainStyles, tailwindStyles].map(styles => {
+      const sheets = [citadelStyles].map(styles => {
         const sheet = new CSSStyleSheet();
         sheet.replaceSync(styles);
         return sheet;
@@ -109,7 +106,7 @@ export class CitadelElement extends HTMLElement {
       this.shadow.adoptedStyleSheets = [...sheets];
     } catch {
       // Fallback for browsers that don't support constructable stylesheets
-      const combinedStyles = [citadelStyles, citadelModuleStyles, mainStyles].join('\n');
+      const combinedStyles = [citadelStyles].join('\n');
       const styleElement = document.createElement('style');
       styleElement.textContent = combinedStyles;
       this.shadow.appendChild(styleElement);

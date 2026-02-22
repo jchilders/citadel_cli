@@ -19,41 +19,41 @@ export const CommandOutputLine: React.FC<CommandOutputLineProps> = ({
   fontSize
 }) => {
   const typography = useMemo(
-    () => resolveTypography(fontFamily, fontSize ?? 'text-sm'),
+    () => resolveTypography(fontFamily, fontSize ?? '0.875rem'),
     [fontFamily, fontSize]
   );
 
   return (
     <div
-      className={`flex items-center gap-2 ${typography.className ?? ''}`.trim()}
+      className="citadel-output-line"
       style={typography.style}
     >
-      <span className="text-gray-200">
+      <span className="citadel-output-command">
         &gt; {command.split(' ').map((part, i) => {
           const isArg = part.startsWith('<') && part.endsWith('>');
           return (
             <span 
               key={i} 
-              className={isArg ? 'text-green-400' : 'text-gray-200'}
+              className={isArg ? 'citadel-output-command-arg' : 'citadel-output-command-word'}
             >
               {i > 0 ? ' ' : ''}{part}
             </span>
           );
         })}
       </span>
-      <span className="text-gray-400">·</span>
-      <span className="text-gray-500">{timestamp}</span>
+      <span className="citadel-output-separator">·</span>
+      <span className="citadel-output-timestamp">{timestamp}</span>
       {status === CommandStatus.Pending && <Spinner />}
       {status === CommandStatus.Success && (
         <div 
           data-testid="success-indicator"
-          className="w-4 h-4 rounded-full bg-green-500" 
+          className="citadel-status-dot citadel-status-dot-success" 
         />
       )}
       {(status === CommandStatus.Timeout || status === CommandStatus.Failure) && (
         <div 
           data-testid="success-indicator"
-          className="w-4 h-4 rounded-full bg-red-500" 
+          className="citadel-status-dot citadel-status-dot-failure" 
         />
       )}
     </div>
