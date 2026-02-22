@@ -1,5 +1,6 @@
 import { CommandRegistry, CommandSegment } from './command-registry';
 import {
+  BooleanCommandResult,
   CommandResult,
   ErrorCommandResult,
   ImageCommandResult,
@@ -185,6 +186,10 @@ export function createCommandRegistry(definitions: CommandDefinition[]): Command
 
 export function text(value: string): TextCommandResult {
   return new TextCommandResult(value);
+}
+
+export function bool(value: boolean, trueText = 'true', falseText = 'false'): BooleanCommandResult {
+  return new BooleanCommandResult(value, trueText, falseText);
 }
 
 export function json(value: unknown): JsonCommandResult {

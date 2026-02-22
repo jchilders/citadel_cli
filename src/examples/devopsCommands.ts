@@ -1,5 +1,5 @@
 import { CommandRegistry } from '../components/Citadel/types/command-registry';
-import { command, createCommandRegistry, json, text } from '../components/Citadel/types/command-dsl';
+import { bool, command, createCommandRegistry, json, text } from '../components/Citadel/types/command-dsl';
 
 export function createDevOpsCommandRegistry(): CommandRegistry {
   return createCommandRegistry([
@@ -118,6 +118,51 @@ export function createDevOpsCommandRegistry(): CommandRegistry {
           regions: ['us-east-1', 'us-west-2'],
           healthStatus: 'healthy'
         });
+      }),
+
+    command('check.deploy.window')
+      .describe('Check whether the production deploy window is currently open')
+      .handle(async () => {
+        const now = new Date();
+        const utcDay = now.getUTCDay();
+        const utcHour = now.getUTCHours();
+        const isBusinessDay = utcDay >= 1 && utcDay <= 5;
+        const isWithinDeployHours = utcHour >= 14 && utcHour < 22;
+        const deployWindowOpen = isBusinessDay && isWithinDeployHours;
+
+        return bool(
+          deployWindowOpen,
+          '👍 Deploy window is open',
+          '👎 Deploy window is closed'
+        );
+      }),
+
+    command('check.error.budget.healthy')
+      .describe('Check if the current service error budget is healthy')
+      .handle(async () => {
+        const currentErrorRatePercent = 0.18;
+        const errorBudgetThresholdPercent = 0.10;
+        const isHealthy = currentErrorRatePercent <= errorBudgetThresholdPercent;
+
+        return bool(
+          isHealthy,
+          '👍 Error budget is healthy',
+          '👎 Error budget is exhausted'
+        );
+      }),
+
+    command('check.autoscale.recommended')
+      .describe('Check if traffic pressure suggests scaling up')
+      .handle(async () => {
+        const cpuPercent = 78.5;
+        const queueDepth = 1320;
+        const isRecommended = cpuPercent >= 75 || queueDepth >= 1000;
+
+        return bool(
+          isRecommended,
+          '👍 Autoscale is recommended',
+          '👎 Autoscale is not needed'
+        );
       }),
   ]);
 }

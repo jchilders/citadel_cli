@@ -15,7 +15,7 @@ separate admin tool.
 - **Keep UI clean**: hidden-by-default overlay (toggle key is configurable;
   default is `.`)
 - **Scale safely**: typed command DSL with argument help, async handlers, and
-  structured result rendering (`text`, `json`, `image`, `error`)
+  structured result rendering (`text`, `json`, `image`, `error`, `bool`)
 
 ## Common Use Cases
 
@@ -98,6 +98,7 @@ Handlers must return one of the following:
 - `JsonCommandResult`
 - `ImageCommandResult`
 - `ErrorCommandResult`
+- `BooleanCommandResult`
 
 ## Typed DSL
 
@@ -131,6 +132,31 @@ DSL handlers receive:
 - `rawArgs`: positional values (`string[]`)
 - `namedArgs`: argument-name map (`Record<string, string | undefined>`)
 - `commandPath`: dot-delimited path string
+
+Helper constructors exported by the DSL:
+
+- `text(value)`
+- `json(value)`
+- `image(url, altText?)`
+- `error(message)`
+- `bool(value, trueText?, falseText?)`
+
+### Boolean Result Example
+
+```typescript
+import { command, createCommandRegistry, bool } from "citadel_cli";
+
+const registry = createCommandRegistry([
+  command("bool.random")
+    .describe("Return a random boolean")
+    .handle(async () => bool(Math.random() >= 0.5, "👍", "👎")),
+]);
+```
+
+Demo registries include boolean commands:
+
+- Basic example: `bool.true`, `bool.false`, `bool.random`
+- DevOps example: `bool.deploy.window`, `bool.error.budget.healthy`, `bool.autoscale.recommended`
 
 ## Legacy `addCommand` API
 

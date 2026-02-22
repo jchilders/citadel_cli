@@ -1,6 +1,6 @@
 /* c8 ignore start */
 import { CommandRegistry } from '../components/Citadel/types/command-registry'
-import { command, createCommandRegistry, image, json, text } from '../components/Citadel/types/command-dsl'
+import { bool, command, createCommandRegistry, image, json, text } from '../components/Citadel/types/command-dsl'
 
 /**
  * Build a fresh registry populated with the basic sample commands.
@@ -75,6 +75,18 @@ export function createBasicCommandRegistry(): CommandRegistry {
         // Intentionally wrong shape to demonstrate runtime invalid-return handling.
         return 'whoops' as unknown as ReturnType<typeof text>
       }),
+
+    command('bool.true')
+      .describe('Return true as thumbs up')
+      .handle(async () => bool(true, '👍', '👎')),
+
+    command('bool.false')
+      .describe('Return false as thumbs down')
+      .handle(async () => bool(false, '👍', '👎')),
+
+    command('bool.random')
+      .describe('Return a random boolean as thumbs up/down')
+      .handle(async () => bool(Math.random() >= 0.5, '👍', '👎')),
 
     command('image.random.picsum')
       .describe('Get a random image from Picsum Photos')

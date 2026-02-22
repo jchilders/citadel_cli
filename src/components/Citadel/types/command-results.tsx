@@ -65,6 +65,25 @@ export class TextCommandResult extends CommandResult {
   }
 }
 
+export class BooleanCommandResult extends CommandResult {
+  constructor(
+    public readonly value: boolean,
+    public readonly trueText: string = 'true',
+    public readonly falseText: string = 'false',
+    timestamp?: number
+  ) {
+    super(timestamp);
+  }
+
+  render(): React.ReactNode {
+    return (
+      <div className="citadel-result-text citadel-result-boolean">
+        {this.value ? this.trueText : this.falseText}
+      </div>
+    );
+  }
+}
+
 export class ErrorCommandResult extends CommandResult {
   constructor(
     public readonly error: string,
