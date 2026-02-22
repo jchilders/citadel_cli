@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 
 import { useCitadelConfig } from '../config/hooks';
 import { useCitadelState } from '../hooks/useCitadelState';
@@ -15,16 +15,20 @@ export const InlineController: React.FC = () => {
   const { state, actions } = useCitadelState();
   const config = useCitadelConfig();
   const outputRef = useRef<HTMLDivElement>(null);
+  const inlineStyle = useMemo(
+    () => ({
+      height: toCssLength(config.initialHeight),
+      maxHeight: toCssLength(config.maxHeight),
+      minHeight: toCssLength(config.minHeight)
+    }),
+    [config.initialHeight, config.maxHeight, config.minHeight]
+  );
 
   return (
     <div
       className="inlineContainer"
       data-testid="citadel-inline-container"
-      style={{
-        height: toCssLength(config.initialHeight),
-        maxHeight: toCssLength(config.maxHeight),
-        minHeight: toCssLength(config.minHeight)
-      }}
+      style={inlineStyle}
     >
       <CitadelTty
         state={state}

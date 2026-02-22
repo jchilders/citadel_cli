@@ -109,7 +109,7 @@ describe('AvailableCommands', () => {
 
     it('shows common prefix highlighting', () => {
       const { container } = renderWithConfig();
-      const elements = container.getElementsByClassName('underline');
+      const elements = container.getElementsByClassName('citadel-available-chip-prefix');
       expect(elements.length).toBeGreaterThan(0);
       expect(elements[0].textContent).toBeTruthy();
     });

@@ -7,7 +7,6 @@ describe('Spinner', () => {
     render(<Spinner />);
     
     const spinner = screen.getByTestId('spinner');
-    expect(spinner.className).includes('animate-spin');
-    expect(spinner.className).includes('border-t-gray-600');
+    expect(spinner.className).includes('citadel-spinner');
   });
 });

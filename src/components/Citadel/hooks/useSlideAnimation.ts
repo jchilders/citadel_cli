@@ -1,5 +1,4 @@
 import { useMemo, useEffect } from 'react';
-import styles from '../Citadel.module.css';
 
 interface SlideAnimationOptions {
   isVisible: boolean;
@@ -12,7 +11,7 @@ export const useSlideAnimation = (options: SlideAnimationOptions) => {
 
   const animationClass = useMemo(() => {
     if (!isVisible) return '';
-    return isClosing ? styles.slideDown : styles.slideUp;
+    return isClosing ? 'citadel_slideDown' : 'citadel_slideUp';
   }, [isVisible, isClosing]);
 
   useEffect(() => {

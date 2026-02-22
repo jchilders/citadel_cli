@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useCitadelConfig } from './config/hooks';
 import { CitadelConfig } from './config/types';
@@ -10,9 +10,6 @@ import { PanelController } from './controllers/PanelController';
 import { InlineController } from './controllers/InlineController';
 
 import citadelStyles from '../../styles/citadel.css?raw';
-import citadelModuleStyles from './Citadel.module.css?raw';
-import mainStyles from '../../styles/styles.css?raw';
-import tailwindStyles from '../../styles/tailwind.css?raw';
 
 interface CitadelProps {
   config?: CitadelConfig;
@@ -41,6 +38,7 @@ export const Citadel: React.FC<CitadelProps> = ({
   // Used only for inline mode (no containerId) so the custom element can attach to a DOM node
   // provisioned by React instead of falling back to document.body.
   const inlineHostRef = useRef<HTMLDivElement | null>(null);
+  const inlineHostStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
   const displayMode = config.displayMode ?? defaultConfig.displayMode ?? 'panel';
 
   useEffect(() => {
@@ -73,7 +71,7 @@ export const Citadel: React.FC<CitadelProps> = ({
   }, [resolvedRegistry, containerId, config, displayMode]);
 
   if (displayMode === 'inline' && !containerId) {
-    return <div ref={inlineHostRef} style={{ width: '100%', height: '100%' }} />;
+    return <div ref={inlineHostRef} style={inlineHostStyle} />;
   }
 
   return null;
@@ -100,7 +98,7 @@ export class CitadelElement extends HTMLElement {
   connectedCallback() {
     // Create and inject styles
     try {
-      const sheets = [citadelStyles, citadelModuleStyles, mainStyles, tailwindStyles].map(styles => {
+      const sheets = [citadelStyles].map(styles => {
         const sheet = new CSSStyleSheet();
         sheet.replaceSync(styles);
         return sheet;
@@ -109,7 +107,7 @@ export class CitadelElement extends HTMLElement {
       this.shadow.adoptedStyleSheets = [...sheets];
     } catch {
       // Fallback for browsers that don't support constructable stylesheets
-      const combinedStyles = [citadelStyles, citadelModuleStyles, mainStyles].join('\n');
+      const combinedStyles = [citadelStyles].join('\n');
       const styleElement = document.createElement('style');
       styleElement.textContent = combinedStyles;
       this.shadow.appendChild(styleElement);

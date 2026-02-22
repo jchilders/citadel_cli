@@ -60,7 +60,7 @@ export const Cursor: React.FC<CursorProps> = ({
   };
 
   return (
-    <div className="relative inline-block">
+    <div className="citadel-cursor-wrapper">
       <span 
         className={`command-cursor ${!isValid ? 'animate-shake' : ''}`} 
         style={cursorStyle}

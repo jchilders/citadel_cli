@@ -43,11 +43,11 @@ export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef 
   return (
     <div 
       ref={outputRef}
-      className="h-full overflow-y-auto border border-gray-700 rounded-lg p-3 text-left"
+      className="citadel-output"
       data-testid="citadel-command-output"
     >
       {output.map((item) => (
-        <div key={item.id} className="mb-4 last:mb-0">
+        <div key={item.id} className="citadel-output-item">
           <CommandOutputLine
             command={item.command.join(' ')}
             timestamp={new Date(item.timestamp).toLocaleTimeString()}
@@ -55,12 +55,12 @@ export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef 
             fontFamily={config.fontFamily}
             fontSize={config.fontSize}
           />
-          <pre
-            className={`text-gray-200 whitespace-pre ${outputTypography.className ?? ''}`.trim()}
+          <div
+            className="citadel-output-content"
             style={outputTypography.style}
           >
             {item.result.render()}
-          </pre>
+          </div>
         </div>
       ))}
     </div>

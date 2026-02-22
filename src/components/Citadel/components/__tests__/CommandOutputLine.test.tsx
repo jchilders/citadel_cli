@@ -22,28 +22,28 @@ describe('CommandOutputLine', () => {
     render(<CommandOutputLine {...defaultProps} status={CommandStatus.Pending} />);
     
     const spinner = screen.getByTestId('spinner');
-    expect(spinner.className).includes('animate-spin');
+    expect(spinner.className).includes('citadel-spinner');
   });
 
   it('shows success indicator when status is success', () => {
     render(<CommandOutputLine {...defaultProps} status={CommandStatus.Success} />);
     
     const successIndicator = screen.getByTestId('success-indicator');
-    expect(successIndicator.className).includes('bg-green-500');
+    expect(successIndicator.className).includes('citadel-status-dot-success');
   });
 
   it('shows success indicator when status is success', () => {
     render(<CommandOutputLine {...defaultProps} status={CommandStatus.Failure} />);
     
     const successIndicator = screen.getByTestId('success-indicator');
-    expect(successIndicator.className).includes('bg-red-500');
+    expect(successIndicator.className).includes('citadel-status-dot-failure');
   });
 
   it('shows success indicator when status is success', () => {
     render(<CommandOutputLine {...defaultProps} status={CommandStatus.Timeout} />);
     
     const successIndicator = screen.getByTestId('success-indicator');
-    expect(successIndicator.className).includes('bg-red-500');
+    expect(successIndicator.className).includes('citadel-status-dot-failure');
   });
 
   it('applies custom typography props', () => {

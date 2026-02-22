@@ -1,4 +1,3 @@
-import { vi } from 'vitest';
 import { render, act, waitFor } from '@testing-library/react';
 import { CitadelConfigProvider } from '../CitadelConfigContext';
 import { useCitadelCommands, useCitadelConfig, useCitadelStorage } from '../hooks';
@@ -76,29 +75,16 @@ describe('CitadelConfigContext', () => {
 
     describe('command persistence in shadow DOM', () => {
       it('should maintain command regsitry across shadow DOM renders', () => {
-        // Mock CSS modules
-        vi.mock('../../../Citadel.module.css', () => ({
-          default: {
-            container: 'container',
-            innerContainer: 'innerContainer',
-            resizeHandle: 'resizeHandle'
-          }
-        }));
-
         const testCmdRegsitry = new CommandRegistry();
         testCmdRegsitry.addCommand(
           [{ type: 'word', name: 'test' }],
           'Test command'
         );
 
-        // Create CitadelElement with mocked styles
+        // Create CitadelElement and verify it preserves the registry reference.
         const citadelElement = new CitadelElement(testCmdRegsitry);
 
-        // Verify the command regsitry is maintained
         expect(citadelElement['commandRegistry']).toBe(testCmdRegsitry);
-
-        // Clean up
-        vi.resetModules();
       });
     });
   });

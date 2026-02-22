@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useState, useMemo, useLayoutEffect, useCallback } from 'react';
 import { ArgumentSegment } from '../types/command-registry';
 import { CitadelState, CitadelActions } from '../types/state';
 import { Cursor } from '../Cursor';
@@ -31,12 +31,14 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   const [showInvalidAnimation, setShowInvalidAnimation] = useState(false);
   const config = useCitadelConfig();
   const segmentStackVersion = useSegmentStackVersion();
+  const cursorMeasureRef = useRef<HTMLSpanElement>(null);
+  const [cursorLeftPx, setCursorLeftPx] = useState(0);
   const inputTypography = useMemo(
     () => resolveTypography(config.fontFamily, config.fontSize),
     [config.fontFamily, config.fontSize]
   );
 
-  const onKeyDown = async (e: React.KeyboardEvent) => {
+  const onKeyDown = useCallback(async (e: React.KeyboardEvent) => {
     const result = handleKeyDown(e, state, actions);
     
     // Handle both sync and async returns
@@ -48,17 +50,17 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       setShowInvalidAnimation(true);
       setTimeout(() => setShowInvalidAnimation(false), INVALID_INPUT_ANIMATION_MS);
     }
-  };
+  }, [actions, handleKeyDown, state]);
 
-  const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     handleInputChange(event.target.value, actions);
-  };
+  }, [actions, handleInputChange]);
 
-  const handlePaste = (event: React.ClipboardEvent) => {
+  const handlePaste = useCallback((event: React.ClipboardEvent) => {
     event.preventDefault();
     const pastedText = event.clipboardData.getData('text');
     handleInputChange(pastedText, actions);
-  };
+  }, [actions, handleInputChange]);
 
   // Focus input and set initial input state on mount
   useEffect(() => {
@@ -106,27 +108,27 @@ export const CommandInput: React.FC<CommandInputProps> = ({
         const argSegment = (segment as ArgumentSegment);
         return (
           <React.Fragment key={"arg-" + argSegment.name + argSegment.value}>
-            <span className="text-gray-200 whitespace-pre">
+            <span className="citadel-input-segment-arg">
               {argSegment.value}
             </span>
             { (index < segmentStack.size() && hasNextSegment) &&
-              <span className="text-gray-200 whitespace-pre"> </span>
+              <span className="citadel-input-segment-space"> </span>
             }
           </React.Fragment>
         );
       }
       return (
         <React.Fragment key={"word-" + segment.name}>
-          <span className="text-blue-400 whitespace-pre">{segment.name}</span>
+          <span className="citadel-input-segment-word">{segment.name}</span>
           { (index < segmentStack.size() && hasNextSegment) &&
-            <span className="text-blue-400 whitespace-pre"> </span>
+            <span className="citadel-input-segment-space citadel-input-segment-space-command"> </span>
           }
         </React.Fragment>
       );
     });
 
     return [(
-      <div className="flex items-center gap-1" data-testid="user-input-area" key={segmentStackVersion}>
+      <div className="citadel-input-segments" data-testid="user-input-area" key={segmentStackVersion}>
         {elements}
       </div>
     )];
@@ -144,28 +146,52 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   }, [segmentStackVersion, getNextExpectedSegment]);
 
   const isCommandEntryMode = !state.isEnteringArg;
-  const cursorInputLength = state.currentInput.length;
+  const inputModeClass = isCommandEntryMode ? 'is-command-mode' : 'is-argument-mode';
+  const cursorStyle = useMemo(
+    () => ({
+      left: `${cursorLeftPx}px`,
+      transition: 'left 0.05s ease-out',
+    }),
+    [cursorLeftPx]
+  );
+  const cursorConfig = useMemo(
+    () => ({
+      type: (config.cursorType ?? defaultConfig.cursorType) as CursorType,
+      color: config.cursorColor || defaultConfig.cursorColor,
+      speed: config.cursorSpeed || defaultConfig.cursorSpeed
+    }),
+    [config.cursorColor, config.cursorSpeed, config.cursorType]
+  );
+
+  useLayoutEffect(() => {
+    const measureEl = cursorMeasureRef.current;
+    const inputEl = inputRef.current;
+    if (!measureEl || !inputEl) {
+      setCursorLeftPx(0);
+      return;
+    }
+
+    const measuredWidth = measureEl.getBoundingClientRect().width;
+    setCursorLeftPx(Math.max(0, measuredWidth - inputEl.scrollLeft));
+  }, [state.currentInput, inputModeClass, inputTypography.style]);
 
   return (
-    <div className="flex flex-col w-full bg-gray-900 rounded-lg p-4">
-      <style>{`
-        @keyframes subtleGlow {
-          0%, 100% { box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
-          50% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
-        }
-        .invalid-input-animation {
-          animation: subtleGlow 0.4s ease-in-out;
-        }
-      `}</style>
-      
+    <div className="citadel-input-shell">
       <div
-        className={`flex items-center gap-2 ${inputTypography.className ?? ''}`.trim()}
+        className="citadel-input-line"
         style={inputTypography.style}
       >
-        <div className="text-gray-400">&gt;</div>
-        <div className="flex-1 flex items-center">
+        <div className="citadel-input-prompt">&gt;</div>
+        <div className="citadel-input-row">
           {segmentNamesAndVals}
-          <div className="relative flex-1">
+          <div className="citadel-input-control">
+            <span
+              ref={cursorMeasureRef}
+              className={`citadel-input-measure ${inputModeClass}`.trim()}
+              aria-hidden="true"
+            >
+              {state.currentInput}
+            </span>
             <input
               ref={inputRef}
               type="text"
@@ -175,25 +201,16 @@ export const CommandInput: React.FC<CommandInputProps> = ({
               onKeyDown={onKeyDown}
               onPaste={handlePaste}
               data-testid="citadel-command-input"
-              className={`w-full bg-transparent outline-none caret-transparent ${isCommandEntryMode ? 'text-blue-400' : 'text-gray-200'} ${showInvalidAnimation ? 'invalid-input-animation' : ''}`}
+              className={`citadel-input-field ${inputModeClass} ${showInvalidAnimation ? 'invalid-input-animation' : ''}`.trim()}
               spellCheck={false}
               autoComplete="off"
               placeholder={placeholderText}
             />
             <div 
-              className="absolute top-0 pointer-events-none"
-              style={{
-                left: `${cursorInputLength}ch`,
-                transition: 'left 0.05s ease-out'
-              }}
+              className="citadel-input-cursor"
+              style={cursorStyle}
             >
-              <Cursor 
-                style={{ 
-                  type: (config.cursorType ?? defaultConfig.cursorType) as CursorType,
-                  color: config.cursorColor || defaultConfig.cursorColor,
-                  speed: config.cursorSpeed || defaultConfig.cursorSpeed
-                }}
-              />
+              <Cursor style={cursorConfig} />
             </div>
           </div>
         </div>
