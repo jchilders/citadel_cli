@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useState, useMemo, useLayoutEffect } from 'react';
 import { ArgumentSegment } from '../types/command-registry';
 import { CitadelState, CitadelActions } from '../types/state';
 import { Cursor } from '../Cursor';
@@ -31,6 +31,8 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   const [showInvalidAnimation, setShowInvalidAnimation] = useState(false);
   const config = useCitadelConfig();
   const segmentStackVersion = useSegmentStackVersion();
+  const cursorMeasureRef = useRef<HTMLSpanElement>(null);
+  const [cursorLeftPx, setCursorLeftPx] = useState(0);
   const inputTypography = useMemo(
     () => resolveTypography(config.fontFamily, config.fontSize),
     [config.fontFamily, config.fontSize]
@@ -144,8 +146,19 @@ export const CommandInput: React.FC<CommandInputProps> = ({
   }, [segmentStackVersion, getNextExpectedSegment]);
 
   const isCommandEntryMode = !state.isEnteringArg;
-  const cursorInputLength = state.currentInput.length;
   const inputModeClass = isCommandEntryMode ? 'is-command-mode' : 'is-argument-mode';
+
+  useLayoutEffect(() => {
+    const measureEl = cursorMeasureRef.current;
+    const inputEl = inputRef.current;
+    if (!measureEl || !inputEl) {
+      setCursorLeftPx(0);
+      return;
+    }
+
+    const measuredWidth = measureEl.getBoundingClientRect().width;
+    setCursorLeftPx(Math.max(0, measuredWidth - inputEl.scrollLeft));
+  }, [state.currentInput, inputModeClass, inputTypography.style]);
 
   return (
     <div className="citadel-input-shell">
@@ -157,6 +170,13 @@ export const CommandInput: React.FC<CommandInputProps> = ({
         <div className="citadel-input-row">
           {segmentNamesAndVals}
           <div className="citadel-input-control">
+            <span
+              ref={cursorMeasureRef}
+              className={`citadel-input-measure ${inputModeClass}`.trim()}
+              aria-hidden="true"
+            >
+              {state.currentInput}
+            </span>
             <input
               ref={inputRef}
               type="text"
@@ -174,7 +194,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
             <div 
               className="citadel-input-cursor"
               style={{
-                left: `${cursorInputLength}ch`,
+                left: `${cursorLeftPx}px`,
                 transition: 'left 0.05s ease-out'
               }}
             >

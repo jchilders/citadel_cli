@@ -40,6 +40,17 @@ type MockFn<T extends (...args: any[]) => any> = T & {
 describe('CommandInput', () => {
   let cmdRegistry: CommandRegistry;
   const defaultState = createMockCitadelState();
+  const createRect = (width: number): DOMRect => ({
+    x: 0,
+    y: 0,
+    width,
+    height: 16,
+    top: 0,
+    left: 0,
+    right: width,
+    bottom: 16,
+    toJSON: () => ({})
+  } as DOMRect);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -238,6 +249,37 @@ describe('CommandInput', () => {
     const input = getByTestId('citadel-command-input');
     expect(input.className).toContain('is-argument-mode');
     expect(input.className).not.toContain('is-command-mode');
+  });
+
+  it('does not introduce a visual trailing space while entering a quoted argument', async () => {
+    const mockActions = createMockCitadelActions();
+    const state = createMockCitadelState({ currentInput: '"Hey there', isEnteringArg: true });
+    const rectSpy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function() {
+      if (this.classList?.contains('citadel-input-measure')) {
+        return createRect((this.textContent ?? '').length * 8);
+      }
+      return createRect(0);
+    });
+
+    try {
+      const { getByTestId } = render(
+        <TestWrapper commandRegistry={cmdRegistry}>
+          <CommandInput state={state} actions={mockActions} />
+        </TestWrapper>
+      );
+
+      const input = getByTestId('citadel-command-input') as HTMLInputElement;
+      expect(input.value).toBe('"Hey there');
+      expect(input.value.endsWith(' ')).toBe(false);
+
+      await waitFor(() => {
+        const cursor = document.querySelector('.citadel-input-cursor') as HTMLDivElement | null;
+        expect(cursor).toBeTruthy();
+        expect(cursor?.style.left).toBe('80px');
+      });
+    } finally {
+      rectSpy.mockRestore();
+    }
   });
 });
 
