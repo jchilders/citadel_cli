@@ -22,7 +22,7 @@ const isProduction = import.meta.env.PROD;
  * 
  * @property fontSize - The default font size used by the interface. Default: '0.875rem'.
  * 
- * @property initialHeight - The initial CSS height of the interface. Default: '40vh'.
+ * @property initialHeight - The initial CSS height of the interface. Default: '50vh'.
  * 
  * @property logLevel - The logging level for the Citadel interface. Default: DEBUG in development, ERROR in production.
  * 
@@ -47,7 +47,7 @@ export const defaultConfig: CitadelConfig = {
   includeHelpCommand: true,
   fontFamily: 'monospace',
   fontSize: '0.875rem',
-  initialHeight: '40vh',
+  initialHeight: '50vh',
   logLevel: isProduction ? LogLevel.ERROR : LogLevel.DEBUG,
   maxHeight: '80vh',
   minHeight: '200',

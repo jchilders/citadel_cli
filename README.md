@@ -167,7 +167,7 @@ const config = {
   fontFamily: '"JetBrains Mono", monospace',
   fontSize: '0.875rem', // CSS font-size value (e.g. '14px', '0.875rem')
   maxHeight: '80vh',
-  initialHeight: '40vh',
+  initialHeight: '50vh',
   minHeight: '200',
   outputFontSize: '0.75rem', // optional CSS font-size override for output text
   resetStateOnHide: false,
