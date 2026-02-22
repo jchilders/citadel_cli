@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCitadelConfig } from '../config/hooks';
 import { useCitadelState } from '../hooks/useCitadelState';
 import { useGlobalShortcut } from '../hooks/useGlobalShortcut';
@@ -92,16 +92,21 @@ export const PanelController: React.FC = () => {
     onAnimationComplete: handleAnimationComplete
   });
 
+  const panelStyle = useMemo(
+    () => ({
+      ...(height ? { height } : {}),
+      maxHeight: config.maxHeight
+    }),
+    [config.maxHeight, height]
+  );
+
   if (!isVisible) return null;
 
   return (
     <div
       ref={containerRef}
       className={`panelContainer ${isVisible ? 'citadel_slideUp' : ''} ${isClosing ? 'citadel_slideDown' : ''}`}
-      style={{
-        ...height ? { height } : undefined,
-        maxHeight: config.maxHeight
-      }}
+      style={panelStyle}
     >
       <div className="resizeHandle" onMouseDown={handleMouseDown} />
       <CitadelTty

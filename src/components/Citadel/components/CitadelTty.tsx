@@ -18,13 +18,17 @@ export const CitadelTty: React.FC<CitadelTtyProps> = ({
 }) => {
   const config = useCitadelConfig();
   const isInline = config.displayMode === 'inline';
+  const outputPaneStyle = React.useMemo(
+    () => (isInline ? { overflow: 'hidden' } : undefined),
+    [isInline]
+  );
 
   return (
     <div className="innerContainer citadel-tty">
       <div
         className="citadel-tty-output-pane"
         data-testid="citadel-output-pane"
-        style={isInline ? { overflow: 'hidden' } : undefined}
+        style={outputPaneStyle}
       >
         <CommandOutput output={state.output} outputRef={outputRef} />
       </div>

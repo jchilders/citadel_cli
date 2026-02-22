@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo, useLayoutEffect } from 'react';
+import React, { useRef, useEffect, useState, useMemo, useLayoutEffect, useCallback } from 'react';
 import { ArgumentSegment } from '../types/command-registry';
 import { CitadelState, CitadelActions } from '../types/state';
 import { Cursor } from '../Cursor';
@@ -38,7 +38,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     [config.fontFamily, config.fontSize]
   );
 
-  const onKeyDown = async (e: React.KeyboardEvent) => {
+  const onKeyDown = useCallback(async (e: React.KeyboardEvent) => {
     const result = handleKeyDown(e, state, actions);
     
     // Handle both sync and async returns
@@ -50,17 +50,17 @@ export const CommandInput: React.FC<CommandInputProps> = ({
       setShowInvalidAnimation(true);
       setTimeout(() => setShowInvalidAnimation(false), INVALID_INPUT_ANIMATION_MS);
     }
-  };
+  }, [actions, handleKeyDown, state]);
 
-  const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     handleInputChange(event.target.value, actions);
-  };
+  }, [actions, handleInputChange]);
 
-  const handlePaste = (event: React.ClipboardEvent) => {
+  const handlePaste = useCallback((event: React.ClipboardEvent) => {
     event.preventDefault();
     const pastedText = event.clipboardData.getData('text');
     handleInputChange(pastedText, actions);
-  };
+  }, [actions, handleInputChange]);
 
   // Focus input and set initial input state on mount
   useEffect(() => {
@@ -147,6 +147,21 @@ export const CommandInput: React.FC<CommandInputProps> = ({
 
   const isCommandEntryMode = !state.isEnteringArg;
   const inputModeClass = isCommandEntryMode ? 'is-command-mode' : 'is-argument-mode';
+  const cursorStyle = useMemo(
+    () => ({
+      left: `${cursorLeftPx}px`,
+      transition: 'left 0.05s ease-out',
+    }),
+    [cursorLeftPx]
+  );
+  const cursorConfig = useMemo(
+    () => ({
+      type: (config.cursorType ?? defaultConfig.cursorType) as CursorType,
+      color: config.cursorColor || defaultConfig.cursorColor,
+      speed: config.cursorSpeed || defaultConfig.cursorSpeed
+    }),
+    [config.cursorColor, config.cursorSpeed, config.cursorType]
+  );
 
   useLayoutEffect(() => {
     const measureEl = cursorMeasureRef.current;
@@ -193,18 +208,9 @@ export const CommandInput: React.FC<CommandInputProps> = ({
             />
             <div 
               className="citadel-input-cursor"
-              style={{
-                left: `${cursorLeftPx}px`,
-                transition: 'left 0.05s ease-out'
-              }}
+              style={cursorStyle}
             >
-              <Cursor 
-                style={{ 
-                  type: (config.cursorType ?? defaultConfig.cursorType) as CursorType,
-                  color: config.cursorColor || defaultConfig.cursorColor,
-                  speed: config.cursorSpeed || defaultConfig.cursorSpeed
-                }}
-              />
+              <Cursor style={cursorConfig} />
             </div>
           </div>
         </div>

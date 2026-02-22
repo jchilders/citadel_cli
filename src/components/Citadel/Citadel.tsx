@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useCitadelConfig } from './config/hooks';
 import { CitadelConfig } from './config/types';
@@ -38,6 +38,7 @@ export const Citadel: React.FC<CitadelProps> = ({
   // Used only for inline mode (no containerId) so the custom element can attach to a DOM node
   // provisioned by React instead of falling back to document.body.
   const inlineHostRef = useRef<HTMLDivElement | null>(null);
+  const inlineHostStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
   const displayMode = config.displayMode ?? defaultConfig.displayMode ?? 'panel';
 
   useEffect(() => {
@@ -70,7 +71,7 @@ export const Citadel: React.FC<CitadelProps> = ({
   }, [resolvedRegistry, containerId, config, displayMode]);
 
   if (displayMode === 'inline' && !containerId) {
-    return <div ref={inlineHostRef} style={{ width: '100%', height: '100%' }} />;
+    return <div ref={inlineHostRef} style={inlineHostStyle} />;
   }
 
   return null;
