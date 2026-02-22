@@ -254,7 +254,7 @@ describe('CommandInput', () => {
   it('does not introduce a visual trailing space while entering a quoted argument', async () => {
     const mockActions = createMockCitadelActions();
     const state = createMockCitadelState({ currentInput: '"Hey there', isEnteringArg: true });
-    const rectSpy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function() {
+    const rectSpy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function(this: HTMLElement) {
       if (this.classList?.contains('citadel-input-measure')) {
         return createRect((this.textContent ?? '').length * 8);
       }

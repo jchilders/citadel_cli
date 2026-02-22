@@ -187,6 +187,64 @@ Then to make the component aware of them:
 <Citadel commandRegistry={cmdRegistry} config={config} />
 ```
 
+## Performance Metrics
+
+Citadel includes scripts to capture and compare before/after performance and
+size metrics.
+
+### Metrics collected
+
+- Build metrics:
+  - Bundle size (raw + gzip) for `dist/citadel.es.js`, `dist/citadel.umd.cjs`,
+    and `dist/citadel.css`
+  - Total LOC and extension breakdown
+  - Dependency presence for `tailwindcss`, `postcss`, and `autoprefixer`
+  - `node_modules` size (`du -sk`)
+- Runtime metrics (Chromium):
+  - JS heap usage before/after interaction
+  - Input latency (keydown to input update)
+  - FPS sample over a short window
+  - Long task count and duration
+  - DOM node count
+
+All outputs are written to `test-results/metrics/`.
+
+### Commands
+
+```bash
+npm run metrics:build
+npm run metrics:runtime
+npm run metrics:compare -- --before <before.json> --after <after.json>
+npm run metrics:all -- --label <label>
+npm run metrics:report -- --label <label> --before-build <before-build.json> --before-runtime <before-runtime.json>
+```
+
+### Before/After workflow
+
+1. Capture a baseline snapshot:
+
+```bash
+npm run metrics:all -- --label before
+```
+
+2. After your changes, capture the new snapshot and generate comparisons:
+
+```bash
+npm run metrics:all -- --label after \
+  --before-build test-results/metrics/build-before-<timestamp>.json \
+  --before-runtime test-results/metrics/runtime-before-<timestamp>.json
+```
+
+3. Open generated reports:
+- `test-results/metrics/run-after.md`
+- `test-results/metrics/compare-build-after.md` (if `--before-build` provided)
+- `test-results/metrics/compare-runtime-after.md` (if `--before-runtime` provided)
+
+Notes:
+- `metrics:runtime` starts a local dev server and requires local port binding.
+- If you only want comparison output from existing snapshots, use
+  `npm run metrics:report`.
+
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on developing, testing, and releasing Citadel CLI.
