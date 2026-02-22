@@ -12,6 +12,10 @@
   --citadel-min-height: 200px;
   --citadel-max-height: 80vh;
   --citadel-default-height: 35vh;
+  --citadel-panel-enter-duration: 200ms;
+  --citadel-panel-exit-duration: 200ms;
+  --citadel-panel-enter-easing: cubic-bezier(0.16, 1, 0.3, 1);
+  --citadel-panel-exit-easing: cubic-bezier(0.4, 0, 1, 1);
 
   display: block;
   pointer-events: auto;
@@ -71,6 +75,8 @@
   padding: 0;
   background-color: var(--citadel-bg);
   overflow: hidden;
+  transform: translateY(0);
+  will-change: transform;
 }
 
 .innerContainer {
@@ -138,11 +144,18 @@
 }
 
 .citadel_slideUp {
-  animation: citadel_slideUp 0.2s ease-out forwards;
+  animation: citadel_slideUp var(--citadel-panel-enter-duration) var(--citadel-panel-enter-easing) forwards;
 }
 
 .citadel_slideDown {
-  animation: citadel_slideDown 0.2s ease-out forwards;
+  animation: citadel_slideDown var(--citadel-panel-exit-duration) var(--citadel-panel-exit-easing) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    --citadel-panel-enter-duration: 1ms;
+    --citadel-panel-exit-duration: 1ms;
+  }
 }
 
 .inlineContainer {

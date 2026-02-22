@@ -17,10 +17,19 @@ export const PanelController: React.FC = () => {
   const startHeightRef = useRef(0);
   const { state, actions } = useCitadelState();
 
+  const handleOpen = useCallback(() => {
+    setIsClosing(false);
+    setIsVisible(true);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setIsClosing(true);
+  }, []);
+
   useGlobalShortcut({
-    onOpen: () => setIsVisible(true),
-    onClose: () => setIsClosing(true),
-    isVisible,
+    onOpen: handleOpen,
+    onClose: handleClose,
+    isVisible: isVisible && !isClosing,
     showCitadelKey: config.showCitadelKey || '.'
   });
 
@@ -86,7 +95,7 @@ export const PanelController: React.FC = () => {
     }
   }, [isClosing]);
 
-  useSlideAnimation({
+  const { animationClass } = useSlideAnimation({
     isVisible,
     isClosing,
     onAnimationComplete: handleAnimationComplete
@@ -105,7 +114,7 @@ export const PanelController: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className={`panelContainer ${isVisible ? 'citadel_slideUp' : ''} ${isClosing ? 'citadel_slideDown' : ''}`}
+      className={`panelContainer ${animationClass}`.trim()}
       style={panelStyle}
     >
       <div className="resizeHandle" onMouseDown={handleMouseDown} />
