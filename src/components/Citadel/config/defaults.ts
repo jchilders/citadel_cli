@@ -34,8 +34,12 @@ const isProduction = import.meta.env.PROD;
  * 
  * @property resetStateOnHide - When true, hiding the interface (via Escape key or other means) will clear the command input.
  *                             When false, the interface preserves the last input when hidden. Default: false.
+ *
+ * @property closeOnEscape - When true, pressing Escape hides the panel in panel mode. Default: true.
  * 
  * @property showCitadelKey - The keyboard key that shows the command interface. Default: '.' (period).
+ *
+ * @property showOnLoad - When true, panel mode starts visible on mount. Default: false.
  * 
  * @property storage - Configuration for command history storage. Default: { type: 'localStorage', maxCommands: 100 }.
  */
@@ -53,7 +57,9 @@ export const defaultConfig: CitadelConfig = {
   minHeight: '200',
   outputFontSize: '0.875rem',
   resetStateOnHide: false,
+  closeOnEscape: true,
   showCitadelKey: '.',
+  showOnLoad: false,
   displayMode: 'panel',
   storage: {
     type: 'localStorage',

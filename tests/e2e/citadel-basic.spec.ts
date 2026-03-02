@@ -67,6 +67,20 @@ async function waitForOutputToContain(
   }, expectedText);
 }
 
+async function waitForPanelVisibility(
+  page: Page,
+  visible: boolean,
+) {
+  await page.waitForFunction((shouldBeVisible) => {
+    const host = document.querySelector('citadel-element');
+    if (!host) return false;
+    const shadow = host.shadowRoot;
+    if (!shadow) return false;
+    const panel = shadow.querySelector('.panelContainer');
+    return shouldBeVisible ? !!panel : !panel;
+  }, visible);
+}
+
 test.describe('Citadel CLI E2E Tests', () => {
   test('should activate Citadel with period key', async ({ page }) => {
     await openHarness(page);
@@ -74,16 +88,31 @@ test.describe('Citadel CLI E2E Tests', () => {
 
     const citadelElement = page.locator('citadel-element');
     await expect(citadelElement).toBeVisible();
+    await waitForPanelVisibility(page, true);
   });
 
   test('should deactivate Citadel with Escape key', async ({ page }) => {
     await openHarness(page);
     await page.keyboard.press('.');
-    const citadelElement = page.locator('citadel-element');
-    await expect(citadelElement).toBeVisible();
+    await waitForPanelVisibility(page, true);
 
     await page.keyboard.press('Escape');
-    await expect(citadelElement).toBeVisible();
+    await waitForPanelVisibility(page, false);
+  });
+
+  test('shows panel on initial load when configured', async ({ page }) => {
+    await openHarness(page, { config: { showOnLoad: true } });
+
+    await waitForPanelVisibility(page, true);
+  });
+
+  test('does not close panel on Escape when closeOnEscape is disabled', async ({ page }) => {
+    await openHarness(page, { config: { showOnLoad: true, closeOnEscape: false } });
+    await waitForPanelVisibility(page, true);
+
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(450);
+    await waitForPanelVisibility(page, true);
   });
 
   test('lists commands alphabetically with help last', async ({ page }) => {

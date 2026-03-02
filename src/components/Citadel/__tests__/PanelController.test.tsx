@@ -8,11 +8,14 @@ import { defaultConfig } from '../config/defaults';
 import { PANEL_CLOSE_DURATION_MS } from '../hooks/useSlideAnimation';
 
 describe('PanelController', () => {
-  const renderPanel = async () => {
+  const renderPanel = async (configOverrides = {}) => {
     const user = userEvent.setup();
     await act(async () => {
       render(
-        <CitadelConfigProvider config={defaultConfig} commandRegistry={new CommandRegistry()}>
+        <CitadelConfigProvider
+          config={{ ...defaultConfig, ...configOverrides }}
+          commandRegistry={new CommandRegistry()}
+        >
           <PanelController />
         </CitadelConfigProvider>
       );
@@ -98,5 +101,28 @@ describe('PanelController', () => {
     } finally {
       window.matchMedia = originalMatchMedia;
     }
+  });
+
+  it('starts visible when showOnLoad is true', async () => {
+    await renderPanel({ showOnLoad: true });
+
+    await waitFor(() => {
+      expect(document.querySelector('.panelContainer')).not.toBeNull();
+    });
+  });
+
+  it('does not close on Escape when closeOnEscape is false', async () => {
+    await renderPanel({ showOnLoad: true, closeOnEscape: false });
+
+    await waitFor(() => {
+      expect(document.querySelector('.panelContainer')).not.toBeNull();
+    });
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    await new Promise(resolve => setTimeout(resolve, PANEL_CLOSE_DURATION_MS + 40));
+    const panel = document.querySelector('.panelContainer');
+    expect(panel).not.toBeNull();
+    expect(panel?.className).not.toContain('citadel_slideDown');
   });
 });

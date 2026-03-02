@@ -13,7 +13,7 @@ separate admin tool.
 - **Debug in context**: call APIs, inspect JSON, clear storage, and run app
   actions without leaving the page
 - **Keep UI clean**: hidden-by-default overlay (toggle key is configurable;
-  default is `.`)
+  default is `.`, and can be shown on load if desired)
 - **Scale safely**: typed command DSL with argument help, async handlers, and
   structured result rendering (`text`, `json`, `image`, `error`, `bool`)
 
@@ -212,7 +212,9 @@ const config = {
   minHeight: '200',
   outputFontSize: '0.75rem', // optional CSS font-size override for output text
   resetStateOnHide: false,
+  closeOnEscape: true,
   showCitadelKey: '.',
+  showOnLoad: false,
   cursorType: 'blink', // 'blink', 'spin', 'solid', or 'bbs'
   cursorSpeed: 530,
   storage: {

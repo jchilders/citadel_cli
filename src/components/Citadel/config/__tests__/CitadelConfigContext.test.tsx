@@ -110,7 +110,9 @@ describe('CitadelConfigContext', () => {
     it('should merge custom config with defaults', () => {
       const customConfig = {
         cursorType: 'blink' as const,
-        cursorColor: '#ff0000'
+        cursorColor: '#ff0000',
+        closeOnEscape: false,
+        showOnLoad: true
       };
 
       const { getByTestId } = render(
@@ -123,6 +125,8 @@ describe('CitadelConfigContext', () => {
       const parsedConfig = JSON.parse(configElement.textContent || '{}');
       expect(parsedConfig.cursorType).toBe('blink');
       expect(parsedConfig.cursorColor).toBe('#ff0000');
+      expect(parsedConfig.closeOnEscape).toBe(false);
+      expect(parsedConfig.showOnLoad).toBe(true);
       expect(parsedConfig.storage).toBeDefined();
     });
 

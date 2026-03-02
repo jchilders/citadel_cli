@@ -6,9 +6,9 @@ import { useSlideAnimation } from '../hooks/useSlideAnimation';
 import { CitadelTty } from '../components/CitadelTty';
 
 export const PanelController: React.FC = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
   const config = useCitadelConfig();
+  const [isVisible, setIsVisible] = useState(() => config.showOnLoad ?? false);
+  const [isClosing, setIsClosing] = useState(false);
   const [height, setHeight] = useState<string | null>(() => config.initialHeight || null);
   const outputRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -30,7 +30,8 @@ export const PanelController: React.FC = () => {
     onOpen: handleOpen,
     onClose: handleClose,
     isVisible: isVisible && !isClosing,
-    showCitadelKey: config.showCitadelKey || '.'
+    showCitadelKey: config.showCitadelKey || '.',
+    closeOnEscape: config.closeOnEscape ?? true
   });
 
   const handleMouseMove = useCallback((event: MouseEvent) => {

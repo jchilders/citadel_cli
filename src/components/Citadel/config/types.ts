@@ -84,9 +84,21 @@ export interface CitadelConfig {
   resetStateOnHide?: boolean;
 
   /**
+   * Whether to keep Escape from closing the panel in `displayMode: 'panel'`.
+   * Defaults to `true`.
+   */
+  closeOnEscape?: boolean;
+
+  /**
    * The keyboard key that shows the command interface.
    */
   showCitadelKey?: string;
+
+  /**
+   * Whether to show the panel immediately on mount when `displayMode: 'panel'`.
+   * Defaults to `false`.
+   */
+  showOnLoad?: boolean;
 
   /**
    * Presentation mode for rendering the Citadel interface.

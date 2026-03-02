@@ -44,7 +44,9 @@ export const CitadelConfigProvider: React.FC<{
     cursorType: config.cursorType ?? defaultConfig.cursorType,
     cursorColor: config.cursorColor ?? defaultConfig.cursorColor,
     cursorSpeed: config.cursorSpeed ?? defaultConfig.cursorSpeed,
-    showCitadelKey: config.showCitadelKey || '.'
+    closeOnEscape: config.closeOnEscape ?? defaultConfig.closeOnEscape,
+    showCitadelKey: config.showCitadelKey ?? defaultConfig.showCitadelKey,
+    showOnLoad: config.showOnLoad ?? defaultConfig.showOnLoad
   }), [config]);
 
   // Initialize or reinitialize storage when storage config changes.

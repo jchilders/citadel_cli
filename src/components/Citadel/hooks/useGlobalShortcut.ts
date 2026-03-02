@@ -5,9 +5,16 @@ interface UseGlobalShortcutProps {
   onClose: () => void;
   isVisible: boolean;
   showCitadelKey: string;
+  closeOnEscape: boolean;
 }
 
-export const useGlobalShortcut = ({ onOpen, onClose, isVisible, showCitadelKey }: UseGlobalShortcutProps) => {
+export const useGlobalShortcut = ({
+  onOpen,
+  onClose,
+  isVisible,
+  showCitadelKey,
+  closeOnEscape
+}: UseGlobalShortcutProps) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Check if the pressed key matches showCitadelKey and no input elements are focused
@@ -21,7 +28,7 @@ export const useGlobalShortcut = ({ onOpen, onClose, isVisible, showCitadelKey }
       }
 
       // Handle escape key
-      if (isVisible && event.key === 'Escape') {
+      if (closeOnEscape && isVisible && event.key === 'Escape') {
         event.preventDefault();
         onClose();
       }
@@ -29,5 +36,5 @@ export const useGlobalShortcut = ({ onOpen, onClose, isVisible, showCitadelKey }
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onOpen, onClose, isVisible, showCitadelKey]);
+  }, [onOpen, onClose, isVisible, showCitadelKey, closeOnEscape]);
 };
