@@ -38,3 +38,6 @@ jobs:
 
     - name: Build the component
       run: npm run build
+
+    - name: Verify npm package artifacts
+      run: npm run verify:pack
