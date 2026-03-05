@@ -12,6 +12,7 @@ export interface RuntimeConfigControls {
   setCursorColor: (color: string) => void;
   setDisplayMode: (mode: DisplayMode) => void;
   setIncludeHelpCommand: (enabled: boolean) => void;
+  toggleOutputPane: () => void;
   setMaxHeight: (value: string) => void;
   resetConfig: () => void;
 }
@@ -95,6 +96,13 @@ export function createRuntimeConfigCommandDefinitions(
         return text('Help command disabled.');
       }) as CommandDefinition,
 
+    command('outputPane.toggle')
+      .describe('Toggle the output pane visibility')
+      .handle(async () => {
+        controls.toggleOutputPane();
+        return text('Output pane visibility toggled.');
+      }) as CommandDefinition,
+
     command('config.maxHeight')
       .describe('Set the maximum Citadel height')
       .arg('value', (arg) =>
@@ -118,11 +126,13 @@ export function createRuntimeConfigCommandDefinitions(
         const defaults = DEFAULT_CURSOR_CONFIGS[baseCursorType];
         const defaultMode = (defaultConfig.displayMode === 'inline' ? 'inline' : 'panel') as DisplayMode;
         const includeHelp = defaultConfig.includeHelpCommand ?? true;
+        const showOutputPane = defaultConfig.showOutputPane ?? true;
         const defaultMaxHeight = defaultConfig.maxHeight ?? '80vh';
         return text(
           `Configuration reset. Cursor type "${baseCursorType}" with color "${defaultConfig.cursorColor ?? defaults.color}". ` +
           `Display mode "${defaultMode}". Max height "${defaultMaxHeight}". ` +
-          `Help command ${includeHelp ? 'enabled' : 'disabled'}.`
+          `Help command ${includeHelp ? 'enabled' : 'disabled'}. ` +
+          `Output pane ${showOutputPane ? 'enabled' : 'disabled'}.`
         );
       }) as CommandDefinition
   );

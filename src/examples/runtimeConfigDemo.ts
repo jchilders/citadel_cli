@@ -11,6 +11,7 @@ const DEFAULT_CURSOR_COLOR =
   defaultConfig.cursorColor ?? DEFAULT_CURSOR_CONFIGS[DEFAULT_CURSOR_TYPE].color;
 const DEFAULT_MODE: DisplayMode = defaultConfig.displayMode === 'inline' ? 'inline' : 'panel';
 const DEFAULT_INCLUDE_HELP = defaultConfig.includeHelpCommand ?? true;
+const DEFAULT_SHOW_OUTPUT_PANE = defaultConfig.showOutputPane ?? true;
 const DEFAULT_MAX_HEIGHT = defaultConfig.maxHeight ?? '80vh';
 
 interface UseRuntimeConfigDemoResult {
@@ -26,6 +27,7 @@ export const useRuntimeConfigDemo = (
   const [includeHelpCommand, setIncludeHelpCommand] = useState<boolean>(
     options.initialIncludeHelp ?? DEFAULT_INCLUDE_HELP
   );
+  const [showOutputPane, setShowOutputPane] = useState<boolean>(DEFAULT_SHOW_OUTPUT_PANE);
   const [cursorType, setCursorType] = useState<CursorType>(DEFAULT_CURSOR_TYPE);
   const [cursorColor, setCursorColor] = useState<string>(DEFAULT_CURSOR_COLOR);
   const [maxHeight, setMaxHeight] = useState<string>(DEFAULT_MAX_HEIGHT);
@@ -46,6 +48,10 @@ export const useRuntimeConfigDemo = (
     setIncludeHelpCommand(enabled);
   }, []);
 
+  const handleToggleOutputPane = useCallback(() => {
+    setShowOutputPane((prev) => !prev);
+  }, []);
+
   const handleSetMaxHeight = useCallback((value: string) => {
     setMaxHeight(value);
   }, []);
@@ -55,6 +61,7 @@ export const useRuntimeConfigDemo = (
     setCursorColor(DEFAULT_CURSOR_COLOR);
     setMode(DEFAULT_MODE);
     setIncludeHelpCommand(DEFAULT_INCLUDE_HELP);
+    setShowOutputPane(DEFAULT_SHOW_OUTPUT_PANE);
     setMaxHeight(DEFAULT_MAX_HEIGHT);
   }, []);
 
@@ -64,6 +71,7 @@ export const useRuntimeConfigDemo = (
       setCursorColor: handleSetCursorColor,
       setDisplayMode: handleSetDisplayMode,
       setIncludeHelpCommand: handleSetIncludeHelp,
+      toggleOutputPane: handleToggleOutputPane,
       setMaxHeight: handleSetMaxHeight,
       resetConfig
     }));
@@ -72,6 +80,7 @@ export const useRuntimeConfigDemo = (
     handleSetCursorColor,
     handleSetDisplayMode,
     handleSetIncludeHelp,
+    handleToggleOutputPane,
     handleSetMaxHeight,
     resetConfig
   ]);
@@ -84,9 +93,10 @@ export const useRuntimeConfigDemo = (
       cursorColor,
       cursorSpeed: defaults.speed,
       displayMode: mode,
+      showOutputPane,
       maxHeight
     };
-  }, [cursorColor, cursorType, includeHelpCommand, maxHeight, mode]);
+  }, [cursorColor, cursorType, includeHelpCommand, maxHeight, mode, showOutputPane]);
 
   return {
     commandRegistry,

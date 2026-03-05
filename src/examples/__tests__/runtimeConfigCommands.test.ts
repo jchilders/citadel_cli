@@ -10,6 +10,7 @@ const createControls = (): RuntimeConfigControls => ({
   setCursorColor: vi.fn(),
   setDisplayMode: vi.fn(),
   setIncludeHelpCommand: vi.fn(),
+  toggleOutputPane: vi.fn(),
   setMaxHeight: vi.fn(),
   resetConfig: vi.fn()
 });
@@ -71,5 +72,20 @@ describe('runtimeConfigCommands', () => {
         commandPath: 'config.maxHeight'
       })
     ).rejects.toThrow('Max height requires a value');
+  });
+
+  it('toggles output pane visibility', async () => {
+    const controls = createControls();
+    const command = getDefinition('outputPane.toggle', controls);
+
+    const result = await command.handler({
+      rawArgs: [],
+      namedArgs: {},
+      commandPath: 'outputPane.toggle'
+    });
+
+    expect(controls.toggleOutputPane).toHaveBeenCalledTimes(1);
+    expect(result).toBeInstanceOf(TextCommandResult);
+    expect((result as TextCommandResult).text).toContain('toggled');
   });
 });

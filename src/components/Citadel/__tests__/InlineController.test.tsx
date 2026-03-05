@@ -5,7 +5,7 @@ import { CommandRegistry } from '../types/command-registry';
 import { defaultConfig } from '../config/defaults';
 
 describe('InlineController', () => {
-  const renderInline = async () => {
+  const renderInline = async (configOverrides = {}) => {
     let result: ReturnType<typeof render>;
     await act(async () => {
       result = render(
@@ -14,7 +14,8 @@ describe('InlineController', () => {
             ...defaultConfig, 
             displayMode: 'inline',
             initialHeight: '123px',
-            maxHeight: '456px'
+            maxHeight: '456px',
+            ...configOverrides
           }}
           commandRegistry={new CommandRegistry()}
         >
@@ -38,5 +39,14 @@ describe('InlineController', () => {
 
     const inner = container.querySelector('.innerContainer');
     expect(inner).toBeTruthy();
+  });
+
+  it('collapses to compact height when output pane is hidden', async () => {
+    const { getByTestId } = await renderInline({ showOutputPane: false });
+
+    const container = getByTestId('citadel-inline-container') as HTMLDivElement;
+    expect(container.style.height).toBe('128px');
+    expect(container.style.maxHeight).toBe('128px');
+    expect(container.style.minHeight).toBe('128px');
   });
 });

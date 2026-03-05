@@ -79,6 +79,13 @@ export interface CitadelConfig {
   outputFontSize?: string;
 
   /**
+   * Controls whether the output pane is rendered.
+   * Set to `false` when command side effects are rendered elsewhere in the host app.
+   * Defaults to `true`.
+   */
+  showOutputPane?: boolean;
+
+  /**
    * Whether to reset the state when the interface is hidden (via Escape key or other means).
    */
   resetStateOnHide?: boolean;

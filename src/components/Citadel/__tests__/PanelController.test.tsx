@@ -125,4 +125,25 @@ describe('PanelController', () => {
     expect(panel).not.toBeNull();
     expect(panel?.className).not.toContain('citadel_slideDown');
   });
+
+  it('applies configured minHeight to panel sizing', async () => {
+    await renderPanel({ showOnLoad: true, minHeight: '150' });
+
+    await waitFor(() => {
+      const panel = document.querySelector('.panelContainer') as HTMLDivElement | null;
+      expect(panel).not.toBeNull();
+      expect(panel?.style.minHeight).toBe('150px');
+    });
+  });
+
+  it('collapses panel minHeight when output pane is hidden', async () => {
+    await renderPanel({ showOnLoad: true, showOutputPane: false });
+
+    await waitFor(() => {
+      const panel = document.querySelector('.panelContainer') as HTMLDivElement | null;
+      expect(panel).not.toBeNull();
+      expect(panel?.style.minHeight).toBe('128px');
+      expect(panel?.style.height).toBe('128px');
+    });
+  });
 });

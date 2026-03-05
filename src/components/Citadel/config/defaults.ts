@@ -31,6 +31,8 @@ const isProduction = import.meta.env.PROD;
  * @property minHeight - The minimum CSS height of the interface. Default: '200'.
  * 
  * @property outputFontSize - The output font size as a CSS value. Default: '0.875rem'.
+ *
+ * @property showOutputPane - Whether to render the output pane. Default: true.
  * 
  * @property resetStateOnHide - When true, hiding the interface (via Escape key or other means) will clear the command input.
  *                             When false, the interface preserves the last input when hidden. Default: false.
@@ -56,6 +58,7 @@ export const defaultConfig: CitadelConfig = {
   maxHeight: '80vh',
   minHeight: '200',
   outputFontSize: '0.875rem',
+  showOutputPane: true,
   resetStateOnHide: false,
   closeOnEscape: true,
   showCitadelKey: '.',

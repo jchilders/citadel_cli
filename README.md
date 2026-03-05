@@ -211,6 +211,7 @@ const config = {
   initialHeight: '50vh',
   minHeight: '200',
   outputFontSize: '0.75rem', // optional CSS font-size override for output text
+  showOutputPane: true, // set false to hide command output pane
   resetStateOnHide: false,
   closeOnEscape: true,
   showCitadelKey: '.',

@@ -40,4 +40,13 @@ describe('CitadelTty', () => {
     const pane = getByTestId('citadel-output-pane') as HTMLDivElement;
     expect(pane.style.overflow).toBe('hidden');
   });
+
+  it('does not render output pane when showOutputPane is false', async () => {
+    const { queryByTestId } = await renderTty({
+      ...defaultConfig,
+      showOutputPane: false
+    });
+
+    expect(queryByTestId('citadel-output-pane')).toBeNull();
+  });
 });
