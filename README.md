@@ -6,6 +6,10 @@ Citadel helps you turn repetitive UI workflows into fast keyboard commands for
 developers, support engineers, and power users, without sending them to a
 separate admin tool.
 
+The key interaction model is prefix expansion: users usually do not type the
+full command. They type the shortest unambiguous prefix and Citadel expands it
+for them. For example, `us` can expand to `user show`.
+
 ## Why Developers Add Citadel
 
 - **Move faster in existing apps**: expose internal actions as commands instead
@@ -32,10 +36,22 @@ separate admin tool.
 npm i citadel_cli
 ```
 
+## Documentation
+
+Start with the docs in `docs/`:
+
+- [`docs/README.md`](docs/README.md) for the full guide
+- [`docs/01-installing-citadel-in-an-existing-react-app.md`](docs/01-installing-citadel-in-an-existing-react-app.md) for the fastest setup
+- [`docs/02-defining-commands.md`](docs/02-defining-commands.md) for the command DSL
+
 ## Quick Start (Hello World)
 
 Commands are the core concept in Citadel. Think `user add 1234` or
 `qa deploy my_feature_branch`.
+
+Users usually enter prefixes rather than full commands. If your command is
+`greet`, typing `g` is enough. If your command is `user.show`, typing `us` is
+enough as long as that prefix is unambiguous.
 
 To get running:
 
@@ -67,20 +83,25 @@ function App() {
 
 ![screenshot_greeting_cmd](https://github.com/user-attachments/assets/a3c1acad-69b3-4079-87af-0425aea3980a)
 
-## Command Expansion
+## Prefix Expansion
 
-Citadel CLI uses **auto-expansion** to make entering commands as fast as
-possible. When you type the first letter of a command it automatically expands
-to the full word. For the above example, typing <kbd>g</kbd> would expand
-in-place to `greet ` (with a trailing space) whereupon you can enter in a value
-for the `name` argument.
+Prefix expansion is the core way users interact with Citadel.
 
-For hierarchical commands, expansion is prefix-based and unambiguous:
+Users usually do not type full command names. They type the shortest
+unambiguous prefix, and Citadel expands it in place.
+
+For the quick start example above, typing <kbd>g</kbd> expands to `greet `
+(with a trailing space), and the user can then enter the `name` argument.
+
+For hierarchical commands, expansion is prefix-based:
 
 - `us` can resolve to `user show`
 - `ud` can resolve to `user deactivate`
 - If two options share a prefix (`show` and `search`), continue until unique:
   `ush` => `user show`, `use` => `user search`
+
+Think of the DSL path as the canonical command definition and the prefix as the
+normal way the user enters it.
 
 ## Help Text
 

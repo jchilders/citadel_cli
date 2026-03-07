@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.app.json",
+  "compilerOptions": {
+    "baseUrl": "../..",
+    "paths": {
+      "citadel_cli": ["src/index.ts"]
+    }
+  },
+  "include": ["./**/*.ts", "./**/*.tsx", "../../src/vite-env.d.ts"]
+}
