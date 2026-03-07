@@ -2,6 +2,7 @@ import React from 'react';
 import { useCitadelCommands, useCitadelConfig, useSegmentStack } from '../config/hooks';
 import { Logger } from '../utils/logger';
 import { resolveTypography } from '../utils/typography';
+import { getCommandPrefixLengths } from '../types/command-prefix';
 
 interface AvailableCommandsProps {
   currentInput?: string;
@@ -38,25 +39,10 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({ currentInp
     return [...sortedNonHelpSegments, ...helpSegments];
   }, [filteredCommandSegments]);
 
-  const boldLengths = React.useMemo(() => {
-    const map = new Map<string, number>();
-    for (const segment of sortedCommands) {
-      const boldLen = sortedCommands.reduce((length, other) => {
-        if (other === segment) return length;
-        let commonPrefix = 0;
-        while (
-          commonPrefix < segment.name.length &&
-          commonPrefix < other.name.length &&
-          segment.name[commonPrefix].toLowerCase() === other.name[commonPrefix].toLowerCase()
-        ) {
-          commonPrefix++;
-        }
-        return Math.max(length, commonPrefix + 1);
-      }, 1);
-      map.set(segment.name, boldLen);
-    }
-    return map;
-  }, [sortedCommands]);
+  const boldLengths = React.useMemo(
+    () => getCommandPrefixLengths(sortedCommands),
+    [sortedCommands]
+  );
 
   const nextSegmentIsArgument = filteredCommandSegments.some(seg => seg.type === 'argument');
   const nextSegment = filteredCommandSegments[0];

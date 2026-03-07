@@ -27,10 +27,10 @@ describe('createHelpHandler', () => {
 
     expect(lines[0]).toBe('Available Commands:');
     expect(lines.slice(1)).toEqual([
-      'deploy <environment> - Deploy the current build',
+      '[d]eploy <environment> - Deploy the current build',
       '  <environment>: Choose target environment',
-      'status - Check current status',
-      'help - Show available commands'
+      '[s]tatus - Check current status',
+      '[h]elp - Show available commands'
     ]);
   });
 
@@ -49,7 +49,7 @@ describe('createHelpHandler', () => {
     const result = await handler();
     const lines = result.text.split('\n');
 
-    expect(lines).toContain('user show <userId> - Show user details');
+    expect(lines).toContain('[u]ser [s]how <userId> - Show user details');
     expect(lines).toContain('  <userId>: Enter user ID');
   });
 
