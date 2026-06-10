@@ -1,6 +1,7 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI coding agents working in this repository.
+(`CLAUDE.md` is a symlink to this file.)
 
 ## What This Is
 
@@ -10,12 +11,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm run dev          # Start Vite dev server (demo app in src/App.tsx)
-npm run build        # TypeScript compile + Vite library build → dist/
+npm run preview      # Serve the production build locally
+npm run build        # tsc + Vite library build + sync-package-artifacts → dist/
 npm run lint         # ESLint
 npm run lint:fix     # ESLint with auto-fix
 npm test             # Vitest unit tests (run once)
 npm run test:e2e     # Playwright end-to-end tests
+npm run test:e2e:ui  # Playwright with interactive UI
 npm run coverage     # Vitest with coverage report
+npm run verify:pack  # Verify dist/ package artifacts (CI runs this)
+npm run metrics:*    # Build/runtime metrics collection (see scripts/metrics/)
 ```
 
 To run a single test file:
@@ -23,7 +28,14 @@ To run a single test file:
 npx vitest --run src/components/Citadel/hooks/__tests__/useCommandParser.test.ts
 ```
 
-**Note:** A pre-commit hook runs the full test suite before every commit. This takes ~10–15 seconds.
+**Node version:** `npm test` requires Node ≥22 — the test script sets
+`NODE_OPTIONS=--no-experimental-webstorage`, a flag that does not exist on
+older Node and fails with "not allowed in NODE_OPTIONS" (exit code 9).
+`package.json` `engines` says `>=20`, but that applies to consumers, not
+development.
+
+**Git hooks:** a pre-commit hook runs the full test suite (~10–15s), and a
+pre-push hook runs the test suite plus the library build (~30–45s).
 
 ## Releasing
 
@@ -33,13 +45,18 @@ npm version <patch|minor|major>   # bumps package.json + creates git tag
 git push && git push --tags        # triggers CI publish to npm
 ```
 
+The Release workflow (`auto-publish.yml`) reuses `test.yml` as its test job, so
+a red Tests workflow blocks publishing. If a release run fails, fix the cause
+on `main`, then re-point the tag (`git tag -f v<x.y.z> <commit>` + force-push
+the tag) to re-trigger it.
+
 ## Architecture
 
 ### Library vs. Dev App
 
-- **Library entry point**: `src/index.ts` — exports `Citadel`, `CommandRegistry`, `CitadelConfig`, and result types
+- **Library entry point**: `src/index.ts` — exports `Citadel`, `CommandRegistry`, the command DSL, `CitadelConfig`, and result types
 - **Dev app**: `src/App.tsx` — Vite dev server demo, not included in the build
-- **Build output**: `dist/citadel.es.js` and `dist/citadel.umd.cjs` (CSS is embedded in the JS and injected into the Shadow DOM — no separate stylesheet ships)
+- **Build output**: `dist/citadel.es.js` and `dist/citadel.umd.cjs` (the `.cjs` is written by `scripts/sync-package-artifacts.mjs` after the Vite build). CSS is embedded in the JS and injected into the Shadow DOM — no separate stylesheet ships.
 
 ### Shadow DOM Isolation
 
@@ -47,23 +64,46 @@ The `Citadel` React component mounts a **Web Component** (`<citadel-element>`) t
 
 The stylesheet is imported as a raw string (`citadel.css?raw`) in `Citadel.tsx` and injected at mount time — no build plugin is involved.
 
+### Defining Commands (the DSL)
+
+The recommended authoring path is the typed DSL in
+`src/components/Citadel/types/command-dsl.ts`:
+
+```typescript
+command('user.show')                       // dot-delimited hierarchical path
+  .describe('Show user details')
+  .arg('userId', (arg) => arg.describe('Enter user ID'))
+  .handle(async ({ namedArgs }) => json({ id: namedArgs.userId }))
+```
+
+Build a registry with `createCommandRegistry(definitions)` and pass it to
+`<Citadel>`. Result helpers: `text`, `json`, `image`, `error`, `bool`. The
+legacy `CommandRegistry#addCommand` API still works but is not the preferred
+path for new commands.
+
+Command words auto-expand from the shortest unambiguous prefix, so prefer
+sibling command words with distinct first letters (e.g. `users.filter` /
+`users.sort` / `users.reset` → `u f` / `u s` / `u r`). Enum-like values are
+better modeled as word segments than free-text arguments so they participate
+in expansion (`users.filter.admin` → `u f a`).
+
 ### Data Flow
 
-1. **`CommandRegistry`** — holds `CommandNode[]`, each with ordered `CommandSegment[]` (words + arguments), a description, and an async handler. Users build this externally and pass it to `<Citadel>`.
+1. **`CommandRegistry`** — holds `CommandNode[]`, each with ordered `CommandSegment[]` (words + arguments), a description, and an async handler. Users build this externally (usually via the DSL) and pass it to `<Citadel>`.
 
 2. **`CitadelConfigContext`** (`src/components/Citadel/config/CitadelConfigContext.tsx`) — React context wrapping the entire component tree inside the shadow DOM. Provides merged config, the command registry, storage, and a shared `SegmentStack`.
 
 3. **`SegmentStack`** (`src/components/Citadel/types/segment-stack.ts`) — observer-pattern stack that tracks the user's current command path (e.g., `["user", "show"]`). Lives in context so all hooks share one instance.
 
-4. **`useCommandParser`** (`src/components/Citadel/hooks/useCommandParser.ts`) — the central input-handling hook. Manages `InputState` (`idle` | `entering_command` | `entering_argument`), auto-expansion logic (`tryAutocomplete`), key event handling, and command execution dispatch.
+4. **`useCommandParser`** (`src/components/Citadel/hooks/useCommandParser.ts`) — the central input-handling hook. Manages `InputState` (`idle` | `entering_command` | `entering_argument`), auto-expansion logic (`tryAutocomplete`), key event handling, and command execution dispatch. Also exports `parseInput`, which tokenizes argument input (quoting, completion state).
 
 5. **`useCitadelState`** (`src/components/Citadel/hooks/useCitadelState.ts`) — manages output history (`OutputItem[]`), command execution with timeout, and history navigation.
 
 ### Display Modes
 
-`CitadelRoot` renders either:
+`CitadelRoot` (in `Citadel.tsx`) renders either:
 - **`PanelController`** — slide-up overlay anchored to viewport bottom, toggleable via `showCitadelKey`. Supports drag-to-resize.
-- **`InlineController`** — always-visible, fills its host container. Useful for embedding in dashboards.
+- **`InlineController`** — always-visible, fills its host container; sized via `initialHeight`/`maxHeight`/`minHeight` config. Useful for embedding in dashboards.
 
 Both delegate to `CitadelTty` for the actual terminal UI.
 
@@ -73,6 +113,7 @@ Handlers must return one of these (all extend `CommandResult`):
 - `TextCommandResult` — plain text
 - `JsonCommandResult` — JSON tree
 - `ImageCommandResult` — image display
+- `BooleanCommandResult` — true/false with configurable display text (`bool(value, trueText, falseText)`)
 - `ErrorCommandResult` — error styling
 
 ### Storage
@@ -83,9 +124,26 @@ Command history is persisted via `StorageFactory`, which returns either `LocalSt
 
 - Prefer oklch for defining colors over HCL or RGB.
 
-### Path Alias
+### Imports
 
-`tsconfig.app.json` configures `@/` as an alias for `src/`. Use `@/components/...` for imports within the library source.
+Use relative imports within `src/` — no path alias is configured.
+
+## Demo App (`src/App.tsx` + `src/examples/`)
+
+The dev-server demo has five tabs, each backed by a registry in
+`src/examples/`:
+
+- **Basic** (`basicCommands.ts`) — result types, error handling, media output
+- **Page Control** (`pageControlCommands.ts` + `pageControlDemo.ts`) — commands that drive the demo page itself; renders Citadel **inline** next to a live table
+- **Local Full-Stack** (`localDevCommands.ts`) — dev-overlay story; the `localstorage.*` commands operate on real browser state
+- **DevOps** (`devopsCommands.ts`) — internal-tools story, simulated data
+- **Runtime Config** (`runtimeConfigCommands.ts` + `runtimeConfigDemo.ts`) — commands that reconfigure Citadel live
+
+Pattern: examples that only return data are plain registry factories. Examples
+whose commands mutate page or config state pair a `use<Name>Demo()` hook
+(owns the React state, builds the registry via `useMemo`) with a
+`create<Name>CommandDefinitions(actions)` factory. Follow this pattern when
+adding stateful examples, and mock the hook in `App.test.tsx`.
 
 ## Repository Skills
 
@@ -99,9 +157,19 @@ Command history is persisted via `StorageFactory`, which returns either `LocalSt
 Example:
 ```bash
 node skills/citadel-browser-screenshots/scripts/capture_citadel_screenshot.mjs \
-  --url http://127.0.0.1:4173 \
+  --url http://localhost:5173 \
   --tab "Basic" \
   --keys "u s 1234 Enter" \
-  --out /Users/jchilders/work/jchilders/citadel_cli/test-results/screenshots/citadel-basic.png \
+  --out test-results/screenshots/citadel-basic.png \
   --clip-citadel
 ```
+
+Gotchas:
+- Use `localhost`, not `127.0.0.1` — the Vite dev server binds IPv6 (`::1`)
+  only, so `127.0.0.1` is refused. Read the actual port from Vite's startup
+  output; it increments past 5173 when the port is busy.
+- Key tokens are typed back-to-back with no separator. Multi-argument commands
+  need an explicit `Space` token between argument values
+  (e.g. `"loc s demo.theme Space dark Enter"`).
+- Omit `--clip-citadel` to capture the whole page (e.g. to verify on-page
+  effects like the Page Control table).
