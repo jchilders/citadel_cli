@@ -204,6 +204,10 @@ export const CommandInput: React.FC<CommandInputProps> = ({
               className={`citadel-input-field ${inputModeClass} ${showInvalidAnimation ? 'invalid-input-animation' : ''}`.trim()}
               spellCheck={false}
               autoComplete="off"
+              data-1p-ignore="true"
+              data-lpignore="true"
+              data-bwignore="true"
+              data-form-type="other"
               placeholder={placeholderText}
             />
             <div 

@@ -45,7 +45,7 @@ git push && git push --tags        # triggers CI publish to npm
 
 The `Citadel` React component mounts a **Web Component** (`<citadel-element>`) that hosts a Shadow DOM. All React rendering happens inside that shadow root. CSS is injected as `CSSStyleSheet` via `adoptedStyleSheets`. This means Tailwind and component styles are fully isolated from the host app.
 
-The custom Vite plugin `plugins/vite-shadow-dom.ts` handles CSS-in-JS bundling for this pattern.
+The stylesheet is imported as a raw string (`citadel.css?raw`) in `Citadel.tsx` and injected at mount time — no build plugin is involved.
 
 ### Data Flow
 

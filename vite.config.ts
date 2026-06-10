@@ -2,7 +2,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
-import { viteShadowDOM } from './plugins/vite-shadow-dom'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -19,10 +18,6 @@ export default defineConfig({
         'src/App.tsx',
         'src/main.tsx',
       ],
-    }),
-    viteShadowDOM({
-      injectMethod: 'constructable',
-      include: ['src/components/Citadel/**/*.{ts,tsx}']
     })
   ],
   build: {
