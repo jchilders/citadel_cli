@@ -1,5 +1,7 @@
 # Citadel CLI
 
+![Citadel demo: "." opens the console, "c Hello!" expands to cowsay and prints an ASCII cow, then "u s 1234" expands to user show 1234 and renders a JSON result inline](https://raw.githubusercontent.com/jchilders/citadel_cli/main/docs/images/citadel-demo.gif)
+
 Embed a terminal-style command console directly inside your React app.
 
 Citadel turns repetitive, parameterized operations — "look up account 1234",
@@ -59,7 +61,6 @@ results inline — `user.show 1234` returning a JSON tree is not something a
 palette models. Many apps ship both: ⌘K for finding and navigating, Citadel for
 operating.
 
-![Citadel demo: pressing "u s 1234 Enter" expands to "user show 1234" and renders a JSON result inline](https://raw.githubusercontent.com/jchilders/citadel_cli/main/docs/images/citadel-demo.gif)
 
 ## Installation
 
