@@ -3,6 +3,8 @@
 [![npm version](https://img.shields.io/npm/v/citadel_cli)](https://www.npmjs.com/package/citadel_cli)
 [![minzipped size](https://img.shields.io/bundlephobia/minzip/citadel_cli)](https://bundlephobia.com/package/citadel_cli)
 
+**[Try the live demo →](https://jchilders.github.io/citadel_cli/)**
+
 ![Citadel demo: "." opens the console, "c Hello!" expands to cowsay and prints an ASCII cow, then "u s 1234" expands to user show 1234 and renders a JSON result inline](https://raw.githubusercontent.com/jchilders/citadel_cli/main/docs/images/citadel-demo.gif)
 
 A terminal-style command console embedded in your React app. Citadel turns
@@ -61,8 +63,9 @@ Shadow DOM, fully isolated from your app.
 - [`docs/01-installing-citadel-in-an-existing-react-app.md`](docs/01-installing-citadel-in-an-existing-react-app.md) — fastest setup
 - [`docs/02-defining-commands.md`](docs/02-defining-commands.md) — command DSL
 
-Or run the demo: clone this repo, `npm install`, `npm run dev`. Five tabs,
-each backed by a registry in `src/examples/`.
+Or explore the [live demo](https://jchilders.github.io/citadel_cli/) — five
+tabs, each backed by a registry in `src/examples/`. To run it locally:
+`npm install && npm run dev`.
 
 ## Quick Start
 

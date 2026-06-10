@@ -43,7 +43,8 @@
     "metrics:runtime": "node scripts/metrics/collect-runtime-metrics.mjs",
     "metrics:compare": "node scripts/metrics/compare-metrics.mjs",
     "metrics:all": "node scripts/metrics/run-all-metrics.mjs",
-    "metrics:report": "node scripts/metrics/run-all-metrics.mjs --skip-build --skip-runtime"
+    "metrics:report": "node scripts/metrics/run-all-metrics.mjs --skip-build --skip-runtime",
+    "build:demo": "vite build --config vite.demo.config.ts"
   },
   "exports": {
     ".": {

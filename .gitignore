@@ -38,3 +38,4 @@ coverage/
 # Playwright e2e testing
 test-results/
 playwright-report/
+dist-demo
