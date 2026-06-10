@@ -2,9 +2,11 @@
 
 Embed a terminal-style command console directly inside your React app.
 
-Citadel helps you turn repetitive UI workflows into fast keyboard commands for
-developers, support engineers, and power users, without sending them to a
-separate admin tool.
+Citadel turns repetitive, parameterized operations — "look up account 1234",
+"refund order 5678", "seed twenty test users" — into a few keystrokes, with the
+results rendered inline. It shines where the same people run the same
+operations all day: internal back-office tools, admin panels, support
+dashboards, and developer debug overlays.
 
 The key interaction model is prefix expansion: users usually do not type the
 full command. They type the shortest unambiguous prefix and Citadel expands it
@@ -21,12 +23,41 @@ for them. For example, `us` can expand to `user show`.
 - **Scale safely**: typed command DSL with argument help, async handlers, and
   structured result rendering (`text`, `json`, `image`, `error`, `bool`)
 
-## Common Use Cases
+## Where Citadel Fits
 
-- **Internal Tools**: replace repetitive click paths with direct commands
-- **Support & Operations**: add safe operational commands to admin dashboards
-- **API Testing & Debugging**: execute REST calls and inspect responses inline
-- **Power User Workflows**: give advanced users terminal speed in web UI
+- **Internal back-office & support tooling**: a support agent who runs "look up
+  user → check subscription → issue refund" two hundred times a day gets each
+  step down to three keystrokes. The vocabulary is small and the users are
+  trainable, so the speed compounds. (Command handlers run in the browser with
+  the user's session — keep server-side authorization as the gate on every
+  mutation, and Citadel becomes a fast front-end to authority, not the
+  authority itself.)
+- **Development debug overlay**: a quake-style console for your own app — seed
+  data, switch mock scenarios, impersonate users, toggle flags, dump a store.
+  Hidden behind a keypress, style-isolated by its Shadow DOM, and easy to strip
+  from production builds.
+- **Keyboard-first vertical SaaS**: trading, logistics, dispatch — apps where
+  users live for eight hours and measure work in seconds. The Bloomberg
+  terminal's command line is this pattern; Citadel is an embeddable React
+  version of it.
+- **Embedded dashboard consoles**: with `displayMode: 'inline'`, a small query
+  console living inside a metrics or status page (`logs.tail api`,
+  `metrics.show p99`).
+
+The common thread: a **known vocabulary**, **high frequency**, **parameterized
+operations**, and **data coming back**. If your users are casual visitors, your
+input is form-shaped, or your audience arrives cold, a search palette or a form
+is the better tool — Citadel is built for the workflows those can't serve.
+
+## Citadel and ⌘K Palettes
+
+Citadel complements a ⌘K command palette (kbar, cmdk, and friends) rather than
+replacing it. A palette is fuzzy search over *actions*: ideal for navigation
+and discovery, and it ends when the action fires. Citadel is a command
+*language*: hierarchical commands that take arguments and render structured
+results inline — `user.show 1234` returning a JSON tree is not something a
+palette models. Many apps ship both: ⌘K for finding and navigating, Citadel for
+operating.
 
 ![Animated screenshot of Citadel CLI](https://github.com/user-attachments/assets/b64da0f7-a4a0-4f76-bc03-c0e40c0e14e5)
 
@@ -180,7 +211,7 @@ const registry = createCommandRegistry([
 Demo registries include boolean commands:
 
 - Basic example: `bool.true`, `bool.false`, `bool.random`
-- DevOps example: `bool.deploy.window`, `bool.error.budget.healthy`, `bool.autoscale.recommended`
+- DevOps example: `check.deploy.window`, `check.error.budget.healthy`, `check.autoscale.recommended`
 
 ## Legacy `addCommand` API
 

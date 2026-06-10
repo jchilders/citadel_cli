@@ -1,12 +1,17 @@
 {
   "name": "citadel_cli",
-  "description": "A hierarchical command line (CLI) for your webapp",
+  "description": "Keyboard-driven command console for React apps — built for internal tools, admin panels, and dev debug overlays",
   "keywords": [
     "react",
     "command",
     "cli",
     "interface",
-    "console"
+    "console",
+    "terminal",
+    "command-palette",
+    "internal-tools",
+    "admin-panel",
+    "devtools"
   ],
   "author": {
     "name": "James Childers",
