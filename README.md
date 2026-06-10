@@ -17,6 +17,7 @@ prefix and Citadel expands it. `us` becomes `user show`.
 - **Debug in context**: call APIs, inspect JSON, mutate app state without leaving the page
 - **Clean UI**: hidden-by-default overlay (toggle key configurable, default `.`)
 - **Typed DSL**: argument help, async handlers, structured results (`text`, `json`, `image`, `error`, `bool`)
+- **Lightweight**: ~16 kB gzipped including styles, zero runtime dependencies — React is the only peer
 
 ## Where Citadel Fits
 
@@ -47,8 +48,9 @@ commands with arguments and structured inline results. Many apps ship both —
 npm i citadel_cli
 ```
 
-No CSS import needed — styles ship inside the component's Shadow DOM, fully
-isolated from your app.
+That's the whole footprint: one package, no transitive runtime dependencies,
+~16 kB gzipped. No CSS import needed — styles ship inside the component's
+Shadow DOM, fully isolated from your app.
 
 ## Documentation
 
