@@ -39,7 +39,7 @@ git push && git push --tags        # triggers CI publish to npm
 
 - **Library entry point**: `src/index.ts` — exports `Citadel`, `CommandRegistry`, `CitadelConfig`, and result types
 - **Dev app**: `src/App.tsx` — Vite dev server demo, not included in the build
-- **Build output**: `dist/citadel.es.js` and `dist/citadel.umd.cjs`, plus `dist/citadel.css`
+- **Build output**: `dist/citadel.es.js` and `dist/citadel.umd.cjs` (CSS is embedded in the JS and injected into the Shadow DOM — no separate stylesheet ships)
 
 ### Shadow DOM Isolation
 

@@ -36,6 +36,9 @@ for them. For example, `us` can expand to `user show`.
 npm i citadel_cli
 ```
 
+No CSS import is required — styles are embedded in the component and injected
+into its Shadow DOM, fully isolated from your app's styles.
+
 ## Documentation
 
 Start with the docs in `docs/`:
@@ -260,8 +263,7 @@ size metrics.
 ### Metrics collected
 
 - Build metrics:
-  - Bundle size (raw + gzip) for `dist/citadel.es.js`, `dist/citadel.umd.cjs`,
-    and `dist/citadel.css`
+  - Bundle size (raw + gzip) for `dist/citadel.es.js` and `dist/citadel.umd.cjs`
   - Total LOC and extension breakdown
   - Dependency presence for `tailwindcss`, `postcss`, and `autoprefixer`
   - `node_modules` size (`du -sk`)

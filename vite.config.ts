@@ -10,6 +10,15 @@ export default defineConfig({
     react(),
     dts({
       insertTypesEntry: true,
+      exclude: [
+        'src/**/__tests__/**',
+        'src/**/*.test.*',
+        'src/__test-utils__/**',
+        'src/test/**',
+        'src/examples/**',
+        'src/App.tsx',
+        'src/main.tsx',
+      ],
     }),
     viteShadowDOM({
       injectMethod: 'constructable',
@@ -36,10 +45,9 @@ export default defineConfig({
         },
       },
     },
-    emptyOutDir: false,  // need to preserve the generated stylesheet; without this it gets deleted from dist/
+    emptyOutDir: true,  // safe to clear dist/: nothing else writes to it before vite build
     cssCodeSplit: false,
     sourcemap: process.env.NODE_ENV === 'development',
-    manifest: true,
     assetsDir: 'dist',
   },
   test: {

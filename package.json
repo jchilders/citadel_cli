@@ -19,6 +19,7 @@
   },
   "version": "1.4.2",
   "type": "module",
+  "sideEffects": false,
   "scripts": {
     "build": "tsc && vite build && node scripts/sync-package-artifacts.mjs",
     "verify:pack": "node scripts/verify-package-artifacts.mjs",
@@ -35,18 +36,14 @@
     "metrics:runtime": "node scripts/metrics/collect-runtime-metrics.mjs",
     "metrics:compare": "node scripts/metrics/compare-metrics.mjs",
     "metrics:all": "node scripts/metrics/run-all-metrics.mjs",
-    "metrics:report": "node scripts/metrics/run-all-metrics.mjs --skip-build --skip-runtime",
-    "postinstall": "playwright install"
+    "metrics:report": "node scripts/metrics/run-all-metrics.mjs --skip-build --skip-runtime"
   },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "style": "./dist/citadel.css",
       "import": "./dist/citadel.es.js",
       "require": "./dist/citadel.umd.cjs"
-    },
-    "./styles.css": "./dist/citadel.css",
-    "./citadel.css": "./dist/citadel.css"
+    }
   },
   "types": "./dist/index.d.ts",
   "main": "./dist/citadel.umd.cjs",
@@ -54,12 +51,9 @@
   "files": [
     "dist"
   ],
-  "dependencies": {
-    "lucide-react": "^0.460.0"
-  },
   "peerDependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",

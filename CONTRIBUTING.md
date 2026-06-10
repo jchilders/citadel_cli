@@ -13,13 +13,18 @@
    npm install
    ```
 
-3. **Run the test suites**
+3. **Install Playwright browsers (one-time, needed for e2e tests)**
+   ```bash
+   npx playwright install
+   ```
+
+4. **Run the test suites**
    ```bash
    npm run test
    npm run test:e2e
    ```
 
-4. **Install local git hooks (recommended)**
+5. **Install local git hooks (recommended)**
    ```bash
    ./scripts/install-git-hooks.sh
    ```
@@ -27,12 +32,12 @@
    - `pre-push` to run `npm test` and `npm run build`
    - `pre-merge-commit` to run the same checks when merging into `main`
 
-5. **Run the linter**
+6. **Run the linter**
    ```bash
    npm run lint
    ```
 
-6. **Optional: build the package**
+7. **Optional: build the package**
    ```bash
    npm run build
    ```
