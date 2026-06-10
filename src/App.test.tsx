@@ -10,6 +10,7 @@ const mockCreateBasicCommandRegistry = vi.fn();
 const mockCreateLocalDevCommandRegistry = vi.fn();
 const mockCreateDevOpsCommandRegistry = vi.fn();
 const mockUseRuntimeConfigDemo = vi.fn();
+const mockUsePageControlDemo = vi.fn();
 
 vi.mock('./index', () => ({
   Citadel: (props: unknown) => {
@@ -34,6 +35,23 @@ vi.mock('./examples/runtimeConfigDemo', () => ({
   useRuntimeConfigDemo: () => mockUseRuntimeConfigDemo()
 }));
 
+vi.mock('./examples/pageControlDemo', () => ({
+  usePageControlDemo: () => mockUsePageControlDemo()
+}));
+
+const buildPageControlDemo = (registry: CommandRegistry) => ({
+  commandRegistry: registry,
+  users: [
+    { id: 1, name: 'Ada Lovelace', role: 'admin', status: 'active' },
+    { id: 2, name: 'Claude Shannon', role: 'viewer', status: 'away' }
+  ],
+  totalUsers: 2,
+  roleFilter: null,
+  sortField: null,
+  theme: 'dark',
+  toast: null
+});
+
 describe('App', () => {
   beforeEach(() => {
     mockCitadel.mockClear();
@@ -41,6 +59,7 @@ describe('App', () => {
     mockCreateLocalDevCommandRegistry.mockReset();
     mockCreateDevOpsCommandRegistry.mockReset();
     mockUseRuntimeConfigDemo.mockReset();
+    mockUsePageControlDemo.mockReset();
     window.localStorage.clear();
   });
 
@@ -58,6 +77,7 @@ describe('App', () => {
       config: runtimeConfig,
       mode: 'inline'
     });
+    mockUsePageControlDemo.mockReturnValue(buildPageControlDemo(new CommandRegistry()));
 
     render(<App />);
 
@@ -88,6 +108,7 @@ describe('App', () => {
       config: runtimeConfig,
       mode: 'inline'
     });
+    mockUsePageControlDemo.mockReturnValue(buildPageControlDemo(new CommandRegistry()));
 
     render(<App />);
 
@@ -102,5 +123,34 @@ describe('App', () => {
 
     expect(props.config).toEqual(runtimeConfig);
     expect(window.localStorage.getItem('citadel-demo-example')).toBe('runtime');
+  });
+
+  it('switches to page control example and renders the team table', () => {
+    const pageControlRegistry = new CommandRegistry();
+    mockCreateBasicCommandRegistry.mockReturnValue(new CommandRegistry());
+    mockCreateLocalDevCommandRegistry.mockReturnValue(new CommandRegistry());
+    mockCreateDevOpsCommandRegistry.mockReturnValue(new CommandRegistry());
+    mockUseRuntimeConfigDemo.mockReturnValue({
+      commandRegistry: new CommandRegistry(),
+      config: { displayMode: 'inline' },
+      mode: 'inline'
+    });
+    mockUsePageControlDemo.mockReturnValue(buildPageControlDemo(pageControlRegistry));
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Page Control/i }));
+
+    expect(screen.getByText('Team directory')).toBeTruthy();
+    expect(screen.getByText('Ada Lovelace')).toBeTruthy();
+
+    const calls = mockCitadel.mock.calls;
+    const props = calls[calls.length - 1][0] as {
+      commandRegistry: CommandRegistry;
+      config: CitadelConfig;
+    };
+    expect(props.commandRegistry).toBe(pageControlRegistry);
+    expect(props.config.displayMode).toBe('inline');
+    expect(window.localStorage.getItem('citadel-demo-example')).toBe('pagecontrol');
   });
 });

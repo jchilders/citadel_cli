@@ -43,8 +43,7 @@ export function createDevOpsCommandRegistry(): CommandRegistry {
       .handle(async () => {
         await new Promise(resolve => setTimeout(resolve, 800));
 
-        const baseTime = new Date('2024-12-12T21:31:42-05:00');
-        baseTime.setHours(baseTime.getHours() - 1);
+        const baseTime = new Date(Date.now() - 60 * 1000);
 
         const formatDate = (date: Date) => {
           return date.toLocaleString('en-US', {

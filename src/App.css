@@ -207,6 +207,243 @@ body {
   font-size: 0.74rem;
 }
 
+.demo-pagecontrol-layout {
+  display: grid;
+  gap: 1.25rem;
+  align-items: start;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 900px) {
+  .demo-pagecontrol-layout {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+}
+
+.demo-inline-host {
+  min-width: 0;
+}
+
+.demo-widget {
+  border: 1px solid color-mix(in oklch, oklch(44.6% 0.043 257.3) 55%, transparent);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  background: color-mix(in oklch, oklch(37.2% 0.044 257.3) 14%, transparent);
+}
+
+.demo-widget-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+
+.demo-widget-title {
+  margin: 0;
+  color: oklch(92.8% 0.006 264.5);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.demo-widget-meta {
+  margin: 0;
+  color: oklch(55.1% 0.023 264.4);
+  font-size: 0.72rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+.demo-user-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.demo-user-table th {
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid color-mix(in oklch, oklch(44.6% 0.043 257.3) 55%, transparent);
+  color: oklch(55.1% 0.023 264.4);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.demo-user-table td {
+  padding: 0.45rem 0.75rem;
+  border-bottom: 1px solid color-mix(in oklch, oklch(37.2% 0.044 257.3) 45%, transparent);
+  color: oklch(80% 0.012 259.8);
+}
+
+.demo-user-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.demo-status {
+  display: inline-block;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.demo-status-active {
+  color: oklch(84.5% 0.143 164.9);
+  background: color-mix(in oklch, oklch(84.5% 0.143 164.9) 12%, transparent);
+}
+
+.demo-status-away {
+  color: oklch(85% 0.12 85);
+  background: color-mix(in oklch, oklch(85% 0.12 85) 12%, transparent);
+}
+
+.demo-status-offline {
+  color: oklch(60% 0.02 264);
+  background: color-mix(in oklch, oklch(60% 0.02 264) 14%, transparent);
+}
+
+.demo-toast {
+  position: fixed;
+  top: 1.25rem;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 50;
+  max-width: 22rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid color-mix(in oklch, oklch(84.5% 0.143 164.9) 45%, transparent);
+  border-radius: 0.6rem;
+  background: color-mix(in oklch, oklch(20.8% 0.042 265.8) 92%, oklch(84.5% 0.143 164.9));
+  color: oklch(92.8% 0.006 264.5);
+  font-size: 0.85rem;
+  box-shadow: 0 12px 36px color-mix(in oklch, black 40%, transparent);
+  animation: demo-toast-in 180ms ease-out;
+}
+
+@keyframes demo-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.demo-page[data-theme='light'] {
+  background: radial-gradient(circle at 18% 0%, oklch(94% 0.025 258.2), transparent 42%),
+    radial-gradient(circle at 88% 12%, oklch(93.5% 0.02 275.8), transparent 46%),
+    oklch(97.5% 0.005 264.7);
+  color: oklch(25% 0.02 264.5);
+}
+
+.demo-page[data-theme='light'] .demo-brand {
+  color: oklch(52% 0.13 164.9);
+}
+
+.demo-page[data-theme='light'] .demo-title {
+  color: oklch(20% 0.03 264.5);
+}
+
+.demo-page[data-theme='light'] .demo-title-sub,
+.demo-page[data-theme='light'] .demo-description,
+.demo-page[data-theme='light'] .demo-tab,
+.demo-page[data-theme='light'] .demo-source-link,
+.demo-page[data-theme='light'] .demo-widget-meta,
+.demo-page[data-theme='light'] .demo-user-table th {
+  color: oklch(50% 0.02 264.4);
+}
+
+.demo-page[data-theme='light'] .demo-card {
+  border-color: oklch(87% 0.012 257.3);
+  background: white;
+  box-shadow: 0 24px 80px color-mix(in oklch, oklch(40% 0.04 264) 14%, transparent);
+}
+
+.demo-page[data-theme='light'] .demo-tabbar {
+  border-bottom-color: oklch(87% 0.012 257.3);
+  background: oklch(96.5% 0.006 264.7);
+}
+
+.demo-page[data-theme='light'] .demo-tab:hover {
+  color: oklch(30% 0.03 258.3);
+}
+
+.demo-page[data-theme='light'] .demo-tab.is-active {
+  color: oklch(45% 0.13 164.9);
+  border-bottom-color: oklch(45% 0.13 164.9);
+}
+
+.demo-page[data-theme='light'] .demo-example-info {
+  border-bottom-color: oklch(90% 0.01 257.3);
+}
+
+.demo-page[data-theme='light'] .demo-example-title,
+.demo-page[data-theme='light'] .demo-widget-title,
+.demo-page[data-theme='light'] .demo-try-title {
+  color: oklch(22% 0.03 264.5);
+}
+
+.demo-page[data-theme='light'] .demo-example-description,
+.demo-page[data-theme='light'] .demo-try-copy,
+.demo-page[data-theme='light'] .demo-user-table td {
+  color: oklch(38% 0.02 259.8);
+}
+
+.demo-page[data-theme='light'] .demo-example-hint,
+.demo-page[data-theme='light'] .demo-footer-note {
+  color: oklch(58% 0.02 257.3);
+}
+
+.demo-page[data-theme='light'] .demo-try-box,
+.demo-page[data-theme='light'] .demo-widget {
+  border-color: oklch(88% 0.012 257.3);
+  background: oklch(97% 0.006 264.7);
+}
+
+.demo-page[data-theme='light'] .demo-user-table th,
+.demo-page[data-theme='light'] .demo-user-table td {
+  border-bottom-color: oklch(90% 0.01 257.3);
+}
+
+.demo-page[data-theme='light'] .demo-user-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.demo-page[data-theme='light'] .demo-try-prefix,
+.demo-page[data-theme='light'] .demo-command-code {
+  color: oklch(45% 0.13 164.9);
+}
+
+.demo-page[data-theme='light'] .demo-command-code {
+  border-color: color-mix(in oklch, oklch(45% 0.13 164.9) 35%, transparent);
+  background: color-mix(in oklch, oklch(45% 0.13 164.9) 7%, transparent);
+}
+
+.demo-page[data-theme='light'] kbd {
+  color: oklch(30% 0.03 264.5);
+  background: oklch(94% 0.008 260);
+  border-color: oklch(82% 0.015 257.3);
+}
+
+.demo-page[data-theme='light'] .demo-status-active {
+  color: oklch(45% 0.13 164.9);
+  background: color-mix(in oklch, oklch(45% 0.13 164.9) 10%, transparent);
+}
+
+.demo-page[data-theme='light'] .demo-status-away {
+  color: oklch(55% 0.12 85);
+  background: color-mix(in oklch, oklch(55% 0.12 85) 12%, transparent);
+}
+
+.demo-page[data-theme='light'] .demo-toast {
+  border-color: color-mix(in oklch, oklch(45% 0.13 164.9) 45%, transparent);
+  background: white;
+  color: oklch(25% 0.02 264.5);
+}
+
 .demo-footer-note {
   margin-top: 2rem;
   text-align: center;

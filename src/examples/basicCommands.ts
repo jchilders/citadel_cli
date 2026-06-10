@@ -12,7 +12,8 @@ export function createBasicCommandRegistry(): CommandRegistry {
       .describe('Show user details')
       .arg('userId', (arg) => arg.describe('Enter user ID'))
       .handle(async ({ namedArgs }) => {
-        await new Promise((resolve) => setTimeout(resolve, 2000))
+        // Brief delay so the loading state is visible in the demo.
+        await new Promise((resolve) => setTimeout(resolve, 400))
 
         return json({
           id: namedArgs.userId,
