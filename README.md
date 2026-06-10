@@ -1,5 +1,8 @@
 # Citadel CLI
 
+[![npm version](https://img.shields.io/npm/v/citadel_cli)](https://www.npmjs.com/package/citadel_cli)
+[![minzipped size](https://img.shields.io/bundlephobia/minzip/citadel_cli)](https://bundlephobia.com/package/citadel_cli)
+
 ![Citadel demo: "." opens the console, "c Hello!" expands to cowsay and prints an ASCII cow, then "u s 1234" expands to user show 1234 and renders a JSON result inline](https://raw.githubusercontent.com/jchilders/citadel_cli/main/docs/images/citadel-demo.gif)
 
 A terminal-style command console embedded in your React app. Citadel turns
