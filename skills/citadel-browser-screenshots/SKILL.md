@@ -52,6 +52,36 @@ Tokens are typed back-to-back with no separator, so commands with multiple
 arguments need an explicit `Space` token between argument values:
 `"loc s demo.theme Space dark Enter"`.
 
+## Recording GIFs
+
+`scripts/record_citadel_gif.mjs` records a key sequence as an animated GIF
+with an on-screen KeyCastr-style keystroke HUD (requires `ffmpeg` and `gifski`
+on PATH). With the default `--crop panel` it dry-runs the sequence once to
+measure the panel's maximum extent (the panel grows upward as output
+accumulates), reloads, then records; `--crop viewport` keeps the whole page.
+`--speed` time-compresses at encode time, and `--root-font` bumps the document
+root font-size (Citadel's type is rem-based, so text scales crisply). Unlike
+the screenshot script there is no implicit open-key press — include the
+opening `.` in `--keys`. This is what generates the README demo GIF:
+
+```bash
+node skills/citadel-browser-screenshots/scripts/record_citadel_gif.mjs \
+  --url http://localhost:5173 \
+  --tab "Basic" \
+  --keys ". wait:1100 c wait:1300 Hello! wait:500 Enter wait:2600 u wait:800 s wait:800 1234 wait:600 Enter wait:3000" \
+  --viewport-height 1120 \
+  --root-font 19 \
+  --speed 1.25 \
+  --quality 95 \
+  --out docs/images/citadel-demo.gif
+```
+
+Mind the HUD fade timing when sequencing: keystroke runs merge into one pill
+unless separated by a pause longer than ~1.3s (e.g. the `wait:1300` between
+the `c` expansion and its argument above). If output scroll-clips at the end,
+increase `--viewport-height` — the panel is 50vh, so taller viewport = taller
+pane.
+
 ## Command Sequences
 
 Read `references/citadel_sequences.md` for known-good sequences per demo tab:

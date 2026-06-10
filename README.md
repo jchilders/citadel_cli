@@ -59,7 +59,7 @@ results inline — `user.show 1234` returning a JSON tree is not something a
 palette models. Many apps ship both: ⌘K for finding and navigating, Citadel for
 operating.
 
-![Animated screenshot of Citadel CLI](https://github.com/user-attachments/assets/b64da0f7-a4a0-4f76-bc03-c0e40c0e14e5)
+![Citadel demo: pressing "u s 1234 Enter" expands to "user show 1234" and renders a JSON result inline](https://raw.githubusercontent.com/jchilders/citadel_cli/main/docs/images/citadel-demo.gif)
 
 ## Installation
 
