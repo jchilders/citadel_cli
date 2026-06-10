@@ -8,7 +8,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { useCommandParser } from '../useCommandParser';
+import { parseInput, useCommandParser } from '../useCommandParser';
 import { CommandNode, CommandRegistry, ArgumentSegment } from '../../types/command-registry';
 import { CitadelState, CitadelActions } from '../../types';
 import { 
@@ -561,5 +561,66 @@ describe('useCommandParser', () => {
   });
 
   describe.skip('executeCommand', () => {
+  });
+
+  describe('handleInputChange', () => {
+    it('does not commit an empty argument when input is backspaced to empty', () => {
+      const { result } = renderHook(() => useCommandParser());
+      // user.comment expects the userId argument next
+      setCommandPath('user', 'comment');
+      const sizeBefore = mockSegmentStack.size();
+
+      // Simulates the input value after backspacing the last character of an argument
+      act(() => {
+        result.current.handleInputChange('', mockActions);
+      });
+
+      expect(mockSegmentStack.size()).toBe(sizeBefore);
+      expect(mockActions.setCurrentInput).toHaveBeenCalledWith('');
+    });
+
+    it('still commits an argument terminated by a trailing space', () => {
+      const { result } = renderHook(() => useCommandParser());
+      setCommandPath('user', 'comment');
+      const sizeBefore = mockSegmentStack.size();
+
+      act(() => {
+        result.current.handleInputChange('1234 ', mockActions);
+      });
+
+      expect(mockSegmentStack.size()).toBe(sizeBefore + 1);
+      const args = mockSegmentStack.arguments;
+      expect(args[args.length - 1].value).toBe('1234');
+    });
+  });
+});
+
+describe('parseInput', () => {
+  it('treats empty input as incomplete', () => {
+    expect(parseInput('').isComplete).toBe(false);
+  });
+
+  it('treats whitespace-only input as incomplete', () => {
+    expect(parseInput(' ').isComplete).toBe(false);
+  });
+
+  it('treats a space-terminated word as complete', () => {
+    const parsed = parseInput('hello ');
+    expect(parsed.isComplete).toBe(true);
+    expect(parsed.words).toEqual(['hello']);
+  });
+
+  it('treats a closed quoted word as complete', () => {
+    const parsed = parseInput('"hello world"');
+    expect(parsed.isComplete).toBe(true);
+    expect(parsed.words).toEqual(['hello world']);
+  });
+
+  it('treats an unterminated word as incomplete', () => {
+    expect(parseInput('hello').isComplete).toBe(false);
+  });
+
+  it('treats an unclosed quote as incomplete', () => {
+    expect(parseInput('"hello').isComplete).toBe(false);
   });
 });

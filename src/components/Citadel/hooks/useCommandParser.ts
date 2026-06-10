@@ -406,6 +406,8 @@ export function parseInput(input: string): ParsedInput {
     currentWord,
     isQuoted,
     quoteChar,
-    isComplete: !isQuoted && !currentWord
+    // Empty input is not "complete" — treating it as complete would commit an
+    // empty argument when the user backspaces their input away.
+    isComplete: !isQuoted && !currentWord && words.length > 0
   };
 }
