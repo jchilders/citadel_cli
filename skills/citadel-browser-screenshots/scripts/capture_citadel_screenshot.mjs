@@ -38,6 +38,9 @@ function parseArgs(argv) {
     afterMs: 250,
     fullPage: false,
     clipCitadel: false,
+    // Pin the scheme so captures stay deterministic; the demo page follows
+    // prefers-color-scheme and Playwright's own default is light.
+    colorScheme: 'dark',
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -77,6 +80,11 @@ function parseArgs(argv) {
     }
     if (arg === '--open-key') {
       options.openKey = next;
+      i += 1;
+      continue;
+    }
+    if (arg === '--color-scheme') {
+      options.colorScheme = next;
       i += 1;
       continue;
     }
@@ -161,7 +169,10 @@ async function main() {
   await fs.mkdir(path.dirname(options.out), { recursive: true });
 
   const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const page = await browser.newPage({
+    viewport: { width: 1440, height: 900 },
+    colorScheme: options.colorScheme,
+  });
 
   try {
     await page.goto(options.url, { waitUntil: 'domcontentloaded' });

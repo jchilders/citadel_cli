@@ -30,6 +30,10 @@ Use `localhost`, not `127.0.0.1` — the Vite dev server binds IPv6 (`::1`)
 only, so `127.0.0.1` is refused. Read the actual port from Vite's startup
 output; it increments past 5173 when that port is busy.
 
+The demo page follows `prefers-color-scheme`, so captures pin
+`colorScheme: dark` for determinism. Pass `--color-scheme light` to the
+screenshot script to capture the light theme.
+
 3. Verify output file exists and report its absolute path.
 
 ## Script Behavior

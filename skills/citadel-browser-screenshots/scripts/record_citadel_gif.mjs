@@ -164,6 +164,9 @@ async function main() {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     viewport,
+    // The demo follows prefers-color-scheme; pin dark so renders stay
+    // deterministic (Playwright's default is light).
+    colorScheme: 'dark',
     recordVideo: { dir: workDir, size: viewport },
   });
   const recordingStart = Date.now();
