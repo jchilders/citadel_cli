@@ -2,65 +2,44 @@
 
 ![Citadel demo: "." opens the console, "c Hello!" expands to cowsay and prints an ASCII cow, then "u s 1234" expands to user show 1234 and renders a JSON result inline](https://raw.githubusercontent.com/jchilders/citadel_cli/main/docs/images/citadel-demo.gif)
 
-Embed a terminal-style command console directly inside your React app.
+A terminal-style command console embedded in your React app. Citadel turns
+repetitive, parameterized operations — "look up account 1234", "refund order
+5678" — into a few keystrokes, with results rendered inline. Built for
+internal back-office tools, admin panels, support dashboards, and dev debug
+overlays.
 
-Citadel turns repetitive, parameterized operations — "look up account 1234",
-"refund order 5678", "seed twenty test users" — into a few keystrokes, with the
-results rendered inline. It shines where the same people run the same
-operations all day: internal back-office tools, admin panels, support
-dashboards, and developer debug overlays.
-
-The key interaction model is prefix expansion: users usually do not type the
-full command. They type the shortest unambiguous prefix and Citadel expands it
-for them. For example, `us` can expand to `user show`.
+The core interaction is prefix expansion: users type the shortest unambiguous
+prefix and Citadel expands it. `us` becomes `user show`.
 
 ## Why Developers Add Citadel
 
-- **Move faster in existing apps**: expose internal actions as commands instead
-  of building more buttons and forms
-- **Debug in context**: call APIs, inspect JSON, clear storage, and run app
-  actions without leaving the page
-- **Keep UI clean**: hidden-by-default overlay (toggle key is configurable;
-  default is `.`, and can be shown on load if desired)
-- **Scale safely**: typed command DSL with argument help, async handlers, and
-  structured result rendering (`text`, `json`, `image`, `error`, `bool`)
+- **Fewer buttons and forms**: expose internal actions as commands
+- **Debug in context**: call APIs, inspect JSON, mutate app state without leaving the page
+- **Clean UI**: hidden-by-default overlay (toggle key configurable, default `.`)
+- **Typed DSL**: argument help, async handlers, structured results (`text`, `json`, `image`, `error`, `bool`)
 
 ## Where Citadel Fits
 
-- **Internal back-office & support tooling**: a support agent who runs "look up
-  user → check subscription → issue refund" two hundred times a day gets each
-  step down to three keystrokes. The vocabulary is small and the users are
-  trainable, so the speed compounds. (Command handlers run in the browser with
-  the user's session — keep server-side authorization as the gate on every
-  mutation, and Citadel becomes a fast front-end to authority, not the
-  authority itself.)
-- **Development debug overlay**: a quake-style console for your own app — seed
-  data, switch mock scenarios, impersonate users, toggle flags, dump a store.
-  Hidden behind a keypress, style-isolated by its Shadow DOM, and easy to strip
-  from production builds.
-- **Keyboard-first vertical SaaS**: trading, logistics, dispatch — apps where
-  users live for eight hours and measure work in seconds. The Bloomberg
-  terminal's command line is this pattern; Citadel is an embeddable React
-  version of it.
-- **Embedded dashboard consoles**: with `displayMode: 'inline'`, a small query
-  console living inside a metrics or status page (`logs.tail api`,
-  `metrics.show p99`).
+- **Back-office & support tooling**: lookup → modify → annotate loops drop to a
+  few keystrokes each. Handlers run in the browser with the user's session, so
+  keep server-side authorization as the gate on every mutation.
+- **Dev debug overlay**: a quake-style console — seed data, toggle flags,
+  impersonate users. Shadow DOM-isolated, easy to strip from production.
+- **Keyboard-first vertical SaaS**: trading, logistics, dispatch. The Bloomberg
+  terminal's command line is this pattern.
+- **Embedded dashboard consoles**: `displayMode: 'inline'` puts a query console
+  inside a metrics or status page.
 
-The common thread: a **known vocabulary**, **high frequency**, **parameterized
-operations**, and **data coming back**. If your users are casual visitors, your
-input is form-shaped, or your audience arrives cold, a search palette or a form
-is the better tool — Citadel is built for the workflows those can't serve.
+The common thread: known vocabulary, high frequency, parameterized operations,
+data coming back. For casual visitors or form-shaped input, a search palette
+or form is the better tool.
 
 ## Citadel and ⌘K Palettes
 
-Citadel complements a ⌘K command palette (kbar, cmdk, and friends) rather than
-replacing it. A palette is fuzzy search over *actions*: ideal for navigation
-and discovery, and it ends when the action fires. Citadel is a command
-*language*: hierarchical commands that take arguments and render structured
-results inline — `user.show 1234` returning a JSON tree is not something a
-palette models. Many apps ship both: ⌘K for finding and navigating, Citadel for
-operating.
-
+A ⌘K palette (kbar, cmdk) is fuzzy search over actions — ideal for navigation,
+done when the action fires. Citadel is a command language: hierarchical
+commands with arguments and structured inline results. Many apps ship both —
+⌘K for finding, Citadel for operating.
 
 ## Installation
 
@@ -68,46 +47,27 @@ operating.
 npm i citadel_cli
 ```
 
-No CSS import is required — styles are embedded in the component and injected
-into its Shadow DOM, fully isolated from your app's styles.
+No CSS import needed — styles ship inside the component's Shadow DOM, fully
+isolated from your app.
 
 ## Documentation
 
-Start with the docs in `docs/`:
+- [`docs/README.md`](docs/README.md) — full guide
+- [`docs/01-installing-citadel-in-an-existing-react-app.md`](docs/01-installing-citadel-in-an-existing-react-app.md) — fastest setup
+- [`docs/02-defining-commands.md`](docs/02-defining-commands.md) — command DSL
 
-- [`docs/README.md`](docs/README.md) for the full guide
-- [`docs/01-installing-citadel-in-an-existing-react-app.md`](docs/01-installing-citadel-in-an-existing-react-app.md) for the fastest setup
-- [`docs/02-defining-commands.md`](docs/02-defining-commands.md) for the command DSL
+Or run the demo: clone this repo, `npm install`, `npm run dev`. Five tabs,
+each backed by a registry in `src/examples/`.
 
-Or run the interactive demo locally: clone this repo, `npm install`, then
-`npm run dev`. The demo has five tabs — Basic, Page Control (commands driving
-the page itself, with Citadel inline), Local Full-Stack, DevOps, and Runtime
-Config — each backed by a registry in `src/examples/`.
-
-## Quick Start (Hello World)
-
-Commands are the core concept in Citadel. Think `user add 1234` or
-`qa deploy my_feature_branch`.
-
-Users usually enter prefixes rather than full commands. If your command is
-`greet`, typing `g` is enough. If your command is `user.show`, typing `us` is
-enough as long as that prefix is unambiguous.
-
-To get running:
+## Quick Start
 
 1. Define commands with the typed DSL
-2. Build a `CommandRegistry` from those definitions
-3. Pass the registry to `Citadel`
+2. Build a `CommandRegistry`
+3. Pass it to `<Citadel>`
 
 ```typescript
-import {
-  Citadel,
-  command,
-  createCommandRegistry,
-  text,
-} from "citadel_cli";
+import { Citadel, command, createCommandRegistry, text } from "citadel_cli";
 
-// 1. Define and register commands
 const registry = createCommandRegistry([
   command("greet")
     .describe("Say hello to someone")
@@ -115,7 +75,6 @@ const registry = createCommandRegistry([
     .handle(async ({ namedArgs }) => text(`Hello ${namedArgs.name} world!`)),
 ]);
 
-// 2. Pass the registry to the component
 function App() {
   return <Citadel commandRegistry={registry} />;
 }
@@ -123,149 +82,51 @@ function App() {
 
 ![screenshot_greeting_cmd](https://github.com/user-attachments/assets/a3c1acad-69b3-4079-87af-0425aea3980a)
 
+Press `.`, type `g` (expands to `greet`), type a name, press Enter.
+
 ## Prefix Expansion
 
-Prefix expansion is the core way users interact with Citadel.
+Users type the shortest unambiguous prefix for each command word:
 
-Users usually do not type full command names. They type the shortest
-unambiguous prefix, and Citadel expands it in place.
+- `us` → `user show`, `ud` → `user deactivate`
+- Shared prefixes need one more letter: `ush` → `user show`, `use` → `user search`
 
-For the quick start example above, typing <kbd>g</kbd> expands to `greet `
-(with a trailing space), and the user can then enter the `name` argument.
+Design tip: model enum-like values as command words, not free-text arguments,
+so they expand too — `users.filter.admin` runs from three keystrokes
+(`u` `f` `a`).
 
-For hierarchical commands, expansion is prefix-based:
+## The DSL
 
-- `us` can resolve to `user show`
-- `ud` can resolve to `user deactivate`
-- If two options share a prefix (`show` and `search`), continue until unique:
-  `ush` => `user show`, `use` => `user search`
+Command paths are dot-delimited and hierarchical (`user.show` → `user show`).
+Handlers receive:
 
-Think of the DSL path as the canonical command definition and the prefix as the
-normal way the user enters it.
+- `rawArgs`: positional values (`string[]`)
+- `namedArgs`: argument-name map (`Record<string, string | undefined>`)
+- `commandPath`: the dot-delimited path
 
-One design tip: model enum-like values as command words rather than free-text
-arguments so they participate in expansion. `users.filter.admin` runs from
-three keystrokes (`u` `f` `a`); `users.filter <role>` makes the user type out
-`admin` by hand.
+Each handler returns one result helper:
 
-## Help Text
+- `text(value)`
+- `json(value)`
+- `image(url, altText?)`
+- `error(message)`
+- `bool(value, trueText?, falseText?)` — e.g. `bool(ok, "👍", "👎")`
 
-Argument segment `description` values are shown as argument-level help text.
-Example built-in help output:
+Argument descriptions surface in the built-in `help` command:
 
 ```text
 user show <userId> - Show user details
   <userId>: Enter user ID
 ```
 
-Handlers must return one of the following:
+Arguments may be single- or double-quoted when they contain spaces.
 
-- `TextCommandResult`
-- `JsonCommandResult`
-- `ImageCommandResult`
-- `ErrorCommandResult`
-- `BooleanCommandResult`
-
-## Typed DSL
-
-For clearer command authoring, you can define commands with a DSL and compile
-them into a `CommandRegistry`:
-
-```typescript
-import {
-  Citadel,
-  command,
-  createCommandRegistry,
-  text,
-} from "citadel_cli";
-
-const registry = createCommandRegistry([
-  command("user.show")
-    .describe("Show user details")
-    .arg("userId", (arg) => arg.describe("Enter user ID"))
-    .handle(async ({ namedArgs }) => {
-      return text(`Showing user ${namedArgs.userId}`);
-    }),
-]);
-
-function App() {
-  return <Citadel commandRegistry={registry} />;
-}
-```
-
-DSL handlers receive:
-
-- `rawArgs`: positional values (`string[]`)
-- `namedArgs`: argument-name map (`Record<string, string | undefined>`)
-- `commandPath`: dot-delimited path string
-
-Helper constructors exported by the DSL:
-
-- `text(value)`
-- `json(value)`
-- `image(url, altText?)`
-- `error(message)`
-- `bool(value, trueText?, falseText?)`
-
-### Boolean Result Example
-
-```typescript
-import { command, createCommandRegistry, bool } from "citadel_cli";
-
-const registry = createCommandRegistry([
-  command("bool.random")
-    .describe("Return a random boolean")
-    .handle(async () => bool(Math.random() >= 0.5, "👍", "👎")),
-]);
-```
-
-Demo registries include boolean commands:
-
-- Basic example: `bool.true`, `bool.false`, `bool.random`
-- DevOps example: `check.deploy.window`, `check.error.budget.healthy`, `check.autoscale.recommended`
-
-## Legacy `addCommand` API
-
-`CommandRegistry#addCommand` still works and is fully supported. The DSL is now
-the recommended authoring path for new command definitions.
-
-### Arguments
-
-1. Each command can have zero or more arguments
-2. Argument values are passed to the handler as a `String[]`
-3. Arguments can be single- or double-quoted
-
-### Example Handlers
-
-Clearing localstorage:
-
-```
-  async () => {
-    localStorage.clear();
-    return new TextCommandResult('localStorage cleared!');
-  }
-```
-
-Make an HTTP POST with a body containing a given `name`:
-
-```
-async (args: string[]) => {
-  const response = await fetch('https://api.example.com/endpoint', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ name: args[0] }),
-  });
-  return new JsonCommandResult(await response.json());
-}
-```
-
+The legacy `CommandRegistry#addCommand` API still works; the DSL is the
+recommended path for new commands.
 
 ## Configuration
 
-Certain configuration options can be passed to the Citadel component. These are
-given below, along with their default values.
+Defaults shown:
 
 ```typescript
 const config = {
@@ -273,12 +134,12 @@ const config = {
   displayMode: 'panel', // 'panel' (overlay) or 'inline' (always visible)
   includeHelpCommand: true,
   fontFamily: 'monospace',
-  fontSize: '0.875rem', // CSS font-size value (e.g. '14px', '0.875rem')
+  fontSize: '0.875rem',
   maxHeight: '80vh',
   initialHeight: '50vh',
   minHeight: '200',
-  outputFontSize: '0.875rem', // optional CSS font-size override for output text
-  showOutputPane: true, // set false to hide command output pane
+  outputFontSize: '0.875rem',
+  showOutputPane: true,
   resetStateOnHide: false,
   closeOnEscape: true,
   showCitadelKey: '.',
@@ -286,79 +147,22 @@ const config = {
   cursorType: 'blink', // 'blink', 'spin', 'solid', or 'bbs'
   cursorSpeed: 530,
   cursorColor: 'var(--cursor-color, #fff)',
-  storage: {
-    type: 'localStorage',
-    maxCommands: 100
-  }
+  storage: { type: 'localStorage', maxCommands: 100 }
 };
+
+<Citadel commandRegistry={registry} config={config} />
 ```
 
-See [`docs/04-configuring-citadel-and-command-history.md`](docs/04-configuring-citadel-and-command-history.md)
-for the full option table.
-
-Then to make the component aware of them:
-
-```
-<Citadel commandRegistry={cmdRegistry} config={config} />
-```
+Full option table: [`docs/04-configuring-citadel-and-command-history.md`](docs/04-configuring-citadel-and-command-history.md).
 
 ## Performance Metrics
 
-Citadel includes scripts to capture and compare before/after performance and
-size metrics.
-
-### Metrics collected
-
-- Build metrics:
-  - Bundle size (raw + gzip) for `dist/citadel.es.js` and `dist/citadel.umd.cjs`
-  - Total LOC and extension breakdown
-  - Dependency presence for `tailwindcss`, `postcss`, and `autoprefixer`
-  - `node_modules` size (`du -sk`)
-- Runtime metrics (Chromium):
-  - JS heap usage before/after interaction
-  - Input latency (keydown to input update)
-  - FPS sample over a short window
-  - Long task count and duration
-  - DOM node count
-
-All outputs are written to `test-results/metrics/`.
-
-### Commands
-
-```bash
-npm run metrics:build
-npm run metrics:runtime
-npm run metrics:compare -- --before <before.json> --after <after.json>
-npm run metrics:all -- --label <label>
-npm run metrics:report -- --label <label> --before-build <before-build.json> --before-runtime <before-runtime.json>
-```
-
-### Before/After workflow
-
-1. Capture a baseline snapshot:
-
-```bash
-npm run metrics:all -- --label before
-```
-
-2. After your changes, capture the new snapshot and generate comparisons:
-
-```bash
-npm run metrics:all -- --label after \
-  --before-build test-results/metrics/build-before-<timestamp>.json \
-  --before-runtime test-results/metrics/runtime-before-<timestamp>.json
-```
-
-3. Open generated reports:
-- `test-results/metrics/run-after.md`
-- `test-results/metrics/compare-build-after.md` (if `--before-build` provided)
-- `test-results/metrics/compare-runtime-after.md` (if `--before-runtime` provided)
-
-Notes:
-- `metrics:runtime` starts a local dev server and requires local port binding.
-- If you only want comparison output from existing snapshots, use
-  `npm run metrics:report`.
+`npm run metrics:build`, `metrics:runtime`, `metrics:compare`, and
+`metrics:all` capture before/after bundle-size and runtime metrics (heap,
+input latency, FPS, long tasks) to `test-results/metrics/`. See
+`scripts/metrics/`.
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on developing, testing, and releasing Citadel CLI.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for developing, testing, and
+releasing.
