@@ -78,6 +78,11 @@ Start with the docs in `docs/`:
 - [`docs/01-installing-citadel-in-an-existing-react-app.md`](docs/01-installing-citadel-in-an-existing-react-app.md) for the fastest setup
 - [`docs/02-defining-commands.md`](docs/02-defining-commands.md) for the command DSL
 
+Or run the interactive demo locally: clone this repo, `npm install`, then
+`npm run dev`. The demo has five tabs — Basic, Page Control (commands driving
+the page itself, with Citadel inline), Local Full-Stack, DevOps, and Runtime
+Config — each backed by a registry in `src/examples/`.
+
 ## Quick Start (Hello World)
 
 Commands are the core concept in Citadel. Think `user add 1234` or
@@ -136,6 +141,11 @@ For hierarchical commands, expansion is prefix-based:
 
 Think of the DSL path as the canonical command definition and the prefix as the
 normal way the user enters it.
+
+One design tip: model enum-like values as command words rather than free-text
+arguments so they participate in expansion. `users.filter.admin` runs from
+three keystrokes (`u` `f` `a`); `users.filter <role>` makes the user type out
+`admin` by hand.
 
 ## Help Text
 
@@ -256,16 +266,17 @@ async (args: string[]) => {
 Certain configuration options can be passed to the Citadel component. These are
 given below, along with their default values.
 
-```
+```typescript
 const config = {
   commandTimeoutMs: 10000,
+  displayMode: 'panel', // 'panel' (overlay) or 'inline' (always visible)
   includeHelpCommand: true,
-  fontFamily: '"JetBrains Mono", monospace',
+  fontFamily: 'monospace',
   fontSize: '0.875rem', // CSS font-size value (e.g. '14px', '0.875rem')
   maxHeight: '80vh',
   initialHeight: '50vh',
   minHeight: '200',
-  outputFontSize: '0.75rem', // optional CSS font-size override for output text
+  outputFontSize: '0.875rem', // optional CSS font-size override for output text
   showOutputPane: true, // set false to hide command output pane
   resetStateOnHide: false,
   closeOnEscape: true,
@@ -273,12 +284,16 @@ const config = {
   showOnLoad: false,
   cursorType: 'blink', // 'blink', 'spin', 'solid', or 'bbs'
   cursorSpeed: 530,
+  cursorColor: 'var(--cursor-color, #fff)',
   storage: {
     type: 'localStorage',
     maxCommands: 100
   }
 };
 ```
+
+See [`docs/04-configuring-citadel-and-command-history.md`](docs/04-configuring-citadel-and-command-history.md)
+for the full option table.
 
 Then to make the component aware of them:
 

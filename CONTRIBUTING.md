@@ -2,6 +2,11 @@
 
 ## Getting Started
 
+**Requirements:** Node ≥22. The test script sets
+`NODE_OPTIONS=--no-experimental-webstorage`, which older Node rejects with
+"not allowed in NODE_OPTIONS". (The package's `engines` field says `>=20`, but
+that applies to consumers, not development.)
+
 1. **Clone the repository**
    ```bash
    git clone https://github.com/jchilders/citadel_cli.git

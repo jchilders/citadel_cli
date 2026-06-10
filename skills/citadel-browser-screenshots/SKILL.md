@@ -19,12 +19,16 @@ npm run dev
 
 ```bash
 node skills/citadel-browser-screenshots/scripts/capture_citadel_screenshot.mjs \
-  --url http://127.0.0.1:5173 \
+  --url http://localhost:5173 \
   --tab "Basic" \
   --keys "u s 1234 Enter" \
-  --out /Users/jchilders/work/jchilders/citadel_cli/test-results/screenshots/citadel-basic-user-show.png \
+  --out test-results/screenshots/citadel-basic-user-show.png \
   --clip-citadel
 ```
+
+Use `localhost`, not `127.0.0.1` — the Vite dev server binds IPv6 (`::1`)
+only, so `127.0.0.1` is refused. Read the actual port from Vite's startup
+output; it increments past 5173 when that port is busy.
 
 3. Verify output file exists and report its absolute path.
 
@@ -41,14 +45,19 @@ node skills/citadel-browser-screenshots/scripts/capture_citadel_screenshot.mjs \
 
 Use key tokens for deterministic timing:
 
-- `Enter`, `Escape`, `Tab`, arrow keys
+- `Enter`, `Escape`, `Tab`, `Space`, arrow keys
 - `wait:<ms>` pauses between interactions (example: `wait:500`)
+
+Tokens are typed back-to-back with no separator, so commands with multiple
+arguments need an explicit `Space` token between argument values:
+`"loc s demo.theme Space dark Enter"`.
 
 ## Command Sequences
 
 Read `references/citadel_sequences.md` for known-good sequences per demo tab:
 
 - Basic
+- Page Control
 - Local Full-Stack
 - DevOps
 - Runtime Config

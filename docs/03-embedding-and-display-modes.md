@@ -9,7 +9,7 @@ You can also toggle whether the output pane is shown.
 
 ## Panel mode
 
-Panel mode is the default. This shows Citadel in an initiially hidden slide-up panel.
+Panel mode is the default. This shows Citadel in an initially hidden slide-up panel.
 
 ```tsx
 import { Citadel, command, createCommandRegistry, text } from 'citadel_cli';

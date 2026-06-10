@@ -69,6 +69,25 @@ A path is a sequence of literal words.
 
 Use short, specific words. Auto-expansion works best when sibling commands diverge early.
 
+When an argument can only take a few known values, model those values as
+command words instead of a free-text argument so they participate in
+expansion:
+
+```tsx
+// Three keystrokes: u f a
+command('users.filter.admin')
+  .describe('Show only admins')
+  .handle(async () => text('Filtered to admins'));
+
+// Versus making the user type "admin" out by hand:
+command('users.filter')
+  .arg('role', (arg) => arg.describe('One of: admin, editor, viewer'))
+  .handle(async ({ namedArgs }) => text(`Filtered to ${namedArgs.role}`));
+```
+
+Reserve `.arg()` for genuinely free-form values such as IDs, names, and
+messages.
+
 ## How users enter commands
 
 Users usually do not type the full command text.

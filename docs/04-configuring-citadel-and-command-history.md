@@ -61,7 +61,7 @@ export function ConfiguredCitadelExample() {
 | `fontFamily` | Main font family. | `'monospace'` |
 | `fontSize` | Base UI font size. | `'0.875rem'` |
 | `outputFontSize` | Output text font size override. | `'0.875rem'` |
-| `initialHeight` | Starting height for the panel. | `'50vh'` |
+| `initialHeight` | Starting height for the panel or inline container. | `'50vh'` |
 | `minHeight` | Minimum height. | `'200'` |
 | `maxHeight` | Maximum height. | `'80vh'` |
 | `cursorType` | Cursor style: `blink`, `spin`, `solid`, or `bbs`. | `'blink'` |

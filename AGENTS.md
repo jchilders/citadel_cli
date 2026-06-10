@@ -34,8 +34,10 @@ older Node and fails with "not allowed in NODE_OPTIONS" (exit code 9).
 `package.json` `engines` says `>=20`, but that applies to consumers, not
 development.
 
-**Git hooks:** a pre-commit hook runs the full test suite (~10–15s), and a
-pre-push hook runs the test suite plus the library build (~30–45s).
+**Git hooks:** `./scripts/install-git-hooks.sh` installs a pre-push hook that
+runs the full test suite plus the library build (~30–45s), and a
+pre-merge-commit hook that runs the same checks when merging into `main`.
+There is no pre-commit hook — plain commits are instant.
 
 ## Releasing
 

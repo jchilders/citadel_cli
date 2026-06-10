@@ -13,7 +13,7 @@ const isProduction = import.meta.env.PROD;
  * @property cursorSpeed - The speed of cursor animation in milliseconds. Default varies by cursor type:
  *                        blink: 530ms, spin/bbs: 120ms, solid: N/A
  * 
- * @property cursorType - The type of cursor animation to display. Can be one of 'blink', 'spin', 'solid', or 'bbs'. Default: 'bbs'.
+ * @property cursorType - The type of cursor animation to display. Can be one of 'blink', 'spin', 'solid', or 'bbs'. Default: 'blink'.
  * 
  * @property includeHelpCommand - When true, automatically adds a 'help' command that displays all available commands.
  *                               When false, no help command will be shown. Default: true.
