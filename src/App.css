@@ -445,6 +445,29 @@ body {
   color: oklch(25% 0.02 264.5);
 }
 
+.demo-github-link {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 30;
+  display: inline-flex;
+  padding: 0.4rem;
+  color: oklch(55.1% 0.023 264.4);
+  transition: color 120ms ease;
+}
+
+.demo-github-link:hover {
+  color: oklch(92.8% 0.006 264.5);
+}
+
+.demo-page[data-theme='light'] .demo-github-link {
+  color: oklch(55% 0.02 264.4);
+}
+
+.demo-page[data-theme='light'] .demo-github-link:hover {
+  color: oklch(22% 0.03 264.5);
+}
+
 .demo-footer-note {
   margin-top: 2rem;
   text-align: center;
