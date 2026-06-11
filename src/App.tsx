@@ -103,6 +103,26 @@ function App() {
     }
   }, [selectedExample]);
 
+  // When the Runtime Config tab switches Citadel to inline mode, the console
+  // mounts at the bottom of a page that just grew taller than the viewport —
+  // scroll it into view so its input and command chips aren't below the fold.
+  const runtimeDisplayMode = runtimeDemo.config.displayMode;
+  useEffect(() => {
+    if (selectedExample !== 'runtime' || runtimeDisplayMode !== 'inline') {
+      return;
+    }
+
+    // The custom element mounts and sizes itself asynchronously; give it a
+    // beat before scrolling.
+    const timer = setTimeout(() => {
+      document.querySelector('citadel-element')?.scrollIntoView?.({
+        block: 'end',
+        behavior: 'smooth',
+      });
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [selectedExample, runtimeDisplayMode]);
+
   const activeBaseRegistry = useMemo(() => {
     if (selectedExample === 'devops') {
       return devopsRegistry;
