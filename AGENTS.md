@@ -20,6 +20,9 @@ npm run test:e2e     # Playwright end-to-end tests
 npm run test:e2e:ui  # Playwright with interactive UI
 npm run coverage     # Vitest with coverage report
 npm run verify:pack  # Verify dist/ package artifacts (CI runs this)
+npm run docs:dev     # VitePress dev server for docs/
+npm run docs:build   # Build docs site → docs/.vitepress/dist
+npm run docs:preview # Serve the built docs site locally
 npm run metrics:*    # Build/runtime metrics collection (see scripts/metrics/)
 ```
 

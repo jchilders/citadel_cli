@@ -59,6 +59,10 @@ Shadow DOM, fully isolated from your app.
 
 ## Documentation
 
+**[Read the docs →](https://jchilders.github.io/citadel_cli/docs/)**
+
+Or browse the markdown sources directly:
+
 - [`docs/README.md`](docs/README.md) — full guide
 - [`docs/01-installing-citadel-in-an-existing-react-app.md`](docs/01-installing-citadel-in-an-existing-react-app.md) — fastest setup
 - [`docs/02-defining-commands.md`](docs/02-defining-commands.md) — command DSL

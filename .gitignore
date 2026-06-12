@@ -39,3 +39,7 @@ coverage/
 test-results/
 playwright-report/
 dist-demo
+
+# VitePress docs build
+docs/.vitepress/dist
+docs/.vitepress/cache

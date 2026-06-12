@@ -1,4 +1,4 @@
-name: Deploy Demo to GitHub Pages
+name: Deploy Demo and Docs to GitHub Pages
 
 on:
   push:
@@ -34,6 +34,12 @@ jobs:
 
       - name: Build demo app
         run: npm run build:demo
+
+      - name: Build docs site
+        run: npm run docs:build
+
+      - name: Merge docs into site
+        run: cp -r docs/.vitepress/dist dist-demo/docs
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

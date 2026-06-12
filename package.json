@@ -44,7 +44,10 @@
     "metrics:compare": "node scripts/metrics/compare-metrics.mjs",
     "metrics:all": "node scripts/metrics/run-all-metrics.mjs",
     "metrics:report": "node scripts/metrics/run-all-metrics.mjs --skip-build --skip-runtime",
-    "build:demo": "vite build --config vite.demo.config.ts"
+    "build:demo": "vite build --config vite.demo.config.ts",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "exports": {
     ".": {
@@ -85,6 +88,7 @@
     "typescript-eslint": "^8.11.0",
     "vite": "^5.1.5",
     "vite-plugin-dts": "^4.5.0",
+    "vitepress": "^1.6.4",
     "vitest": "^2.1.6"
   }
 }
