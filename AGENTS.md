@@ -136,9 +136,9 @@ The dev-server demo has five tabs, each backed by a registry in
 `src/examples/`:
 
 - **Basic** (`basicCommands.ts`) — result types, error handling, media output
-- **Page Control** (`pageControlCommands.ts` + `pageControlDemo.ts`) — commands that drive the demo page itself; renders Citadel **inline** next to a live table
 - **Local Full-Stack** (`localDevCommands.ts`) — dev-overlay story; the `localstorage.*` commands operate on real browser state
 - **DevOps** (`devopsCommands.ts`) — internal-tools story, simulated data
+- **Spreadsheet** (`spreadsheetCommands.ts` + `spreadsheetDemo.ts`) — table-driving commands (`sort.*`, `filter.*`, `reset`) operating on a live team table; renders Citadel **inline** next to it with the output pane hidden (the table is the feedback)
 - **Runtime Config** (`runtimeConfigCommands.ts` + `runtimeConfigDemo.ts`) — commands that reconfigure Citadel live
 
 Pattern: examples that only return data are plain registry factories. Examples
@@ -174,4 +174,4 @@ Gotchas:
   need an explicit `Space` token between argument values
   (e.g. `"loc s demo.theme Space dark Enter"`).
 - Omit `--clip-citadel` to capture the whole page (e.g. to verify on-page
-  effects like the Page Control table).
+  effects like the Spreadsheet table).

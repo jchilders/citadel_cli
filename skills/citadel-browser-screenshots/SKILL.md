@@ -91,9 +91,9 @@ pane.
 Read `references/citadel_sequences.md` for known-good sequences per demo tab:
 
 - Basic
-- Page Control
 - Local Full-Stack
 - DevOps
+- Spreadsheet
 - Runtime Config
 
 Load only the sequence(s) needed for the current screenshot task.

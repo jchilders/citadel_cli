@@ -6,71 +6,102 @@ import { createLocalDevCommandRegistry } from './examples/localDevCommands';
 import { defaultConfig } from './components/Citadel/config/defaults';
 import { CitadelConfig } from './components/Citadel/config/types';
 import { useRuntimeConfigDemo } from './examples/runtimeConfigDemo';
-import { usePageControlDemo } from './examples/pageControlDemo';
+import { useSpreadsheetDemo } from './examples/spreadsheetDemo';
 import './App.css';
 
-type ExampleId = 'basic' | 'pagecontrol' | 'localdev' | 'devops' | 'runtime';
+type ExampleId = 'basic' | 'localdev' | 'devops' | 'spreadsheet' | 'runtime';
+
+type PageTheme = 'dark' | 'light';
+
+const LIGHT_SCHEME_QUERY = '(prefers-color-scheme: light)';
+
+const getPreferredTheme = (): PageTheme =>
+  typeof window !== 'undefined' && window.matchMedia?.(LIGHT_SCHEME_QUERY).matches
+    ? 'light'
+    : 'dark';
+
+// The demo page follows the OS color-scheme preference.
+const usePreferredTheme = (): PageTheme => {
+  const [theme, setTheme] = useState<PageTheme>(getPreferredTheme);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia?.(LIGHT_SCHEME_QUERY);
+    if (!mediaQuery?.addEventListener) {
+      return;
+    }
+
+    const onChange = (event: MediaQueryListEvent) => {
+      setTheme(event.matches ? 'light' : 'dark');
+    };
+    mediaQuery.addEventListener('change', onChange);
+    return () => mediaQuery.removeEventListener('change', onChange);
+  }, []);
+
+  return theme;
+};
 
 const EXAMPLE_STORAGE_KEY = 'citadel-demo-example';
 const EXAMPLE_LABELS: Record<ExampleId, string> = {
   basic: 'Basic',
-  pagecontrol: 'Page Control',
   localdev: 'Local Full-Stack',
   devops: 'DevOps',
+  spreadsheet: 'Spreadsheet',
   runtime: 'Runtime Config',
 };
 const EXAMPLE_DESCRIPTIONS: Record<ExampleId, string> = {
   basic: 'A broad starter setup with user operations, error handling, and media output.',
-  pagecontrol: 'Commands that drive this page itself — filter the team directory, flip the theme, pop a toast.',
+  spreadsheet: 'Commands that drive the team directory on this page — sort it, filter it, reset it. Notice that this tab is configured with the output pane hidden: the table itself is the feedback.',
   localdev: 'A local development setup for API checks, quick DB queries, seeding, and full-stack log inspection.',
   devops: 'An operations-flavored setup focused on deploy, logs, metrics, and infrastructure actions.',
   runtime: 'A live configuration setup that changes Citadel behavior while you use it.',
 };
 const EXAMPLE_HINTS: Record<ExampleId, string> = {
   basic: 'Great first stop to understand command structure and result types.',
-  pagecontrol: 'This is the core use case: Citadel as a keyboard-driven control surface for your own app state.',
+  spreadsheet: 'This is the core use case: Citadel as a keyboard-driven control surface for your own app state.',
   localdev: 'The dev-overlay story: ship this in development builds as a quake-style debug console.',
   devops: 'The internal-tools story: operational commands a support or ops team runs all day.',
   runtime: 'Shows Citadel acting as a control surface, not just a command runner.',
 };
 const EXAMPLE_TRY_COMMAND: Record<ExampleId, string> = {
   basic: 'user.show 1234',
-  pagecontrol: 'users.filter.admin',
+  spreadsheet: 'filter.admin',
   localdev: 'localstorage.list',
   devops: 'monitor.metrics',
   runtime: 'display.mode.inline',
 };
 const EXAMPLE_TRY_KEYS: Record<ExampleId, string> = {
   basic: 'u s 1234',
-  pagecontrol: 'u f a',
+  spreadsheet: 'f a',
   localdev: 'loc l',
   devops: 'm m',
   runtime: 'd m i',
 };
 const EXAMPLE_TRY_EXPLANATION: Record<ExampleId, string> = {
   basic: 'Shows a single user result.',
-  pagecontrol: 'Filters the team table on this page. Then try users.sort.name (u s n), theme.light (t l), or notify (n hello).',
+  spreadsheet: 'Filters the team table on this page. Then try sort.name.desc (s n d) or reset (r).',
   localdev: 'Lists your browser’s real localStorage — these commands run against live page state.',
   devops: 'Shows a live-style metrics payload.',
   runtime: 'Switches Citadel into inline mode in the page.',
 };
 const EXAMPLE_SOURCE_URL: Record<ExampleId, string> = {
   basic: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/basicCommands.ts',
-  pagecontrol: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/pageControlCommands.ts',
+  spreadsheet: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/spreadsheetCommands.ts',
   localdev: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/localDevCommands.ts',
   devops: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/devopsCommands.ts',
   runtime: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/runtimeConfigDemo.ts',
 };
 
-const VALID_EXAMPLE_IDS: ExampleId[] = ['basic', 'pagecontrol', 'localdev', 'devops', 'runtime'];
+const VALID_EXAMPLE_IDS: ExampleId[] = ['basic', 'localdev', 'devops', 'spreadsheet', 'runtime'];
 
-// The page-control tab embeds Citadel inline next to the team table so both
-// stay visible while commands run.
-const PAGE_CONTROL_CONFIG: CitadelConfig = {
+// The spreadsheet tab embeds Citadel inline next to the team table so both
+// stay visible while commands run. The output pane is hidden — the table
+// itself shows what each command did.
+const SPREADSHEET_CONFIG: CitadelConfig = {
   ...defaultConfig,
   displayMode: 'inline',
-  initialHeight: '340px',
-  maxHeight: '340px',
+  showOutputPane: false,
+  initialHeight: '120px',
+  maxHeight: '120px',
 };
 
 const isExampleId = (value: string): value is ExampleId =>
@@ -95,7 +126,8 @@ function App() {
   const localDevRegistry = useMemo(() => createLocalDevCommandRegistry(), []);
   const devopsRegistry = useMemo(() => createDevOpsCommandRegistry(), []);
   const runtimeDemo = useRuntimeConfigDemo();
-  const pageControlDemo = usePageControlDemo();
+  const spreadsheetDemo = useSpreadsheetDemo();
+  const theme = usePreferredTheme();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -142,7 +174,7 @@ function App() {
   const activeConfig = selectedExample === 'runtime' ? runtimeDemo.config : defaultConfig;
 
   return (
-    <div className="demo-page" data-theme={pageControlDemo.theme}>
+    <div className="demo-page" data-theme={theme}>
       <a
         className="demo-github-link"
         href="https://github.com/jchilders/citadel_cli"
@@ -219,7 +251,7 @@ function App() {
                 <span className="demo-try-prefix">&gt;</span> Try it now
               </p>
               <p className="demo-try-copy">
-                {selectedExample === 'pagecontrol' ? (
+                {selectedExample === 'spreadsheet' ? (
                   <>Click the console below, then type </>
                 ) : (
                   <>Press <kbd>.</kbd> to open Citadel, then type </>
@@ -238,15 +270,18 @@ function App() {
               </p>
             </div>
 
-            {selectedExample === 'pagecontrol' && (
-              <div className="demo-pagecontrol-layout">
+            {selectedExample === 'spreadsheet' && (
+              <div className="demo-spreadsheet-layout">
                 <div className="demo-widget">
                   <div className="demo-widget-header">
                     <p className="demo-widget-title">Team directory</p>
                     <p className="demo-widget-meta">
-                      {pageControlDemo.users.length} of {pageControlDemo.totalUsers} shown
-                      {pageControlDemo.roleFilter && ` · role: ${pageControlDemo.roleFilter}`}
-                      {pageControlDemo.sortField && ` · sorted by ${pageControlDemo.sortField}`}
+                      {spreadsheetDemo.users.length} of {spreadsheetDemo.totalUsers} shown
+                      {spreadsheetDemo.roleFilter && ` · role: ${spreadsheetDemo.roleFilter}`}
+                      {spreadsheetDemo.sortField &&
+                        ` · sorted by ${spreadsheetDemo.sortField} ${
+                          spreadsheetDemo.sortDirection === 'desc' ? '↓' : '↑'
+                        }`}
                     </p>
                   </div>
                   <table className="demo-user-table">
@@ -258,7 +293,7 @@ function App() {
                       </tr>
                     </thead>
                     <tbody>
-                      {pageControlDemo.users.map((user) => (
+                      {spreadsheetDemo.users.map((user) => (
                         <tr key={user.id}>
                           <td>{user.name}</td>
                           <td>{user.role}</td>
@@ -274,9 +309,9 @@ function App() {
                 </div>
                 <div className="demo-inline-host">
                   <Citadel
-                    key="pagecontrol"
-                    commandRegistry={pageControlDemo.commandRegistry}
-                    config={PAGE_CONTROL_CONFIG}
+                    key="spreadsheet"
+                    commandRegistry={spreadsheetDemo.commandRegistry}
+                    config={SPREADSHEET_CONFIG}
                   />
                 </div>
               </div>
@@ -284,17 +319,11 @@ function App() {
           </section>
         </main>
 
-        {pageControlDemo.toast && (
-          <div className="demo-toast" role="status">
-            {pageControlDemo.toast}
-          </div>
-        )}
-
         <p className="demo-footer-note">
           citadel_cli - a keyboard-driven command surface for React apps
         </p>
 
-        {selectedExample !== 'pagecontrol' && (
+        {selectedExample !== 'spreadsheet' && (
           <Citadel
             key={selectedExample}
             commandRegistry={activeBaseRegistry}

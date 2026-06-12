@@ -140,7 +140,7 @@ export const useCommandParser = () => {
       if (parsedInput.isQuoted) {
         if (parsedInput.isComplete) { // `"hello"`
           if (!(nextExpectedSegment instanceof ArgumentSegment)) return;
-          nextExpectedSegment.value = newValue.trim() || '';
+          nextExpectedSegment.value = stripSurroundingQuotes(newValue);
           Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", nextExpectedSegment);
           segmentStack.push(nextExpectedSegment);
           actions.setCurrentInput('');
@@ -151,10 +151,10 @@ export const useCommandParser = () => {
           // User is still entering an argument. Do nothing
           return;
         }
-      } else { // unquoted input
-        if (parsedInput.isComplete) { // `hello `
+      } else { // unquoted input, or a quoted argument whose closing quote was just typed
+        if (parsedInput.isComplete) { // `hello ` or `"hello"`
           if (!(nextExpectedSegment instanceof ArgumentSegment)) return;
-          nextExpectedSegment.value = newValue.trim() || '';
+          nextExpectedSegment.value = stripSurroundingQuotes(newValue);
           Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", nextExpectedSegment);
           segmentStack.push(nextExpectedSegment);
           actions.setCurrentInput('');
@@ -260,7 +260,7 @@ export const useCommandParser = () => {
         if (inputState === 'entering_argument' || (isEnteringArg && currentInput.trim())) {
           const nextSegment = getNextExpectedSegment();
           if (nextSegment instanceof ArgumentSegment) {
-            nextSegment.value = currentInput;
+            nextSegment.value = stripSurroundingQuotes(currentInput);
             Logger.debug("[handleKeyDown][Enter]['entering_argument'] pushing: ", nextSegment);
             segmentStack.push(nextSegment);
           }
@@ -357,6 +357,20 @@ export const useCommandParser = () => {
   };
 }
 
+
+/**
+ * Returns the trimmed input with a matching pair of surrounding single or
+ * double quotes removed, so quoted argument values are stored without their
+ * delimiters (`"Hello, world"` → `Hello, world`).
+ */
+export function stripSurroundingQuotes(input: string): string {
+  const trimmed = input.trim();
+  const first = trimmed[0];
+  if ((first === '"' || first === "'") && trimmed.length >= 2 && trimmed.endsWith(first)) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
 
 export interface ParsedInput {
   words: string[];

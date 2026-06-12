@@ -8,23 +8,23 @@ Use these `--tab` + `--keys` combinations with the capture script.
   - `--tab "Basic"`
   - `--keys "u s 1234 Enter"`
 
-## Page Control
+## Spreadsheet
+
+This tab hides Citadel's output pane (`showOutputPane: false`), so command
+feedback is the team table itself — omit `--clip-citadel` and capture the
+whole page to see the effect.
 
 - Filter the on-page team table by role:
-  - `--tab "Page Control"`
-  - `--keys "u f a Enter"`
+  - `--tab "Spreadsheet"`
+  - `--keys "f a Enter"`
 
-- Sort the team table by name:
-  - `--tab "Page Control"`
-  - `--keys "u s n Enter"`
+- Sort the team table by name, descending:
+  - `--tab "Spreadsheet"`
+  - `--keys "s n d Enter"`
 
-- Flip the demo page to the light theme:
-  - `--tab "Page Control"`
-  - `--keys "t l Enter"`
-
-- Pop a toast notification:
-  - `--tab "Page Control"`
-  - `--keys "n \"Build finished\" Enter"`
+- Clear the table filter and sort:
+  - `--tab "Spreadsheet"`
+  - `--keys "r Enter"`
 
 ## Local Full-Stack
 

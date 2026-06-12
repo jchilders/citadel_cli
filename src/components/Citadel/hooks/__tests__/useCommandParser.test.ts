@@ -592,6 +592,59 @@ describe('useCommandParser', () => {
       const args = mockSegmentStack.arguments;
       expect(args[args.length - 1].value).toBe('1234');
     });
+
+    it('strips double quotes from a quoted argument', () => {
+      const { result } = renderHook(() => useCommandParser());
+      setCommandPath('user', 'comment');
+
+      act(() => {
+        result.current.handleInputChange('"Hello, world"', mockActions);
+      });
+
+      const args = mockSegmentStack.arguments;
+      expect(args[args.length - 1].value).toBe('Hello, world');
+    });
+
+    it('strips single quotes from a quoted argument', () => {
+      const { result } = renderHook(() => useCommandParser());
+      setCommandPath('user', 'comment');
+
+      act(() => {
+        result.current.handleInputChange("'Hello, world'", mockActions);
+      });
+
+      const args = mockSegmentStack.arguments;
+      expect(args[args.length - 1].value).toBe('Hello, world');
+    });
+  });
+
+  describe('quoted argument values on Enter', () => {
+    it('stores the argument without its surrounding quotes', async () => {
+      const mockNode = createMockCommand('test1', {});
+      vi.spyOn(mockCommandRegistry, 'getCommand').mockReturnValue(mockNode);
+
+      const stateWithArg = {
+        ...mockState,
+        currentNode: mockNode,
+        currentInput: '"Hello, world"',
+        isEnteringArg: true,
+        commandStack: ['test1'],
+      };
+
+      const { result } = renderHook(() => useCommandParser());
+      setCommandPath('test1');
+
+      await act(async () => {
+        await result.current.handleKeyDown(createMockKeyboardEvent('Enter'), stateWithArg, mockActions);
+      });
+
+      expect(mockActions.executeCommand).toHaveBeenCalled();
+      // The stack is cleared after execution, so inspect what was pushed
+      const pushedArg = vi.mocked(mockSegmentStack.push).mock.calls
+        .map(([segment]) => segment)
+        .find((segment): segment is ArgumentSegment => segment instanceof ArgumentSegment);
+      expect(pushedArg?.value).toBe('Hello, world');
+    });
   });
 });
 

@@ -207,7 +207,7 @@ body {
   font-size: 0.74rem;
 }
 
-.demo-pagecontrol-layout {
+.demo-spreadsheet-layout {
   display: grid;
   gap: 1.25rem;
   align-items: start;
@@ -215,7 +215,7 @@ body {
 }
 
 @media (min-width: 900px) {
-  .demo-pagecontrol-layout {
+  .demo-spreadsheet-layout {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
   }
 }
@@ -302,34 +302,6 @@ body {
 .demo-status-offline {
   color: oklch(60% 0.02 264);
   background: color-mix(in oklch, oklch(60% 0.02 264) 14%, transparent);
-}
-
-.demo-toast {
-  position: fixed;
-  top: 1.25rem;
-  left: 50%;
-  translate: -50% 0;
-  z-index: 50;
-  max-width: 22rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid color-mix(in oklch, oklch(84.5% 0.143 164.9) 45%, transparent);
-  border-radius: 0.6rem;
-  background: color-mix(in oklch, oklch(20.8% 0.042 265.8) 92%, oklch(84.5% 0.143 164.9));
-  color: oklch(92.8% 0.006 264.5);
-  font-size: 0.85rem;
-  box-shadow: 0 12px 36px color-mix(in oklch, black 40%, transparent);
-  animation: demo-toast-in 180ms ease-out;
-}
-
-@keyframes demo-toast-in {
-  from {
-    opacity: 0;
-    transform: translateY(-0.5rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .demo-page[data-theme='light'] {
@@ -437,12 +409,6 @@ body {
 .demo-page[data-theme='light'] .demo-status-away {
   color: oklch(55% 0.12 85);
   background: color-mix(in oklch, oklch(55% 0.12 85) 12%, transparent);
-}
-
-.demo-page[data-theme='light'] .demo-toast {
-  border-color: color-mix(in oklch, oklch(45% 0.13 164.9) 45%, transparent);
-  background: white;
-  color: oklch(25% 0.02 264.5);
 }
 
 .demo-github-link {

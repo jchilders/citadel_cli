@@ -116,7 +116,7 @@ export function createBasicCommandRegistry(): CommandRegistry {
 
     command('cowsay')
       .describe('Make a cow say something')
-      .arg('message', (arg) => arg.describe('What should the cow say?'))
+      .arg('message', (arg) => arg.describe('What should the cow say? Use quotes for multiple words.'))
       .handle(async ({ namedArgs }) => {
         const message = namedArgs.message || 'Moo!'
         const bubbleWidth = message.length + 2
