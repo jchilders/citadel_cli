@@ -411,26 +411,44 @@ body {
   background: color-mix(in oklch, oklch(55% 0.12 85) 12%, transparent);
 }
 
-.demo-github-link {
+.demo-corner-links {
   position: fixed;
   top: 1rem;
   right: 1rem;
   z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.demo-github-link {
   display: inline-flex;
   padding: 0.4rem;
   color: oklch(55.1% 0.023 264.4);
   transition: color 120ms ease;
 }
 
-.demo-github-link:hover {
+.demo-docs-link {
+  padding: 0.4rem 0.5rem;
+  color: oklch(55.1% 0.023 264.4);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+
+.demo-github-link:hover,
+.demo-docs-link:hover {
   color: oklch(92.8% 0.006 264.5);
 }
 
-.demo-page[data-theme='light'] .demo-github-link {
+.demo-page[data-theme='light'] .demo-github-link,
+.demo-page[data-theme='light'] .demo-docs-link {
   color: oklch(55% 0.02 264.4);
 }
 
-.demo-page[data-theme='light'] .demo-github-link:hover {
+.demo-page[data-theme='light'] .demo-github-link:hover,
+.demo-page[data-theme='light'] .demo-docs-link:hover {
   color: oklch(22% 0.03 264.5);
 }
 
