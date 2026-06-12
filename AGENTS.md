@@ -83,6 +83,12 @@ Build a registry with `createCommandRegistry(definitions)` and pass it to
 legacy `CommandRegistry#addCommand` API still works but is not the preferred
 path for new commands.
 
+Trailing arguments can be marked optional, with an optional declared default
+(e.g. `.arg('count', (arg) => arg.describe('…').optional({ default: '10' }))`);
+the command then executes without them and the handler receives the default
+(or `undefined` if none was declared). Required arguments may not follow
+optional ones.
+
 Command words auto-expand from the shortest unambiguous prefix, so prefer
 sibling command words with distinct first letters (e.g. `users.filter` /
 `users.sort` / `users.reset` → `u f` / `u s` / `u r`). Enum-like values are

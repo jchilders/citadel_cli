@@ -3,6 +3,7 @@ import { useCitadelCommands, useCitadelConfig, useSegmentStack } from '../config
 import { Logger } from '../utils/logger';
 import { resolveTypography } from '../utils/typography';
 import { getCommandPrefixLengths } from '../types/command-prefix';
+import { ArgumentSegment } from '../types/command-registry';
 
 interface AvailableCommandsProps {
   currentInput?: string;
@@ -70,7 +71,11 @@ export const AvailableCommands: React.FC<AvailableCommandsProps> = ({ currentInp
           </div>
         ) : filteredCommandSegments.length > 0 ? (
           <>
-            <span className="citadel-available-next-arg">{nextSegment.name}</span>
+            <span className="citadel-available-next-arg">
+              {(nextSegment as ArgumentSegment).optional
+                ? `[${nextSegment.name}]`
+                : nextSegment.name}
+            </span>
             {nextSegment.description && (
               <span className="citadel-available-next-desc">- {nextSegment.description}</span>
             )}

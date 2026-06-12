@@ -194,6 +194,33 @@ describe('Citadel', () => {
     });
   });
 
+  it('keeps the panel open when config changes without a display-mode change', async () => {
+    let rerender: (ui: React.ReactElement) => void;
+    await act(async () => {
+      ({ rerender } = render(<Citadel config={{ cursorType: 'blink' }} />));
+    });
+
+    // Open the panel
+    await act(async () => {
+      await user.keyboard(defaultConfig.showCitadelKey || '.');
+    });
+
+    const elementBefore = document.querySelector('citadel-element') as HTMLElement & { shadowRoot: ShadowRoot };
+    await waitFor(() => {
+      expect(elementBefore.shadowRoot.querySelector('[data-testid="citadel-command-input"]')).toBeTruthy();
+    });
+
+    // Reconfigure in place (same display mode)
+    await act(async () => {
+      rerender(<Citadel config={{ cursorType: 'bbs' }} />);
+    });
+
+    // Same custom element instance, and the panel is still open
+    const elementAfter = document.querySelector('citadel-element');
+    expect(elementAfter).toBe(elementBefore);
+    expect(elementBefore.shadowRoot.querySelector('[data-testid="citadel-command-input"]')).toBeTruthy();
+  });
+
   it('unmounts root and clears shadow content on disconnect', async () => {
     const element = new CitadelElement(new CommandRegistry());
     document.body.appendChild(element);

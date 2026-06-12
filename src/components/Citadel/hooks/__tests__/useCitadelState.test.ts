@@ -10,6 +10,7 @@ import {
   setupCitadelStateHook
 } from '../../../../__test-utils__/factories';
 import { TextCommandResult, ErrorCommandResult } from '../../types/command-results';
+import { ArgumentSegment, CommandNode, WordSegment } from '../../types/command-registry';
 import { useCommandHistory } from '../useCommandHistory';
 
 // Mock hooks
@@ -135,6 +136,30 @@ describe('useCitadelState', () => {
       });
 
       expect(hook.result.current.state.output[0].result).toBe(mockResult);
+    });
+
+    it('fills declared defaults for omitted trailing optional arguments', async () => {
+      const { hook } = setupCitadelStateHook();
+      const handler = vi.fn(async () => new TextCommandResult('ok'));
+      const node = new CommandNode(
+        [
+          new WordSegment('seed'),
+          new ArgumentSegment('userId', 'User ID'),
+          new ArgumentSegment('count', 'Count', undefined, undefined, true, '10'),
+        ],
+        'Seed users',
+        handler
+      );
+      vi.mocked(mockCommands.getCommand).mockReturnValue(node);
+
+      mockSegmentStack.push(new WordSegment('seed'));
+      mockSegmentStack.push(new ArgumentSegment('userId', 'User ID', '42'));
+
+      await act(async () => {
+        await hook.result.current.actions.executeCommand();
+      });
+
+      expect(handler).toHaveBeenCalledWith(['42', '10']);
     });
 
     it('should handle executeCommand action failure', async () => {

@@ -1,4 +1,4 @@
-import { CommandRegistry, CommandSegment } from './command-registry';
+import { ArgumentSegment, CommandRegistry, CommandSegment } from './command-registry';
 import {
   BooleanCommandResult,
   CommandResult,
@@ -26,8 +26,20 @@ export interface CommandDefinition<ArgName extends string = string> {
   handler: DslCommandHandler<ArgName>;
 }
 
+export interface OptionalArgumentOptions {
+  /** Value the handler receives when the argument is omitted. */
+  default?: string;
+}
+
 export interface ArgumentBuilderApi {
   describe(description: string): this;
+  /**
+   * Marks the argument as optional: the command can be executed without it.
+   * When omitted, the handler receives `options.default` if provided, or
+   * `undefined` otherwise. Optional arguments must come after all required
+   * ones.
+   */
+  optional(options?: OptionalArgumentOptions): this;
 }
 
 export interface CommandBuilderApi<ArgName extends string = never> {
@@ -49,14 +61,30 @@ interface MutableCommandDefinition {
 
 class ArgumentBuilder implements ArgumentBuilderApi {
   private _description?: string;
+  private _optional = false;
+  private _defaultValue?: string;
 
   describe(description: string): this {
     this._description = description;
     return this;
   }
 
+  optional(options?: OptionalArgumentOptions): this {
+    this._optional = true;
+    this._defaultValue = options?.default;
+    return this;
+  }
+
   get description(): string | undefined {
     return this._description;
+  }
+
+  get isOptional(): boolean {
+    return this._optional;
+  }
+
+  get defaultValue(): string | undefined {
+    return this._defaultValue;
   }
 }
 
@@ -88,10 +116,23 @@ class CommandBuilder<ArgName extends string = never> implements CommandBuilderAp
     const argumentBuilder = new ArgumentBuilder();
     configure?.(argumentBuilder);
 
+    const lastSegment = this.state.segments[this.state.segments.length - 1];
+    if (
+      !argumentBuilder.isOptional &&
+      lastSegment?.type === 'argument' &&
+      (lastSegment as ArgumentSegment).optional
+    ) {
+      throw new Error(
+        `Invalid command "${this.state.path}": required argument "${name}" cannot follow an optional argument.`
+      );
+    }
+
     this.state.segments.push({
       type: 'argument',
       name,
       description: argumentBuilder.description,
+      optional: argumentBuilder.isOptional || undefined,
+      defaultValue: argumentBuilder.defaultValue,
     });
 
     return this as unknown as CommandBuilder<ArgName | Name>;

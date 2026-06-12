@@ -115,6 +115,30 @@ Arguments can be quoted when they contain spaces. These examples show the fully 
 - `note add "Sprint retro" "Capture follow-up items"`
 - `note add 'Sprint retro' 'Capture follow-up items'`
 
+### Optional arguments
+
+Mark trailing arguments optional with `.optional()`. The command can then be
+executed without them. Declare a default and the handler receives it in place
+of the omitted value:
+
+```tsx
+command('seed.users')
+  .arg('count', (arg) =>
+    arg.describe('How many users to seed (default: 10)').optional({ default: '10' })
+  )
+  .handle(async ({ namedArgs }) => {
+    const count = parseInt(namedArgs.count ?? '10', 10);
+    return text(`Seeded ${count} users.`);
+  });
+```
+
+Without a declared default (`.optional()`), the handler receives `undefined`
+for the omitted argument and applies its own fallback.
+
+Optional arguments **must** come after all required ones — `.arg()` throws
+otherwise. Help output renders them in square brackets (`[count]`) instead of
+angle brackets (`<count>`).
+
 ## Handler context
 
 Each handler receives one object:
@@ -136,7 +160,7 @@ command('note.add')
 
 ## Result helpers
 
-Handlers should return one of Citadel's result types. These are what is used to determine what is shown in the output console when the handler is done executing. Each `handle` must return one of these:
+Handlers should return one of Citadel's result types. These are what is used to determine what is shown in the output console when the handler is done executing. Each `handle` **must** return one of these:
 
 - `text(value)`
 - `json(value)`

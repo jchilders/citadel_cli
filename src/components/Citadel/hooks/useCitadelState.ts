@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { CitadelState, CitadelActions, OutputItem } from '../types/state';
+import { ArgumentSegment } from '../types/command-registry';
 import { useCitadelConfig, useCitadelCommands, useCitadelStorage, useSegmentStack } from '../config/hooks';
 import { CommandResult, ErrorCommandResult } from '../types/command-results';
 import { useCommandHistory } from './useCommandHistory';
@@ -82,6 +83,17 @@ export const useCitadelState = () => {
         });
 
         const argVals = segmentStack.arguments.map(argSeg => argSeg.value || '');
+
+        // Fill in declared defaults for omitted trailing optional arguments.
+        const declaredArgs = command.segments.filter(
+          (seg): seg is ArgumentSegment => seg.type === 'argument'
+        );
+        for (let i = argVals.length; i < declaredArgs.length; i++) {
+          const { defaultValue } = declaredArgs[i];
+          if (defaultValue === undefined) break;
+          argVals.push(defaultValue);
+        }
+
         const result = await Promise.race([
           command.handler(argVals),
           timeoutPromise

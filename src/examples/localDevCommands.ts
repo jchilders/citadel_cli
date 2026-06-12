@@ -91,9 +91,13 @@ export function createLocalDevCommandRegistry(): CommandRegistry {
 
     command('seed.users')
       .describe('Seed local development users')
-      .arg('count', (arg) => arg.describe('How many users to seed (default: 10)'))
+      .arg('count', (arg) =>
+        arg.describe('How many users to seed (default: 10)').optional({ default: '10' })
+      )
       .handle(async ({ namedArgs }) => {
-        const count = Math.max(1, parseInt(namedArgs.count || '10', 10));
+        // namedArgs.count is filled with the declared default when omitted;
+        // the fallback only satisfies the string | undefined type.
+        const count = Math.max(1, parseInt(namedArgs.count ?? '10', 10));
         return text(`Seeded ${count} local users into the development database.`);
       }),
 

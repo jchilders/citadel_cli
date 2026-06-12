@@ -85,6 +85,51 @@ describe('command DSL', () => {
     expect(registry.getCommand(['status'])).toBeTruthy();
   });
 
+  it('marks arguments optional via the builder', () => {
+    const definition = command('seed.users')
+      .describe('Seed users')
+      .arg('count', (argument) => argument.describe('How many (default: 10)').optional())
+      .handle(async () => text('ok'));
+
+    expect(definition.segments).toEqual([
+      { type: 'word', name: 'seed' },
+      { type: 'word', name: 'users' },
+      {
+        type: 'argument',
+        name: 'count',
+        description: 'How many (default: 10)',
+        optional: true,
+      },
+    ]);
+  });
+
+  it('stores a declared default for an optional argument', () => {
+    const definition = command('seed.users')
+      .describe('Seed users')
+      .arg('count', (argument) => argument.optional({ default: '10' }))
+      .handle(async () => text('ok'));
+
+    expect(definition.segments[2]).toEqual({
+      type: 'argument',
+      name: 'count',
+      description: undefined,
+      optional: true,
+      defaultValue: '10',
+    });
+  });
+
+  it('rejects a required argument after an optional one', () => {
+    expect(() =>
+      command('report')
+        .describe('Generate a report')
+        .arg('format', (argument) => argument.optional())
+        .arg('destination')
+        .handle(async () => text('x'))
+    ).toThrow(
+      'Invalid command "report": required argument "destination" cannot follow an optional argument.'
+    );
+  });
+
   it('rejects invalid command paths', () => {
     expect(() => command('').describe('Invalid').handle(async () => text('x'))).toThrow(
       'Command path cannot be empty'

@@ -1,6 +1,10 @@
-import { CommandRegistry } from './command-registry';
+import { ArgumentSegment, CommandRegistry, CommandSegment } from './command-registry';
 import { formatCommandNameWithPrefix, getCommandPrefixLengths } from './command-prefix';
 import { TextCommandResult } from './command-results';
+
+// Required arguments render as <name>, optional ones as [name].
+const formatArgumentName = (segment: CommandSegment): string =>
+  (segment as ArgumentSegment).optional ? `[${segment.name}]` : `<${segment.name}>`;
 
 export const createHelpHandler = (cmdRegistry: CommandRegistry) => {
   return async function() {
@@ -22,13 +26,13 @@ export const createHelpHandler = (cmdRegistry: CommandRegistry) => {
       .map(command => {
         const rawCmdPath = command.segments.map(segment => {
           if (segment.type === 'argument') {
-            return `<${segment.name}>`;
+            return formatArgumentName(segment);
           }
           return segment.name;
         });
         const displayCmdPath = command.segments.map((segment, index) => {
           if (segment.type === 'argument') {
-            return `<${segment.name}>`;
+            return formatArgumentName(segment);
           }
           const path = command.segments
             .slice(0, index)
@@ -39,7 +43,7 @@ export const createHelpHandler = (cmdRegistry: CommandRegistry) => {
         const commandLine = `${displayCmdPath.join(' ')} - ${command.description}`;
         const argumentLines = command.segments
           .filter((segment) => segment.type === 'argument' && segment.description)
-          .map((segment) => `  <${segment.name}>: ${segment.description}`);
+          .map((segment) => `  ${formatArgumentName(segment)}: ${segment.description}`);
 
         return {
           commandLine,

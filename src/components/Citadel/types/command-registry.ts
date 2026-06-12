@@ -55,7 +55,11 @@ export class ArgumentSegment extends BaseSegment {
      name: string,
      description?: string,
      public value?: string,
-     public readonly valid?: () => boolean
+     public readonly valid?: () => boolean,
+     /** Optional arguments may be omitted when the command is executed. */
+     public readonly optional?: boolean,
+     /** Value passed to the handler when an optional argument is omitted. */
+     public readonly defaultValue?: string
    ) {
      super('argument', name, description);
    }
@@ -72,7 +76,9 @@ export const cloneCommandSegment = (segment: CommandSegment): CommandSegment => 
       argumentLike.name,
       argumentLike.description,
       argumentLike.value,
-      argumentLike.valid
+      argumentLike.valid,
+      argumentLike.optional,
+      argumentLike.defaultValue
     );
   }
 
@@ -327,8 +333,18 @@ export class CommandRegistry {
       .filter(command => command.segments.length > pathDepth)
       .map(command => {
         const segment = command.segments[pathDepth];
-        const SegmentClass = segment.type === 'argument' ? ArgumentSegment : WordSegment;
-        return new SegmentClass(segment.name, segment.description);
+        if (segment.type === 'argument') {
+          const argumentLike = segment as ArgumentSegment;
+          return new ArgumentSegment(
+            argumentLike.name,
+            argumentLike.description,
+            undefined,
+            undefined,
+            argumentLike.optional,
+            argumentLike.defaultValue
+          );
+        }
+        return new WordSegment(segment.name, segment.description);
       });
 
     // Deduplicate segments based on type and name

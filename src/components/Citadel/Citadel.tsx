@@ -41,12 +41,19 @@ export const Citadel: React.FC<CitadelProps> = ({
   const inlineHostStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
   const displayMode = config.displayMode ?? defaultConfig.displayMode ?? 'panel';
 
+  const elementRef = useRef<CitadelElement | null>(null);
+  // Latest props for the mount effect, so host changes don't have to wait for
+  // (or be triggered by) config/registry identity changes.
+  const configRef = useRef(config);
+  configRef.current = config;
+  const registryRef = useRef(resolvedRegistry);
+  registryRef.current = resolvedRegistry;
+
+  // Create the custom element only when its host changes. Config and registry
+  // updates are applied in place (below) so panel visibility, output history,
+  // and other internal state survive reconfiguration.
   useEffect(() => {
-    Logger.configure({
-      level: config.logLevel || defaultConfig.logLevel || LogLevel.ERROR,
-      prefix: '[Citadel]'
-    });
-    const citadelElement = new CitadelElement(resolvedRegistry, config);
+    const citadelElement = new CitadelElement(registryRef.current, configRef.current);
     const isInlineWithoutContainer = displayMode === 'inline' && !containerId;
     const container = isInlineWithoutContainer
       ? inlineHostRef.current
@@ -65,10 +72,20 @@ export const Citadel: React.FC<CitadelProps> = ({
       container.appendChild(citadelElement);
     }
 
+    elementRef.current = citadelElement;
     return () => {
+      elementRef.current = null;
       citadelElement.parentElement?.removeChild(citadelElement);
     };
-  }, [resolvedRegistry, containerId, config, displayMode]);
+  }, [containerId, displayMode]);
+
+  useEffect(() => {
+    Logger.configure({
+      level: config.logLevel || defaultConfig.logLevel || LogLevel.ERROR,
+      prefix: '[Citadel]'
+    });
+    elementRef.current?.update(resolvedRegistry, config);
+  }, [resolvedRegistry, config]);
 
   if (displayMode === 'inline' && !containerId) {
     return <div ref={inlineHostRef} style={inlineHostStyle} />;
@@ -122,7 +139,23 @@ export class CitadelElement extends HTMLElement {
 
     // Initialize React within shadow DOM
     this.root = createRoot(container);
-    this.root.render(
+    this.renderApp();
+  }
+
+  /**
+   * Applies a new config and/or registry by re-rendering the existing React
+   * root, preserving internal state (panel visibility, output history) that a
+   * full element remount would reset.
+   */
+  update(commandRegistry: CommandRegistry, config?: CitadelConfig) {
+    this.commandRegistry = commandRegistry;
+    this.config = config;
+    this.setAttribute('data-display-mode', this.config?.displayMode ?? 'panel');
+    this.renderApp();
+  }
+
+  private renderApp() {
+    this.root?.render(
       <CitadelConfigProvider config={this.config || defaultConfig} commandRegistry={this.commandRegistry}>
         <CitadelRoot />
       </CitadelConfigProvider>

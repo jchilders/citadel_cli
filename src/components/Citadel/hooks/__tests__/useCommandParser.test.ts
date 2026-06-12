@@ -234,6 +234,64 @@ describe('useCommandParser', () => {
       expect(mockActions.executeCommand).toHaveBeenCalled();
     });
 
+    it('executes a command whose trailing optional argument is omitted', async () => {
+      const mockNode = new CommandNode(
+        [
+          createMockSegment('word', 'test1'),
+          new ArgumentSegment('count', 'How many (default: 10)', undefined, undefined, true)
+        ],
+        'Seed users'
+      );
+
+      vi.spyOn(mockCommandRegistry, 'getCommand').mockReturnValue(mockNode);
+
+      const stateWithoutArg = {
+        ...mockState,
+        currentNode: mockNode,
+        currentInput: '',
+        isEnteringArg: true,
+        commandStack: ['test1'],
+      };
+
+      const { result } = renderHook(() => useCommandParser());
+      setCommandPath('test1');
+
+      await act(async () => {
+        await result.current.handleKeyDown(createMockKeyboardEvent('Enter'), stateWithoutArg, mockActions);
+      });
+
+      expect(mockActions.executeCommand).toHaveBeenCalled();
+    });
+
+    it('does not execute a command whose required argument is omitted', async () => {
+      const mockNode = new CommandNode(
+        [
+          createMockSegment('word', 'test1'),
+          createMockSegment('argument', 'userId', 'User ID')
+        ],
+        'Show user'
+      );
+
+      vi.spyOn(mockCommandRegistry, 'getCommand').mockReturnValue(mockNode);
+
+      const stateWithoutArg = {
+        ...mockState,
+        currentNode: mockNode,
+        currentInput: '',
+        isEnteringArg: true,
+        commandStack: ['test1'],
+      };
+
+      const { result } = renderHook(() => useCommandParser());
+      setCommandPath('test1');
+
+      await act(async () => {
+        await result.current.handleKeyDown(createMockKeyboardEvent('Enter'), stateWithoutArg, mockActions);
+      });
+
+      expect(mockActions.executeCommand).not.toHaveBeenCalled();
+    });
+
     it('should not complete command while quote is unclosed', async () => {
       const mockNode = createMockCommand('test1', { });
 

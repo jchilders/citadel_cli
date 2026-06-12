@@ -53,6 +53,24 @@ describe('createHelpHandler', () => {
     expect(lines).toContain('  <userId>: Enter user ID');
   });
 
+  it('renders optional arguments in square brackets', async () => {
+    const registry = new CommandRegistry();
+    registry.addCommand(
+      [
+        new WordSegment('seed'),
+        new ArgumentSegment('count', 'How many users to seed (default: 10)', undefined, undefined, true),
+      ],
+      'Seed local users'
+    );
+
+    const handler = createHelpHandler(registry);
+    const result = await handler();
+    const lines = result.text.split('\n');
+
+    expect(lines).toContain('[s]eed [count] - Seed local users');
+    expect(lines).toContain('  [count]: How many users to seed (default: 10)');
+  });
+
   it('returns fallback message when no commands exist', async () => {
     const registry = new CommandRegistry();
     const handler = createHelpHandler(registry);

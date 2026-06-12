@@ -274,10 +274,14 @@ export const useCommandParser = () => {
           return false;
         }
 
-        // Validate that all required arguments are provided
-        const requiredArgs = command.segments.filter(seg => seg.type === 'argument');
+        // Validate that all required arguments are provided. Arguments fill in
+        // order, so trailing optional ones may be omitted — their handlers
+        // receive undefined and apply defaults.
+        const requiredArgs = command.segments.filter(
+          seg => seg.type === 'argument' && !(seg as ArgumentSegment).optional
+        );
         const providedArgs = segmentStack.arguments;
-        
+
         if (requiredArgs.length > providedArgs.length) {
           // Missing required arguments - trigger invalid input animation
           return false;
