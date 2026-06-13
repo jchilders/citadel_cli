@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Citadel } from './index';
 import { createBasicCommandRegistry } from './examples/basicCommands.ts';
 import { createDevOpsCommandRegistry } from './examples/devopsCommands';
@@ -7,9 +7,11 @@ import { defaultConfig } from './components/Citadel/config/defaults';
 import { CitadelConfig } from './components/Citadel/config/types';
 import { useRuntimeConfigDemo } from './examples/runtimeConfigDemo';
 import { useSpreadsheetDemo } from './examples/spreadsheetDemo';
+import { useHackingSimDemo } from './examples/hackingSimDemo';
+import { useStarshipDemo } from './examples/starshipDemo';
 import './App.css';
 
-type ExampleId = 'basic' | 'localdev' | 'devops' | 'spreadsheet' | 'runtime';
+type ExampleId = 'basic' | 'localdev' | 'devops' | 'spreadsheet' | 'runtime' | 'hacking' | 'starship';
 
 type PageTheme = 'dark' | 'light';
 
@@ -47,6 +49,8 @@ const EXAMPLE_LABELS: Record<ExampleId, string> = {
   devops: 'DevOps',
   spreadsheet: 'Spreadsheet',
   runtime: 'Runtime Config',
+  hacking: 'Hacking Sim',
+  starship: 'Starship',
 };
 const EXAMPLE_DESCRIPTIONS: Record<ExampleId, string> = {
   basic: 'A broad starter setup with user operations, error handling, and media output.',
@@ -54,6 +58,8 @@ const EXAMPLE_DESCRIPTIONS: Record<ExampleId, string> = {
   localdev: 'A local development setup for API checks, quick DB queries, seeding, and full-stack log inspection.',
   devops: 'An operations-flavored setup focused on deploy, logs, metrics, and infrastructure actions.',
   runtime: 'A live configuration setup that changes Citadel behavior while you use it.',
+  hacking: 'A tiny hacking-sim game where the command set grows as you explore the network: scan to find hosts, connect to open a session, exploit to root them and capture loot that unlocks the next target.',
+  starship: 'A starship engineering console game. Hostiles are chasing you — balance a limited power budget between shields and the jump drive, repair damage, and charge to 100% to escape before the hull fails. The available commands track the ship’s situation.',
 };
 const EXAMPLE_HINTS: Record<ExampleId, string> = {
   basic: 'Great first stop to understand command structure and result types.',
@@ -61,6 +67,8 @@ const EXAMPLE_HINTS: Record<ExampleId, string> = {
   localdev: 'The dev-overlay story: ship this in development builds as a quake-style debug console.',
   devops: 'The internal-tools story: operational commands a support or ops team runs all day.',
   runtime: 'Shows Citadel acting as a control surface, not just a command runner.',
+  hacking: 'Mostly here to be fun — pop the mainframe and see what happens. (It also quietly shows commands appearing and disappearing as the game state changes.)',
+  starship: 'The fullest demo: a live status dashboard the console drives, a real resource-management game loop, and commands that appear and vanish with the ship’s state.',
 };
 const EXAMPLE_TRY_COMMAND: Record<ExampleId, string> = {
   basic: 'user.show 1234',
@@ -68,6 +76,8 @@ const EXAMPLE_TRY_COMMAND: Record<ExampleId, string> = {
   localdev: 'localstorage.list',
   devops: 'monitor.metrics',
   runtime: 'display.mode.inline',
+  hacking: 'scan',
+  starship: 'shields.raise',
 };
 const EXAMPLE_TRY_KEYS: Record<ExampleId, string> = {
   basic: 'u s 1234',
@@ -75,13 +85,44 @@ const EXAMPLE_TRY_KEYS: Record<ExampleId, string> = {
   localdev: 'loc l',
   devops: 'm m',
   runtime: 'd m i',
+  hacking: 's',
+  starship: 's r',
 };
-const EXAMPLE_TRY_EXPLANATION: Record<ExampleId, string> = {
+// Render a space-separated key sequence (e.g. "p c l") as individual <kbd> keys,
+// matching how the headline try-keys are rendered.
+const keySeq = (seq: string): ReactNode =>
+  seq.split(' ').map((k, i, arr) => (
+    <span key={i}>
+      <kbd>{k}</kbd>
+      {i < arr.length - 1 && ' '}
+    </span>
+  ));
+
+const EXAMPLE_TRY_EXPLANATION: Record<ExampleId, ReactNode> = {
   basic: 'Shows a single user result.',
-  spreadsheet: 'Filters the team table on this page. Then try sort.name.desc (s n d) or reset (r).',
+  spreadsheet: (
+    <>
+      Filters the team table on this page. Then try sort.name.desc ({keySeq('s n d')})
+      or reset ({keySeq('r')}).
+    </>
+  ),
   localdev: 'Lists your browser’s real localStorage — these commands run against live page state.',
   devops: 'Shows a live-style metrics payload.',
   runtime: 'Switches Citadel into inline mode in the page.',
+  hacking: (
+    <>
+      Discovers the DMZ hosts and unlocks a connect.* command for each. Then try
+      connect.gateway ({keySeq('c g')}), exploit.gateway ({keySeq('e g')}), and info ({keySeq('i')}).
+    </>
+  ),
+  starship: (
+    <>
+      Raises shields (damage drops). Then free power with {keySeq('p c l')} (cut
+      life support) and route it to engines with {keySeq('p r e')} to charge the
+      drive; {keySeq('h')} to ride out cycles, and engage with {keySeq('j e')}{' '}
+      once the drive hits 100%.
+    </>
+  ),
 };
 const EXAMPLE_SOURCE_URL: Record<ExampleId, string> = {
   basic: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/basicCommands.ts',
@@ -89,9 +130,11 @@ const EXAMPLE_SOURCE_URL: Record<ExampleId, string> = {
   localdev: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/localDevCommands.ts',
   devops: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/devopsCommands.ts',
   runtime: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/runtimeConfigDemo.ts',
+  hacking: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/hackingSimDemo.ts',
+  starship: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/starshipDemo.ts',
 };
 
-const VALID_EXAMPLE_IDS: ExampleId[] = ['basic', 'localdev', 'devops', 'spreadsheet', 'runtime'];
+const VALID_EXAMPLE_IDS: ExampleId[] = ['basic', 'localdev', 'devops', 'spreadsheet', 'runtime', 'hacking', 'starship'];
 
 // The spreadsheet tab embeds Citadel inline next to the team table so both
 // stay visible while commands run. The output pane is hidden — the table
@@ -102,6 +145,20 @@ const SPREADSHEET_CONFIG: CitadelConfig = {
   showOutputPane: false,
   initialHeight: '120px',
   maxHeight: '120px',
+};
+
+// The starship tab also embeds Citadel inline next to its bridge dashboard, but
+// keeps the output pane visible — the command narration and the win/lose
+// animations are part of the show.
+const STARSHIP_CONFIG: CitadelConfig = {
+  ...defaultConfig,
+  displayMode: 'inline',
+  showOutputPane: true,
+  initialHeight: '340px',
+  maxHeight: '340px',
+  // Disable the built-in `help` so it doesn't collide with `hold` on the "h"
+  // prefix — the bridge chips and the in-world `info` command cover discovery.
+  includeHelpCommand: false,
 };
 
 const isExampleId = (value: string): value is ExampleId =>
@@ -127,6 +184,8 @@ function App() {
   const devopsRegistry = useMemo(() => createDevOpsCommandRegistry(), []);
   const runtimeDemo = useRuntimeConfigDemo();
   const spreadsheetDemo = useSpreadsheetDemo();
+  const hackingDemo = useHackingSimDemo();
+  const starshipDemo = useStarshipDemo();
   const theme = usePreferredTheme();
 
   useEffect(() => {
@@ -168,8 +227,12 @@ function App() {
       return runtimeDemo.commandRegistry;
     }
 
+    if (selectedExample === 'hacking') {
+      return hackingDemo.commandRegistry;
+    }
+
     return basicRegistry;
-  }, [basicRegistry, localDevRegistry, devopsRegistry, runtimeDemo.commandRegistry, selectedExample]);
+  }, [basicRegistry, localDevRegistry, devopsRegistry, runtimeDemo.commandRegistry, hackingDemo.commandRegistry, selectedExample]);
 
   const activeConfig = selectedExample === 'runtime' ? runtimeDemo.config : defaultConfig;
 
@@ -261,7 +324,7 @@ function App() {
                 <span className="demo-try-prefix">&gt;</span> Try it now
               </p>
               <p className="demo-try-copy">
-                {selectedExample === 'spreadsheet' ? (
+                {selectedExample === 'spreadsheet' || selectedExample === 'starship' ? (
                   <>Click the console below, then type </>
                 ) : (
                   <>Press <kbd>.</kbd> to open Citadel, then type </>
@@ -326,6 +389,106 @@ function App() {
                 </div>
               </div>
             )}
+
+            {selectedExample === 'starship' && (
+              <div className="demo-spreadsheet-layout">
+                <div className="demo-widget">
+                  <div className="demo-widget-header">
+                    <p className="demo-widget-title">Bridge status</p>
+                    <span className={`bridge-alert bridge-alert-${starshipDemo.snapshot.alert}`}>
+                      {starshipDemo.snapshot.alert} alert
+                    </span>
+                  </div>
+                  <div className="bridge-meters">
+                    <div>
+                      <div className="bridge-meter-label">
+                        <span>Hull</span>
+                        <span>{starshipDemo.snapshot.hull}%</span>
+                      </div>
+                      <div className="bridge-track">
+                        <div
+                          className={`bridge-fill bridge-fill-hull ${
+                            starshipDemo.snapshot.hull > 30 ? 'is-ok' : ''
+                          }`}
+                          style={{ width: `${starshipDemo.snapshot.hull}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="bridge-meter-label">
+                        <span>Jump drive</span>
+                        <span>{starshipDemo.snapshot.jumpCharge}%</span>
+                      </div>
+                      <div className="bridge-track">
+                        <div
+                          className="bridge-fill bridge-fill-jump"
+                          style={{ width: `${starshipDemo.snapshot.jumpCharge}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="bridge-meter-label">
+                        <span>Power</span>
+                        <span>
+                          {starshipDemo.snapshot.powerUsed}/{starshipDemo.snapshot.reactorOutput}
+                        </span>
+                      </div>
+                      <div className="bridge-track">
+                        <div
+                          className="bridge-fill bridge-fill-power"
+                          style={{
+                            width: `${
+                              starshipDemo.snapshot.reactorOutput
+                                ? (starshipDemo.snapshot.powerUsed /
+                                    starshipDemo.snapshot.reactorOutput) *
+                                  100
+                                : 0
+                            }%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bridge-grid">
+                    {starshipDemo.snapshot.systems.map((sys) => (
+                      <div
+                        key={sys.id}
+                        className={`bridge-system ${sys.online ? '' : 'is-offline'}`}
+                      >
+                        <div className="bridge-system-head">
+                          <span className="bridge-system-name">{sys.label}</span>
+                          <span
+                            className={`bridge-system-state ${
+                              !sys.online ? 'is-offline' : sys.powered ? 'is-powered' : ''
+                            }`}
+                          >
+                            {sys.online ? (sys.powered ? 'powered' : 'standby') : 'offline'}
+                          </span>
+                        </div>
+                        <div className="bridge-track">
+                          <div
+                            className={`bridge-fill bridge-fill-hull ${
+                              sys.integrity > 40 ? 'is-ok' : ''
+                            }`}
+                            style={{ width: `${sys.integrity}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="bridge-event">
+                    cycle {starshipDemo.snapshot.cycle} · {starshipDemo.snapshot.lastEvent}
+                  </p>
+                </div>
+                <div className="demo-inline-host">
+                  <Citadel
+                    key="starship"
+                    commandRegistry={starshipDemo.commandRegistry}
+                    config={STARSHIP_CONFIG}
+                  />
+                </div>
+              </div>
+            )}
           </section>
         </main>
 
@@ -333,7 +496,7 @@ function App() {
           citadel_cli - a keyboard-driven command surface for React apps
         </p>
 
-        {selectedExample !== 'spreadsheet' && (
+        {selectedExample !== 'spreadsheet' && selectedExample !== 'starship' && (
           <Citadel
             key={selectedExample}
             commandRegistry={activeBaseRegistry}

@@ -11,6 +11,8 @@ const mockCreateLocalDevCommandRegistry = vi.fn();
 const mockCreateDevOpsCommandRegistry = vi.fn();
 const mockUseRuntimeConfigDemo = vi.fn();
 const mockUseSpreadsheetDemo = vi.fn();
+const mockUseHackingSimDemo = vi.fn();
+const mockUseStarshipDemo = vi.fn();
 
 vi.mock('./index', () => ({
   Citadel: (props: unknown) => {
@@ -39,6 +41,36 @@ vi.mock('./examples/spreadsheetDemo', () => ({
   useSpreadsheetDemo: () => mockUseSpreadsheetDemo()
 }));
 
+vi.mock('./examples/hackingSimDemo', () => ({
+  useHackingSimDemo: () => mockUseHackingSimDemo()
+}));
+
+vi.mock('./examples/starshipDemo', () => ({
+  useStarshipDemo: () => mockUseStarshipDemo()
+}));
+
+const buildStarshipDemo = (registry: CommandRegistry) => ({
+  commandRegistry: registry,
+  snapshot: {
+    systems: [
+      { id: 'reactor', label: 'Reactor', online: true, integrity: 100, powered: false, powerDraw: 0 },
+      { id: 'shields', label: 'Shields', online: true, integrity: 100, powered: true, powerDraw: 2 },
+      { id: 'engines', label: 'Engines', online: true, integrity: 100, powered: false, powerDraw: 3 },
+      { id: 'life', label: 'Life Support', online: true, integrity: 100, powered: true, powerDraw: 2 }
+    ],
+    reactorOutput: 6,
+    powerUsed: 4,
+    hull: 100,
+    alert: 'green',
+    shieldsRaised: false,
+    jumpCharge: 0,
+    cycle: 0,
+    ejectArmed: false,
+    status: 'active',
+    lastEvent: 'Hostiles inbound.'
+  }
+});
+
 const buildSpreadsheetDemo = (registry: CommandRegistry) => ({
   commandRegistry: registry,
   users: [
@@ -59,6 +91,13 @@ describe('App', () => {
     mockCreateDevOpsCommandRegistry.mockReset();
     mockUseRuntimeConfigDemo.mockReset();
     mockUseSpreadsheetDemo.mockReset();
+    mockUseHackingSimDemo.mockReset();
+    mockUseHackingSimDemo.mockReturnValue({
+      commandRegistry: new CommandRegistry(),
+      snapshot: { hosts: [], loot: [], scanned: false, won: false }
+    });
+    mockUseStarshipDemo.mockReset();
+    mockUseStarshipDemo.mockReturnValue(buildStarshipDemo(new CommandRegistry()));
     window.localStorage.clear();
   });
 
@@ -152,5 +191,36 @@ describe('App', () => {
     expect(props.config.displayMode).toBe('inline');
     expect(props.config.showOutputPane).toBe(false);
     expect(window.localStorage.getItem('citadel-demo-example')).toBe('spreadsheet');
+  });
+
+  it('switches to starship example and renders the bridge dashboard', () => {
+    const starshipRegistry = new CommandRegistry();
+    mockCreateBasicCommandRegistry.mockReturnValue(new CommandRegistry());
+    mockCreateLocalDevCommandRegistry.mockReturnValue(new CommandRegistry());
+    mockCreateDevOpsCommandRegistry.mockReturnValue(new CommandRegistry());
+    mockUseRuntimeConfigDemo.mockReturnValue({
+      commandRegistry: new CommandRegistry(),
+      config: { displayMode: 'inline' },
+      mode: 'inline'
+    });
+    mockUseSpreadsheetDemo.mockReturnValue(buildSpreadsheetDemo(new CommandRegistry()));
+    mockUseStarshipDemo.mockReturnValue(buildStarshipDemo(starshipRegistry));
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Starship/i }));
+
+    expect(screen.getByText('Bridge status')).toBeTruthy();
+    expect(screen.getByText('Life Support')).toBeTruthy();
+
+    const calls = mockCitadel.mock.calls;
+    const props = calls[calls.length - 1][0] as {
+      commandRegistry: CommandRegistry;
+      config: CitadelConfig;
+    };
+    expect(props.commandRegistry).toBe(starshipRegistry);
+    expect(props.config.displayMode).toBe('inline');
+    expect(props.config.showOutputPane).toBe(true);
+    expect(window.localStorage.getItem('citadel-demo-example')).toBe('starship');
   });
 });

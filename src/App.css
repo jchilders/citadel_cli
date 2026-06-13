@@ -304,6 +304,136 @@ body {
   background: color-mix(in oklch, oklch(60% 0.02 264) 14%, transparent);
 }
 
+/* Starship "bridge status" widget */
+.bridge-alert {
+  display: inline-block;
+  padding: 0.05rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+.bridge-alert-green {
+  color: oklch(84.5% 0.143 164.9);
+  background: color-mix(in oklch, oklch(84.5% 0.143 164.9) 14%, transparent);
+}
+
+.bridge-alert-yellow {
+  color: oklch(85% 0.12 85);
+  background: color-mix(in oklch, oklch(85% 0.12 85) 16%, transparent);
+}
+
+.bridge-alert-red {
+  color: oklch(72% 0.2 28);
+  background: color-mix(in oklch, oklch(72% 0.2 28) 18%, transparent);
+}
+
+.bridge-meters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+}
+
+.bridge-meter-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.2rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: oklch(55.1% 0.023 264.4);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+.bridge-track {
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in oklch, oklch(37.2% 0.044 257.3) 35%, transparent);
+}
+
+.bridge-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 220ms ease;
+}
+
+.bridge-fill-hull {
+  background: oklch(72% 0.2 28);
+}
+
+.bridge-fill-hull.is-ok {
+  background: oklch(84.5% 0.143 164.9);
+}
+
+.bridge-fill-jump {
+  background: oklch(82% 0.14 230);
+}
+
+.bridge-fill-power {
+  background: oklch(85% 0.12 85);
+}
+
+.bridge-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.bridge-system {
+  border: 1px solid color-mix(in oklch, oklch(44.6% 0.043 257.3) 45%, transparent);
+  border-radius: 0.55rem;
+  padding: 0.5rem 0.6rem;
+  background: color-mix(in oklch, oklch(37.2% 0.044 257.3) 12%, transparent);
+}
+
+.bridge-system.is-offline {
+  border-color: color-mix(in oklch, oklch(72% 0.2 28) 45%, transparent);
+  opacity: 0.78;
+}
+
+.bridge-system-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.bridge-system-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: oklch(92.8% 0.006 264.5);
+}
+
+.bridge-system-state {
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  color: oklch(55.1% 0.023 264.4);
+}
+
+.bridge-system-state.is-powered {
+  color: oklch(84.5% 0.143 164.9);
+}
+
+.bridge-system-state.is-offline {
+  color: oklch(72% 0.2 28);
+}
+
+.bridge-event {
+  margin: 1rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: oklch(80% 0.012 259.8);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
 .demo-page[data-theme='light'] {
   color-scheme: light;
   background: radial-gradient(circle at 18% 0%, oklch(94% 0.025 258.2), transparent 42%),
