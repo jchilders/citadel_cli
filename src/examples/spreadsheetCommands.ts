@@ -10,7 +10,7 @@ export const SPREADSHEET_SORT_DIRECTIONS = ['asc', 'desc'] as const;
 export type SpreadsheetSortDirection = (typeof SPREADSHEET_SORT_DIRECTIONS)[number];
 
 export interface SpreadsheetActions {
-  filterByRole: (role: SpreadsheetRole) => { shown: number; total: number };
+  filterByRole: (role: SpreadsheetRole) => { shown: number; total: number; cleared: boolean };
   sortBy: (field: SpreadsheetSortField, direction: SpreadsheetSortDirection) => void;
   resetTable: () => { total: number };
 }
@@ -23,9 +23,12 @@ export function createSpreadsheetCommandDefinitions(
   // sort.name.desc.
   const definitions = SPREADSHEET_ROLES.map((role) =>
     command(`filter.${role}`)
-      .describe(`Show only teammates with the ${role} role`)
+      .describe(`Show only teammates with the ${role} role (run again to clear)`)
       .handle(async () => {
-        const { shown, total } = actions.filterByRole(role);
+        const { shown, total, cleared } = actions.filterByRole(role);
+        if (cleared) {
+          return text(`Cleared the "${role}" filter. Showing all ${total} teammates.`);
+        }
         return text(`Showing ${shown} of ${total} teammates with role "${role}".`);
       })
   ) as CommandDefinition[];

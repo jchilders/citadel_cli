@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { CommandRegistry } from '../components/Citadel/types/command-registry';
 import { createCommandRegistry } from '../components/Citadel/types/command-dsl';
 import {
@@ -43,11 +43,19 @@ export const useSpreadsheetDemo = (): UseSpreadsheetDemoResult => {
   const [roleFilter, setRoleFilter] = useState<SpreadsheetRole | null>(null);
   const [sort, setSort] = useState<TableSort | null>(null);
 
+  // Read the current filter synchronously so re-applying the same role can
+  // toggle it off, without making the callback (and thus the registry) churn.
+  const roleFilterRef = useRef<SpreadsheetRole | null>(roleFilter);
+  roleFilterRef.current = roleFilter;
+
   const filterByRole = useCallback((role: SpreadsheetRole) => {
-    setRoleFilter(role);
+    const cleared = roleFilterRef.current === role;
+    setRoleFilter(cleared ? null : role);
+    const total = TEAM.length;
     return {
-      shown: TEAM.filter((user) => user.role === role).length,
-      total: TEAM.length,
+      shown: cleared ? total : TEAM.filter((user) => user.role === role).length,
+      total,
+      cleared,
     };
   }, []);
 
