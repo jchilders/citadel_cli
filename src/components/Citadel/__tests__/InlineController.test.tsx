@@ -49,4 +49,47 @@ describe('InlineController', () => {
     expect(container.style.maxHeight).toBe('128px');
     expect(container.style.minHeight).toBe('128px');
   });
+
+  it('focuses the console when the activation key is pressed', async () => {
+    const { getByTestId } = await renderInline();
+    const input = getByTestId('citadel-command-input') as HTMLInputElement;
+
+    input.blur();
+    expect(document.activeElement).not.toBe(input);
+
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: '.', bubbles: true }));
+    });
+
+    expect(document.activeElement).toBe(input);
+  });
+
+  it('honors a configured activation key', async () => {
+    const { getByTestId } = await renderInline({ showCitadelKey: '/' });
+    const input = getByTestId('citadel-command-input') as HTMLInputElement;
+
+    input.blur();
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: '/', bubbles: true }));
+    });
+
+    expect(document.activeElement).toBe(input);
+  });
+
+  it('does not steal focus from another focused field on the page', async () => {
+    const { getByTestId } = await renderInline();
+    getByTestId('citadel-command-input');
+
+    const other = document.createElement('input');
+    document.body.appendChild(other);
+    other.focus();
+    expect(document.activeElement).toBe(other);
+
+    await act(async () => {
+      other.dispatchEvent(new KeyboardEvent('keydown', { key: '.', bubbles: true }));
+    });
+
+    expect(document.activeElement).toBe(other);
+    other.remove();
+  });
 });

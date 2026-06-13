@@ -2,7 +2,9 @@ import React, { useMemo, useRef } from 'react';
 
 import { useCitadelConfig } from '../config/hooks';
 import { useCitadelState } from '../hooks/useCitadelState';
+import { useInlineFocusShortcut } from '../hooks/useInlineFocusShortcut';
 import { CitadelTty } from '../components/CitadelTty';
+import { defaultConfig } from '../config/defaults';
 
 const OUTPUT_PANE_HIDDEN_MIN_HEIGHT = '128px';
 
@@ -18,6 +20,13 @@ export const InlineController: React.FC = () => {
   const config = useCitadelConfig();
   const showOutputPane = config.showOutputPane ?? true;
   const outputRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Inline mode has no panel to open, so the activation key focuses the console.
+  useInlineFocusShortcut({
+    containerRef,
+    showCitadelKey: config.showCitadelKey ?? defaultConfig.showCitadelKey ?? '.'
+  });
   const inlineStyle = useMemo(
     () => ({
       height: showOutputPane ? toCssLength(config.initialHeight) : OUTPUT_PANE_HIDDEN_MIN_HEIGHT,
@@ -29,6 +38,7 @@ export const InlineController: React.FC = () => {
 
   return (
     <div
+      ref={containerRef}
       className="inlineContainer"
       data-testid="citadel-inline-container"
       style={inlineStyle}
