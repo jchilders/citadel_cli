@@ -69,24 +69,36 @@ the registry, DSL, prefix, segment-stack, cursor, help-command modules;
 `inputStateReducer`/`InputState` → `core/input-state.ts`; the `CommandStorage`
 interface + `MemoryStorage` impl (`LocalStorage` stays in the react package).
 
-**Refactor A — split result data from rendering.** Core result types become
-plain data (discriminated union, no `render()`):
+**Refactor A — split result data from rendering.** *(Implemented; deviates from
+the original plain-union sketch — see note.)* Core keeps the `CommandResult`
+class hierarchy but strips React out of it:
 
-```ts
-// core/results.ts
-type CommandResult =
-  | { kind: 'text'; value: string }
-  | { kind: 'json'; value: unknown }
-  | { kind: 'bool'; value: boolean; trueText: string; falseText: string }
-  | { kind: 'image'; url: string; altText: string }
-  | { kind: 'error'; error: string }
-```
+- `core/results.ts` holds `CommandStatus`, the abstract `CommandResult` base
+  (status machinery + `timestamp`, **no** `render()`), and the built-in data
+  classes (`Text`/`Json`/`Boolean`/`Error`/`Pending`/`Image`CommandResult) with
+  their fields/constructors but **no** `render()`. Zero React import.
+- `types/command-results.ts` is now a back-compat re-export of `core/results`
+  (renamed from `.tsx`; ~15 importers unchanged).
+- `components/renderResult.tsx` (web adapter) renders a `CommandResult` to JSX:
+  `instanceof` each built-in → JSX. The CLI adapter will add its own
+  `cli/renderResult.ts` (→ formatted string; `json` → colorized
+  `JSON.stringify`, `image` → terminal image escape or `[image: url]` fallback).
+- The `text`/`json`/`bool`/`image`/`error` DSL helpers are unchanged — they
+  already build these classes, which are now React-free.
 
-The `text`/`json`/`bool`/`image`/`error` helpers in `command-dsl.ts` build these
-plain objects. Rendering moves to each adapter: `react/renderResult.tsx` switches
-on `kind` → JSX; `cli/renderResult.ts` switches on `kind` → formatted string
-(`json` → colorized `JSON.stringify`, `image` → terminal image escape or
-`[image: url]` fallback).
+> **Why not a plain discriminated union?** `render()` is a *public extension
+> seam*: `CommandResult` is exported from the package root, and consumers (incl.
+> the repo's own `examples/starshipResults.tsx`, `examples/hackingSimVictory.tsx`)
+> subclass it with a custom `render()` returning arbitrary React. A union would
+> break that seam and the "no behavior change" rule. Instead, `render()` is no
+> longer `abstract` on the base; `renderResult()` handles built-ins by type and
+> **falls back to `result.render()` for any custom subclass that defines one** —
+> preserving the seam. The classes also carry mutable execution status
+> (`markSuccess`/`markFailure`/`markTimeout`, used by `useCitadelState` and
+> `instanceof CommandResult` validation), which a plain union would have
+> displaced into a wrapper. Minor caveat: external code calling `.render()`
+> directly on a *built-in* result (undocumented) would need to call
+> `renderResult()` instead.
 
 **Refactor B — completion queries as free functions.** Extracted verbatim from
 the `useCallback` bodies (`useCommandParser.ts:37-117`), with `commands`→`registry`
@@ -181,12 +193,17 @@ independent). Step 3 is the one that needs the e2e tests as a safety net.
 > Note: core modules currently live at `src/components/Citadel/core/`; Step 4
 > moves that directory to `packages/core/`.
 
-### Step 2 — Split result data from rendering
-- [ ] Define plain-data `CommandResult` union in `core/results.ts`
-- [ ] Repoint `text`/`json`/`bool`/`image`/`error` DSL helpers at the plain objects
-- [ ] Add `react/renderResult.tsx` (switch on `kind` → JSX); remove `render()`
-      from the result classes / replace classes with the union
-- [ ] `npm test` green (esp. `command-dsl.test.ts`)
+### Step 2 — Split result data from rendering ✅
+- [x] Move `CommandStatus` + `CommandResult` hierarchy into `core/results.ts`,
+      React-free, with `render()` removed from the base + built-in classes
+      (kept the class hierarchy rather than a plain union — see Refactor A note)
+- [x] `types/command-results` → back-compat re-export of `core/results`
+      (renamed `.tsx` → `.ts`); DSL helpers unchanged (already build these classes)
+- [x] Add `components/renderResult.tsx` (`instanceof` built-ins → JSX, with a
+      custom-subclass `render()` fallback seam); repoint the two `.render()` call
+      sites (`CommandOutput.tsx`, `command-dsl.test.ts`) at it
+- [x] `npm test` green (230 passed / 7 skipped); `tsc`, `eslint`, and
+      `npm run build` clean
 
 ### Step 3 — Introduce the controller reducer
 - [ ] Define `ParserState`, `Effect`, `AbstractKey` in `core/controller.ts`

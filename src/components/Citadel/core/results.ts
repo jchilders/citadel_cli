@@ -1,4 +1,12 @@
-import React from 'react';
+/**
+ * Framework-agnostic command result types.
+ *
+ * Part of the Citadel core: result *data* + execution status, with no React or
+ * DOM dependency. Rendering lives in the front-end adapters
+ * (`components/renderResult.tsx` for the web). Custom result subclasses may
+ * still provide their own `render()`, which the web renderer calls as an
+ * extension seam. See CORE_EXTRACTION_DESIGN.md.
+ */
 
 export enum CommandStatus {
   Pending = 'pending',
@@ -9,7 +17,7 @@ export enum CommandStatus {
 
 export abstract class CommandResult {
   private _status: CommandStatus = CommandStatus.Pending;
-  
+
   constructor(
     public readonly timestamp: number = Date.now()
   ) {}
@@ -29,8 +37,6 @@ export abstract class CommandResult {
   markTimeout(): void {
     this._status = CommandStatus.Timeout;
   }
-
-  abstract render(): React.ReactNode;
 }
 
 export class JsonCommandResult extends CommandResult {
@@ -40,14 +46,6 @@ export class JsonCommandResult extends CommandResult {
   ) {
     super(timestamp);
   }
-
-  render(): React.ReactNode {
-    return (
-      <pre className="citadel-result-json">
-        {JSON.stringify(this.data, null, 2)}
-      </pre>
-    );
-  }
 }
 
 export class TextCommandResult extends CommandResult {
@@ -56,12 +54,6 @@ export class TextCommandResult extends CommandResult {
     timestamp?: number
   ) {
     super(timestamp);
-  }
-
-  render(): React.ReactNode {
-    return (
-      <div className="citadel-result-text">{this.text}</div>
-    );
   }
 }
 
@@ -74,14 +66,6 @@ export class BooleanCommandResult extends CommandResult {
   ) {
     super(timestamp);
   }
-
-  render(): React.ReactNode {
-    return (
-      <div className="citadel-result-text citadel-result-boolean">
-        {this.value ? this.trueText : this.falseText}
-      </div>
-    );
-  }
 }
 
 export class ErrorCommandResult extends CommandResult {
@@ -92,17 +76,9 @@ export class ErrorCommandResult extends CommandResult {
     super(timestamp);
     this.markFailure();
   }
-
-  render(): React.ReactNode {
-    return <div className="citadel-result-error">{this.error}</div>;
-  }
 }
 
-export class PendingCommandResult extends CommandResult {
-  render(): React.ReactNode {
-    return <div className="citadel-result-pending">...</div>;
-  }
-}
+export class PendingCommandResult extends CommandResult {}
 
 export class ImageCommandResult extends CommandResult {
   constructor(
@@ -111,17 +87,5 @@ export class ImageCommandResult extends CommandResult {
     timestamp?: number
   ) {
     super(timestamp);
-  }
-
-  render(): React.ReactNode {
-    return (
-      <div className="citadel-result-image-wrap">
-        <img
-          src={this.imageUrl}
-          alt={this.altText}
-          className="citadel-result-image"
-        />
-      </div>
-    );
   }
 }

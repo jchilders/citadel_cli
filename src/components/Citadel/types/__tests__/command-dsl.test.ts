@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CommandRegistry } from '../command-registry';
 import { TextCommandResult } from '../command-results';
+import { renderResult } from '../../components/renderResult';
 import {
   bool,
   command,
@@ -149,7 +150,7 @@ describe('command DSL', () => {
   it('provides result helper constructors', () => {
     expect(text('hello').text).toBe('hello');
     expect(bool(true).value).toBe(true);
-    expect(bool(false, 'enabled', 'disabled').render()).toBeTruthy();
+    expect(renderResult(bool(false, 'enabled', 'disabled'))).toBeTruthy();
     expect(json({ ok: true }).data).toEqual({ ok: true });
     expect(image('https://example.com/a.png').imageUrl).toBe('https://example.com/a.png');
     expect(error('bad').error).toBe('bad');

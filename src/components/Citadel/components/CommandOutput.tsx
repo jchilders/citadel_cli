@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useMemo } from 'react';
 import { OutputItem } from '../types/state';
 import { CommandOutputLine } from './CommandOutputLine';
+import { renderResult } from './renderResult';
 import { useCitadelConfig } from '../config/hooks';
 import { resolveTypography } from '../utils/typography';
 
@@ -59,7 +60,7 @@ export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef 
             className="citadel-output-content"
             style={outputTypography.style}
           >
-            {item.result.render()}
+            {renderResult(item.result)}
           </div>
         </div>
       ))}
