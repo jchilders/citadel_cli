@@ -1,5 +1,5 @@
 import { useCallback, useReducer } from 'react';
-import { CommandNode, CommandSegment, ArgumentSegment, NullSegment, WordSegment } from '../types/command-registry';
+import { CommandNode, CommandSegment, ArgumentSegment } from '../types/command-registry';
 import { CitadelState, CitadelActions } from '../types/state';
 import { useCitadelCommands, useSegmentStack } from '../config/hooks';
 import { useCitadelState } from './useCitadelState';
@@ -14,6 +14,13 @@ import {
   getAutocompleteSuggestion as coreGetAutocompleteSuggestion,
   isValidCommandInput as coreIsValidCommandInput,
 } from '../core/completion';
+import {
+  reduceInputChange,
+  reduceKey,
+  type AbstractKey,
+  type Effect,
+  type ParserState,
+} from '../core/controller';
 
 // Re-exported for existing consumers (CommandInput.tsx, tests) that import these
 // from this module. The implementations now live in the framework-agnostic core
@@ -56,103 +63,6 @@ export const useCommandParser = () => {
     coreIsValidCommandInput(commands, segmentStack.path(), input),
   [commands, segmentStack]);
 
-  const tryAutocomplete = useCallback((
-    input: string
-  ): CommandSegment => {
-    Logger.debug("[tryAutoComplete] input: ", input);
-    const suggestion = getAutocompleteSuggestion(input);
-    
-    if (!suggestion || suggestion.type === 'null') {
-      return new NullSegment;
-    }
-
-    Logger.debug("[tryAutoComplete] result: ", suggestion);
-    return suggestion;
-  }, [getAutocompleteSuggestion]);
-
-  /**
-   * Handles autocompleting word segments, and saving argument values to the
-   * segment stack.
-   */
-  const handleInputChange = useCallback((
-    newValue: string,
-    actions: CitadelActions,
-  ) => {
-    // Don't process input changes when navigating history
-    if (state.history.position !== null) {
-      return;
-    }
-    actions.setCurrentInput(newValue);
-    Logger.debug("[useCommandParser][handleInputChange] newValue: ", newValue);
-
-    const nextExpectedSegment = getNextExpectedSegment();
-    const expectingArgument = nextExpectedSegment.type === 'argument' || inputState === 'entering_argument';
-
-    if (expectingArgument) {
-      const parsedInput = parseInput(newValue);
-        
-      if (parsedInput.isQuoted) {
-        if (parsedInput.isComplete) { // `"hello"`
-          if (!(nextExpectedSegment instanceof ArgumentSegment)) return;
-          nextExpectedSegment.value = stripSurroundingQuotes(newValue);
-          Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", nextExpectedSegment);
-          segmentStack.push(nextExpectedSegment);
-          actions.setCurrentInput('');
-          setInputStateWithLogging('idle');
-
-          return;
-        } else { // `"hello`
-          // User is still entering an argument. Do nothing
-          return;
-        }
-      } else { // unquoted input, or a quoted argument whose closing quote was just typed
-        if (parsedInput.isComplete) { // `hello ` or `"hello"`
-          if (!(nextExpectedSegment instanceof ArgumentSegment)) return;
-          nextExpectedSegment.value = stripSurroundingQuotes(newValue);
-          Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", nextExpectedSegment);
-          segmentStack.push(nextExpectedSegment);
-          actions.setCurrentInput('');
-          setInputStateWithLogging('idle');
-
-          return;
-        } else { // `hello`
-          // User is still entering an argument. Do nothing
-          return;
-        }
-      }
-    }
-
-    // If the user typed a delimiter after a word token, treat it as an explicit
-    // selection for exact segment names (e.g. "example " should pick `example`
-    // even if `examples` also exists).
-    if (newValue.endsWith(' ')) {
-      const token = newValue.trim().toLowerCase();
-      const exactWordMatches = commands
-        .getCompletions(segmentStack.path())
-        .filter(
-          (segment): segment is WordSegment =>
-            segment.type === 'word' && segment.name.toLowerCase() === token
-        );
-
-      if (exactWordMatches.length === 1) {
-        segmentStack.push(exactWordMatches[0]);
-        actions.setCurrentInput('');
-        setInputStateWithLogging('idle');
-        return;
-      }
-    }
-
-    const suggestedSegment = tryAutocomplete(newValue);
-    if (suggestedSegment.type === 'word') {
-      Logger.debug("[useCommandParser][handleInputChange][entering_command] pushing: ", suggestedSegment);
-      segmentStack.push(suggestedSegment as WordSegment);
-      actions.setCurrentInput('');
-      setInputStateWithLogging('idle');
-
-      return;
-    }
-  }, [tryAutocomplete, state, getNextExpectedSegment, inputState, segmentStack, commands]);
-
   const resetInputState = useCallback((actions: CitadelActions) => {
     actions.setCurrentInput('');
     actions.setIsEnteringArg(false);
@@ -160,146 +70,106 @@ export const useCommandParser = () => {
     setInputStateWithLogging('idle');
   }, [segmentStack]);
 
+  // Build the state snapshot the core controller reads from React/stack state.
+  const snapshot = useCallback((current: CitadelState): ParserState => ({
+    stack: segmentStack.toArray(),
+    currentInput: current.currentInput,
+    inputState,
+    isEnteringArg: current.isEnteringArg,
+    historyPosition: current.history.position,
+  }), [segmentStack, inputState]);
+
+  // Interpret the framework-agnostic effects from the core controller against
+  // the shared segment stack, history service and React state. `historyNav` is
+  // async and handled by handleKeyDown; every other effect applies
+  // synchronously, in order.
+  const applyEffects = useCallback((effects: Effect[], actions: CitadelActions) => {
+    for (const effect of effects) {
+      switch (effect.kind) {
+        case 'setInput':
+          actions.setCurrentInput(effect.value);
+          break;
+        case 'setInputState':
+          setInputStateWithLogging(effect.state);
+          break;
+        case 'commitArgument': {
+          const nextSegment = getNextExpectedSegment();
+          if (nextSegment instanceof ArgumentSegment) {
+            nextSegment.value = effect.value;
+            Logger.debug('[useCommandParser][applyEffects][commitArgument] pushing: ', nextSegment);
+            segmentStack.push(nextSegment);
+          }
+          break;
+        }
+        case 'pushSegment':
+          Logger.debug('[useCommandParser][applyEffects][pushSegment] pushing: ', effect.segment);
+          segmentStack.push(effect.segment);
+          break;
+        case 'popSegment':
+          if (segmentStack.size() > 0) segmentStack.pop();
+          break;
+        case 'execute':
+          Logger.debug('[useCommandParser][applyEffects][execute] segmentStack: ', segmentStack);
+          actions.executeCommand();
+          break;
+        case 'addHistory':
+          history.addStoredCommand(segmentStack.toArray());
+          break;
+        case 'resetInput':
+          resetInputState(actions);
+          break;
+        case 'historyNav':
+          // Async; handled by handleKeyDown.
+          break;
+      }
+    }
+  }, [getNextExpectedSegment, segmentStack, history, resetInputState]);
+
   /**
-   * Handles keyboard events for Backspace, Enter, and regular input.
-   * Responsible for:
-   * - Command execution
-   * - Navigation
-   * Returns false if input was invalid and should trigger animation
+   * Handles autocompleting word segments and saving argument values to the
+   * segment stack as the input field changes.
+   */
+  const handleInputChange = useCallback((
+    newValue: string,
+    actions: CitadelActions,
+  ) => {
+    const effects = reduceInputChange(snapshot(state), newValue, commands);
+    applyEffects(effects, actions);
+  }, [snapshot, state, commands, applyEffects]);
+
+  /**
+   * Handles keyboard events for Backspace, Enter, history navigation, and
+   * command-input validation. Returns false if input was invalid and should
+   * trigger the shake animation; returns a Promise for async history nav.
    */
   const handleKeyDown = useCallback((
     e: KeyboardEvent | React.KeyboardEvent,
-    state: CitadelState,
+    current: CitadelState,
     actions: CitadelActions
   ): boolean | Promise<boolean> => {
-    // Validate key input first
-    const isValidKey = e.key === 'Backspace' || 
-                       e.key === 'Enter' ||
-                       e.key === 'ArrowUp' ||
-                       e.key === 'ArrowDown' ||
-                       e.key === 'ArrowLeft' ||
-                       e.key === 'ArrowRight' ||
-                       e.key === 'Escape' ||
-                       e.key === 'Delete' ||
-                       e.key === 'Home' ||
-                       e.key === 'End' ||
-                       e.key.length === 1;
+    const decision = reduceKey(snapshot(current), toAbstractKey(e), commands);
 
-    if (!isValidKey) {
-      return true;
+    if (decision.preventDefault) {
+      e.preventDefault();
     }
 
-    const { currentInput, isEnteringArg } = state;
-    const parsedInput = parseInput(currentInput);
-
-    // Handle special keys first
-    switch (e.key) {
-      case 'Backspace': {
-        if (currentInput === '') {
-          e.preventDefault();
-          if (segmentStack.size() > 0) segmentStack.pop(); 
-          setInputStateWithLogging('idle');
+    const navEffect = decision.effects.find(effect => effect.kind === 'historyNav');
+    if (navEffect && navEffect.kind === 'historyNav') {
+      return (async () => {
+        const navResult = await history.navigateHistory(navEffect.dir);
+        if (navResult.segments) {
+          segmentStack.clear();
+          segmentStack.pushAll(navResult.segments);
+          // All segments (including arguments) are now in the stack.
+          actions.setCurrentInput('');
         }
         return true;
-      }
-
-      case 'Enter': {
-        e.preventDefault();
-
-        // Don't execute if quotes aren't closed
-        if (parsedInput.isQuoted && !parsedInput.isComplete) {
-          return true;
-        }
-
-        if (inputState === 'entering_argument' || (isEnteringArg && currentInput.trim())) {
-          const nextSegment = getNextExpectedSegment();
-          if (nextSegment instanceof ArgumentSegment) {
-            nextSegment.value = stripSurroundingQuotes(currentInput);
-            Logger.debug("[handleKeyDown][Enter]['entering_argument'] pushing: ", nextSegment);
-            segmentStack.push(nextSegment);
-          }
-        }
-
-        // Validate that we have a concrete command to execute
-        const path = segmentStack.path();
-        const command = commands.getCommand(path);
-        if (!command) {
-          // Command path incomplete; keep stack & input so user can continue typing
-          return false;
-        }
-
-        // Validate that all required arguments are provided. Arguments fill in
-        // order, so trailing optional ones may be omitted — their handlers
-        // receive undefined and apply defaults.
-        const requiredArgs = command.segments.filter(
-          seg => seg.type === 'argument' && !(seg as ArgumentSegment).optional
-        );
-        const providedArgs = segmentStack.arguments;
-
-        if (requiredArgs.length > providedArgs.length) {
-          // Missing required arguments - trigger invalid input animation
-          return false;
-        }
-
-        Logger.debug("[handleKeyDown][Enter] calling actions.executeCommand. segmentStack: ", segmentStack);
-        actions.executeCommand();
-
-        history.addStoredCommand(segmentStack.toArray());
-
-        resetInputState(actions);
-
-        return true;
-      }
-
-      case 'ArrowUp': {
-        e.preventDefault();
-        return (async () => {
-          const navResult = await history.navigateHistory('up');
-          if (navResult.segments) {
-            segmentStack.clear();
-            segmentStack.pushAll(navResult.segments);
-            // Set current input to empty since all segments (including arguments) are in the stack
-            actions.setCurrentInput('');
-          }
-          return true;
-        })();
-      }
-
-      case 'ArrowDown': {
-        e.preventDefault();
-        return (async () => {
-          const navResult = await history.navigateHistory('down');
-          if (navResult.segments) {
-            segmentStack.clear();
-            segmentStack.pushAll(navResult.segments);
-            // Set current input to empty since all segments (including arguments) are in the stack
-            actions.setCurrentInput('');
-          }
-          return true;
-        })();
-      }
-
-      default: {
-        // Handle character input
-        if (!isEnteringArg && e.key.length === 1) {
-          const nextInput = (currentInput + e.key);
-          if (!isValidCommandInput(nextInput)) {
-            e.preventDefault();
-            return false; // Invalid input - trigger animation
-          }
-        }
-        return true;
-      }
+      })();
     }
-  }, [
-    inputState,
-    isValidCommandInput,
-    getNextExpectedSegment,
-    history,
-    resetInputState,
-    commands,
-    segmentStack,
-  ]);
+
+    applyEffects(decision.effects, actions);
+    return decision.valid;
+  }, [snapshot, commands, applyEffects, history, segmentStack]);
 
   return {
     handleInputChange,
@@ -313,4 +183,24 @@ export const useCommandParser = () => {
     getNextExpectedSegment,
     isValidCommandInput,
   };
+}
+
+/**
+ * Maps a DOM keyboard event to the controller's framework-agnostic AbstractKey.
+ * Keys other than Backspace/Enter/ArrowUp/ArrowDown are treated as a single
+ * printable character (`char`) or an unhandled key (`other`).
+ */
+function toAbstractKey(e: KeyboardEvent | React.KeyboardEvent): AbstractKey {
+  if (
+    e.key === 'Backspace' ||
+    e.key === 'Enter' ||
+    e.key === 'ArrowUp' ||
+    e.key === 'ArrowDown'
+  ) {
+    return { name: e.key };
+  }
+  if (e.key.length === 1) {
+    return { name: 'char', char: e.key };
+  }
+  return { name: 'other' };
 }

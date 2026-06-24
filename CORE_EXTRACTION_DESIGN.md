@@ -117,39 +117,58 @@ isValidCommandInput(registry, path, input): boolean
 real design work. Re-express `handleInputChange`/`handleKeyDown` so they *return
 intents* instead of mutating + calling actions:
 
+*(Implemented; the as-built shapes differ slightly from this sketch — see note.)*
+
 ```ts
-// core/controller.ts
-type ParserState = {
-  path: CommandSegment[]; currentInput: string;
-  inputState: InputState; historyPosition: number | null
+// core/controller.ts (as built)
+interface ParserState {
+  stack: CommandSegment[];   // full segment stack, not just names — the reducer
+  currentInput: string;      // simulates the arg push to make Enter decisions
+  inputState: InputState;
+  isEnteringArg: boolean;
+  historyPosition: number | null;
 }
 
 type Effect =
   | { kind: 'setInput'; value: string }
+  | { kind: 'setInputState'; state: InputState }
+  | { kind: 'commitArgument'; value: string }   // set next-expected arg's value & push
   | { kind: 'pushSegment'; segment: CommandSegment }
-  | { kind: 'popSegment' } | { kind: 'clearStack' }
+  | { kind: 'popSegment' }
   | { kind: 'execute' }
-  | { kind: 'addHistory'; segments: CommandSegment[] }
-  | { kind: 'invalidInput' }              // web: shake animation; cli: terminal bell
+  | { kind: 'addHistory' }
+  | { kind: 'resetInput' }                        // clear input/flag/stack → idle
   | { kind: 'historyNav'; dir: 'up' | 'down' }
 
 reduceInputChange(state, newValue, registry): Effect[]
-reduceKey(state, key: AbstractKey, registry): Effect[]
+reduceKey(state, key: AbstractKey, registry): KeyDecision
 ```
+
+> **Deviation from the sketch.** `reduceKey` returns a `KeyDecision`
+> (`{ effects, preventDefault, valid }`), not a bare `Effect[]` — the key handler
+> genuinely needs to signal `preventDefault` and validity (`valid: false` drives
+> the shake animation), which don't map cleanly to effects. `reduceInputChange`
+> does return `Effect[]`. `ParserState.stack` holds full `CommandSegment[]` (not
+> just names) because Enter commits a pending argument *before* resolving the
+> command, so the reducer simulates that push to decide command-exists /
+> required-args. Effects also include `commitArgument`, `resetInput`, and
+> `setInputState` (vs. the sketch's `clearStack`/`invalidInput`) to mirror the
+> original mutate-then-read ordering exactly.
 
 `AbstractKey` removes the DOM dependency:
 
 ```ts
 type AbstractKey =
-  | { name: 'Enter' | 'Backspace' | 'ArrowUp' | 'ArrowDown' | 'Escape' | 'Delete' }
+  | { name: 'Backspace' | 'Enter' | 'ArrowUp' | 'ArrowDown' }
   | { name: 'char'; char: string }
+  | { name: 'other' }   // any other key → no-op (arrows L/R, Escape, modifiers…)
 ```
 
-Web maps `KeyboardEvent`→`AbstractKey` and derives the `preventDefault` decision
-from the returned effects (current `return false` cases at lines 287, 334 become
-an `invalidInput` effect). CLI maps a readline `keypress`→`AbstractKey`. The
-`async` history branches (lines 300–326) become a `historyNav` effect the adapter
-resolves against its own `HistoryService`.
+Web maps `KeyboardEvent`→`AbstractKey` (`toAbstractKey`) and applies
+`decision.preventDefault` / `decision.valid` directly. CLI maps a readline
+`keypress`→`AbstractKey`. The `async` history branches become a `historyNav`
+effect the adapter resolves against its own `HistoryService` (the web adapter
+detects it and returns a `Promise<boolean>`).
 
 ### `@citadel/react` — thin wrapper
 
@@ -205,13 +224,19 @@ independent). Step 3 is the one that needs the e2e tests as a safety net.
 - [x] `npm test` green (230 passed / 7 skipped); `tsc`, `eslint`, and
       `npm run build` clean
 
-### Step 3 — Introduce the controller reducer
-- [ ] Define `ParserState`, `Effect`, `AbstractKey` in `core/controller.ts`
-- [ ] Port `handleInputChange` → `reduceInputChange(state, newValue, registry): Effect[]`
-- [ ] Port `handleKeyDown` → `reduceKey(state, key, registry): Effect[]`
-      (history branches → `historyNav` effect; `return false` → `invalidInput`)
-- [ ] Add `applyEffect` interpreter in `useCommandParser`; delegate to the reducers
-- [ ] `npm test` + `npm run test:e2e` green
+### Step 3 — Introduce the controller reducer ✅
+- [x] Define `ParserState`, `Effect`, `AbstractKey`, `KeyDecision` in
+      `core/controller.ts` (React-free)
+- [x] Port `handleInputChange` → `reduceInputChange(state, newValue, registry): Effect[]`
+- [x] Port `handleKeyDown` → `reduceKey(state, key, registry): KeyDecision`
+      (history branches → `historyNav` effect; `return false` → `valid: false`)
+- [x] Add `applyEffects` interpreter + `snapshot` + `toAbstractKey` in
+      `useCommandParser`; the hook handlers now delegate to the reducers
+- [x] Added `core/__tests__/controller.test.ts` (22 tests) covering the reducer
+      directly — including history nav + Backspace-pop, which the hook tests
+      never exercised
+- [x] `npm test` green (252 passed / 7 skipped, 29 files); `npm run test:e2e`
+      green (10/10 chromium); `tsc`, `eslint`, `npm run build` clean
 
 ### Step 4 — Carve the workspace
 - [ ] Set up npm/pnpm workspaces: `packages/core`, `packages/react`, `packages/cli`
