@@ -5,23 +5,21 @@ import { useCitadelCommands, useSegmentStack } from '../config/hooks';
 import { useCitadelState } from './useCitadelState';
 import { Logger } from '../utils/logger';
 import { useCommandHistory } from './useCommandHistory';
+import { inputStateReducer, type InputState } from '../core/input-state';
+import { parseInput, stripSurroundingQuotes, type ParsedInput } from '../core/parse-input';
+import {
+  getNextExpectedSegment as coreGetNextExpectedSegment,
+  getAvailableNodes as coreGetAvailableNodes,
+  findMatchingCommands as coreFindMatchingCommands,
+  getAutocompleteSuggestion as coreGetAutocompleteSuggestion,
+  isValidCommandInput as coreIsValidCommandInput,
+} from '../core/completion';
 
-export type InputState = 'idle' | 'entering_command' | 'entering_argument';
-
-type InputStateAction = {
-  type: 'set';
-  state: InputState;
-};
-
-function inputStateReducer(state: InputState, action: InputStateAction): InputState {
-  switch (action.type) {
-    case 'set':
-      Logger.debug(`[inputStateReducer] InputState changing from ${state} to ${action.state}`);
-      return action.state;
-    default:
-      return state;
-  }
-}
+// Re-exported for existing consumers (CommandInput.tsx, tests) that import these
+// from this module. The implementations now live in the framework-agnostic core
+// (src/components/Citadel/core/); see CORE_EXTRACTION_DESIGN.md.
+export { parseInput, stripSurroundingQuotes };
+export type { InputState, ParsedInput };
 
 export const useCommandParser = () => {
   const { state } = useCitadelState();
@@ -34,73 +32,29 @@ export const useCommandParser = () => {
     dispatch({ type: 'set', state: newState });
   }
 
-  const getNextExpectedSegment = useCallback((): CommandSegment => {
-    const completions = commands.getCompletions(segmentStack.path());
-    const nextExpectedSegment = completions[0] || segmentStack.nullSegment; // Return first available completion
-    Logger.debug("[getNextExpectedSegment] ", nextExpectedSegment);
-    return nextExpectedSegment;
-  }, [commands, segmentStack]);
+  // These are thin React wrappers over the framework-agnostic core completion
+  // queries (src/components/Citadel/core/completion.ts). They bind the shared
+  // registry + segment-stack path so callers (and tests) keep the same
+  // zero-argument / input-only signatures.
+  const getNextExpectedSegment = useCallback((): CommandSegment =>
+    coreGetNextExpectedSegment(commands, segmentStack.path(), segmentStack.nullSegment),
+  [commands, segmentStack]);
 
-  const getAvailableNodes = useCallback((): CommandNode[] => {
-    const nextSegmentNames = commands.getCompletionNames(segmentStack.path());
-    return nextSegmentNames
-      .map(segmentName => commands.getCommand([...segmentStack.path(), segmentName]))
-      .filter((cmd): cmd is CommandNode => cmd !== undefined);
-  }, [commands, segmentStack]);
+  const getAvailableNodes = useCallback((): CommandNode[] =>
+    coreGetAvailableNodes(commands, segmentStack.path()),
+  [commands, segmentStack]);
 
-  /**
-   * Filters available commands to those that match the user's current input.
-   * Used by AvailableCommands component to show command suggestions, and by
-   * auto-completion logic to determine unique matches.
-   * 
-   * Example: If user types "us", this will "user" but not "unit"
-   */
-  const findMatchingCommands = useCallback((input: string, availableNodes: CommandNode[]): CommandNode[] => {
-    if (!input) return availableNodes;
+  const findMatchingCommands = useCallback((input: string, availableNodes: CommandNode[]): CommandNode[] =>
+    coreFindMatchingCommands(segmentStack.path(), input, availableNodes),
+  [segmentStack]);
 
-    const depth = segmentStack.path().length;
-    return availableNodes.filter(node => {
-      const segment = node.segments[depth];
-      if (!segment || segment.type !== 'word') return false;
-      return segment.name.toLowerCase().startsWith(input.toLowerCase());
-    });
-  }, [segmentStack]);
+  const getAutocompleteSuggestion = useCallback((input: string): CommandSegment =>
+    coreGetAutocompleteSuggestion(commands, segmentStack.path(), input, segmentStack.nullSegment),
+  [commands, segmentStack]);
 
-  /**
-   * Returns a completion suggestion when there's exactly one unambiguous match.
-   * Used to auto-complete command words (not arguments) during typing.
-   * 
-   * Example: If available commands are ["user", "unit"] and input is "us",
-   * returns "user". But if input is "u", returns null since it's ambiguous.
-   */
-  const getAutocompleteSuggestion = useCallback((input: string): CommandSegment => {
-    const uniqueMatch = commands.getUniqueCompletion(segmentStack.path(), input);
-    if (uniqueMatch && uniqueMatch.type === 'word') {
-      return uniqueMatch;
-    }
-    return segmentStack.nullSegment;
-  }, [commands, segmentStack]);
-
-  const isValidCommandInput = useCallback((input: string): boolean => {
-    const currentPath = segmentStack.path();
-    const availableSegments = commands.getCompletions(currentPath);
-    
-    // If we have no completions and there's input, it's invalid
-    if (availableSegments.length === 0 && input) {
-      return false;
-    }
-
-    // For arguments, any input is valid
-    if (availableSegments.some(segment => segment.type === 'argument')) {
-      return true;
-    }
-
-    // For word segments, check if input matches any available completion
-    const isValid = commands.getMatchingCompletions(currentPath, input)
-      .some((segment) => segment.type === 'word');
-    
-    return isValid;
-  }, [commands, segmentStack]);
+  const isValidCommandInput = useCallback((input: string): boolean =>
+    coreIsValidCommandInput(commands, segmentStack.path(), input),
+  [commands, segmentStack]);
 
   const tryAutocomplete = useCallback((
     input: string
@@ -358,74 +312,5 @@ export const useCommandParser = () => {
     getAvailableNodes,
     getNextExpectedSegment,
     isValidCommandInput,
-  };
-}
-
-
-/**
- * Returns the trimmed input with a matching pair of surrounding single or
- * double quotes removed, so quoted argument values are stored without their
- * delimiters (`"Hello, world"` → `Hello, world`).
- */
-export function stripSurroundingQuotes(input: string): string {
-  const trimmed = input.trim();
-  const first = trimmed[0];
-  if ((first === '"' || first === "'") && trimmed.length >= 2 && trimmed.endsWith(first)) {
-    return trimmed.slice(1, -1);
-  }
-  return trimmed;
-}
-
-export interface ParsedInput {
-  words: string[];
-  currentWord: string;
-  isQuoted: boolean;
-  quoteChar?: "'" | '"';
-  isComplete: boolean;
-}
-
-export function parseInput(input: string): ParsedInput {
-  const words: string[] = [];
-  let currentWord = '';
-  let isQuoted = false;
-  let quoteChar: "'" | '"' | undefined;
-
-  for (let i = 0; i < input.length; i++) {
-    const char = input[i];
-
-    if ((char === '"' || char === "'") && (!isQuoted || char === quoteChar)) {
-      if (isQuoted) {
-        // End quote
-        words.push(currentWord);
-        currentWord = '';
-        isQuoted = false;
-        quoteChar = undefined;
-      } else {
-        // Start quote
-        if (currentWord) {
-          words.push(currentWord);
-          currentWord = '';
-        }
-        isQuoted = true;
-        quoteChar = char;
-      }
-    } else if (!isQuoted && char === ' ') {
-      if (currentWord) {
-        words.push(currentWord);
-        currentWord = '';
-      }
-    } else {
-      currentWord += char;
-    }
-  }
-
-  return {
-    words,
-    currentWord,
-    isQuoted,
-    quoteChar,
-    // Empty input is not "complete" — treating it as complete would commit an
-    // empty argument when the user backspaces their input away.
-    isComplete: !isQuoted && !currentWord && words.length > 0
   };
 }

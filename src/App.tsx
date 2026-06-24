@@ -329,12 +329,7 @@ function App() {
                 ) : (
                   <>Press <kbd>.</kbd> to open Citadel, then type </>
                 )}
-                {EXAMPLE_TRY_KEYS[selectedExample].split(' ').map((k, i, arr) => (
-                  <span key={i}>
-                    <kbd>{k}</kbd>
-                    {i < arr.length - 1 && ' '}
-                  </span>
-                ))}
+                {keySeq(EXAMPLE_TRY_KEYS[selectedExample])}
                 {' '}to auto-expand into{' '}
                 <code className="demo-command-code">
                   {EXAMPLE_TRY_COMMAND[selectedExample]}
@@ -400,54 +395,41 @@ function App() {
                     </span>
                   </div>
                   <div className="bridge-meters">
-                    <div>
-                      <div className="bridge-meter-label">
-                        <span>Hull</span>
-                        <span>{starshipDemo.snapshot.hull}%</span>
+                    {[
+                      {
+                        label: 'Hull',
+                        value: `${starshipDemo.snapshot.hull}%`,
+                        fillClass: `bridge-fill-hull ${starshipDemo.snapshot.hull > 30 ? 'is-ok' : ''}`,
+                        pct: starshipDemo.snapshot.hull,
+                      },
+                      {
+                        label: 'Jump drive',
+                        value: `${starshipDemo.snapshot.jumpCharge}%`,
+                        fillClass: 'bridge-fill-jump',
+                        pct: starshipDemo.snapshot.jumpCharge,
+                      },
+                      {
+                        label: 'Power',
+                        value: `${starshipDemo.snapshot.powerUsed}/${starshipDemo.snapshot.reactorOutput}`,
+                        fillClass: 'bridge-fill-power',
+                        pct: starshipDemo.snapshot.reactorOutput
+                          ? (starshipDemo.snapshot.powerUsed / starshipDemo.snapshot.reactorOutput) * 100
+                          : 0,
+                      },
+                    ].map((meter) => (
+                      <div key={meter.label}>
+                        <div className="bridge-meter-label">
+                          <span>{meter.label}</span>
+                          <span>{meter.value}</span>
+                        </div>
+                        <div className="bridge-track">
+                          <div
+                            className={`bridge-fill ${meter.fillClass}`}
+                            style={{ width: `${meter.pct}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="bridge-track">
-                        <div
-                          className={`bridge-fill bridge-fill-hull ${
-                            starshipDemo.snapshot.hull > 30 ? 'is-ok' : ''
-                          }`}
-                          style={{ width: `${starshipDemo.snapshot.hull}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="bridge-meter-label">
-                        <span>Jump drive</span>
-                        <span>{starshipDemo.snapshot.jumpCharge}%</span>
-                      </div>
-                      <div className="bridge-track">
-                        <div
-                          className="bridge-fill bridge-fill-jump"
-                          style={{ width: `${starshipDemo.snapshot.jumpCharge}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="bridge-meter-label">
-                        <span>Power</span>
-                        <span>
-                          {starshipDemo.snapshot.powerUsed}/{starshipDemo.snapshot.reactorOutput}
-                        </span>
-                      </div>
-                      <div className="bridge-track">
-                        <div
-                          className="bridge-fill bridge-fill-power"
-                          style={{
-                            width: `${
-                              starshipDemo.snapshot.reactorOutput
-                                ? (starshipDemo.snapshot.powerUsed /
-                                    starshipDemo.snapshot.reactorOutput) *
-                                  100
-                                : 0
-                            }%`,
-                          }}
-                        />
-                      </div>
-                    </div>
+                    ))}
                   </div>
                   <div className="bridge-grid">
                     {starshipDemo.snapshot.systems.map((sys) => (
