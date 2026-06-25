@@ -24,9 +24,10 @@ packages/
           @citadel/core engine. Run `npm run coffee-bar` or `npm run game-master`.
   sample-commands/  @citadel/sample-commands — framework-agnostic sample command
           registries (pure @citadel/core) shared by BOTH the web demo and the
-          CLI, so one definition file drives both (e.g. createBasicCommandRegistry,
-          used by the web "Basic" tab and `npm run basic-cli`). Registries that
-          touch the DOM/browser (localStorage) or React stay in packages/react.
+          CLI, so one definition file drives both: createBasicCommandRegistry
+          (web "Basic" tab + `npm run basic-cli`) and createDevOpsCommandRegistry
+          (web "DevOps" tab + `npm run devops-cli`). Registries that touch the
+          DOM/browser (localStorage) or React stay in packages/react.
 ```
 
 **Path note:** paths in the Architecture section below that read

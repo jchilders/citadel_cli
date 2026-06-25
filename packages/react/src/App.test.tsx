@@ -22,10 +22,7 @@ vi.mock('./index', () => ({
 }));
 
 vi.mock('@citadel/sample-commands', () => ({
-  createBasicCommandRegistry: () => mockCreateBasicCommandRegistry()
-}));
-
-vi.mock('./examples/devopsCommands', () => ({
+  createBasicCommandRegistry: () => mockCreateBasicCommandRegistry(),
   createDevOpsCommandRegistry: () => mockCreateDevOpsCommandRegistry()
 }));
 

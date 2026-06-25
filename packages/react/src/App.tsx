@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Citadel } from './index';
-import { createBasicCommandRegistry } from '@citadel/sample-commands';
-import { createDevOpsCommandRegistry } from './examples/devopsCommands';
+import { createBasicCommandRegistry, createDevOpsCommandRegistry } from '@citadel/sample-commands';
 import { createLocalDevCommandRegistry } from './examples/localDevCommands';
 import { defaultConfig } from './components/Citadel/config/defaults';
 import { CitadelConfig } from './components/Citadel/config/types';
@@ -128,7 +127,7 @@ const EXAMPLE_SOURCE_URL: Record<ExampleId, string> = {
   basic: 'https://github.com/jchilders/citadel_cli/blob/main/packages/sample-commands/src/basicCommands.ts',
   spreadsheet: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/spreadsheetCommands.ts',
   localdev: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/localDevCommands.ts',
-  devops: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/devopsCommands.ts',
+  devops: 'https://github.com/jchilders/citadel_cli/blob/main/packages/sample-commands/src/devopsCommands.ts',
   runtime: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/runtimeConfigDemo.ts',
   hacking: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/hackingSimDemo.ts',
   starship: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/starshipDemo.ts',

@@ -11,7 +11,11 @@ all shared. No React, no DOM; just a readline REPL.
 npm run coffee-bar      # coffee-bar demo (src/demo.ts)
 npm run game-master     # game-master console (examples/dungeon-console.ts)
 npm run basic-cli       # the web demo's "Basic" example, in the terminal
+npm run devops-cli      # the web demo's "DevOps" example, in the terminal
 ```
+
+`basic-cli` and `devops-cli` import the **exact same** registry files the web
+demo uses (`@citadel/sample-commands`) — one definition, two front-ends.
 (Run from the repo root — the root scripts delegate to this workspace. Or add
 `-w @citadel/cli` to run from anywhere.)
 

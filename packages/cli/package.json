@@ -19,7 +19,8 @@
   "scripts": {
     "coffee-bar": "tsx src/demo.ts",
     "game-master": "tsx examples/dungeon-console.ts",
-    "basic-cli": "tsx examples/basic-cli.ts"
+    "basic-cli": "tsx examples/basic-cli.ts",
+    "devops-cli": "tsx examples/devops-cli.ts"
   },
   "dependencies": {
     "@citadel/core": "1.5.0",

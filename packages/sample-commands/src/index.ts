@@ -7,3 +7,4 @@
  * touch the DOM/browser (e.g. localStorage) or React stay in the React package.
  */
 export { createBasicCommandRegistry } from './basicCommands';
+export { createDevOpsCommandRegistry } from './devopsCommands';
