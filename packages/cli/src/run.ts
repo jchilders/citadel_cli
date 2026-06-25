@@ -1,20 +1,21 @@
 import { CommandRegistry } from '@citadel/core';
 import { CliSession } from './session';
 import { renderResult } from './render-result';
-import { runRepl } from './repl';
+import { runRepl, type ReplOptions } from './repl';
 
 /**
  * Entry helper for CLIs built on @citadel/core. With `--script=<keys>` it runs
  * non-interactively (characters are typed; '\n' presses Enter) and prints each
  * executed command's result — handy for demos, docs, and CI. Otherwise it
  * launches the interactive readline REPL. Build a registry with the command DSL
- * and hand it here; see examples/dungeon-console.ts.
+ * and hand it here; see examples/dungeon-console.ts. Pass `{ welcome }` to set
+ * the app's startup banner.
  */
-export async function runCli(registry: CommandRegistry): Promise<void> {
+export async function runCli(registry: CommandRegistry, options: ReplOptions = {}): Promise<void> {
   const scriptFlag = process.argv.find((arg) => arg.startsWith('--script='));
 
   if (!scriptFlag) {
-    runRepl(registry);
+    runRepl(registry, options);
     return;
   }
 

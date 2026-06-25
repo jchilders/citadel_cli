@@ -43,8 +43,16 @@ function renderSuggestions(view: CompletionView): string {
   return '';
 }
 
+export interface ReplOptions {
+  /**
+   * A welcome line printed once at startup — set this per app (e.g.
+   * "Welcome to Barstucks Coffee Bar ☕"). Defaults to a generic banner.
+   */
+  welcome?: string;
+}
+
 /** Run an interactive readline REPL backed by the @citadel/core engine. */
-export function runRepl(registry: CommandRegistry): void {
+export function runRepl(registry: CommandRegistry, options: ReplOptions = {}): void {
   const out = process.stdout;
 
   const session = new CliSession(registry, (executed) => {
@@ -76,7 +84,8 @@ export function runRepl(registry: CommandRegistry): void {
   readline.emitKeypressEvents(process.stdin);
   if (process.stdin.isTTY) process.stdin.setRawMode(true);
 
-  out.write(`${DIM}Citadel CLI — same engine as the web. Ctrl+C to quit.${RESET}\n`);
+  const welcome = options.welcome ?? 'Citadel CLI — same engine as the web.';
+  out.write(`${welcome}\n${DIM}Ctrl+C to quit.${RESET}\n\n`);
   draw();
 
   process.stdin.on('keypress', async (str: string | undefined, key: readline.Key) => {

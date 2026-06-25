@@ -6,6 +6,6 @@
  * examples/dungeon-console.ts.
  */
 export { runCli } from './run';
-export { runRepl } from './repl';
+export { runRepl, type ReplOptions } from './repl';
 export { CliSession, type ExecutedCommand } from './session';
 export { renderResult } from './render-result';

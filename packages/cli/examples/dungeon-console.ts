@@ -83,4 +83,6 @@ function buildConsole(): CommandRegistry {
   ]);
 }
 
-runCli(buildConsole());
+runCli(buildConsole(), {
+  welcome: '🐉 The dungeon awaits, Game Master. Marshal your party.',
+});

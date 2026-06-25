@@ -39,6 +39,7 @@ runCli(
   createCommandRegistry([
     command('ping').describe('Health check').handle(async () => text('pong')),
   ]),
+  { welcome: 'Welcome to my console — Ctrl+C to quit.' }, // per-app startup banner
 );
 ```
 
