@@ -1,10 +1,11 @@
 import { defineWorkspace } from 'vitest/config';
 
-// Two test projects: the React library/app (jsdom, configured in vite.config.ts)
-// and the framework-agnostic @citadel/core engine (plain node — no DOM). See
+// Three test projects: the React library (jsdom, configured in
+// packages/react/vite.config.ts) and the framework-agnostic @citadel/core
+// engine + @citadel/cli adapter (plain node — no DOM). See
 // CORE_EXTRACTION_DESIGN.md.
 export default defineWorkspace([
-  './vite.config.ts',
+  './packages/react/vite.config.ts',
   {
     test: {
       name: 'core',

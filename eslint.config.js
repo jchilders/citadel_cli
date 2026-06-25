@@ -6,7 +6,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['dist','coverage','command_examples','examples','**/.vitepress/cache','**/.vitepress/dist'] },
+  { ignores: ['**/dist','**/dist-demo','coverage','command_examples','**/.vitepress/cache','**/.vitepress/dist'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
@@ -28,8 +28,8 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/**/*.{ts,tsx}'],
-    ignores: ['**/__tests__/**', 'tests/**', 'src/App.tsx'],
+    files: ['packages/react/src/**/*.{ts,tsx}'],
+    ignores: ['**/__tests__/**', '**/tests/**', 'packages/react/src/App.tsx'],
     rules: {
       'react-perf/jsx-no-new-object-as-prop': 'warn',
       'react-perf/jsx-no-new-array-as-prop': 'warn',

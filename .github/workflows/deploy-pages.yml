@@ -39,7 +39,7 @@ jobs:
         run: npm run docs:build
 
       - name: Merge docs into site
-        run: cp -r docs/.vitepress/dist dist-demo/docs
+        run: cp -r docs/.vitepress/dist packages/react/dist-demo/docs
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -47,7 +47,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist-demo
+          path: packages/react/dist-demo
 
       - name: Deploy to GitHub Pages
         id: deployment

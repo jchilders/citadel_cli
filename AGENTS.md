@@ -7,6 +7,29 @@ This file provides guidance to AI coding agents working in this repository.
 
 `citadel_cli` is a React component library published to npm. It provides a keyboard-driven command console (like a dev-tools terminal overlay) that can be embedded in web apps. Users trigger it with a configurable key (default: `.`), type hierarchical commands with auto-expansion, and see results rendered inline.
 
+## Monorepo Layout
+
+This is an npm-workspaces monorepo (root is a private orchestrator; run `npm`
+scripts from the root and they delegate). See `CORE_EXTRACTION_DESIGN.md` for
+the full extraction history.
+
+```
+packages/
+  core/   @citadel/core  — framework-agnostic command engine (registry, DSL,
+          results, parse, completion, controller). No React/DOM. Source of
+          truth lives here; the React lib bundles it into its dist.
+  react/  citadel_cli    — the published React library (components, hooks,
+          config, Citadel.tsx, the demo app, e2e tests). Depends on @citadel/core.
+  cli/    @citadel/cli   — terminal front-end (readline REPL) driving the same
+          @citadel/core engine. Run `npm run start -w @citadel/cli`.
+```
+
+**Path note:** paths in the Architecture section below that read
+`src/components/Citadel/...` now live under `packages/react/src/components/Citadel/...`
+(React) or, for the engine modules (command-registry, command-dsl, segment-stack,
+results, completion, controller, parse-input, input-state, storage, help-command,
+cursor, logger), under `packages/core/src/...`.
+
 ## Commands
 
 ```bash
@@ -44,16 +67,23 @@ There is no pre-commit hook — plain commits are instant.
 
 ## Releasing
 
-Releases are tag-driven via GitHub Actions — no manual `npm publish`:
+Releases are tag-driven via GitHub Actions — no manual `npm publish`. The
+published package is the `citadel_cli` workspace (`packages/react`); the repo
+root is a private orchestrator and is never published. Bump the version in
+`packages/react/package.json`, then tag and push:
 ```bash
-npm version <patch|minor|major>   # bumps package.json + creates git tag
-git push && git push --tags        # triggers CI publish to npm
+npm version <patch|minor|major> -w citadel_cli   # bumps packages/react/package.json
+git tag v<x.y.z> && git push && git push --tags    # triggers CI publish to npm
 ```
+(`npm version -w` bumps the workspace package but does **not** create the git
+tag, so tag manually to match `packages/react/package.json`.)
 
 The Release workflow (`auto-publish.yml`) reuses `test.yml` as its test job, so
-a red Tests workflow blocks publishing. If a release run fails, fix the cause
-on `main`, then re-point the tag (`git tag -f v<x.y.z> <commit>` + force-push
-the tag) to re-trigger it.
+a red Tests workflow blocks publishing. It checks the tag against
+`packages/react/package.json` and publishes with `npm publish -w citadel_cli`
+(root scripts delegate `build`/`verify:pack` to that workspace). If a release
+run fails, fix the cause on `main`, then re-point the tag
+(`git tag -f v<x.y.z> <commit>` + force-push the tag) to re-trigger it.
 
 ## Architecture
 

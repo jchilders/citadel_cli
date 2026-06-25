@@ -9,7 +9,7 @@ import dts from 'vite-plugin-dts'
 // emitted .d.ts imports to relative paths within dist/ — keeping the published
 // package self-contained without depending on the unpublished @citadel/core.
 // See CORE_EXTRACTION_DESIGN.md.
-const coreSrc = fileURLToPath(new URL('./packages/core/src', import.meta.url))
+const coreSrc = fileURLToPath(new URL('../core/src', import.meta.url))
 
 // https://vite.dev/config/
 export default defineConfig({

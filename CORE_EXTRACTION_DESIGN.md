@@ -260,11 +260,34 @@ independent). Step 3 is the one that needs the e2e tests as a safety net.
 - [x] `tsc`, `npm test` (252), `npm run lint` (0 errors), `npm run build`,
       `npm run verify:pack` all green
 
-**Phase 4.2 — relocate React lib to `packages/react`** *(deferred)* — the
-release-pipeline-touching part (moves the published package + build/docs/demo;
-root becomes a workspace orchestrator). Skipped for now per decision: cosmetic
-reorganization with real publish risk and little functional gain (root already
-*is* the React package). Can be done later as its own phase.
+**Phase 4.2 — relocate React lib to `packages/react` ✅**
+- [x] `git mv` `src/`, `tests/`, `index.html`, `vite.config.ts`,
+      `vite.demo.config.ts`, `playwright.config.ts`, `tsconfig.app.json` →
+      `tsconfig.json`, and the `sync`/`verify` artifact scripts into
+      `packages/react/`; delete the dead `vitest.config.ts` + orphaned
+      `tsconfig.node.json`
+- [x] `packages/react/package.json` is the published `citadel_cli` (publish
+      config, `peerDependencies` react, `@citadel/core` as a build-time devDep —
+      it's bundled into dist, not a runtime dep)
+- [x] Root `package.json` → private orchestrator (`citadel-cli-monorepo`) whose
+      scripts **delegate** (`build`/`verify:pack`/`dev`/`build:demo`/`test:e2e`
+      → `-w citadel_cli`); `test`/`lint`/`docs`/`metrics` stay at root. CI
+      workflows call the same root scripts, so they keep working unchanged.
+- [x] Path fixups: vite.config `@citadel/core` alias → `../core/src`;
+      `vitest.workspace.ts` → `./packages/react/vite.config.ts`; root
+      `tsconfig.json` covers `packages/*/src` for the husky typecheck;
+      `eslint.config.js` globs → `packages/react/src` + `**/dist`
+- [x] Release-pipeline edits (the one part not runnable locally):
+      `auto-publish.yml` publishes `-w citadel_cli` and checks the tag against
+      `packages/react/package.json`; `deploy-pages.yml` points at
+      `packages/react/dist-demo`; `AGENTS.md` Releasing + Monorepo Layout updated
+- [x] Verified from root: `tsc`, `npm test` (259, 30 files), `lint` (0 errors),
+      `build`, `verify:pack`, `build:demo`, e2e (10/10 chromium), CLI demo — all
+      green
+
+> Caveat: the actual `npm publish` step can't be exercised without a real
+> release. The workflow change is the standard npm-workspaces form
+> (`npm publish -w <pkg>` from a private root); review before the next tag.
 
 **Phase 4.3 — `packages/cli` adapter ✅** *(= Step 5; the web+terminal payoff)*
 - [x] `packages/cli` (`@citadel/cli`, depends on `@citadel/core`)

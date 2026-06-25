@@ -16,15 +16,11 @@
     "noFallthroughCasesInSwitch": true,
     "allowImportingTsExtensions": true,
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    },
     "types": [
       "vitest",
       "vitest/globals"
     ]
   },
-  "include": ["src/**/*", "packages/*/src/**/*"],
-  "exclude": ["node_modules", "dist"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["packages/*/src/**/*"],
+  "exclude": ["node_modules", "**/dist"]
 }
