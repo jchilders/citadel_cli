@@ -91,11 +91,12 @@ export function runRepl(registry: CommandRegistry, options: ReplOptions = {}): v
   if (process.stdin.isTTY) process.stdin.setRawMode(true);
 
   const welcome = options.welcome ?? 'Citadel CLI — same engine as the web.';
-  out.write(`${welcome}\n${DIM}Ctrl+C to quit.${RESET}\n\n`);
+  out.write(`${welcome}\n${DIM}Ctrl+C or Ctrl+D to quit.${RESET}\n\n`);
   draw();
 
   process.stdin.on('keypress', async (str: string | undefined, key: readline.Key) => {
-    if (key.ctrl && key.name === 'c') {
+    // Ctrl+C / Ctrl+D (EOF) exit, like the Python and Ruby REPLs.
+    if (key.ctrl && (key.name === 'c' || key.name === 'd')) {
       out.write('\n');
       process.exit(0);
     }
