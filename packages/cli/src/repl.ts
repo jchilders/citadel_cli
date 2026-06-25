@@ -26,11 +26,7 @@ export function runRepl(registry: CommandRegistry): void {
   const draw = () => {
     readline.cursorTo(out, 0);
     readline.clearLine(out, 0);
-    const depth = session.path().length;
-    const suggestions = session
-      .availableCommands()
-      .map((node) => node.segments[depth]?.name)
-      .filter((name): name is string => Boolean(name));
+    const suggestions = session.suggestions();
     const hint = suggestions.length ? `   \x1b[2m(${suggestions.join('  ')})\x1b[0m` : '';
     out.write(`${PROMPT}${session.renderPrompt()}${hint}`);
     readline.cursorTo(out, PROMPT.length + session.renderPrompt().length);

@@ -68,12 +68,12 @@ export class CliSession {
     return [...committed, this.currentInput].filter((part) => part !== '').join(' ');
   }
 
-  /** Command nodes reachable from the current path (for suggestion display). */
-  availableCommands(): CommandNode[] {
-    return this.registry
-      .getCompletionNames(this.stack.path())
-      .map((name) => this.registry.getCommand([...this.stack.path(), name]))
-      .filter((command): command is CommandNode => command !== undefined);
+  /**
+   * The next segment names reachable from the current path — command words and,
+   * when an argument is expected, the argument name. For suggestion display.
+   */
+  suggestions(): string[] {
+    return this.registry.getCompletionNames(this.stack.path());
   }
 
   private snapshot(): ParserState {
