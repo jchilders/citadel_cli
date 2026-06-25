@@ -5,7 +5,7 @@
  * between the web (React) and terminal (CLI) front-ends. See
  * CORE_EXTRACTION_DESIGN.md.
  */
-import { Logger } from '../utils/logger';
+import { Logger } from './logger';
 
 export type InputState = 'idle' | 'entering_command' | 'entering_argument';
 

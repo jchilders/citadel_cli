@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { LocalStorage } from '../LocalStorage';
-import { StoredCommand } from '../../types/storage';
-import { WordSegment, ArgumentSegment } from '../../types/command-registry';
+import { StoredCommand } from '@citadel/core';
+import { WordSegment, ArgumentSegment } from '@citadel/core';
 
 describe('LocalStorage', () => {
   let localStorage: LocalStorage;

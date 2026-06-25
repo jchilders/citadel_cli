@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import App from './App';
-import { CommandRegistry } from './components/Citadel/types/command-registry';
+import { CommandRegistry } from '@citadel/core';
 import { defaultConfig } from './components/Citadel/config/defaults';
 import { CitadelConfig } from './components/Citadel/config/types';
 

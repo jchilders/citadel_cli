@@ -1,6 +1,6 @@
 import { ArgumentSegment, CommandRegistry, CommandSegment } from './command-registry';
 import { formatCommandNameWithPrefix, getCommandPrefixLengths } from './command-prefix';
-import { TextCommandResult } from './command-results';
+import { TextCommandResult } from './results';
 
 // Required arguments render as <name>, optional ones as [name].
 const formatArgumentName = (segment: CommandSegment): string =>

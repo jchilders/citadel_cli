@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
-import { StoredCommand } from '../types/storage';
+import { StoredCommand } from '@citadel/core';
 import { useCitadelStorage } from '../config/hooks';
-import { CommandSegment, cloneCommandSegments } from '../types/command-registry';
+import { CommandSegment, cloneCommandSegments } from '@citadel/core';
 
 export interface CommandHistory {
   storedCommands: StoredCommand[];

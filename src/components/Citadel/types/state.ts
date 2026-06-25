@@ -1,7 +1,11 @@
-import { ArgumentSegment } from './command-registry';
-import { CommandResult, PendingCommandResult } from './command-results';
-import { CommandStorage, StoredCommand } from './storage';
-import { SegmentStack } from './segment-stack';
+import {
+  ArgumentSegment,
+  CommandResult,
+  PendingCommandResult,
+  CommandStorage,
+  StoredCommand,
+  SegmentStack,
+} from '@citadel/core';
 
 export interface CitadelState {
   currentInput: string;

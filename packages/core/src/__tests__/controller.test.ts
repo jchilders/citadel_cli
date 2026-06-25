@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { command, createCommandRegistry, text } from '../../types/command-dsl';
-import { CommandRegistry, CommandSegment } from '../../types/command-registry';
+import { command, createCommandRegistry, text } from '../command-dsl';
+import { CommandRegistry, CommandSegment } from '../command-registry';
 import { InputState } from '../input-state';
 import {
   reduceInputChange,

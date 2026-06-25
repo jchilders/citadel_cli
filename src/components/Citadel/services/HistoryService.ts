@@ -1,4 +1,4 @@
-import { CommandStorage, StoredCommand } from '../types/storage';
+import { CommandStorage, StoredCommand } from '@citadel/core';
 
 export interface HistoryService {
   getCommands(): Promise<StoredCommand[]>;

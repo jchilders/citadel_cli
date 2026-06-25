@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { OutputItem } from '../state';
-import { SegmentStack } from '../segment-stack';
-import { WordSegment } from '../command-registry';
+import { SegmentStack } from '@citadel/core';
+import { WordSegment } from '@citadel/core';
 
 describe('OutputItem', () => {
   afterEach(() => {

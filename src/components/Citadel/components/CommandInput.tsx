@@ -1,8 +1,8 @@
 import React, { useRef, useEffect, useState, useMemo, useLayoutEffect, useCallback } from 'react';
-import { ArgumentSegment } from '../types/command-registry';
+import { ArgumentSegment } from '@citadel/core';
 import { CitadelState, CitadelActions } from '../types/state';
 import { Cursor } from '../Cursor';
-import { CursorType } from '../types/cursor';
+import { CursorType } from '@citadel/core';
 import { defaultConfig } from '../config/defaults';
 import { InputState, useCommandParser } from '../hooks/useCommandParser';
 import { useCitadelConfig, useCitadelCommands, useSegmentStack } from '../config/hooks';

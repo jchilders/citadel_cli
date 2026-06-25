@@ -10,8 +10,8 @@
  * callers that compare against their own shared `NullSegment` instance by
  * identity keep working.
  */
-import { CommandNode, CommandSegment, CommandRegistry } from '../types/command-registry';
-import { Logger } from '../utils/logger';
+import { CommandNode, CommandSegment, CommandRegistry } from './command-registry';
+import { Logger } from './logger';
 
 /**
  * Returns the first available completion for the current path, or the injected

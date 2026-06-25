@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { expect, describe, it } from 'vitest';
 import { CommandOutputLine } from '../CommandOutputLine';
-import { CommandStatus } from '../../types/command-results';
+import { CommandStatus } from '@citadel/core';
 
 describe('CommandOutputLine', () => {
   const defaultProps = {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { CursorStyle, DEFAULT_CURSOR_CONFIGS } from './types/cursor';
+import { CursorStyle, DEFAULT_CURSOR_CONFIGS } from '@citadel/core';
 
 const spinChars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 const bbsChars = ['|', '/', '-', '\\'];

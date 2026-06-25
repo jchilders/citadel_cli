@@ -1,4 +1,4 @@
-import { CommandStorage, StorageConfig } from "../types/storage";
+import { CommandStorage, StorageConfig } from "@citadel/core";
 import { LocalStorage } from "./LocalStorage";
 import { MemoryStorage } from "./MemoryStorage";
 

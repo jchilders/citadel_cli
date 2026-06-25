@@ -1,13 +1,13 @@
 import { render, act, waitFor } from '@testing-library/react';
 import { CitadelConfigProvider } from '../CitadelConfigContext';
 import { useCitadelCommands, useCitadelConfig, useCitadelStorage } from '../hooks';
-import { CommandRegistry } from '../../types/command-registry';
+import { CommandRegistry } from '@citadel/core';
 import { StorageFactory } from '../../storage/StorageFactory';
 import { MemoryStorage } from '../../storage/MemoryStorage';
 import { LocalStorage } from '../../storage/LocalStorage';
 import { defaultConfig } from '../defaults';
 import { CitadelElement } from '../../Citadel';
-import { createHelpHandler } from '../../types/help-command';
+import { createHelpHandler } from '@citadel/core';
 
 describe('CitadelConfigContext', () => {
   describe('command handling', () => {

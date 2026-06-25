@@ -1,5 +1,5 @@
-import { Logger } from '../utils/logger';
-import { CommandResult, TextCommandResult } from './command-results';
+import { Logger } from './logger';
+import { CommandResult, TextCommandResult } from './results';
 
 /** 
  * A callback function that executes a command and returns a Promise of CommandResult.

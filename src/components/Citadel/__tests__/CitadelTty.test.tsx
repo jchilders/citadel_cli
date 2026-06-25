@@ -2,7 +2,7 @@ import { render, act } from '@testing-library/react';
 import React from 'react';
 import { CitadelTty } from '../components/CitadelTty';
 import { CitadelConfigProvider } from '../config/CitadelConfigContext';
-import { CommandRegistry } from '../types/command-registry';
+import { CommandRegistry } from '@citadel/core';
 import { createMockCitadelActions, createMockCitadelState } from '../../../__test-utils__/factories';
 import { defaultConfig } from '../config/defaults';
 

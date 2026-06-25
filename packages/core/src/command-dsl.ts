@@ -6,7 +6,7 @@ import {
   ImageCommandResult,
   JsonCommandResult,
   TextCommandResult,
-} from './command-results';
+} from './results';
 
 export interface CommandExecutionContext<ArgName extends string = string> {
   rawArgs: string[];

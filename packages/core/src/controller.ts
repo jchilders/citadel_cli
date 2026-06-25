@@ -15,7 +15,7 @@ import {
   ArgumentSegment,
   WordSegment,
   NullSegment,
-} from '../types/command-registry';
+} from './command-registry';
 import { InputState } from './input-state';
 import { parseInput, stripSurroundingQuotes } from './parse-input';
 import {

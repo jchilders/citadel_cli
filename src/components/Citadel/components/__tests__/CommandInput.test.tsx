@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react';
 import { CommandInput } from '../CommandInput';
-import { CommandRegistry } from '../../types/command-registry';
-import { TextCommandResult } from '../../types/command-results';
+import { CommandRegistry } from '@citadel/core';
+import { TextCommandResult } from '@citadel/core';
 import { CitadelConfigProvider } from '../../config/CitadelConfigContext';
 import {
   createMockCitadelActions,

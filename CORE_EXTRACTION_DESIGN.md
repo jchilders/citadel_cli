@@ -238,11 +238,34 @@ independent). Step 3 is the one that needs the e2e tests as a safety net.
 - [x] `npm test` green (252 passed / 7 skipped, 29 files); `npm run test:e2e`
       green (10/10 chromium); `tsc`, `eslint`, `npm run build` clean
 
-### Step 4 — Carve the workspace
-- [ ] Set up npm/pnpm workspaces: `packages/core`, `packages/react`, `packages/cli`
-- [ ] `core` depends on nothing; `react` + `cli` depend on `core`
-- [ ] `src/index.ts` re-exports from `@citadel/react` for npm back-compat
-- [ ] `npm run build` + `npm run verify:pack` green
+### Step 4 — Carve the workspace (in progress)
+
+**Phase 4.1 — `@citadel/core` package ✅**
+- [x] Add root `workspaces: ["packages/*"]`; create `packages/core` (`@citadel/core`,
+      exports TS source via `./src/index.ts`)
+- [x] `git mv` the 13 React-free engine files (registry, dsl, prefix,
+      segment-stack, storage, help-command, cursor, results, input-state,
+      parse-input, completion, controller) + `logger` into `packages/core/src`;
+      drop the `command-results` shim
+- [x] Rewire ~60 importers across `src/` to `@citadel/core`; `types/index.ts`
+      re-exports `@citadel/core` (deliberate additive widening — core is now a
+      public reusable surface); `state.ts` stays React-side
+- [x] `vitest.workspace.ts` adds a node-env `core` project (the npm `workspaces`
+      field makes vitest ignore the root `test.include`)
+- [x] Published types stay self-contained: alias `@citadel/core` → its source so
+      Vite bundles the engine into the JS **and** vite-plugin-dts rewrites
+      emitted `.d.ts` imports to relative paths within `dist/` (api-extractor
+      `rollupTypes`/`bundledPackages` was tried first but hit an internal
+      "Unable to follow symbol" crash — the alias approach avoids it entirely)
+- [x] `tsc`, `npm test` (252), `npm run lint` (0 errors), `npm run build`,
+      `npm run verify:pack` all green
+
+**Phase 4.2 — relocate React lib to `packages/react`** *(pending)* — the
+release-pipeline-touching part: moves the published package + build/docs/demo;
+root becomes a workspace orchestrator.
+
+**Phase 4.3 — `packages/cli` adapter** *(pending, = Step 5)* — the actual
+web+terminal reuse payoff.
 
 ### Step 5 — CLI adapter
 - [ ] `cli/renderResult.ts` (union → formatted string)

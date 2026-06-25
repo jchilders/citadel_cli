@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
-import { CommandRegistry } from '../components/Citadel/types/command-registry';
-import { createCommandRegistry } from '../components/Citadel/types/command-dsl';
+import { CommandRegistry } from '@citadel/core';
+import { createCommandRegistry } from '@citadel/core';
 import {
   HACKING_SIM_NETWORK,
   HackingSimSnapshot,

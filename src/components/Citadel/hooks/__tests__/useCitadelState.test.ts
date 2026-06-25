@@ -9,8 +9,8 @@ import {
   createMockCommandHistoryActions,
   setupCitadelStateHook
 } from '../../../../__test-utils__/factories';
-import { TextCommandResult, ErrorCommandResult } from '../../types/command-results';
-import { ArgumentSegment, CommandNode, WordSegment } from '../../types/command-registry';
+import { TextCommandResult, ErrorCommandResult } from '@citadel/core';
+import { ArgumentSegment, CommandNode, WordSegment } from '@citadel/core';
 import { useCommandHistory } from '../useCommandHistory';
 
 // Mock hooks

@@ -1,5 +1,5 @@
-import { SegmentStack } from '../segment-stack';
-import { WordSegment, ArgumentSegment, NullSegment } from '../command-registry';
+import { SegmentStack } from '@citadel/core';
+import { WordSegment, ArgumentSegment, NullSegment } from '@citadel/core';
 
 describe('SegmentStack', () => {
   let stack: SegmentStack;

@@ -1,10 +1,23 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
+import { fileURLToPath, URL } from 'node:url'
 import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
 
+// Resolve @citadel/core to its source (not the node_modules workspace symlink),
+// so Vite bundles the engine into the JS output and vite-plugin-dts rewrites the
+// emitted .d.ts imports to relative paths within dist/ — keeping the published
+// package self-contained without depending on the unpublished @citadel/core.
+// See CORE_EXTRACTION_DESIGN.md.
+const coreSrc = fileURLToPath(new URL('./packages/core/src', import.meta.url))
+
 // https://vite.dev/config/
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@citadel/core': coreSrc,
+    },
+  },
   plugins: [
     react(),
     dts({
@@ -17,6 +30,8 @@ export default defineConfig({
         'src/examples/**',
         'src/App.tsx',
         'src/main.tsx',
+        'packages/**/__tests__/**',
+        'packages/**/*.test.*',
       ],
     })
   ],

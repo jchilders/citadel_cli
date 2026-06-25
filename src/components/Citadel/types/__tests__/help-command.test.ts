@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { createHelpHandler } from '../help-command';
-import { CommandRegistry, WordSegment, ArgumentSegment } from '../command-registry';
-import { TextCommandResult } from '../command-results';
+import { createHelpHandler } from '@citadel/core';
+import { CommandRegistry, WordSegment, ArgumentSegment } from '@citadel/core';
+import { TextCommandResult } from '@citadel/core';
 
 describe('createHelpHandler', () => {
   it('lists commands alphabetically, formats arguments, and appends help entry', async () => {

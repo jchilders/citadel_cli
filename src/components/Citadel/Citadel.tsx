@@ -3,9 +3,9 @@ import { createRoot } from 'react-dom/client';
 import { useCitadelConfig } from './config/hooks';
 import { CitadelConfig } from './config/types';
 import { CitadelConfigProvider } from './config/CitadelConfigContext';
-import { CommandRegistry } from './types/command-registry';
+import { CommandRegistry } from '@citadel/core';
 import { defaultConfig } from './config/defaults';
-import { Logger, LogLevel } from './utils/logger';
+import { Logger, LogLevel } from '@citadel/core';
 import { PanelController } from './controllers/PanelController';
 import { InlineController } from './controllers/InlineController';
 

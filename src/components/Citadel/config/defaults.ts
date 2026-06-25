@@ -1,5 +1,5 @@
 import { CitadelConfig } from './types';
-import { LogLevel } from '../utils/logger';
+import { LogLevel } from '@citadel/core';
 
 const isProduction = import.meta.env.PROD;
 

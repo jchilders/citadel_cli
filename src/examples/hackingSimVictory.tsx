@@ -1,5 +1,5 @@
 import React from 'react';
-import { CommandResult } from '../components/Citadel/types/command-results';
+import { CommandResult } from '@citadel/core';
 import { BannerAnimation, toLines } from './AsciiBanner';
 
 // Skull & crossbones by Joan G. Stark ("jgs"), via https://ascii.co.uk/art/skulls

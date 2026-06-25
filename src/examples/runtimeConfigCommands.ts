@@ -1,6 +1,6 @@
-import { CommandRegistry } from '../components/Citadel/types/command-registry';
-import { CommandDefinition, command, registerCommands, text } from '../components/Citadel/types/command-dsl';
-import { CursorType, DEFAULT_CURSOR_CONFIGS } from '../components/Citadel/types/cursor';
+import { CommandRegistry } from '@citadel/core';
+import { CommandDefinition, command, registerCommands, text } from '@citadel/core';
+import { CursorType, DEFAULT_CURSOR_CONFIGS } from '@citadel/core';
 import { defaultConfig } from '../components/Citadel/config/defaults';
 
 export type DisplayMode = 'panel' | 'inline';

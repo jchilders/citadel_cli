@@ -1,5 +1,5 @@
 import React from 'react';
-import { CommandResult } from '../components/Citadel/types/command-results';
+import { CommandResult } from '@citadel/core';
 import { BannerAnimation, toLines } from './AsciiBanner';
 
 // Two animated end-of-run results for the Starship demo, sharing the reveal

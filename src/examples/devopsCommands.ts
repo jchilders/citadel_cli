@@ -1,5 +1,5 @@
-import { CommandRegistry } from '../components/Citadel/types/command-registry';
-import { bool, command, createCommandRegistry, json, text } from '../components/Citadel/types/command-dsl';
+import { CommandRegistry } from '@citadel/core';
+import { bool, command, createCommandRegistry, json, text } from '@citadel/core';
 
 export function createDevOpsCommandRegistry(): CommandRegistry {
   return createCommandRegistry([
