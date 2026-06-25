@@ -1,7 +1,17 @@
-import { CommandRegistry } from '@citadel/core';
+import { CommandRegistry, WordSegment, createHelpHandler } from '@citadel/core';
 import { CliSession } from './session';
 import { renderResult } from './render-result';
 import { runTui, type CliOptions } from './tui';
+
+/**
+ * Auto-register a `help` command that lists every command (web parity with
+ * `includeHelpCommand`), unless disabled or one already exists.
+ */
+export function ensureHelpCommand(registry: CommandRegistry, options: CliOptions): void {
+  if (options.includeHelpCommand === false) return;
+  if (registry.commandExistsForPath(['help'])) return;
+  registry.addCommand([new WordSegment('help')], 'Show available commands', createHelpHandler(registry));
+}
 
 /**
  * Entry helper for CLIs built on @citadel/core. With `--script=<keys>` it runs
@@ -12,6 +22,8 @@ import { runTui, type CliOptions } from './tui';
  * examples/dungeon-console.ts. Pass `{ welcome }` to set the app's banner.
  */
 export async function runCli(registry: CommandRegistry, options: CliOptions = {}): Promise<void> {
+  ensureHelpCommand(registry, options);
+
   const scriptFlag = process.argv.find((arg) => arg.startsWith('--script='));
 
   if (!scriptFlag) {

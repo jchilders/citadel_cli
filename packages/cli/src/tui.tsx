@@ -13,6 +13,8 @@ export interface CliOptions {
   welcome?: string;
   /** Fail a command that runs longer than this many ms (web parity). 0 disables. */
   commandTimeoutMs?: number;
+  /** Auto-register a `help` command listing all commands (web parity). Default true. */
+  includeHelpCommand?: boolean;
 }
 
 const PROMPT = '> ';

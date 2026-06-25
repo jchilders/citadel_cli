@@ -58,6 +58,10 @@ See [`examples/dungeon-console.ts`](./examples/dungeon-console.ts) for a fuller,
 commented example (stateful commands, optional args, `text`/`json`/`bool`
 results).
 
+`runCli` auto-registers a `help` command that lists every command (with its
+auto-expand shortcuts), matching the web. Pass `{ includeHelpCommand: false }`
+to suppress it, or define your own `help` command to override it.
+
 ## Scripted mode (demos / CI)
 
 `runCli` also takes a non-interactive `--script` where characters are typed and
