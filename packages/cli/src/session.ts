@@ -29,6 +29,8 @@ export interface CliOutputItem {
   path: string[];
   /** The command as typed (words + argument values). */
   commandLine: string;
+  /** When the command was issued (ms epoch), for the output-line timestamp. */
+  timestamp: number;
   status: CommandStatus;
   result: CommandResult;
 }
@@ -81,14 +83,8 @@ export class CliSession {
   private readonly onChange?: () => void;
   private readonly commandTimeoutMs: number;
 
-  /** All executed commands (pending or resolved), in issue order. */
+  /** The output pane: executed commands (pending or resolved), in issue order. */
   readonly outputs: CliOutputItem[] = [];
-
-  /**
-   * Resolved commands in *resolution* order (append-only). The TUI commits these
-   * to scrollback via Ink's <Static>, which needs an append-only list.
-   */
-  readonly resolvedOutputs: CliOutputItem[] = [];
 
   constructor(
     private readonly registry: CommandRegistry,
@@ -322,6 +318,7 @@ export class CliSession {
       id: this.nextId++,
       path: pending.path,
       commandLine: pending.commandLine,
+      timestamp: Date.now(),
       status: CommandStatus.Pending,
       result: new PendingCommandResult(),
     };
@@ -344,7 +341,6 @@ export class CliSession {
       item.status = CommandStatus.Failure;
     }
 
-    this.resolvedOutputs.push(item);
     this.notify();
     this.onExecute?.(item);
   }

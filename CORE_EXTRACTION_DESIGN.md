@@ -320,26 +320,33 @@ independent). Step 3 is the one that needs the e2e tests as a safety net.
 
 **Phase 4.4 — Ink TUI (three-region layout + async output) ✅** — the initial
 `repl.ts` was a line-oriented readline loop: async results printed inline
-whenever they resolved, with no output pane. Replaced with an **Ink** TUI
-(`tui.tsx`) mirroring the web's three regions — a `<Static>` scrollback output
-pane, the command line, and the suggestion list — driven by the same
-`CliSession`. The session gained the web's pending→resolve output lifecycle (a
+whenever they resolved, with no output pane. Replaced with a **full-screen Ink**
+TUI (`tui.tsx`, alternate screen) mirroring the web's three regions — an output
+pane in **its own bordered `<Box>`** (newest anchored to the bottom via
+`flexGrow` + `justifyContent="flex-end"` + `overflow="hidden"`; older scrolls off
+the top), with the command line and suggestion list pinned beneath. Driven by
+the same `CliSession`, which gained the web's pending→resolve output lifecycle (a
 command appends a `PendingCommandResult` item with a spinner on execute, updated
-in place on resolve) and an `onChange` notifier so Ink re-renders; resolved
-items commit to `<Static>` (scrollback) while in-flight spinners + the input
-stay in the live region.
+**in place** on resolve — issue order, like the web) and an `onChange` notifier
+so Ink re-renders.
+
+> An earlier take used Ink `<Static>` for terminal scrollback, but the user
+> wanted the web's contained, self-scrolling box; the bordered full-screen box
+> renders all output dynamically instead (no `<Static>`). Note: `<Static>` is
+> `memo`'d, so it only re-renders when passed a *new* `items` array reference —
+> a stable/mutated array silently drops appended items.
 - [x] deps: `ink`, `ink-spinner`, `react` 18 (matches the web; not published)
 - [x] `tui.tsx`: `<App>` + `<OutputLine>`/`<Suggestions>`; `useInput` →
       `AbstractKey` → core reducers; Ctrl+C/D exit
 - [x] `CliSession`: options-object ctor with `onChange`; `outputs: CliOutputItem[]`
       with the pending→resolve lifecycle (scripted line mode + TUI share it)
 - [x] `run.ts`: interactive → `runTui`; `--script` → the line mode (unchanged)
-- [x] `tui.test.tsx` (2 tests, ink-testing-library) — renders prompt +
-      suggestions, auto-expands a typed prefix
+- [x] `tui.test.tsx` (3 tests, ink-testing-library) — renders the title/box/
+      suggestions, auto-expands a typed prefix, and commits a result to the pane
 - [x] JSX gotcha: tsx ignores tsconfig `jsx` and emits classic `React.createElement`,
       so `tui.tsx` default-imports React and calls hooks as `React.*` (used →
       satisfies the automatic-runtime tsc too)
-- [x] `tsc`, `npm test` (261, 31 files), `lint` (0 errors) green
+- [x] `tsc`, `npm test` (262, 31 files), `lint` (0 errors) green
 
 ## Risks / open questions
 

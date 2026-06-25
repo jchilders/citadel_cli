@@ -3,20 +3,20 @@
 // runtime — tsx ignores the tsconfig `jsx` setting and always emits
 // React.createElement, so React must be in scope.
 import React from 'react';
-import { Box, Static, Text, render, useApp, useInput, type Key } from 'ink';
+import { Box, Text, render, useApp, useInput, useStdout, type Key } from 'ink';
 import Spinner from 'ink-spinner';
 import { CommandRegistry, CommandStatus, type AbstractKey } from '@citadel/core';
 import { CliSession, type CliOutputItem, type CompletionView } from './session';
 import { renderResult } from './render-result';
 
 export interface CliOptions {
-  /** Welcome line printed once above the app. */
+  /** Title line shown at the top of the full-screen UI. */
   welcome?: string;
   /** Fail a command that runs longer than this many ms (web parity). 0 disables. */
   commandTimeoutMs?: number;
 }
 
-const PROMPT = 'citadel❯ ';
+const PROMPT = '> ';
 
 /** Map an Ink keypress to the engine's framework-agnostic AbstractKey. */
 function toAbstractKey(input: string, key: Key): AbstractKey | null {
@@ -30,14 +30,32 @@ function toAbstractKey(input: string, key: Key): AbstractKey | null {
   return null;
 }
 
-/** One row in the output pane: the command echo, a status mark, and the result. */
+/** Track the terminal size, re-rendering on resize so the UI stays full-screen. */
+function useTerminalSize() {
+  const { stdout } = useStdout();
+  const [size, setSize] = React.useState({
+    rows: stdout.rows || 24,
+    columns: stdout.columns || 80,
+  });
+  React.useEffect(() => {
+    const onResize = () => setSize({ rows: stdout.rows || 24, columns: stdout.columns || 80 });
+    stdout.on('resize', onResize);
+    return () => {
+      stdout.off('resize', onResize);
+    };
+  }, [stdout]);
+  return size;
+}
+
+/** One output entry: "> command · time ●" then the result, mirroring the web. */
 function OutputLine({ item }: { item: CliOutputItem }) {
+  const time = new Date(item.timestamp).toLocaleTimeString();
   return (
-    <Box flexDirection="column" marginBottom={1}>
+    <Box flexDirection="column" marginBottom={1} flexShrink={0}>
       <Box>
-        <Text dimColor>❯ </Text>
+        <Text dimColor>&gt; </Text>
         <Text>{item.commandLine}</Text>
-        <Text> </Text>
+        <Text dimColor> · {time} </Text>
         {item.status === CommandStatus.Pending ? (
           <Text color="yellow">
             <Spinner type="dots" />
@@ -48,11 +66,7 @@ function OutputLine({ item }: { item: CliOutputItem }) {
           <Text color="red">●</Text>
         )}
       </Box>
-      {item.status !== CommandStatus.Pending && (
-        <Box marginLeft={2}>
-          <Text>{renderResult(item.result)}</Text>
-        </Box>
-      )}
+      {item.status !== CommandStatus.Pending && <Text>{renderResult(item.result)}</Text>}
     </Box>
   );
 }
@@ -83,11 +97,20 @@ function Suggestions({ view }: { view: CompletionView }) {
       </Text>
     );
   }
-  return null;
+  return <Text> </Text>;
 }
 
-export function App({ registry, commandTimeoutMs }: { registry: CommandRegistry; commandTimeoutMs?: number }) {
+export function App({
+  registry,
+  commandTimeoutMs,
+  welcome,
+}: {
+  registry: CommandRegistry;
+  commandTimeoutMs?: number;
+  welcome?: string;
+}) {
   const { exit } = useApp();
+  const { rows, columns } = useTerminalSize();
   const [, forceRender] = React.useReducer((n: number) => n + 1, 0);
 
   const session = React.useMemo(
@@ -109,37 +132,55 @@ export function App({ registry, commandTimeoutMs }: { registry: CommandRegistry;
     }
   });
 
-  // Resolved commands commit to <Static> (scrollback), in resolution order.
-  // Ink's <Static> is memo'd, so pass a NEW array reference each render —
-  // otherwise it never sees appended items. Pending commands stay in the live
-  // region below with a spinner.
-  const resolved = [...session.resolvedOutputs];
-  const pending = session.outputs.filter((item) => item.status === CommandStatus.Pending);
-
   return (
-    <Box flexDirection="column">
-      <Static items={resolved}>{(item) => <OutputLine key={item.id} item={item} />}</Static>
+    <Box flexDirection="column" height={rows} width={columns}>
+      <Box paddingX={1} justifyContent="space-between">
+        <Text color="cyan" bold>
+          › CITADEL
+        </Text>
+        <Text dimColor>{welcome ?? ''}</Text>
+      </Box>
 
-      {pending.map((item) => (
-        <OutputLine key={item.id} item={item} />
-      ))}
+      {/* Output pane: its own bordered box. Newest output sits at the bottom;
+          older output scrolls off the top (overflow hidden + justify flex-end). */}
+      <Box
+        flexGrow={1}
+        flexDirection="column"
+        borderStyle="round"
+        borderColor="gray"
+        overflow="hidden"
+        justifyContent="flex-end"
+        paddingX={1}
+      >
+        {session.outputs.map((item) => (
+          <OutputLine key={item.id} item={item} />
+        ))}
+      </Box>
 
-      <Box>
+      {/* Command line, pinned. */}
+      <Box paddingX={1}>
         <Text color="cyan">{PROMPT}</Text>
         <Text>{session.renderPrompt()}</Text>
         <Text inverse> </Text>
       </Box>
 
-      <Suggestions view={session.completionView()} />
+      {/* Available commands, pinned. */}
+      <Box paddingX={1}>
+        <Suggestions view={session.completionView()} />
+      </Box>
     </Box>
   );
 }
 
-/** Run the interactive Ink TUI: an output pane (scrollback) + command line + suggestions. */
+/** Run the interactive full-screen Ink TUI (output pane + command line + suggestions). */
 export function runTui(registry: CommandRegistry, options: CliOptions = {}): void {
-  if (options.welcome) {
-    process.stdout.write(`${options.welcome}  \x1b[2m(Ctrl+C or Ctrl+D to quit)\x1b[0m\n\n`);
-  }
-  const app = render(<App registry={registry} commandTimeoutMs={options.commandTimeoutMs} />);
-  void app.waitUntilExit();
+  const stdout = process.stdout;
+  stdout.write('\x1b[?1049h'); // enter the alternate screen buffer (full screen)
+  const restore = () => stdout.write('\x1b[?1049l'); // restore the main screen
+
+  const app = render(
+    <App registry={registry} commandTimeoutMs={options.commandTimeoutMs} welcome={options.welcome} />,
+  );
+  app.waitUntilExit().then(restore, restore);
+  process.on('exit', restore);
 }

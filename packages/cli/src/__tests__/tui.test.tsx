@@ -13,13 +13,14 @@ function buildRegistry() {
 }
 
 describe('Ink TUI', () => {
-  it('renders the command line and the suggestion list', async () => {
+  it('renders the title, output box, and the suggestion list', async () => {
     const { lastFrame } = render(<App registry={buildRegistry()} commandTimeoutMs={0} />);
     await delay(40);
     const frame = lastFrame() ?? '';
-    expect(frame).toContain('citadel❯');
-    expect(frame).toContain('ping');
-    expect(frame).toContain('brew');
+    expect(frame).toContain('CITADEL'); // title bar
+    expect(frame).toContain('╭'); // output pane border
+    expect(frame).toContain('ping'); // suggestion
+    expect(frame).toContain('brew'); // suggestion
   });
 
   it('auto-expands a typed prefix in the command line', async () => {

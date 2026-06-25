@@ -3,9 +3,10 @@
 A terminal front-end for [Citadel](../../README.md). It drives the **same**
 `@citadel/core` command engine that powers the web `<Citadel>` component — the
 prefix auto-expansion, hierarchical commands, argument parsing, and history are
-all shared. The interactive UI is an [Ink](https://github.com/vadimdemedes/ink)
-TUI that mirrors the web's three regions: a scrolling output pane, the command
-line, and the suggestion list. Async command results land in the output pane
+all shared. The interactive UI is a full-screen [Ink](https://github.com/vadimdemedes/ink)
+TUI that mirrors the web's three regions: an output pane in its own bordered box
+(newest at the bottom, older scrolls off the top), with the command line and the
+suggestion list pinned beneath it. Async command results land in the output pane
 (with a spinner while running), never inline with your input.
 
 ## Try it
@@ -74,10 +75,11 @@ npx tsx examples/dungeon-console.ts --script=$'rc\nls\n'
   shared `reduceKey` / `reduceInputChange` core reducers, interprets the
   effects, and runs commands with the same pending→resolve output lifecycle
   (an `onChange` callback lets the TUI re-render).
-- `src/tui.tsx` — the Ink TUI: `<Output>` (a `<Static>` scrollback pane),
-  `<CommandLine>`, and `<Suggestions>`, mapping the web's CitadelTty/
-  CommandOutput/CommandInput/AvailableCommands. `useInput` → `AbstractKey` →
-  the same core reducers.
+- `src/tui.tsx` — the full-screen Ink TUI (alternate screen): a bordered
+  output `<Box>` (`flexGrow` + `justifyContent="flex-end"` + `overflow="hidden"`
+  to keep the newest output in view), with the command line and suggestions
+  pinned below — mapping the web's CitadelTty/CommandOutput/CommandInput/
+  AvailableCommands. `useInput` → `AbstractKey` → the same core reducers.
 - `src/render-result.ts` — renders a `CommandResult` to a string (the web has
   its own JSX renderer).
 - `src/run.ts` — the TUI-or-`--script` entry helper.
