@@ -8,6 +8,7 @@ import {
   CommandResult,
   ErrorCommandResult,
   getNextExpectedSegment,
+  getCommandPrefixLengths,
   reduceInputChange,
   reduceKey,
   type AbstractKey,
@@ -18,8 +19,27 @@ import {
 
 export interface ExecutedCommand {
   path: string[];
+  /** The command as typed (words + argument values), for echoing to scrollback. */
+  commandLine: string;
   result: CommandResult;
 }
+
+/** A command suggestion with the length of its shortest unambiguous prefix. */
+export interface CommandSuggestion {
+  name: string;
+  /** Number of leading characters that uniquely select this command. */
+  prefixLength: number;
+}
+
+/**
+ * What to show beneath the prompt, mirroring the web's AvailableCommands: a list
+ * of next command words (with auto-expand prefixes), or the next argument, or
+ * nothing.
+ */
+export type CompletionView =
+  | { kind: 'commands'; items: CommandSuggestion[] }
+  | { kind: 'argument'; name: string; optional: boolean; description?: string }
+  | { kind: 'none' };
 
 /**
  * Terminal adapter that drives the framework-agnostic @citadel/core engine — the
@@ -69,11 +89,42 @@ export class CliSession {
   }
 
   /**
-   * The next segment names reachable from the current path — command words and,
-   * when an argument is expected, the argument name. For suggestion display.
+   * What to display beneath the prompt for the current path + input. Mirrors the
+   * web's AvailableCommands: matching command words (sorted alphabetically, help
+   * last) each tagged with their shortest unambiguous prefix, or the next
+   * argument, or nothing. Uses the same core helpers as the web.
    */
-  suggestions(): string[] {
-    return this.registry.getCompletionNames(this.stack.path());
+  completionView(): CompletionView {
+    const path = this.stack.path();
+    const input = this.currentInput.trim().toLowerCase();
+    const matching = this.registry.getMatchingCompletions(path, input);
+
+    if (matching.length === 0) return { kind: 'none' };
+
+    if (matching.some((segment) => segment.type === 'argument')) {
+      const arg = matching[0] as ArgumentSegment;
+      return {
+        kind: 'argument',
+        name: arg.name,
+        optional: Boolean(arg.optional),
+        description: arg.description,
+      };
+    }
+
+    const isHelp = (segment: CommandSegment) => segment.name.toLowerCase() === 'help';
+    const sorted = [...matching].sort((a, b) => {
+      if (isHelp(a) !== isHelp(b)) return isHelp(a) ? 1 : -1; // help last
+      return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    });
+    const prefixLengths = getCommandPrefixLengths(sorted);
+
+    return {
+      kind: 'commands',
+      items: sorted.map((segment) => ({
+        name: segment.name,
+        prefixLength: prefixLengths.get(segment.name) ?? 1,
+      })),
+    };
   }
 
   private snapshot(): ParserState {
@@ -120,7 +171,12 @@ export class CliSession {
   }
 
   private applyEffects(effects: Effect[]): void | Promise<void> {
-    let pending: { command: CommandNode; path: string[]; argVals: string[] } | null = null;
+    let pending: {
+      command: CommandNode;
+      path: string[];
+      commandLine: string;
+      argVals: string[];
+    } | null = null;
 
     for (const effect of effects) {
       switch (effect.kind) {
@@ -169,10 +225,24 @@ export class CliSession {
     return pending ? this.runExecution(pending) : undefined;
   }
 
-  private captureExecution(): { command: CommandNode; path: string[]; argVals: string[] } | null {
+  private captureExecution(): {
+    command: CommandNode;
+    path: string[];
+    commandLine: string;
+    argVals: string[];
+  } | null {
     const path = this.stack.path();
     const command = this.registry.getCommand(path);
     if (!command) return null;
+
+    // The command as typed (argument segments show their value), captured before
+    // resetInput clears the stack.
+    const commandLine = this.stack
+      .toArray()
+      .map((segment) =>
+        segment.type === 'argument' ? (segment as ArgumentSegment).value ?? '' : segment.name,
+      )
+      .join(' ');
 
     const argVals = this.stack.arguments.map((argument) => argument.value || '');
     // Fill declared defaults for omitted trailing optional arguments.
@@ -185,10 +255,15 @@ export class CliSession {
       argVals.push(defaultValue);
     }
 
-    return { command, path, argVals };
+    return { command, path, commandLine, argVals };
   }
 
-  private async runExecution(pending: { command: CommandNode; path: string[]; argVals: string[] }): Promise<void> {
+  private async runExecution(pending: {
+    command: CommandNode;
+    path: string[];
+    commandLine: string;
+    argVals: string[];
+  }): Promise<void> {
     let result: CommandResult;
     try {
       const value = await pending.command.handler(pending.argVals);
@@ -204,7 +279,11 @@ export class CliSession {
       result = new ErrorCommandResult(error instanceof Error ? error.message : 'Unknown error');
     }
 
-    const executed: ExecutedCommand = { path: pending.path, result };
+    const executed: ExecutedCommand = {
+      path: pending.path,
+      commandLine: pending.commandLine,
+      result,
+    };
     this.outputs.push(executed);
     this.onExecute?.(executed);
   }

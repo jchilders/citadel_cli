@@ -21,7 +21,7 @@ export async function runCli(registry: CommandRegistry): Promise<void> {
   const keys = scriptFlag.slice('--script='.length);
   const session = new CliSession(registry, (executed) => {
     const out = renderResult(executed.result).replace(/\n/g, ' ');
-    console.log(`[${executed.path.join(' ')}] → ${out}`);
+    console.log(`${executed.commandLine} → ${out}`);
   });
 
   for (const ch of keys) {
