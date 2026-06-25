@@ -7,7 +7,7 @@
  * data). Same engine, same definitions, terminal presentation.
  *
  * Run it:
- *   npm run devops-cli                                       # interactive REPL
+ *   npm run cli:devops                                       # interactive REPL
  *   npx tsx examples/devops-cli.ts --script=$'dp\nml\n'      # scripted
  */
 import { createDevOpsCommandRegistry } from '@citadel/sample-commands';

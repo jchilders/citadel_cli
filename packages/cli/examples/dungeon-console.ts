@@ -6,7 +6,7 @@
  * This file is meant to be read top-to-bottom as a template for your own CLI.
  *
  * Run it:
- *   npm run game-master                              # interactive REPL (from repo root)
+ *   npm run cli:game-master                              # interactive REPL (from repo root)
  *   npx tsx examples/dungeon-console.ts --script=$'rc\\nls\\n'  # scripted
  *
  * In the REPL, type the shortest unambiguous prefix and it auto-expands:

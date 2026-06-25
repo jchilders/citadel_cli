@@ -8,7 +8,7 @@
  * `[image: <url>]` and `cowsay`'s multi-line ASCII prints to stdout.
  *
  * Run it:
- *   npm run basic-cli                                   # interactive REPL
+ *   npm run cli:basic                                   # interactive REPL
  *   npx tsx examples/basic-cli.ts --script=$'bt\nbf\n'  # scripted
  */
 import { createBasicCommandRegistry } from '@citadel/sample-commands';

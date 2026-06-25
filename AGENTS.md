@@ -21,12 +21,12 @@ packages/
   react/  citadel_cli    — the published React library (components, hooks,
           config, Citadel.tsx, the demo app, e2e tests). Depends on @citadel/core.
   cli/    @citadel/cli   — terminal front-end (readline REPL) driving the same
-          @citadel/core engine. Run `npm run coffee-bar` or `npm run game-master`.
+          @citadel/core engine. Run `npm run cli:coffee-bar` or `npm run cli:game-master`.
   sample-commands/  @citadel/sample-commands — framework-agnostic sample command
           registries (pure @citadel/core) shared by BOTH the web demo and the
           CLI, so one definition file drives both: createBasicCommandRegistry
-          (web "Basic" tab + `npm run basic-cli`) and createDevOpsCommandRegistry
-          (web "DevOps" tab + `npm run devops-cli`). Registries that touch the
+          (web "Basic" tab + `npm run cli:basic`) and createDevOpsCommandRegistry
+          (web "DevOps" tab + `npm run cli:devops`). Registries that touch the
           DOM/browser (localStorage) or React stay in packages/react.
 ```
 
