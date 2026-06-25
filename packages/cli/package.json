@@ -1,0 +1,20 @@
+{
+  "name": "@citadel/cli",
+  "version": "1.5.0",
+  "description": "Terminal front-end for Citadel — drives the @citadel/core command engine from a readline REPL",
+  "license": "MIT",
+  "author": {
+    "name": "James Childers",
+    "email": "james.childers@gmail.com"
+  },
+  "type": "module",
+  "bin": {
+    "citadel-cli": "./src/demo.ts"
+  },
+  "scripts": {
+    "start": "tsx src/demo.ts"
+  },
+  "dependencies": {
+    "@citadel/core": "1.5.0"
+  }
+}

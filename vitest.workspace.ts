@@ -13,4 +13,12 @@ export default defineWorkspace([
       include: ['src/**/*.test.ts'],
     },
   },
+  {
+    test: {
+      name: 'cli',
+      root: './packages/cli',
+      environment: 'node',
+      include: ['src/**/*.test.ts'],
+    },
+  },
 ]);

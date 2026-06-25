@@ -260,18 +260,40 @@ independent). Step 3 is the one that needs the e2e tests as a safety net.
 - [x] `tsc`, `npm test` (252), `npm run lint` (0 errors), `npm run build`,
       `npm run verify:pack` all green
 
-**Phase 4.2 — relocate React lib to `packages/react`** *(pending)* — the
-release-pipeline-touching part: moves the published package + build/docs/demo;
-root becomes a workspace orchestrator.
+**Phase 4.2 — relocate React lib to `packages/react`** *(deferred)* — the
+release-pipeline-touching part (moves the published package + build/docs/demo;
+root becomes a workspace orchestrator). Skipped for now per decision: cosmetic
+reorganization with real publish risk and little functional gain (root already
+*is* the React package). Can be done later as its own phase.
 
-**Phase 4.3 — `packages/cli` adapter** *(pending, = Step 5)* — the actual
-web+terminal reuse payoff.
+**Phase 4.3 — `packages/cli` adapter ✅** *(= Step 5; the web+terminal payoff)*
+- [x] `packages/cli` (`@citadel/cli`, depends on `@citadel/core`)
+- [x] `render-result.ts` — `CommandResult` → string (the CLI's `renderResult`,
+      with the same custom-subclass `render()` fallback seam as the web)
+- [x] `session.ts` — `CliSession`, the terminal counterpart of `useCommandParser`:
+      owns a `SegmentStack` + parser state, feeds keystrokes through the **same**
+      `reduceKey`/`reduceInputChange` reducers, interprets the effects, and runs
+      handlers (replicating `executeCommand` incl. optional-arg defaults). Also
+      replicates `CommandInput`'s `entering_argument` sync.
+- [x] `repl.ts` — interactive readline loop (keypress → `AbstractKey` →
+      session); `demo.ts` — runnable entry with a non-interactive `--script`
+      mode; `demo-registry.ts` — a playful coffee-themed registry
+- [x] `packages/cli/src/__tests__/session.test.ts` (7 tests) drives the session
+      keystroke-by-keystroke: auto-expansion, word→arg commit, quoted args,
+      invalid-char rejection, Backspace-pop, error rendering, ArrowUp recall
+- [x] `vitest.workspace.ts` adds a node-env `cli` project; `tsx` (dev dep) runs
+      the REPL; `npm run start -w @citadel/cli` launches it
+- [x] **Fixed a core bundler-ism:** `logger.ts` used Vite's `import.meta.env.PROD`,
+      which crashes under plain Node/the CLI — now guarded (falls back to
+      `NODE_ENV`) so `@citadel/core` is genuinely bundler-agnostic
+- [x] `tsc`, `npm test` (259, 30 files), `lint` (0 errors), `build`,
+      `verify:pack` all green; `--script` demo runs end-to-end under Node
 
-### Step 5 — CLI adapter
-- [ ] `cli/renderResult.ts` (union → formatted string)
-- [ ] readline/Ink loop: keypress → `AbstractKey` → `reduceKey` → `applyEffect`
-- [ ] FileStorage-backed `CommandStorage` impl for history
-- [ ] Smoke test: run a registry's commands end-to-end in the terminal
+> Pre-existing engine nuance confirmed (not changed): pressing Enter while
+> `inputState === 'entering_argument'` with an empty buffer commits an empty
+> argument rather than applying a trailing optional arg's default. The CLI
+> reproduces the web faithfully; the demo registry models choices as word
+> segments to sidestep it.
 
 ## Risks / open questions
 
