@@ -3,12 +3,12 @@
  *
  * The command registry is *not* duplicated — `createBasicCommandRegistry` is the
  * exact same file the web demo uses (@citadel/sample-commands), proving the same
- * definitions drive both the web `<Citadel>` overlay and this REPL. Only
+ * definitions drive both the web `<Citadel>` overlay and this terminal UI. Only
  * presentation differs (the adapter's renderResult): images show as
  * `[image: <url>]` and `cowsay`'s multi-line ASCII prints to stdout.
  *
  * Run it:
- *   npm run cli:basic                                   # interactive REPL
+ *   npm run cli:basic                                   # interactive TUI
  *   npx tsx examples/basic-cli.ts --script=$'bt\nbf\n'  # scripted
  */
 import { createBasicCommandRegistry } from '@citadel/sample-commands';

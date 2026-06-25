@@ -6,7 +6,9 @@ import {
   NullSegment,
   SegmentStack,
   CommandResult,
+  CommandStatus,
   ErrorCommandResult,
+  PendingCommandResult,
   getNextExpectedSegment,
   getCommandPrefixLengths,
   reduceInputChange,
@@ -17,11 +19,27 @@ import {
   type ParserState,
 } from '@citadel/core';
 
-export interface ExecutedCommand {
+/**
+ * One entry in the output pane. Mirrors the web's OutputItem lifecycle: created
+ * with a PendingCommandResult (status Pending) the moment a command executes,
+ * then updated in place when the handler resolves.
+ */
+export interface CliOutputItem {
+  id: number;
   path: string[];
-  /** The command as typed (words + argument values), for echoing to scrollback. */
+  /** The command as typed (words + argument values). */
   commandLine: string;
+  status: CommandStatus;
   result: CommandResult;
+}
+
+export interface CliSessionOptions {
+  /** Called once per command when it resolves (used by the scripted line mode). */
+  onExecute?: (item: CliOutputItem) => void;
+  /** Called after every state change, so a TUI can re-render. */
+  onChange?: () => void;
+  /** Fail a command that runs longer than this many ms (web parity). 0 disables. */
+  commandTimeoutMs?: number;
 }
 
 /** A command suggestion with the length of its shortest unambiguous prefix. */
@@ -43,10 +61,11 @@ export type CompletionView =
 
 /**
  * Terminal adapter that drives the framework-agnostic @citadel/core engine — the
- * CLI counterpart of the React `useCommandParser` hook. It owns a segment stack
- * and the parser state, feeds keystrokes through the same `reduceKey` /
- * `reduceInputChange` reducers the web uses, and interprets the returned
- * effects against in-memory state. No React, no DOM. See
+ * CLI counterpart of the React useCommandParser + useCitadelState hooks. It owns
+ * a segment stack, the parser state, and the output history; feeds keystrokes
+ * through the same reduceKey / reduceInputChange reducers the web uses; and runs
+ * commands with the same pending→resolve output lifecycle. No React, no DOM.
+ * Both the scripted (line) mode and the Ink TUI drive one of these. See
  * CORE_EXTRACTION_DESIGN.md.
  */
 export class CliSession {
@@ -56,16 +75,22 @@ export class CliSession {
   private isEnteringArg = false;
   private readonly historyEntries: CommandSegment[][] = [];
   private historyPosition: number | null = null;
+  private nextId = 0;
 
-  /** Commands executed so far, most recent last. */
-  readonly outputs: ExecutedCommand[] = [];
+  private readonly onExecute?: (item: CliOutputItem) => void;
+  private readonly onChange?: () => void;
+  private readonly commandTimeoutMs: number;
+
+  /** The output pane: executed commands (pending or resolved), oldest first. */
+  readonly outputs: CliOutputItem[] = [];
 
   constructor(
     private readonly registry: CommandRegistry,
-    private readonly onExecute?: (executed: ExecutedCommand) => void,
-    /** Fail a command that runs longer than this many ms (web parity). 0 disables. */
-    private readonly commandTimeoutMs: number = 10_000,
+    options: CliSessionOptions = {},
   ) {
+    this.onExecute = options.onExecute;
+    this.onChange = options.onChange;
+    this.commandTimeoutMs = options.commandTimeoutMs ?? 10_000;
     this.syncInputState();
   }
 
@@ -141,6 +166,10 @@ export class CliSession {
       isEnteringArg: this.isEnteringArg,
       historyPosition: this.historyPosition,
     };
+  }
+
+  private notify(): void {
+    this.onChange?.();
   }
 
   /**
@@ -227,6 +256,7 @@ export class CliSession {
 
     this.historyPosition = null;
     this.syncInputState();
+    this.notify();
 
     return pending ? this.runExecution(pending) : undefined;
   }
@@ -280,7 +310,18 @@ export class CliSession {
     commandLine: string;
     argVals: string[];
   }): Promise<void> {
-    let result: CommandResult;
+    // Append a pending entry immediately so the output pane shows a spinner next
+    // to the command echo while the (possibly async) handler runs.
+    const item: CliOutputItem = {
+      id: this.nextId++,
+      path: pending.path,
+      commandLine: pending.commandLine,
+      status: CommandStatus.Pending,
+      result: new PendingCommandResult(),
+    };
+    this.outputs.push(item);
+    this.notify();
+
     try {
       const value = await this.withTimeout(pending.command.handler(pending.argVals));
       if (!(value instanceof CommandResult)) {
@@ -290,18 +331,15 @@ export class CliSession {
         );
       }
       value.markSuccess();
-      result = value;
+      item.result = value;
+      item.status = CommandStatus.Success;
     } catch (error) {
-      result = new ErrorCommandResult(error instanceof Error ? error.message : 'Unknown error');
+      item.result = new ErrorCommandResult(error instanceof Error ? error.message : 'Unknown error');
+      item.status = CommandStatus.Failure;
     }
 
-    const executed: ExecutedCommand = {
-      path: pending.path,
-      commandLine: pending.commandLine,
-      result,
-    };
-    this.outputs.push(executed);
-    this.onExecute?.(executed);
+    this.notify();
+    this.onExecute?.(item);
   }
 
   private navigate(dir: 'up' | 'down'): void {
@@ -320,6 +358,7 @@ export class CliSession {
         this.stack.clear();
         this.currentInput = '';
         this.syncInputState();
+        this.notify();
         return;
       }
     }
@@ -329,6 +368,7 @@ export class CliSession {
     this.stack.pushAll(entry.map((segment) => segment));
     this.currentInput = '';
     this.syncInputState();
+    this.notify();
   }
 
   /**

@@ -15,11 +15,13 @@ export default defineWorkspace([
     },
   },
   {
+    // The CLI's Ink TUI tests are .tsx — use the automatic JSX runtime.
+    esbuild: { jsx: 'automatic' },
     test: {
       name: 'cli',
       root: './packages/cli',
       environment: 'node',
-      include: ['src/**/*.test.ts'],
+      include: ['src/**/*.test.{ts,tsx}'],
     },
   },
 ]);

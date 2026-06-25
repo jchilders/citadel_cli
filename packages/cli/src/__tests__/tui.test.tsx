@@ -1,0 +1,32 @@
+import { describe, expect, it } from 'vitest';
+import { render } from 'ink-testing-library';
+import { App } from '../tui';
+import { command, createCommandRegistry, text } from '@citadel/core';
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function buildRegistry() {
+  return createCommandRegistry([
+    command('ping').describe('Ping').handle(async () => text('pong')),
+    command('brew.espresso').describe('Espresso').handle(async () => text('coffee')),
+  ]);
+}
+
+describe('Ink TUI', () => {
+  it('renders the command line and the suggestion list', async () => {
+    const { lastFrame } = render(<App registry={buildRegistry()} commandTimeoutMs={0} />);
+    await delay(40);
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('citadel❯');
+    expect(frame).toContain('ping');
+    expect(frame).toContain('brew');
+  });
+
+  it('auto-expands a typed prefix in the command line', async () => {
+    const { lastFrame, stdin } = render(<App registry={buildRegistry()} commandTimeoutMs={0} />);
+    await delay(60); // let Ink subscribe to stdin
+    stdin.write('p'); // unique prefix → ping
+    await delay(40);
+    expect(lastFrame() ?? '').toContain('ping');
+  });
+});

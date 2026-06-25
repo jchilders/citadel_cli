@@ -3,7 +3,10 @@
 A terminal front-end for [Citadel](../../README.md). It drives the **same**
 `@citadel/core` command engine that powers the web `<Citadel>` component — the
 prefix auto-expansion, hierarchical commands, argument parsing, and history are
-all shared. No React, no DOM; just a readline REPL.
+all shared. The interactive UI is an [Ink](https://github.com/vadimdemedes/ink)
+TUI that mirrors the web's three regions: a scrolling output pane, the command
+line, and the suggestion list. Async command results land in the output pane
+(with a spinner while running), never inline with your input.
 
 ## Try it
 
@@ -19,7 +22,7 @@ demo uses (`@citadel/sample-commands`) — one definition, two front-ends.
 (Run from the repo root — the root scripts delegate to this workspace. Or add
 `-w @citadel/cli` to run from anywhere.)
 
-In the REPL, type the shortest unambiguous prefix and it expands as you go:
+In the TUI, type the shortest unambiguous prefix and it expands as you go:
 
 ```
 citadel❯ r d 20 ⏎        roll.dice 20      → 🎲 d20 → 14
@@ -67,9 +70,14 @@ npx tsx examples/dungeon-console.ts --script=$'rc\nls\n'
 ## How it fits together
 
 - `src/session.ts` — `CliSession`, the terminal counterpart of the web's
-  `useCommandParser` hook. Feeds keystrokes through the shared
-  `reduceKey` / `reduceInputChange` core reducers and interprets the effects.
+  `useCommandParser` + `useCitadelState` hooks. Feeds keystrokes through the
+  shared `reduceKey` / `reduceInputChange` core reducers, interprets the
+  effects, and runs commands with the same pending→resolve output lifecycle
+  (an `onChange` callback lets the TUI re-render).
+- `src/tui.tsx` — the Ink TUI: `<Output>` (a `<Static>` scrollback pane),
+  `<CommandLine>`, and `<Suggestions>`, mapping the web's CitadelTty/
+  CommandOutput/CommandInput/AvailableCommands. `useInput` → `AbstractKey` →
+  the same core reducers.
 - `src/render-result.ts` — renders a `CommandResult` to a string (the web has
   its own JSX renderer).
-- `src/repl.ts` — the interactive readline loop; `src/run.ts` — the
-  REPL-or-`--script` entry helper.
+- `src/run.ts` — the TUI-or-`--script` entry helper.
