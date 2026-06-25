@@ -40,4 +40,33 @@ describe('Ink TUI', () => {
     await delay(60);
     expect(lastFrame() ?? '').toContain('pong');
   });
+
+  it('scrolls the output history with PageUp / PageDown', async () => {
+    let n = 0;
+    const reg = createCommandRegistry([
+      command('x').describe('row').handle(async () => text(`R${String(++n).padStart(2, '0')}`)),
+    ]);
+    const { lastFrame, stdin } = render(<App registry={reg} commandTimeoutMs={0} />);
+    await delay(60);
+    for (let i = 0; i < 12; i++) {
+      stdin.write('x'); // → command x
+      stdin.write('\r'); // execute → R01..R12
+      await delay(12);
+    }
+    await delay(40);
+    // Newest in view, oldest scrolled off the top.
+    expect(lastFrame() ?? '').toContain('R12');
+    expect(lastFrame() ?? '').not.toContain('R01');
+
+    stdin.write('\x1b[5~'); // PageUp
+    stdin.write('\x1b[5~');
+    await delay(40);
+    expect(lastFrame() ?? '').toContain('R01'); // scrolled to the top
+    expect(lastFrame() ?? '').toContain('scrolled'); // scroll hint
+
+    stdin.write('\x1b[6~'); // PageDown
+    stdin.write('\x1b[6~');
+    await delay(40);
+    expect(lastFrame() ?? '').toContain('R12'); // back to the newest
+  });
 });
