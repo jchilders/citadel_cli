@@ -141,11 +141,13 @@ export function App({
       exit();
       return;
     }
-    if (key.pageUp) {
+    // Scroll the output pane: PageUp/PageDown, or Shift+↑/↓ (Mac-friendly).
+    // Checked before the AbstractKey mapping, since plain ↑/↓ recall history.
+    if (key.pageUp || (key.shift && key.upArrow)) {
       setScrollOffset((o) => Math.min(maxOffset.current, o + page));
       return;
     }
-    if (key.pageDown) {
+    if (key.pageDown || (key.shift && key.downArrow)) {
       setScrollOffset((o) => Math.max(0, o - page));
       return;
     }
@@ -169,9 +171,9 @@ export function App({
 
   const scrollHint =
     offset > 0
-      ? `↑ scrolled · PgDn → newest`
+      ? `↑ scrolled · ⇧↓ / PgDn → newest`
       : maxOffset.current > 0
-        ? `PgUp/PgDn to scroll`
+        ? `⇧↑ ⇧↓ or PgUp/PgDn to scroll`
         : (welcome ?? '');
 
   return (

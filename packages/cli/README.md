@@ -34,8 +34,9 @@ citadel❯ c r ⏎           crew.roster       → { "size": 1, "members": ["Ara
 ```
 
 Quote multi-word argument values (`"Goblin ambush"`). `Backspace` on an empty
-line steps back up the command path; `↑`/`↓` recall history; `PageUp`/`PageDown`
-scroll back through the output pane (any keystroke snaps back to the newest).
+line steps back up the command path; `↑`/`↓` recall history; `Shift`+`↑`/`↓` (or
+`PageUp`/`PageDown`) scroll back through the output pane (any keystroke snaps
+back to the newest).
 
 ## Build your own
 

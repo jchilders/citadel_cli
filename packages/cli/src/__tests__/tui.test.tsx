@@ -68,5 +68,10 @@ describe('Ink TUI', () => {
     stdin.write('\x1b[6~');
     await delay(40);
     expect(lastFrame() ?? '').toContain('R12'); // back to the newest
+
+    stdin.write('\x1b[1;2A'); // Shift+Up also scrolls back
+    stdin.write('\x1b[1;2A');
+    await delay(40);
+    expect(lastFrame() ?? '').toContain('R01');
   });
 });
