@@ -63,6 +63,8 @@ export class CliSession {
   constructor(
     private readonly registry: CommandRegistry,
     private readonly onExecute?: (executed: ExecutedCommand) => void,
+    /** Fail a command that runs longer than this many ms (web parity). 0 disables. */
+    private readonly commandTimeoutMs: number = 10_000,
   ) {
     this.syncInputState();
   }
@@ -262,6 +264,16 @@ export class CliSession {
     return { command, path, commandLine, argVals };
   }
 
+  /** Race a handler against the command timeout (web parity). 0 disables it. */
+  private withTimeout<T>(promise: Promise<T>): Promise<T> {
+    if (!this.commandTimeoutMs) return promise;
+    let timer: ReturnType<typeof setTimeout>;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error('Request timed out')), this.commandTimeoutMs);
+    });
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+  }
+
   private async runExecution(pending: {
     command: CommandNode;
     path: string[];
@@ -270,7 +282,7 @@ export class CliSession {
   }): Promise<void> {
     let result: CommandResult;
     try {
-      const value = await pending.command.handler(pending.argVals);
+      const value = await this.withTimeout(pending.command.handler(pending.argVals));
       if (!(value instanceof CommandResult)) {
         throw new Error(
           `The ${pending.path.join('.')} command returned an invalid result type. ` +

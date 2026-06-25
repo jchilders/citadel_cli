@@ -20,10 +20,14 @@ export async function runCli(registry: CommandRegistry, options: ReplOptions = {
   }
 
   const keys = scriptFlag.slice('--script='.length);
-  const session = new CliSession(registry, (executed) => {
-    const out = renderResult(executed.result).replace(/\n/g, ' ');
-    console.log(`${executed.commandLine} → ${out}`);
-  });
+  const session = new CliSession(
+    registry,
+    (executed) => {
+      const out = renderResult(executed.result).replace(/\n/g, ' ');
+      console.log(`${executed.commandLine} → ${out}`);
+    },
+    options.commandTimeoutMs,
+  );
 
   for (const ch of keys) {
     if (ch === '\n') {

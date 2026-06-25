@@ -49,20 +49,26 @@ export interface ReplOptions {
    * "Welcome to Barstucks Coffee Bar ☕"). Defaults to a generic banner.
    */
   welcome?: string;
+  /** Fail a command that runs longer than this many ms. Defaults to 10000; 0 disables. */
+  commandTimeoutMs?: number;
 }
 
 /** Run an interactive readline REPL backed by the @citadel/core engine. */
 export function runRepl(registry: CommandRegistry, options: ReplOptions = {}): void {
   const out = process.stdout;
 
-  const session = new CliSession(registry, (executed) => {
-    // Wipe the live prompt block, commit the typed command + its result to
-    // scrollback, then let draw() render a fresh prompt below.
-    readline.cursorTo(out, 0);
-    readline.clearScreenDown(out);
-    out.write(`${DIM}${PROMPT}${RESET}${executed.commandLine}\n`);
-    out.write(renderResult(executed.result) + '\n');
-  });
+  const session = new CliSession(
+    registry,
+    (executed) => {
+      // Wipe the live prompt block, commit the typed command + its result to
+      // scrollback, then let draw() render a fresh prompt below.
+      readline.cursorTo(out, 0);
+      readline.clearScreenDown(out);
+      out.write(`${DIM}${PROMPT}${RESET}${executed.commandLine}\n`);
+      out.write(renderResult(executed.result) + '\n');
+    },
+    options.commandTimeoutMs,
+  );
 
   // Render the prompt line, with the suggestion line on the row below, and park
   // the cursor back at the end of the prompt.

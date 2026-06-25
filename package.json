@@ -27,6 +27,7 @@
     "build:demo": "npm run build:demo -w citadel_cli",
     "coffee-bar": "npm run coffee-bar -w @citadel/cli",
     "game-master": "npm run game-master -w @citadel/cli",
+    "basic-cli": "npm run basic-cli -w @citadel/cli",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "NODE_OPTIONS=--no-experimental-webstorage vitest --run",

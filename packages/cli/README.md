@@ -10,6 +10,7 @@ all shared. No React, no DOM; just a readline REPL.
 ```bash
 npm run coffee-bar      # coffee-bar demo (src/demo.ts)
 npm run game-master     # game-master console (examples/dungeon-console.ts)
+npm run basic-cli       # the web demo's "Basic" example, in the terminal
 ```
 (Run from the repo root — the root scripts delegate to this workspace. Or add
 `-w @citadel/cli` to run from anywhere.)
