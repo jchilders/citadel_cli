@@ -29,4 +29,14 @@ describe('Ink TUI', () => {
     await delay(40);
     expect(lastFrame() ?? '').toContain('ping');
   });
+
+  it('runs a command and commits its result to the output pane', async () => {
+    const { lastFrame, stdin } = render(<App registry={buildRegistry()} commandTimeoutMs={0} />);
+    await delay(60);
+    stdin.write('p'); // → ping
+    await delay(20);
+    stdin.write('\r'); // Enter → execute
+    await delay(60);
+    expect(lastFrame() ?? '').toContain('pong');
+  });
 });

@@ -109,22 +109,16 @@ export function App({ registry, commandTimeoutMs }: { registry: CommandRegistry;
     }
   });
 
-  // Resolved items are committed to <Static> (scrollback) once, in resolution
-  // order — Static is append-only, so accumulate them in a ref. Pending items
-  // stay in the live region below with a spinner.
-  const resolved = React.useRef<CliOutputItem[]>([]);
-  const seen = React.useRef<Set<number>>(new Set());
-  for (const item of session.outputs) {
-    if (item.status !== CommandStatus.Pending && !seen.current.has(item.id)) {
-      seen.current.add(item.id);
-      resolved.current.push(item);
-    }
-  }
+  // Resolved commands commit to <Static> (scrollback), in resolution order.
+  // Ink's <Static> is memo'd, so pass a NEW array reference each render —
+  // otherwise it never sees appended items. Pending commands stay in the live
+  // region below with a spinner.
+  const resolved = [...session.resolvedOutputs];
   const pending = session.outputs.filter((item) => item.status === CommandStatus.Pending);
 
   return (
     <Box flexDirection="column">
-      <Static items={resolved.current}>{(item) => <OutputLine key={item.id} item={item} />}</Static>
+      <Static items={resolved}>{(item) => <OutputLine key={item.id} item={item} />}</Static>
 
       {pending.map((item) => (
         <OutputLine key={item.id} item={item} />

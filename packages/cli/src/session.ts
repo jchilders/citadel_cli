@@ -81,8 +81,14 @@ export class CliSession {
   private readonly onChange?: () => void;
   private readonly commandTimeoutMs: number;
 
-  /** The output pane: executed commands (pending or resolved), oldest first. */
+  /** All executed commands (pending or resolved), in issue order. */
   readonly outputs: CliOutputItem[] = [];
+
+  /**
+   * Resolved commands in *resolution* order (append-only). The TUI commits these
+   * to scrollback via Ink's <Static>, which needs an append-only list.
+   */
+  readonly resolvedOutputs: CliOutputItem[] = [];
 
   constructor(
     private readonly registry: CommandRegistry,
@@ -338,6 +344,7 @@ export class CliSession {
       item.status = CommandStatus.Failure;
     }
 
+    this.resolvedOutputs.push(item);
     this.notify();
     this.onExecute?.(item);
   }
