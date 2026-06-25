@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { Citadel } from '../../src';
 import { CitadelConfig } from '../../src/components/Citadel/config/types';
 import { defaultConfig } from '../../src/components/Citadel/config/defaults';
-import { createBasicCommandRegistry } from '../../src/examples/basicCommands';
+import { createBasicCommandRegistry } from '@citadel/sample-commands';
 
 type HarnessProps = {
   config?: Partial<CitadelConfig>;

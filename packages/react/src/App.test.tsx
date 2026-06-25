@@ -21,7 +21,7 @@ vi.mock('./index', () => ({
   }
 }));
 
-vi.mock('./examples/basicCommands.ts', () => ({
+vi.mock('@citadel/sample-commands', () => ({
   createBasicCommandRegistry: () => mockCreateBasicCommandRegistry()
 }));
 

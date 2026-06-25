@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Citadel } from './index';
-import { createBasicCommandRegistry } from './examples/basicCommands.ts';
+import { createBasicCommandRegistry } from '@citadel/sample-commands';
 import { createDevOpsCommandRegistry } from './examples/devopsCommands';
 import { createLocalDevCommandRegistry } from './examples/localDevCommands';
 import { defaultConfig } from './components/Citadel/config/defaults';
@@ -125,7 +125,7 @@ const EXAMPLE_TRY_EXPLANATION: Record<ExampleId, ReactNode> = {
   ),
 };
 const EXAMPLE_SOURCE_URL: Record<ExampleId, string> = {
-  basic: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/basicCommands.ts',
+  basic: 'https://github.com/jchilders/citadel_cli/blob/main/packages/sample-commands/src/basicCommands.ts',
   spreadsheet: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/spreadsheetCommands.ts',
   localdev: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/localDevCommands.ts',
   devops: 'https://github.com/jchilders/citadel_cli/blob/main/src/examples/devopsCommands.ts',
