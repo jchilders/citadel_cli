@@ -8,9 +8,11 @@ all shared. No React, no DOM; just a readline REPL.
 ## Try it
 
 ```bash
-npm run start -w @citadel/cli        # coffee-bar demo (src/demo.ts)
-npm run example -w @citadel/cli      # game-master console (examples/dungeon-console.ts)
+npm run coffee-bar      # coffee-bar demo (src/demo.ts)
+npm run game-master     # game-master console (examples/dungeon-console.ts)
 ```
+(Run from the repo root — the root scripts delegate to this workspace. Or add
+`-w @citadel/cli` to run from anywhere.)
 
 In the REPL, type the shortest unambiguous prefix and it expands as you go:
 
@@ -50,9 +52,10 @@ results).
 `\n` presses Enter — handy for tests and docs:
 
 ```bash
-npm run example -w @citadel/cli -- --script=$'rc\nls\n'
-# [roll coin] → 🪙 Tails
-# [log show]  → { "entries": [] }
+# Invoke the file directly — `npm run` intercepts the --script flag name.
+npx tsx examples/dungeon-console.ts --script=$'rc\nls\n'
+# roll coin → 🪙 Tails
+# log show  → { "entries": [] }
 ```
 
 ## How it fits together

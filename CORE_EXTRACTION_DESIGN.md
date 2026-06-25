@@ -305,7 +305,7 @@ independent). Step 3 is the one that needs the e2e tests as a safety net.
       keystroke-by-keystroke: auto-expansion, word→arg commit, quoted args,
       invalid-char rejection, Backspace-pop, error rendering, ArrowUp recall
 - [x] `vitest.workspace.ts` adds a node-env `cli` project; `tsx` (dev dep) runs
-      the REPL; `npm run start -w @citadel/cli` launches it
+      the REPL; `npm run coffee-bar` / `npm run game-master` launch it
 - [x] **Fixed a core bundler-ism:** `logger.ts` used Vite's `import.meta.env.PROD`,
       which crashes under plain Node/the CLI — now guarded (falls back to
       `NODE_ENV`) so `@citadel/core` is genuinely bundler-agnostic

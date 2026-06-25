@@ -17,8 +17,8 @@
     "citadel-cli": "./src/demo.ts"
   },
   "scripts": {
-    "start": "tsx src/demo.ts",
-    "example": "tsx examples/dungeon-console.ts"
+    "coffee-bar": "tsx src/demo.ts",
+    "game-master": "tsx examples/dungeon-console.ts"
   },
   "dependencies": {
     "@citadel/core": "1.5.0"

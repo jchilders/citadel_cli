@@ -21,7 +21,7 @@ packages/
   react/  citadel_cli    — the published React library (components, hooks,
           config, Citadel.tsx, the demo app, e2e tests). Depends on @citadel/core.
   cli/    @citadel/cli   — terminal front-end (readline REPL) driving the same
-          @citadel/core engine. Run `npm run start -w @citadel/cli`.
+          @citadel/core engine. Run `npm run coffee-bar` or `npm run game-master`.
 ```
 
 **Path note:** paths in the Architecture section below that read

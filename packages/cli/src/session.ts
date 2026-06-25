@@ -85,7 +85,11 @@ export class CliSession {
     const committed = this.stack.toArray().map((segment) =>
       segment.type === 'argument' ? (segment as ArgumentSegment).value ?? '' : segment.name,
     );
-    return [...committed, this.currentInput].filter((part) => part !== '').join(' ');
+    // A committed path always ends in a space, so an auto-expanded word reads as
+    // "crew " — ready for the next word or argument — and the in-progress input
+    // follows it.
+    const prefix = committed.length > 0 ? committed.join(' ') + ' ' : '';
+    return prefix + this.currentInput;
   }
 
   /**
