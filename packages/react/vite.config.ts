@@ -4,23 +4,32 @@ import { fileURLToPath, URL } from 'node:url'
 import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
 
-// Resolve @citadel_cli/core to its source (not the node_modules workspace symlink),
-// so Vite bundles the engine into the JS output and vite-plugin-dts rewrites the
-// emitted .d.ts imports to relative paths within dist/ — keeping the published
-// package self-contained without depending on the unpublished @citadel_cli/core.
-// See CORE_EXTRACTION_DESIGN.md.
+// Resolve @citadel_cli/core to its source so Vite bundles the engine into the
+// JS output (self-contained ES + UMD, no runtime resolution needed) and the
+// vitest run executes against live source.
+//
+// The emitted .d.ts, however, must NOT inline core via this alias — doing so
+// produced relative paths that escape the package (../../core/src) and broke
+// consumer type resolution. `aliasesExclude` leaves `@citadel_cli/core` as a
+// bare import in the declarations, resolved from the published package (declared
+// as a dependency). See CORE_EXTRACTION_DESIGN.md.
 const coreSrc = fileURLToPath(new URL('../core/src', import.meta.url))
+const CORE = '@citadel_cli/core'
 
 // https://vite.dev/config/
 export default defineConfig({
   resolve: {
     alias: {
-      '@citadel_cli/core': coreSrc,
+      [CORE]: coreSrc,
     },
   },
   plugins: [
     react(),
     dts({
+      // Keep @citadel_cli/core a bare import in the emitted .d.ts (resolved from
+      // the published package) instead of following the source alias, which
+      // would emit package-escaping relative paths.
+      aliasesExclude: [CORE],
       insertTypesEntry: true,
       exclude: [
         'src/**/__tests__/**',

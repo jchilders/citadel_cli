@@ -79,8 +79,10 @@ packages publish in lockstep at the same version:
 - `@citadel_cli/core` — the framework-agnostic engine (built to `dist/`)
 - `@citadel_cli/cli` — the terminal/Ink front-end (built to `dist/`; depends on
   `@citadel_cli/core` via a `^` range, so a matching minor/patch bump resolves)
-- `@citadel_cli/react` (`packages/react`) — the React component library (bundles
-  `@citadel_cli/core` into its own `dist/`, so it has no runtime dep on it)
+- `@citadel_cli/react` (`packages/react`) — the React component library. Bundles
+  `@citadel_cli/core` into its JS `dist/` (self-contained ES + UMD), but declares
+  `@citadel_cli/core` as a `^` dependency because its emitted `.d.ts` re-exports
+  the engine as a bare `@citadel_cli/core` import (resolvable for consumers)
 
 The repo root is a private orchestrator and is never published;
 `@citadel_cli/sample-commands` is private (demo registries) and is never published.
@@ -108,11 +110,21 @@ built `dist/`. To keep the dev loop build-free, source is resolved instead via:
 the root `tsconfig.json` `paths` (so `tsx` demos load `src/`), the
 `vitest.workspace.ts` aliases (so tests run against `src/`), and the React
 library's own vite alias (so its build bundles `@citadel_cli/core` from source).
-`@citadel_cli/cli`'s `tsconfig.build.json` clears those `paths` so its emitted
-`.d.ts` keeps `@citadel_cli/core` as an external bare import. Both `@citadel_cli/core`
-and `@citadel_cli/cli` roll their declarations into a single `dist/index.d.ts`
-(`vite-plugin-dts` `rollupTypes`) so the published types resolve cleanly under
-NodeNext/Node16. See `CORE_EXTRACTION_DESIGN.md`.
+
+So the published `.d.ts` resolve cleanly under NodeNext/Node16 as well as
+bundler resolution, the engine must stay a *bare* `@citadel_cli/core` import in
+the declarations rather than a package-escaping relative path:
+- `@citadel_cli/core` and `@citadel_cli/cli` roll their declarations into a
+  single self-contained `dist/index.d.ts` (`vite-plugin-dts` `rollupTypes`).
+  `@citadel_cli/cli`'s `tsconfig.build.json` clears the `paths` so its `.d.ts`
+  keeps `@citadel_cli/core` external.
+- `@citadel_cli/react` can't use `rollupTypes` (api-extractor chokes on its
+  surface), so its dts uses `aliasesExclude: ['@citadel_cli/core']` to keep the
+  bare import, and `src/index.ts` re-exports the engine **directly**
+  (`export * from '@citadel_cli/core'`) — a two-hop star re-export through an
+  intermediate module is not surfaced by NodeNext.
+
+See `CORE_EXTRACTION_DESIGN.md`.
 
 ## Architecture
 
