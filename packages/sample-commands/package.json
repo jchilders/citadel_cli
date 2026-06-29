@@ -11,6 +11,6 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@citadel_cli/core": "1.5.0"
+    "@citadel_cli/core": "^1.5.0"
   }
 }

@@ -22,7 +22,7 @@
     "type": "git",
     "url": "git+https://github.com/jchilders/citadel_cli.git"
   },
-  "version": "1.5.0",
+  "version": "1.7.0",
   "type": "module",
   "engines": {
     "node": ">=20"
