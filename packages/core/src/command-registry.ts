@@ -1,0 +1,363 @@
+import { Logger } from './logger';
+import { CommandResult, TextCommandResult } from './results';
+
+/** 
+ * A callback function that executes a command and returns a Promise of CommandResult.
+ * Similar to a lambda in Ruby, this is a first-class function that can be passed
+ * as an argument and stored as a variable.
+ */
+export type CommandHandler = (args: string[]) => Promise<CommandResult>;
+
+/**
+ * A no-op handler that returns an empty string. Used as the default handler
+ * for CommandNodes that don't specify a handler.
+ */
+export const NoopHandler: CommandHandler = async () => {
+  return new TextCommandResult('');
+};
+
+/** Base interface for command segments */
+export abstract class BaseSegment {
+  constructor(
+    public readonly type: 'word' | 'argument' | 'null',
+    public readonly name: string,
+    public readonly description?: string
+  ) {}
+
+  toString(): string {
+    return this.name;
+  }
+}
+
+/** Represents a null segment for empty stack operations */
+export class NullSegment extends BaseSegment {
+  constructor() {
+    super('null', '>null<', 'Empty segment');
+  }
+}
+
+/** Represents a segment in a command path - either a word or argument */
+export type CommandSegment = WordSegment | ArgumentSegment | NullSegment;
+
+/** Represents a literal word in a command path */
+export class WordSegment extends BaseSegment {
+   constructor(
+     name: string,
+     description?: string
+   ) {
+     super('word', name, description);
+   }
+ }
+
+/** Represents an argument that can be passed to a command, and its value*/
+export class ArgumentSegment extends BaseSegment {
+   constructor(
+     name: string,
+     description?: string,
+     public value?: string,
+     public readonly valid?: () => boolean,
+     /** Optional arguments may be omitted when the command is executed. */
+     public readonly optional?: boolean,
+     /** Value passed to the handler when an optional argument is omitted. */
+     public readonly defaultValue?: string
+   ) {
+     super('argument', name, description);
+   }
+ }
+
+export const cloneCommandSegment = (segment: CommandSegment): CommandSegment => {
+  if (segment.type === 'word') {
+    return new WordSegment(segment.name, segment.description);
+  }
+
+  if (segment.type === 'argument') {
+    const argumentLike = segment as ArgumentSegment;
+    return new ArgumentSegment(
+      argumentLike.name,
+      argumentLike.description,
+      argumentLike.value,
+      argumentLike.valid,
+      argumentLike.optional,
+      argumentLike.defaultValue
+    );
+  }
+
+  return new NullSegment();
+};
+
+export const cloneCommandSegments = (segments: CommandSegment[]): CommandSegment[] =>
+  segments.map((segment) => cloneCommandSegment(segment));
+
+/** Defines a complete command with its path and behavior */
+export class CommandNode {
+  private readonly _segments: CommandSegment[];
+  private readonly _description?: string;   // Used by `Help` command, etc.
+  private readonly _handler: CommandHandler;
+
+  constructor(segments: CommandSegment[], description?: string, handler: CommandHandler = NoopHandler) {
+    this._segments = segments;
+    this._description = description;
+    this._handler = handler;
+  }
+
+  get segments(): CommandSegment[] {
+    return this._segments
+  }
+
+  get description(): string | undefined {
+    return this._description;
+  }
+
+  get handler(): CommandHandler {
+    return this._handler;
+  }
+
+  get hasArguments(): boolean {
+    return this.segments.some(segment => segment.type === 'argument');
+  }
+
+  get fullPath(): string[] {
+    return this.segments.map(segment => segment.name);
+  }
+
+  get fullPath_s(): string {
+    return this.fullPath.join(' ');
+  }
+
+  equals(other: CommandNode): boolean {
+    return this.fullPath.join(' ') === other.fullPath.join(' ');
+  }
+}
+
+/**
+ * Used to store user-defined commands.
+ */
+export class CommandRegistry {
+  private _commands: CommandNode[] = [];
+
+  get commands(): CommandNode[] {
+    return this._commands;
+  }
+
+  /**
+   * Registers a new command composed of ordered segments.
+   *
+   * Each segment describes either a literal word or an argument placeholder. The resulting
+   * path must be unique across the registry once argument placeholders are normalized.
+   *
+   * @param segments Ordered command path definition.
+   * @param description Human-readable summary surfaced by help and search results.
+   * @param handler Async handler executed when the command is submitted; defaults to `NoopHandler`.
+   * @throws {Error} If the segment list is empty or the path collides with an existing command.
+   */
+  addCommand(segments: CommandSegment[], description: string, handler: CommandHandler = NoopHandler) {
+    if (segments === undefined || segments.length === 0) {
+      throw new Error('Command path cannot be empty');
+    }
+
+    const newCommandNode = new CommandNode(segments, description, handler);
+    const existingCommand = this._commands.find(cmd => {
+      const cmdPattern = cmd.segments.map(segment => 
+        segment.type === 'argument' ? '*' : segment.name
+      ).join(' ');
+      
+      const newPattern = segments.map(segment => 
+        segment.type === 'argument' ? '*' : segment.name
+      ).join(' ');
+      
+      return cmdPattern === newPattern;
+    });
+
+    if (existingCommand) {
+      throw new Error(`Duplicate commands: '${existingCommand.fullPath_s}' and '${newCommandNode.fullPath_s}'`);
+    }
+
+    this._commands.push(newCommandNode);
+  }
+
+  /**
+   * Removes a command that exactly matches the provided path.
+   *
+   * @param path The command path to remove.
+   * @returns True if a command was removed; otherwise false.
+   */
+  removeCommand(path: string[]): boolean {
+    const targetPath = path.join(' ');
+    const index = this._commands.findIndex(command => command.fullPath.join(' ') === targetPath);
+
+    if (index === -1) {
+      return false;
+    }
+
+    this._commands.splice(index, 1);
+    return true;
+  }
+
+  /**
+   * Retrieves a command from the registry for the given path.
+   * 
+   * @param path The path of the command.
+   * @returns The command node or undefined if not found.
+   */
+  getCommand(path: string[]): CommandNode | undefined {
+    return this._commands.find((command) => {
+      // For exact matches (when all arguments are provided)
+      const fullPath = command.fullPath.join(' ');
+      const searchPath = path.join(' ');
+      if (fullPath === searchPath) {
+        return true;
+      }
+      
+      // For partial matches (when looking up command template)
+      // Check if the provided path matches the word segments of the command
+      const wordSegments = command.segments.filter(seg => seg.type === 'word');
+      const wordPath = wordSegments.map(seg => seg.name);
+      
+      if (wordPath.length === path.length && wordPath.join(' ') === searchPath) {
+        return true;
+      }
+      
+      return false;
+    });
+  }
+
+  commandExistsForPath(path: string[]): boolean {
+    // Convert the path to a pattern where arguments are represented by '*'
+    const pathPattern = this._commands.map(cmd => 
+      cmd.segments.map(segment => 
+        segment.type === 'argument' ? '*' : segment.name
+      ).join(' ')
+    );
+
+    // Convert the new path to a pattern
+    const newPathPattern = path.map((segment, index) => {
+      const isArgument = this._commands.some(cmd => 
+        cmd.segments[index]?.type === 'argument'
+      );
+      return isArgument ? '*' : segment;
+    }).join(' ');
+
+    return pathPattern.includes(newPathPattern);
+  }
+
+  /**
+   * Gets possible matches for a given path.
+   * 
+   * @param path The path to get completions for.
+   * @returns An array of completion strings.
+   */
+  getCompletionNames(path: string[]): string[] {
+    return this.getCompletions(path).map(segment => segment.name);
+  }
+
+  /**
+   * Returns completion segments whose names start with the given prefix.
+   * Matching is case-insensitive.
+   */
+  getMatchingCompletions(path: string[], prefix: string): CommandSegment[] {
+    const normalizedPrefix = prefix.trim().toLowerCase();
+    const completions = this.getCompletions(path);
+
+    if (!normalizedPrefix) {
+      return completions;
+    }
+
+    return completions.filter((segment) =>
+      segment.name.toLowerCase().startsWith(normalizedPrefix)
+    );
+  }
+
+  /**
+   * Returns a single completion when prefix matching is unambiguous.
+   * Returns undefined for ambiguous or no-match prefixes.
+   */
+  getUniqueCompletion(path: string[], prefix: string): CommandSegment | undefined {
+    const matches = this.getMatchingCompletions(path, prefix);
+    if (matches.length !== 1) {
+      return undefined;
+    }
+
+    return matches[0];
+  }
+
+  /**
+   * Gets an array of segments reachable from a given path
+   * 
+   * @param path The path to get completions for.
+   * @returns An array of completion strings.
+   */
+  getCompletions(path: string[]): CommandSegment[] {
+    Logger.debug("[getCompletions] path: ", path);
+    // If no path provided, get all top-level segments
+    if (!path.length) {
+      const topLevelSegments = this._commands.map(cmd => cmd.segments[0]);
+      const isEqual = (a: CommandSegment, b: CommandSegment): boolean => 
+        a.type === b.type && a.name === b.name;
+      
+      const uniqueSegments = topLevelSegments.filter((seg, index, self) =>
+        index === self.findIndex(o => isEqual(o, seg))
+      );
+
+      return uniqueSegments;
+    }
+
+    const pathDepth = path.length;
+
+    // Find all commands that match the current path prefix
+    const matchingSegments = this._commands
+      .filter(command => {
+        const segments = command.segments;
+        
+        // Skip if command isn't long enough to have completions at this depth
+        if (segments.length <= pathDepth - 1) {
+          return false;
+        }
+
+        // Check if all segments up to current depth match
+        for (let i = 0; i < pathDepth; i++) {
+          const pathSegment = path[i];
+          const cmdSegment = segments[i];
+          
+          // Handle argument segments (marked with '*' in path)
+          if (pathSegment === '*' && cmdSegment.type === 'argument') {
+            continue;
+          }
+          
+          // Handle word segments
+          if (pathSegment !== cmdSegment.name) {
+            return false;
+          }
+        }
+        return true;
+      })
+      .filter(command => command.segments.length > pathDepth)
+      .map(command => {
+        const segment = command.segments[pathDepth];
+        if (segment.type === 'argument') {
+          const argumentLike = segment as ArgumentSegment;
+          return new ArgumentSegment(
+            argumentLike.name,
+            argumentLike.description,
+            undefined,
+            undefined,
+            argumentLike.optional,
+            argumentLike.defaultValue
+          );
+        }
+        return new WordSegment(segment.name, segment.description);
+      });
+
+    // Deduplicate segments based on type and name
+    const uniqueSegments = matchingSegments.filter((segment, index, self) =>
+      index === self.findIndex(s => 
+        s.type === segment.type && s.name === segment.name
+      )
+    );
+
+    return uniqueSegments;
+  }
+
+  hasNextSegment(path: string[]): boolean {
+    return this.getCompletions(path).length > 0;
+  }
+}

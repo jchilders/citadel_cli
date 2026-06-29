@@ -1,0 +1,21 @@
+{
+  "name": "@citadel/core",
+  "version": "1.5.0",
+  "description": "Framework-agnostic command engine for Citadel (parsing, completion, controller, DSL) — shared by the web and terminal front-ends",
+  "license": "MIT",
+  "author": {
+    "name": "James Childers",
+    "email": "james.childers@gmail.com"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "types": "./src/index.ts",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  }
+}

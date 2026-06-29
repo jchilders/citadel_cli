@@ -1,0 +1,104 @@
+import { render, screen } from '@testing-library/react';
+import { expect, describe, it, vi, beforeEach } from 'vitest';
+import { CommandOutput } from '../CommandOutput';
+import { CitadelConfigProvider } from '../../config/CitadelConfigContext';
+import { defaultConfig } from '../../config/defaults';
+import { OutputItem } from '../../types/state';
+import { TextCommandResult } from '@citadel/core';
+import { createMockSegment, createMockSegmentStack } from '../../../../__test-utils__/factories';
+
+describe('CommandOutput', () => {
+  const mockOutputRef = { current: document.createElement('div') };
+  
+  beforeEach(() => {
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(cb => {
+      cb(performance.now());
+      return 0;
+    });
+  });
+
+  const createOutputItem = (commandNames: string[] = ['test']) => {
+    const mockSegmentStack = createMockSegmentStack();
+    const segments = commandNames.map(name => createMockSegment('word', name));
+    segments.forEach(segment => mockSegmentStack.push(segment));
+
+    const item = new OutputItem(mockSegmentStack);
+    const result = new TextCommandResult('Test output');
+    result.markSuccess();
+    item.result = result;
+    return item;
+  };
+
+  const defaultProps = {
+    output: [createOutputItem()],
+    outputRef: mockOutputRef,
+  };
+
+  const renderWithConfig = (props = defaultProps, config = defaultConfig) => {
+    return render(
+      <CitadelConfigProvider config={config}>
+        <CommandOutput {...props} />
+      </CitadelConfigProvider>
+    );
+  };
+
+  it('renders with default font size', () => {
+    renderWithConfig();
+    const preElement = screen.getByText('Test output').parentElement;
+    expect(preElement?.style.fontSize).toBe('0.875rem');
+  });
+
+  it('uses custom font size from config', () => {
+    const customConfig = {
+      ...defaultConfig,
+      outputFontSize: '12px'
+    };
+    renderWithConfig(defaultProps, customConfig);
+    const preElement = screen.getByText('Test output').parentElement;
+    expect(preElement?.style.fontSize).toBe('12px');
+  });
+
+  it('falls back to global font settings when outputFontSize is omitted', () => {
+    const customConfig = {
+      ...defaultConfig,
+      fontFamily: '"Fira Code", monospace',
+      fontSize: '15px',
+      outputFontSize: undefined
+    };
+
+    renderWithConfig(defaultProps, customConfig);
+    const preElement = screen.getByText('Test output').parentElement;
+    expect(preElement?.style.fontSize).toBe('15px');
+    expect(preElement?.style.fontFamily).toContain('Fira Code');
+  });
+
+  it('renders multiple output items', () => {
+    const output = [
+      createOutputItem(['test', '1']),
+      createOutputItem(['test', '2'])
+    ];
+    output[0].result = new TextCommandResult('First output');
+    output[1].result = new TextCommandResult('Second output');
+
+    renderWithConfig({ ...defaultProps, output });
+    
+    expect(screen.getByText('First output')).toBeDefined();
+    expect(screen.getByText('Second output')).toBeDefined();
+  });
+
+  it('scrolls to bottom when output changes', () => {
+    const mockDiv = document.createElement('div');
+    Object.defineProperty(mockDiv, 'scrollTop', {
+      set: vi.fn(),
+    });
+    Object.defineProperty(mockDiv, 'scrollHeight', {
+      get: () => 1000,
+    });
+    const mockRef = { current: mockDiv };
+
+    renderWithConfig({ ...defaultProps, outputRef: mockRef });
+    
+    // Verify that requestAnimationFrame was called
+    expect(window.requestAnimationFrame).toHaveBeenCalled();
+  });
+});

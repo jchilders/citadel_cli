@@ -1,0 +1,61 @@
+{
+  "name": "citadel_cli",
+  "description": "Keyboard-driven command console for React apps — built for internal tools, admin panels, and dev debug overlays",
+  "keywords": [
+    "react",
+    "command",
+    "cli",
+    "interface",
+    "console",
+    "terminal",
+    "command-palette",
+    "internal-tools",
+    "admin-panel",
+    "devtools"
+  ],
+  "author": {
+    "name": "James Childers",
+    "email": "james.childers@gmail.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jchilders/citadel_cli.git"
+  },
+  "version": "1.5.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc && vite build && node scripts/sync-package-artifacts.mjs",
+    "verify:pack": "node scripts/verify-package-artifacts.mjs",
+    "dev": "vite",
+    "preview": "vite preview",
+    "build:demo": "vite build --config vite.demo.config.ts",
+    "test:e2e": "NODE_OPTIONS=--disable-warning=DEP0205 playwright test",
+    "test:e2e:ui": "NODE_OPTIONS=--disable-warning=DEP0205 playwright test --ui"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/citadel.es.js",
+      "require": "./dist/citadel.umd.cjs"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "main": "./dist/citadel.umd.cjs",
+  "module": "./dist/citadel.es.js",
+  "files": [
+    "dist"
+  ],
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@citadel/core": "1.5.0",
+    "@citadel/sample-commands": "1.5.0"
+  }
+}

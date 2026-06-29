@@ -1,0 +1,41 @@
+import { CommandStorage, StorageConfig } from "@citadel/core";
+import { LocalStorage } from "./LocalStorage";
+import { MemoryStorage } from "./MemoryStorage";
+
+export class StorageFactory {
+  private static instance: StorageFactory | undefined;
+  private currentStorage?: CommandStorage;
+
+  private constructor() {}
+
+  static reset(): void {
+    StorageFactory.instance = undefined;
+  }
+
+  static getInstance(): StorageFactory {
+    if (!StorageFactory.instance) {
+      StorageFactory.instance = new StorageFactory();
+    }
+    return StorageFactory.instance;
+  }
+
+  initializeStorage(config: StorageConfig): void {
+    try {
+      if (config.type === 'memory') {
+        this.currentStorage = new MemoryStorage(config);
+      } else {
+        this.currentStorage = new LocalStorage(config);
+      }
+    } catch (error) {
+      console.warn('Failed to create storage, falling back to memory storage:', error);
+      this.currentStorage = new MemoryStorage(config);
+    }
+  }
+
+  getStorage(): CommandStorage {
+    if (!this.currentStorage) {
+      throw new Error('Storage not initialized. Call initializeStorage first.');
+    }
+    return this.currentStorage;
+  }
+}

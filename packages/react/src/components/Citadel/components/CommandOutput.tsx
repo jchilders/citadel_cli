@@ -1,0 +1,69 @@
+import React, { useEffect, useCallback, useMemo } from 'react';
+import { OutputItem } from '../types/state';
+import { CommandOutputLine } from './CommandOutputLine';
+import { renderResult } from './renderResult';
+import { useCitadelConfig } from '../config/hooks';
+import { resolveTypography } from '../utils/typography';
+
+interface CommandOutputProps {
+  output: OutputItem[];
+  outputRef: React.RefObject<HTMLDivElement>;
+}
+
+export const CommandOutput: React.FC<CommandOutputProps> = ({ output, outputRef }) => {
+  const config = useCitadelConfig();
+  const outputTypography = useMemo(
+    () => resolveTypography(config.fontFamily, config.outputFontSize ?? config.fontSize),
+    [config.fontFamily, config.fontSize, config.outputFontSize]
+  );
+
+  const scrollToBottom = useCallback(() => {
+    if (outputRef.current) {
+      const scrollContainer = outputRef.current;
+      requestAnimationFrame(() => {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      });
+    }
+  }, [outputRef]);
+
+  // Scroll to bottom when output changes
+  useEffect(() => {
+    scrollToBottom();
+
+    // Also set up listeners for any images that might load
+    if (outputRef.current) {
+      const images = outputRef.current.getElementsByTagName('img');
+      const lastImage = images[images.length - 1];
+      if (lastImage && !lastImage.complete) {
+        lastImage.addEventListener('load', scrollToBottom);
+        return () => lastImage.removeEventListener('load', scrollToBottom);
+      }
+    }
+  }, [output, scrollToBottom, outputRef]);
+
+  return (
+    <div 
+      ref={outputRef}
+      className="citadel-output"
+      data-testid="citadel-command-output"
+    >
+      {output.map((item) => (
+        <div key={item.id} className="citadel-output-item">
+          <CommandOutputLine
+            command={item.command.join(' ')}
+            timestamp={new Date(item.timestamp).toLocaleTimeString()}
+            status={item.result.status}
+            fontFamily={config.fontFamily}
+            fontSize={config.fontSize}
+          />
+          <div
+            className="citadel-output-content"
+            style={outputTypography.style}
+          >
+            {renderResult(item.result)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
