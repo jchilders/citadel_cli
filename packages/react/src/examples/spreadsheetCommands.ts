@@ -1,4 +1,4 @@
-import { CommandDefinition, command, text } from '@citadel/core';
+import { CommandDefinition, command, text } from '@citadel_cli/core';
 
 export const SPREADSHEET_ROLES = ['admin', 'editor', 'viewer'] as const;
 export type SpreadsheetRole = (typeof SPREADSHEET_ROLES)[number];

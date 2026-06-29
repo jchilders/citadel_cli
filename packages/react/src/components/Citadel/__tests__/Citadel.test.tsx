@@ -3,9 +3,9 @@ import { render, waitFor, act, fireEvent } from '@testing-library/react';
 import { Citadel, CitadelElement } from '../Citadel';
 import userEvent from '@testing-library/user-event';
 import type { UserEvent } from '@testing-library/user-event';
-import { StorageType } from '@citadel/core';
-import { CommandRegistry, WordSegment } from '@citadel/core';
-import { TextCommandResult } from '@citadel/core';
+import { StorageType } from '@citadel_cli/core';
+import { CommandRegistry, WordSegment } from '@citadel_cli/core';
+import { TextCommandResult } from '@citadel_cli/core';
 import { defaultConfig } from '../config/defaults'
 
 describe('Citadel', () => {

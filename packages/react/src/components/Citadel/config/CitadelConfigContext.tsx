@@ -1,11 +1,11 @@
 import React, { createContext, useEffect, useMemo, useState } from 'react';
-import { createHelpHandler } from '@citadel/core';
+import { createHelpHandler } from '@citadel_cli/core';
 import { CitadelConfig } from './types';
 import { defaultConfig } from './defaults';
 import { StorageFactory } from '../storage/StorageFactory';
-import { CommandStorage } from '@citadel/core';
-import { CommandRegistry } from '@citadel/core';
-import { SegmentStack } from '@citadel/core';
+import { CommandStorage } from '@citadel_cli/core';
+import { CommandRegistry } from '@citadel_cli/core';
+import { SegmentStack } from '@citadel_cli/core';
 
 interface CitadelContextValue {
   config: CitadelConfig;

@@ -1,8 +1,8 @@
 import { vi } from 'vitest';
-import { CommandNode, CommandRegistry, CommandHandler, WordSegment, ArgumentSegment, CommandSegment, NullSegment } from '@citadel/core';
-import { TextCommandResult } from '@citadel/core';
+import { CommandNode, CommandRegistry, CommandHandler, WordSegment, ArgumentSegment, CommandSegment, NullSegment } from '@citadel_cli/core';
+import { TextCommandResult } from '@citadel_cli/core';
 import { CitadelState, CitadelActions, OutputItem } from '../components/Citadel/types';
-import { SegmentStack } from '@citadel/core';
+import { SegmentStack } from '@citadel_cli/core';
 import { CommandHistory, CommandHistoryActions, useCommandHistory } from '../components/Citadel/hooks/useCommandHistory';
 import { useCitadelState } from '../components/Citadel/hooks/useCitadelState';
 import { renderHook } from '@testing-library/react';
@@ -63,7 +63,7 @@ export const createMockCommandRegistry = (): CommandRegistry => {
   return commands;
 };
 
-import { StoredCommand } from '@citadel/core';
+import { StoredCommand } from '@citadel_cli/core';
 export const createMockStoredCommand = (overrides = {}): StoredCommand => ({
   commandSegments: [createMockCommandSegment('word', 'test-command')],
   timestamp: 1234567890,  // Fixed timestamp for testing

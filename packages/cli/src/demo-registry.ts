@@ -1,4 +1,4 @@
-import { command, createCommandRegistry, json, text, CommandRegistry } from '@citadel/core';
+import { command, createCommandRegistry, json, text, CommandRegistry } from '@citadel_cli/core';
 
 /**
  * A small, playful registry for the CLI demo. Sibling words have distinct first

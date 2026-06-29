@@ -5,7 +5,7 @@ import {
   json,
   bool,
   error,
-} from '@citadel/core';
+} from '@citadel_cli/core';
 import { warpJump, hullBreach } from './starshipResults';
 
 // A "survive the incident and jump to safety" engineering console. The fun core

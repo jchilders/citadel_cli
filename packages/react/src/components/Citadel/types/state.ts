@@ -5,7 +5,7 @@ import {
   CommandStorage,
   StoredCommand,
   SegmentStack,
-} from '@citadel/core';
+} from '@citadel_cli/core';
 
 export interface CitadelState {
   currentInput: string;

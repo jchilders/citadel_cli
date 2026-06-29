@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { useSpreadsheetDemo } from '../spreadsheetDemo';
-import { CommandRegistry } from '@citadel/core';
+import { CommandRegistry } from '@citadel_cli/core';
 
 const runCommand = (registry: CommandRegistry, path: string[]) =>
   act(async () => {

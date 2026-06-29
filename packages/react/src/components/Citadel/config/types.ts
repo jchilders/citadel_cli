@@ -1,6 +1,6 @@
-import { CursorType } from '@citadel/core';
-import { StorageConfig } from '@citadel/core';
-import { LogLevel } from '@citadel/core';
+import { CursorType } from '@citadel_cli/core';
+import { StorageConfig } from '@citadel_cli/core';
+import { LogLevel } from '@citadel_cli/core';
 
 export interface CitadelConfig {
   /**

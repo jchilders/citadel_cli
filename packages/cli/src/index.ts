@@ -1,7 +1,7 @@
 /**
- * @citadel/cli — terminal front-end for the @citadel/core command engine.
+ * @citadel_cli/cli — terminal front-end for the @citadel_cli/core command engine.
  *
- * Hand a command registry (built with the @citadel/core DSL) to `runCli` for an
+ * Hand a command registry (built with the @citadel_cli/core DSL) to `runCli` for an
  * interactive Ink TUI (output pane + command line + suggestions), or drive a
  * `CliSession` directly. See the README and examples/dungeon-console.ts.
  */

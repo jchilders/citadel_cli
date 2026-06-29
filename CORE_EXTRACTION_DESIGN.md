@@ -56,12 +56,12 @@ packages/
   cli/       ← readline (or Ink) adapter over the same core
 ```
 
-`src/index.ts` re-exports from `@citadel/react` so the published npm package keeps
+`src/index.ts` re-exports from `@citadel_cli/react` so the published npm package keeps
 its current surface.
 
 ## Design
 
-### `@citadel/core`
+### `@citadel_cli/core`
 
 **Moves nearly as-is** (drop the `Logger` import or make it injectable):
 the registry, DSL, prefix, segment-stack, cursor, help-command modules;
@@ -170,7 +170,7 @@ Web maps `KeyboardEvent`→`AbstractKey` (`toAbstractKey`) and applies
 effect the adapter resolves against its own `HistoryService` (the web adapter
 detects it and returns a `Promise<boolean>`).
 
-### `@citadel/react` — thin wrapper
+### `@citadel_cli/react` — thin wrapper
 
 `useCommandParser` shrinks to: hold `inputState` via `useReducer`, call
 `reduceKey`/`reduceInputChange`, then interpret the effect list against the
@@ -178,7 +178,7 @@ existing `segmentStack`/`actions`/`history` (a ~40-line `applyEffect` switch).
 Components, Shadow DOM, CSS injection, and `renderResult.tsx` stay here. Net:
 loses ~250 lines of logic to core, gains a small interpreter.
 
-### `@citadel/cli` — new adapter
+### `@citadel_cli/cli` — new adapter
 
 ```ts
 const registry = createCommandRegistry(defs)
@@ -189,7 +189,7 @@ readline keypress → toAbstractKey → reduceKey(state, key, registry)
 ```
 
 Raw `readline` for a plain prompt, or **Ink** to mirror the web's live suggestion
-list / expansion preview. Imports *only* `@citadel/core`.
+list / expansion preview. Imports *only* `@citadel_cli/core`.
 
 ## Migration checklist
 
@@ -240,19 +240,19 @@ independent). Step 3 is the one that needs the e2e tests as a safety net.
 
 ### Step 4 — Carve the workspace (in progress)
 
-**Phase 4.1 — `@citadel/core` package ✅**
-- [x] Add root `workspaces: ["packages/*"]`; create `packages/core` (`@citadel/core`,
+**Phase 4.1 — `@citadel_cli/core` package ✅**
+- [x] Add root `workspaces: ["packages/*"]`; create `packages/core` (`@citadel_cli/core`,
       exports TS source via `./src/index.ts`)
 - [x] `git mv` the 13 React-free engine files (registry, dsl, prefix,
       segment-stack, storage, help-command, cursor, results, input-state,
       parse-input, completion, controller) + `logger` into `packages/core/src`;
       drop the `command-results` shim
-- [x] Rewire ~60 importers across `src/` to `@citadel/core`; `types/index.ts`
-      re-exports `@citadel/core` (deliberate additive widening — core is now a
+- [x] Rewire ~60 importers across `src/` to `@citadel_cli/core`; `types/index.ts`
+      re-exports `@citadel_cli/core` (deliberate additive widening — core is now a
       public reusable surface); `state.ts` stays React-side
 - [x] `vitest.workspace.ts` adds a node-env `core` project (the npm `workspaces`
       field makes vitest ignore the root `test.include`)
-- [x] Published types stay self-contained: alias `@citadel/core` → its source so
+- [x] Published types stay self-contained: alias `@citadel_cli/core` → its source so
       Vite bundles the engine into the JS **and** vite-plugin-dts rewrites
       emitted `.d.ts` imports to relative paths within `dist/` (api-extractor
       `rollupTypes`/`bundledPackages` was tried first but hit an internal
@@ -266,19 +266,19 @@ independent). Step 3 is the one that needs the e2e tests as a safety net.
       `tsconfig.json`, and the `sync`/`verify` artifact scripts into
       `packages/react/`; delete the dead `vitest.config.ts` + orphaned
       `tsconfig.node.json`
-- [x] `packages/react/package.json` is the published `citadel_cli` (publish
-      config, `peerDependencies` react, `@citadel/core` as a build-time devDep —
+- [x] `packages/react/package.json` is the published `@citadel_cli/react` (publish
+      config, `peerDependencies` react, `@citadel_cli/core` as a build-time devDep —
       it's bundled into dist, not a runtime dep)
 - [x] Root `package.json` → private orchestrator (`citadel-cli-monorepo`) whose
       scripts **delegate** (`build`/`verify:pack`/`dev`/`build:demo`/`test:e2e`
-      → `-w citadel_cli`); `test`/`lint`/`docs`/`metrics` stay at root. CI
+      → `-w @citadel_cli/react`); `test`/`lint`/`docs`/`metrics` stay at root. CI
       workflows call the same root scripts, so they keep working unchanged.
-- [x] Path fixups: vite.config `@citadel/core` alias → `../core/src`;
+- [x] Path fixups: vite.config `@citadel_cli/core` alias → `../core/src`;
       `vitest.workspace.ts` → `./packages/react/vite.config.ts`; root
       `tsconfig.json` covers `packages/*/src` for the husky typecheck;
       `eslint.config.js` globs → `packages/react/src` + `**/dist`
 - [x] Release-pipeline edits (the one part not runnable locally):
-      `auto-publish.yml` publishes `-w citadel_cli` and checks the tag against
+      `auto-publish.yml` publishes `-w @citadel_cli/react` and checks the tag against
       `packages/react/package.json`; `deploy-pages.yml` points at
       `packages/react/dist-demo`; `AGENTS.md` Releasing + Monorepo Layout updated
 - [x] Verified from root: `tsc`, `npm test` (259, 30 files), `lint` (0 errors),
@@ -290,7 +290,7 @@ independent). Step 3 is the one that needs the e2e tests as a safety net.
 > (`npm publish -w <pkg>` from a private root); review before the next tag.
 
 **Phase 4.3 — `packages/cli` adapter ✅** *(= Step 5; the web+terminal payoff)*
-- [x] `packages/cli` (`@citadel/cli`, depends on `@citadel/core`)
+- [x] `packages/cli` (`@citadel_cli/cli`, depends on `@citadel_cli/core`)
 - [x] `render-result.ts` — `CommandResult` → string (the CLI's `renderResult`,
       with the same custom-subclass `render()` fallback seam as the web)
 - [x] `session.ts` — `CliSession`, the terminal counterpart of `useCommandParser`:
@@ -308,7 +308,7 @@ independent). Step 3 is the one that needs the e2e tests as a safety net.
       the REPL; `npm run cli:coffee-bar` / `npm run cli:game-master` launch it
 - [x] **Fixed a core bundler-ism:** `logger.ts` used Vite's `import.meta.env.PROD`,
       which crashes under plain Node/the CLI — now guarded (falls back to
-      `NODE_ENV`) so `@citadel/core` is genuinely bundler-agnostic
+      `NODE_ENV`) so `@citadel_cli/core` is genuinely bundler-agnostic
 - [x] `tsc`, `npm test` (259, 30 files), `lint` (0 errors), `build`,
       `verify:pack` all green; `--script` demo runs end-to-end under Node
 
@@ -348,26 +348,26 @@ so Ink re-renders.
       satisfies the automatic-runtime tsc too)
 - [x] `tsc`, `npm test` (262, 31 files), `lint` (0 errors) green
 
-### Step 6 — Publish `@citadel/core` + `@citadel/cli` as first-class packages
+### Step 6 — Publish `@citadel_cli/core` + `@citadel_cli/cli` as first-class packages
 
 Goal: let a new, external CLI tool depend on the shared engine. Previously only
-`citadel_cli` (the React lib) published, and it merely *bundled* core; `@citadel/core`
-and `@citadel/cli` were workspace-internal source with `main` → `src/*.ts`.
+`@citadel_cli/react` (the React lib) published, and it merely *bundled* core; `@citadel_cli/core`
+and `@citadel_cli/cli` were workspace-internal source with `main` → `src/*.ts`.
 
-- [x] `@citadel/core`: Vite library build (single ESM `dist/index.js`,
+- [x] `@citadel_cli/core`: Vite library build (single ESM `dist/index.js`,
       dependency-free so everything bundles) + `vite-plugin-dts` `rollupTypes`
       → single `dist/index.d.ts`. `package.json` `main`/`module`/`types` → `dist`,
       `files: ["dist"]`, `build` script.
-- [x] `@citadel/cli`: Vite library build keeping `@citadel/core`/`ink`/`react`
+- [x] `@citadel_cli/cli`: Vite library build keeping `@citadel_cli/core`/`ink`/`react`
       **external** (real runtime deps), classic JSX transform (matches `tui.tsx`),
       `rollupTypes` → single `dist/index.d.ts`. `main`/`types` → `dist`,
-      `files: ["dist"]`. Moved `@citadel/sample-commands` to devDependencies
+      `files: ["dist"]`. Moved `@citadel_cli/sample-commands` to devDependencies
       (only the examples use it); core dep is `^` so lockstep bumps resolve.
       Dropped the demo `bin` (the package is a library for building CLIs).
 - [x] `tsconfig.build.json` for cli clears the root `paths` so the emitted
-      `.d.ts` keeps `@citadel/core` as a bare external import (not inlined).
+      `.d.ts` keeps `@citadel_cli/core` as a bare external import (not inlined).
 - [x] Dev stays build-free: root `tsconfig.json` `paths` + `vitest.workspace.ts`
-      aliases resolve the `@citadel/*` specifiers to `src/`, even though
+      aliases resolve the `@citadel_cli/*` specifiers to `src/`, even though
       `package.json` now points at `dist/`. (`publishConfig` field overrides were
       rejected — npm 11 does not apply them; verified empirically.)
 - [x] `rollupTypes` (single `dist/index.d.ts`, no extensionless relative
@@ -375,7 +375,7 @@ and `@citadel/cli` were workspace-internal source with `main` → `src/*.ts`.
       project resolves both runtime and types from the packed tarballs.
 - [x] Root `build` runs core → cli → react in order. `auto-publish.yml` verifies
       the tag against all three `package.json` versions and publishes core, cli,
-      then `citadel_cli`. `@citadel/sample-commands` stays private.
+      then `@citadel_cli/react`. `@citadel_cli/sample-commands` stays private.
 - [x] Full gate green: `npm run build` (3 pkgs), `npm test` (267), `lint`
       (0 errors), `verify:pack`, plus a packed-tarball consumer smoke test
       (runtime + `tsc --moduleResolution NodeNext`).

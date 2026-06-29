@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { CommandRegistry } from '@citadel/core';
-import { TextCommandResult } from '@citadel/core';
+import { CommandRegistry } from '@citadel_cli/core';
+import { TextCommandResult } from '@citadel_cli/core';
 import { renderResult } from '../../components/renderResult';
 import {
   bool,
@@ -12,7 +12,7 @@ import {
   registerCommand,
   registerCommands,
   text,
-} from '@citadel/core';
+} from '@citadel_cli/core';
 
 describe('command DSL', () => {
   it('builds command metadata with command and argument descriptions', () => {

@@ -1,9 +1,9 @@
 import React from 'react';
 import { useCitadelCommands, useCitadelConfig, useSegmentStack } from '../config/hooks';
-import { Logger } from '@citadel/core';
+import { Logger } from '@citadel_cli/core';
 import { resolveTypography } from '../utils/typography';
-import { getCommandPrefixLengths } from '@citadel/core';
-import { ArgumentSegment } from '@citadel/core';
+import { getCommandPrefixLengths } from '@citadel_cli/core';
+import { ArgumentSegment } from '@citadel_cli/core';
 
 interface AvailableCommandsProps {
   currentInput?: string;

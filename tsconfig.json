@@ -17,9 +17,9 @@
     "allowImportingTsExtensions": true,
     "baseUrl": ".",
     "paths": {
-      "@citadel/core": ["./packages/core/src/index.ts"],
-      "@citadel/cli": ["./packages/cli/src/index.ts"],
-      "@citadel/sample-commands": ["./packages/sample-commands/src/index.ts"]
+      "@citadel_cli/core": ["./packages/core/src/index.ts"],
+      "@citadel_cli/cli": ["./packages/cli/src/index.ts"],
+      "@citadel_cli/sample-commands": ["./packages/sample-commands/src/index.ts"]
     },
     "types": [
       "vitest",

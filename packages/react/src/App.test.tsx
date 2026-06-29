@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import App from './App';
-import { CommandRegistry } from '@citadel/core';
+import { CommandRegistry } from '@citadel_cli/core';
 import { defaultConfig } from './components/Citadel/config/defaults';
 import { CitadelConfig } from './components/Citadel/config/types';
 
@@ -21,7 +21,7 @@ vi.mock('./index', () => ({
   }
 }));
 
-vi.mock('@citadel/sample-commands', () => ({
+vi.mock('@citadel_cli/sample-commands', () => ({
   createBasicCommandRegistry: () => mockCreateBasicCommandRegistry(),
   createDevOpsCommandRegistry: () => mockCreateDevOpsCommandRegistry()
 }));

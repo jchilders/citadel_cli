@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { SegmentStack } from '@citadel/core';
-import { ArgumentSegment, CommandSegment } from '@citadel/core';
+import { SegmentStack } from '@citadel_cli/core';
+import { ArgumentSegment, CommandSegment } from '@citadel_cli/core';
 
 export interface SegmentStackActions {
   push: (segment: CommandSegment) => void;

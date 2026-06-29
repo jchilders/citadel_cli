@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Citadel } from './index';
-import { createBasicCommandRegistry, createDevOpsCommandRegistry } from '@citadel/sample-commands';
+import { createBasicCommandRegistry, createDevOpsCommandRegistry } from '@citadel_cli/sample-commands';
 import { createLocalDevCommandRegistry } from './examples/localDevCommands';
 import { defaultConfig } from './components/Citadel/config/defaults';
 import { CitadelConfig } from './components/Citadel/config/types';

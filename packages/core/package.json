@@ -1,5 +1,5 @@
 {
-  "name": "@citadel/core",
+  "name": "@citadel_cli/core",
   "version": "1.5.0",
   "description": "Framework-agnostic command engine for Citadel (parsing, completion, controller, DSL) — shared by the web and terminal front-ends",
   "license": "MIT",
@@ -24,5 +24,8 @@
   ],
   "scripts": {
     "build": "vite build"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

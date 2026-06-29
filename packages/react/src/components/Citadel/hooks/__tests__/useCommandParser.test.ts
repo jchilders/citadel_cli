@@ -9,7 +9,7 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { parseInput, useCommandParser } from '../useCommandParser';
-import { CommandNode, CommandRegistry, ArgumentSegment } from '@citadel/core';
+import { CommandNode, CommandRegistry, ArgumentSegment } from '@citadel_cli/core';
 import { CitadelState, CitadelActions } from '../../types';
 import { 
   createMockCitadelState, 
@@ -19,7 +19,7 @@ import {
   createMockSegment,
   createMockCitadelActions
 } from '../../../../__test-utils__/factories';
-import { SegmentStack } from '@citadel/core';
+import { SegmentStack } from '@citadel_cli/core';
 
 const {
   mockUseCitadelConfig,

@@ -1,5 +1,5 @@
-import { StorageConfig, StoredCommand } from '@citadel/core';
-import { ArgumentSegment, cloneCommandSegments } from '@citadel/core';
+import { StorageConfig, StoredCommand } from '@citadel_cli/core';
+import { ArgumentSegment, cloneCommandSegments } from '@citadel_cli/core';
 import { BaseStorage } from './BaseStorage';
 
 /**

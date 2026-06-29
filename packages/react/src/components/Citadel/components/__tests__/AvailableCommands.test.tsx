@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import { AvailableCommands } from '../AvailableCommands';
 import { CitadelConfigProvider } from '../../config/CitadelConfigContext';
-import { CommandRegistry } from '@citadel/core';
+import { CommandRegistry } from '@citadel_cli/core';
 import { createMockSegment } from '../../../../__test-utils__/factories';
 
 describe('AvailableCommands', () => {

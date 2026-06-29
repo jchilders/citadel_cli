@@ -1,6 +1,6 @@
 # Citadel docs
 
-These pages cover the current public API for `citadel_cli`.
+These pages cover the current public API for `@citadel_cli/react`.
 
 One important concept up front: Citadel is prefix-driven. Users usually do not
 type full command names. They type the shortest unambiguous prefix and Citadel

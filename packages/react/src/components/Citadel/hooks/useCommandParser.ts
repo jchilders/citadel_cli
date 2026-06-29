@@ -1,26 +1,26 @@
 import { useCallback, useReducer } from 'react';
-import { CommandNode, CommandSegment, ArgumentSegment } from '@citadel/core';
+import { CommandNode, CommandSegment, ArgumentSegment } from '@citadel_cli/core';
 import { CitadelState, CitadelActions } from '../types/state';
 import { useCitadelCommands, useSegmentStack } from '../config/hooks';
 import { useCitadelState } from './useCitadelState';
-import { Logger } from '@citadel/core';
+import { Logger } from '@citadel_cli/core';
 import { useCommandHistory } from './useCommandHistory';
-import { inputStateReducer, type InputState } from '@citadel/core';
-import { parseInput, stripSurroundingQuotes, type ParsedInput } from '@citadel/core';
+import { inputStateReducer, type InputState } from '@citadel_cli/core';
+import { parseInput, stripSurroundingQuotes, type ParsedInput } from '@citadel_cli/core';
 import {
   getNextExpectedSegment as coreGetNextExpectedSegment,
   getAvailableNodes as coreGetAvailableNodes,
   findMatchingCommands as coreFindMatchingCommands,
   getAutocompleteSuggestion as coreGetAutocompleteSuggestion,
   isValidCommandInput as coreIsValidCommandInput,
-} from '@citadel/core';
+} from '@citadel_cli/core';
 import {
   reduceInputChange,
   reduceKey,
   type AbstractKey,
   type Effect,
   type ParserState,
-} from '@citadel/core';
+} from '@citadel_cli/core';
 
 // Re-exported for existing consumers (CommandInput.tsx, tests) that import these
 // from this module. The implementations now live in the framework-agnostic core

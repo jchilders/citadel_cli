@@ -4,10 +4,10 @@ import { fileURLToPath, URL } from 'node:url'
 import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
 
-// Resolve @citadel/core to its source (not the node_modules workspace symlink),
+// Resolve @citadel_cli/core to its source (not the node_modules workspace symlink),
 // so Vite bundles the engine into the JS output and vite-plugin-dts rewrites the
 // emitted .d.ts imports to relative paths within dist/ — keeping the published
-// package self-contained without depending on the unpublished @citadel/core.
+// package self-contained without depending on the unpublished @citadel_cli/core.
 // See CORE_EXTRACTION_DESIGN.md.
 const coreSrc = fileURLToPath(new URL('../core/src', import.meta.url))
 
@@ -15,7 +15,7 @@ const coreSrc = fileURLToPath(new URL('../core/src', import.meta.url))
 export default defineConfig({
   resolve: {
     alias: {
-      '@citadel/core': coreSrc,
+      '@citadel_cli/core': coreSrc,
     },
   },
   plugins: [

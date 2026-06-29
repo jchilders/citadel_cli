@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import { PanelController } from '../controllers/PanelController';
 import { CitadelConfigProvider } from '../config/CitadelConfigContext';
-import { CommandRegistry } from '@citadel/core';
+import { CommandRegistry } from '@citadel_cli/core';
 import { defaultConfig } from '../config/defaults';
 import { PANEL_CLOSE_DURATION_MS } from '../hooks/useSlideAnimation';
 

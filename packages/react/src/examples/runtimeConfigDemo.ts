@@ -1,9 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
 import { CitadelConfig } from '../components/Citadel/config/types';
 import { defaultConfig } from '../components/Citadel/config/defaults';
-import { CursorType, DEFAULT_CURSOR_CONFIGS } from '@citadel/core';
-import { CommandRegistry } from '@citadel/core';
-import { createCommandRegistry } from '@citadel/core';
+import { CursorType, DEFAULT_CURSOR_CONFIGS } from '@citadel_cli/core';
+import { CommandRegistry } from '@citadel_cli/core';
+import { createCommandRegistry } from '@citadel_cli/core';
 import { createRuntimeConfigCommandDefinitions, type DisplayMode } from './runtimeConfigCommands';
 
 const DEFAULT_CURSOR_TYPE = (defaultConfig.cursorType ?? 'blink') as CursorType;

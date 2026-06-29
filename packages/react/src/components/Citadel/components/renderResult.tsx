@@ -7,7 +7,7 @@ import {
   ErrorCommandResult,
   PendingCommandResult,
   ImageCommandResult,
-} from '@citadel/core';
+} from '@citadel_cli/core';
 
 /**
  * Web adapter: renders a framework-agnostic {@link CommandResult} to React

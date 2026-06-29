@@ -1,5 +1,5 @@
 {
-  "name": "citadel_cli",
+  "name": "@citadel_cli/react",
   "description": "Keyboard-driven command console for React apps — built for internal tools, admin panels, and dev debug overlays",
   "keywords": [
     "react",
@@ -55,7 +55,10 @@
     "react-dom": "^18.2.0 || ^19.0.0"
   },
   "devDependencies": {
-    "@citadel/core": "1.5.0",
-    "@citadel/sample-commands": "1.5.0"
+    "@citadel_cli/core": "1.5.0",
+    "@citadel_cli/sample-commands": "1.5.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

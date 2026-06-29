@@ -15,7 +15,7 @@ import {
   image,
   json,
   text,
-} from 'citadel_cli';
+} from '@citadel_cli/react';
 
 const commandRegistry = createCommandRegistry([
   command('user.show')

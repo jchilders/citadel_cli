@@ -1,24 +1,24 @@
 import { defineWorkspace } from 'vitest/config';
 import { fileURLToPath, URL } from 'node:url';
 
-// The @citadel/* packages now publish built artifacts (their package.json main
+// The @citadel_cli/* packages now publish built artifacts (their package.json main
 // points at dist/), so the node test projects alias the bare specifiers back to
 // source — tests run against the live source without a build step. The React
-// project resolves @citadel/core via its own vite.config alias.
+// project resolves @citadel_cli/core via its own vite.config alias.
 const coreSrc = fileURLToPath(new URL('./packages/core/src/index.ts', import.meta.url));
 const sampleSrc = fileURLToPath(new URL('./packages/sample-commands/src/index.ts', import.meta.url));
 
 // Three test projects: the React library (jsdom, configured in
-// packages/react/vite.config.ts) and the framework-agnostic @citadel/core
-// engine + @citadel/cli adapter (plain node — no DOM). See
+// packages/react/vite.config.ts) and the framework-agnostic @citadel_cli/core
+// engine + @citadel_cli/cli adapter (plain node — no DOM). See
 // CORE_EXTRACTION_DESIGN.md.
 export default defineWorkspace([
   './packages/react/vite.config.ts',
   {
     resolve: {
       alias: {
-        '@citadel/core': coreSrc,
-        '@citadel/sample-commands': sampleSrc,
+        '@citadel_cli/core': coreSrc,
+        '@citadel_cli/sample-commands': sampleSrc,
       },
     },
     test: {
@@ -33,8 +33,8 @@ export default defineWorkspace([
     esbuild: { jsx: 'automatic' },
     resolve: {
       alias: {
-        '@citadel/core': coreSrc,
-        '@citadel/sample-commands': sampleSrc,
+        '@citadel_cli/core': coreSrc,
+        '@citadel_cli/sample-commands': sampleSrc,
       },
     },
     test: {

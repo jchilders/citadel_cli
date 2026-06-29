@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { command, createCommandRegistry, json, text } from '@citadel/core';
+import { command, createCommandRegistry, json, text } from '@citadel_cli/core';
 import { CliSession } from '../session';
 import { renderResult } from '../render-result';
 

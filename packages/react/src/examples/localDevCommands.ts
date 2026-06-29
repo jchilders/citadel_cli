@@ -1,5 +1,5 @@
-import { CommandRegistry } from '@citadel/core';
-import { command, createCommandRegistry, json, text } from '@citadel/core';
+import { CommandRegistry } from '@citadel_cli/core';
+import { command, createCommandRegistry, json, text } from '@citadel_cli/core';
 
 const DEFAULT_API_BASE_URL = 'http://localhost:3000';
 

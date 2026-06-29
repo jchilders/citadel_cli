@@ -15,7 +15,7 @@ In this first example, the command is `greet`, but the user only needs to type
 ## 1. Installation
 
 ```bash
-npm i citadel_cli
+npm i @citadel_cli/react
 ```
 
 Citadel expects these peer dependencies to already exist in your app:
@@ -28,7 +28,7 @@ Citadel expects these peer dependencies to already exist in your app:
 Drop this into your app's main component file, e.g. `App.tsx`. This creates a simple command to print "Hello, world!" to the output pane.
 
 ```tsx
-import { Citadel, command, createCommandRegistry, text } from 'citadel_cli';
+import { Citadel, command, createCommandRegistry, text } from '@citadel_cli/react';
 
 const commandRegistry = createCommandRegistry([
   command('greet')
@@ -66,7 +66,7 @@ That prefix-first workflow is the normal way to use Citadel.
 Next, let's make our `greet` command accept a name.
 
 ```tsx
-import { Citadel, command, createCommandRegistry, text } from 'citadel_cli';
+import { Citadel, command, createCommandRegistry, text } from '@citadel_cli/react';
 
 const commandRegistry = createCommandRegistry([
   command('greet')

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { MemoryStorage } from '../MemoryStorage';
-import { StoredCommand } from '@citadel/core';
-import { WordSegment, ArgumentSegment } from '@citadel/core';
+import { StoredCommand } from '@citadel_cli/core';
+import { WordSegment, ArgumentSegment } from '@citadel_cli/core';
 
 describe('MemoryStorage', () => {
   let memoryStorage: MemoryStorage;

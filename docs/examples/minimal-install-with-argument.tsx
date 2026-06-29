@@ -1,4 +1,4 @@
-import { Citadel, command, createCommandRegistry, text } from 'citadel_cli';
+import { Citadel, command, createCommandRegistry, text } from '@citadel_cli/react';
 
 const commandRegistry = createCommandRegistry([
   command('greet')

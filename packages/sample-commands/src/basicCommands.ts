@@ -1,6 +1,6 @@
 /* c8 ignore start */
-import { CommandRegistry } from '@citadel/core'
-import { bool, command, createCommandRegistry, image, json, text } from '@citadel/core'
+import { CommandRegistry } from '@citadel_cli/core'
+import { bool, command, createCommandRegistry, image, json, text } from '@citadel_cli/core'
 
 /**
  * Build a fresh registry populated with the basic sample commands.

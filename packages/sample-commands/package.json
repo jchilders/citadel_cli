@@ -1,7 +1,7 @@
 {
-  "name": "@citadel/sample-commands",
+  "name": "@citadel_cli/sample-commands",
   "version": "1.5.0",
-  "description": "Framework-agnostic sample command registries shared by the web demo and the terminal CLI — pure @citadel/core, no React/DOM",
+  "description": "Framework-agnostic sample command registries shared by the web demo and the terminal CLI — pure @citadel_cli/core, no React/DOM",
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -11,6 +11,6 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@citadel/core": "1.5.0"
+    "@citadel_cli/core": "1.5.0"
   }
 }

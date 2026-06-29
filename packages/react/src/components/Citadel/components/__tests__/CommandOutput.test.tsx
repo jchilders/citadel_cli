@@ -4,7 +4,7 @@ import { CommandOutput } from '../CommandOutput';
 import { CitadelConfigProvider } from '../../config/CitadelConfigContext';
 import { defaultConfig } from '../../config/defaults';
 import { OutputItem } from '../../types/state';
-import { TextCommandResult } from '@citadel/core';
+import { TextCommandResult } from '@citadel_cli/core';
 import { createMockSegment, createMockSegmentStack } from '../../../../__test-utils__/factories';
 
 describe('CommandOutput', () => {

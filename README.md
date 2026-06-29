@@ -1,7 +1,7 @@
 # Citadel CLI
 
-[![npm version](https://img.shields.io/npm/v/citadel_cli)](https://www.npmjs.com/package/citadel_cli)
-[![minzipped size](https://img.shields.io/bundlephobia/minzip/citadel_cli)](https://bundlephobia.com/package/citadel_cli)
+[![npm version](https://img.shields.io/npm/v/@citadel_cli/react)](https://www.npmjs.com/package/@citadel_cli/react)
+[![minzipped size](https://img.shields.io/bundlephobia/minzip/@citadel_cli/react)](https://bundlephobia.com/package/@citadel_cli/react)
 
 **[Try the live demo →](https://jchilders.github.io/citadel_cli/)**
 
@@ -50,7 +50,7 @@ commands with arguments and structured inline results. Many apps ship both —
 ## Installation
 
 ```bash
-npm i citadel_cli
+npm i @citadel_cli/react
 ```
 
 That's the whole footprint: one package, no transitive runtime dependencies,
@@ -78,7 +78,7 @@ tabs, each backed by a registry in `src/examples/`. To run it locally:
 3. Pass it to `<Citadel>`
 
 ```typescript
-import { Citadel, command, createCommandRegistry, text } from "citadel_cli";
+import { Citadel, command, createCommandRegistry, text } from "@citadel_cli/react";
 
 const registry = createCommandRegistry([
   command("greet")

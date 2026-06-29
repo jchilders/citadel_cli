@@ -2,7 +2,7 @@
  * Example CLI: the web demo's **DevOps** example, in your terminal.
  *
  * Like basic-cli, the registry is not duplicated — `createDevOpsCommandRegistry`
- * is the exact same shared file the web demo uses (@citadel/sample-commands).
+ * is the exact same shared file the web demo uses (@citadel_cli/sample-commands).
  * Commands: deploy.*, monitor.*, infra.scale, check.* (simulated internal-tools
  * data). Same engine, same definitions, terminal presentation.
  *
@@ -10,7 +10,7 @@
  *   npm run cli:devops                                       # interactive TUI
  *   npx tsx examples/devops-cli.ts --script=$'dp\nml\n'      # scripted
  */
-import { createDevOpsCommandRegistry } from '@citadel/sample-commands';
+import { createDevOpsCommandRegistry } from '@citadel_cli/sample-commands';
 import { runCli } from '../src/run';
 
 runCli(createDevOpsCommandRegistry(), {

@@ -4,7 +4,7 @@
 // React.createElement, so React must be in scope.
 import React from 'react';
 import { Box, Text, render, useApp, useInput, useStdout, type Key } from 'ink';
-import { CommandRegistry, CommandStatus, type AbstractKey } from '@citadel/core';
+import { CommandRegistry, CommandStatus, type AbstractKey } from '@citadel_cli/core';
 import { CliSession, type CliOutputItem, type CompletionView } from './session';
 import { renderResult } from './render-result';
 

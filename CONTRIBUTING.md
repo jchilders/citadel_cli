@@ -52,7 +52,7 @@ If you want to link the package into another project while developing locally:
 ```bash
 npm link
 # inside the consuming project
-npm unlink citadel_cli && npm link citadel_cli
+npm unlink @citadel_cli/react && npm link @citadel_cli/react
 ```
 
 Press <kbd>.</kbd> in your app to toggle the console.

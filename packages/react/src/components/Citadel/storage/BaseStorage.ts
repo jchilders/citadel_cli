@@ -1,4 +1,4 @@
-import { CommandStorage, StorageConfig, StoredCommand } from '@citadel/core';
+import { CommandStorage, StorageConfig, StoredCommand } from '@citadel_cli/core';
 
 /**
  * Base class for command history storage implementations

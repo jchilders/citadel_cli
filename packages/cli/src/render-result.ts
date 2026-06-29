@@ -6,7 +6,7 @@ import {
   ErrorCommandResult,
   ImageCommandResult,
   PendingCommandResult,
-} from '@citadel/core';
+} from '@citadel_cli/core';
 
 /**
  * Terminal adapter for command results — the CLI counterpart of the web's

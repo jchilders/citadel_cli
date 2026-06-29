@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { TextCommandResult } from '@citadel/core';
+import { TextCommandResult } from '@citadel_cli/core';
 import {
   createRuntimeConfigCommandDefinitions,
   RuntimeConfigControls

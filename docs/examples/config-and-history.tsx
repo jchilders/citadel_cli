@@ -4,7 +4,7 @@ import {
   command,
   createCommandRegistry,
   text,
-} from 'citadel_cli';
+} from '@citadel_cli/react';
 
 const commandRegistry = createCommandRegistry([
   command('hello')

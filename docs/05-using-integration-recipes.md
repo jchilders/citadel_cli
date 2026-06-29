@@ -5,7 +5,7 @@ These patterns cover common ways to use Citadel in a real app.
 ## Call an API and render JSON
 
 ```tsx
-import { Citadel, command, createCommandRegistry, error, json } from 'citadel_cli';
+import { Citadel, command, createCommandRegistry, error, json } from '@citadel_cli/react';
 
 const commandRegistry = createCommandRegistry([
   command('user.lookup')
@@ -35,7 +35,7 @@ Some commands should change the host app instead of rendering a result pane.
 
 ```tsx
 import { useMemo, useState } from 'react';
-import { Citadel, command, createCommandRegistry, text } from 'citadel_cli';
+import { Citadel, command, createCommandRegistry, text } from '@citadel_cli/react';
 
 export function ActionOnlyRecipeExample() {
   const [environment, setEnvironment] = useState('staging');
@@ -71,7 +71,7 @@ When you hide the output pane, Citadel still runs the command. It simply stops r
 ## Return a quick boolean status
 
 ```tsx
-import { Citadel, bool, command, createCommandRegistry } from 'citadel_cli';
+import { Citadel, bool, command, createCommandRegistry } from '@citadel_cli/react';
 
 const commandRegistry = createCommandRegistry([
   command('feature.enabled')
@@ -89,7 +89,7 @@ Boolean results work well for health checks, feature flags, and other yes-or-no 
 ## Rendering an image
 
 ```tsx
-import { Citadel, command, createCommandRegistry, image } from 'citadel_cli';
+import { Citadel, command, createCommandRegistry, image } from '@citadel_cli/react';
 
 const commandRegistry = createCommandRegistry([
   command('avatar.show')

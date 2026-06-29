@@ -3,10 +3,10 @@ import { defineConfig } from 'vite';
 import { fileURLToPath, URL } from 'node:url';
 import dts from 'vite-plugin-dts';
 
-// @citadel/core is dependency-free, so the library build bundles every module
+// @citadel_cli/core is dependency-free, so the library build bundles every module
 // into a single ESM file (dist/index.js) and vite-plugin-dts emits the matching
 // type declarations (dist/index.d.ts + per-module .d.ts). Published consumers
-// — @citadel/cli and any downstream CLI — import the built artifacts; local
+// — @citadel_cli/cli and any downstream CLI — import the built artifacts; local
 // dev/test resolves the source via the root tsconfig `paths` and the vitest
 // workspace aliases. See CORE_EXTRACTION_DESIGN.md.
 export default defineConfig({

@@ -8,7 +8,7 @@ import {
   image,
   json,
   text,
-} from 'citadel_cli';
+} from '@citadel_cli/react';
 
 const apiRegistry = createCommandRegistry([
   command('user.lookup')

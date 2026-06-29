@@ -12,7 +12,7 @@ You can also toggle whether the output pane is shown.
 Panel mode is the default. This shows Citadel in an initially hidden slide-up panel.
 
 ```tsx
-import { Citadel, command, createCommandRegistry, text } from 'citadel_cli';
+import { Citadel, command, createCommandRegistry, text } from '@citadel_cli/react';
 
 const commandRegistry = createCommandRegistry([
   command('hello')
@@ -41,7 +41,7 @@ Panel mode stays hidden until the user opens it, then overlays the current app.
 Inline mode renders Citadel immediately instead of waiting for a keyboard shortcut.
 
 ```tsx
-import { Citadel, command, createCommandRegistry, text } from 'citadel_cli';
+import { Citadel, command, createCommandRegistry, text } from '@citadel_cli/react';
 
 const commandRegistry = createCommandRegistry([
   command('status')
@@ -72,7 +72,7 @@ Inline mode renders Citadel directly in the page layout, so it behaves like a pe
 If you need Citadel to render into a known DOM node, pass `containerId`.
 
 ```tsx
-import { Citadel, command, createCommandRegistry, text } from 'citadel_cli';
+import { Citadel, command, createCommandRegistry, text } from '@citadel_cli/react';
 
 const commandRegistry = createCommandRegistry([
   command('status')
@@ -108,7 +108,7 @@ terminal. For example:
 - the real feedback already appears elsewhere in the app
 
 ```tsx
-import { Citadel, command, createCommandRegistry, text } from 'citadel_cli';
+import { Citadel, command, createCommandRegistry, text } from '@citadel_cli/react';
 
 const commandRegistry = createCommandRegistry([
   command('status.refresh')

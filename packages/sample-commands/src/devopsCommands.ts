@@ -1,5 +1,5 @@
-import { CommandRegistry } from '@citadel/core';
-import { bool, command, createCommandRegistry, json, text } from '@citadel/core';
+import { CommandRegistry } from '@citadel_cli/core';
+import { bool, command, createCommandRegistry, json, text } from '@citadel_cli/core';
 
 export function createDevOpsCommandRegistry(): CommandRegistry {
   return createCommandRegistry([

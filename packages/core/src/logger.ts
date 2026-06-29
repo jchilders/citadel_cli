@@ -9,7 +9,7 @@ export enum LogLevel {
 
 // Resolve the production flag without assuming a Vite bundler. `import.meta.env`
 // only exists under Vite; in plain Node / the CLI it is undefined, so guard the
-// access (and fall back to NODE_ENV) to keep @citadel/core bundler-agnostic.
+// access (and fall back to NODE_ENV) to keep @citadel_cli/core bundler-agnostic.
 const viteEnv = (import.meta as { env?: { PROD?: boolean } }).env;
 const isProduction =
   viteEnv?.PROD ??

@@ -4,7 +4,7 @@ import {
   text,
   json,
   error,
-} from '@citadel/core';
+} from '@citadel_cli/core';
 import { victory } from './hackingSimVictory';
 
 // A tiny hacking-sim game: scan the network, pop hosts, capture loot that

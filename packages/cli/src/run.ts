@@ -1,4 +1,4 @@
-import { CommandRegistry, WordSegment, createHelpHandler } from '@citadel/core';
+import { CommandRegistry, WordSegment, createHelpHandler } from '@citadel_cli/core';
 import { CliSession } from './session';
 import { renderResult } from './render-result';
 import { runTui, type CliOptions } from './tui';
@@ -14,7 +14,7 @@ export function ensureHelpCommand(registry: CommandRegistry, options: CliOptions
 }
 
 /**
- * Entry helper for CLIs built on @citadel/core. With `--script=<keys>` it runs
+ * Entry helper for CLIs built on @citadel_cli/core. With `--script=<keys>` it runs
  * non-interactively (characters are typed; '\n' presses Enter) and prints each
  * executed command's result — handy for demos, docs, and CI. Otherwise it
  * launches the interactive Ink TUI (output pane + command line + suggestions).

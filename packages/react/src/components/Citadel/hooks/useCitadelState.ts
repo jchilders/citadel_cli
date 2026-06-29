@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
 import { CitadelState, CitadelActions, OutputItem } from '../types/state';
-import { ArgumentSegment } from '@citadel/core';
+import { ArgumentSegment } from '@citadel_cli/core';
 import { useCitadelConfig, useCitadelCommands, useCitadelStorage, useSegmentStack } from '../config/hooks';
-import { CommandResult, ErrorCommandResult } from '@citadel/core';
+import { CommandResult, ErrorCommandResult } from '@citadel_cli/core';
 import { useCommandHistory } from './useCommandHistory';
 import { initializeHistoryService } from '../services/HistoryService';
-import { Logger } from '@citadel/core';
+import { Logger } from '@citadel_cli/core';
 
 export const useCitadelState = () => {
   const config = useCitadelConfig();

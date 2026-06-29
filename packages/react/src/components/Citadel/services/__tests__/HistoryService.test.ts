@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { CommandStorage, StoredCommand } from '@citadel/core';
-import { WordSegment } from '@citadel/core';
+import type { CommandStorage, StoredCommand } from '@citadel_cli/core';
+import { WordSegment } from '@citadel_cli/core';
 
 const createMockStorage = () => ({
   getStoredCommands: vi.fn<CommandStorage['getStoredCommands']>().mockResolvedValue([]),

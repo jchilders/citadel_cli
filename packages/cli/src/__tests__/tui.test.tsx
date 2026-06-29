@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render } from 'ink-testing-library';
 import { App } from '../tui';
-import { command, createCommandRegistry, text } from '@citadel/core';
+import { command, createCommandRegistry, text } from '@citadel_cli/core';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

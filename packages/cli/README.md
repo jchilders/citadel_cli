@@ -1,7 +1,7 @@
-# @citadel/cli
+# @citadel_cli/cli
 
 A terminal front-end for [Citadel](../../README.md). It drives the **same**
-`@citadel/core` command engine that powers the web `<Citadel>` component — the
+`@citadel_cli/core` command engine that powers the web `<Citadel>` component — the
 prefix auto-expansion, hierarchical commands, argument parsing, and history are
 all shared. The interactive UI is a full-screen [Ink](https://github.com/vadimdemedes/ink)
 TUI that mirrors the web's three regions: an output pane in its own bordered box
@@ -19,9 +19,9 @@ npm run cli:devops      # the web demo's "DevOps" example, in the terminal
 ```
 
 `basic-cli` and `devops-cli` import the **exact same** registry files the web
-demo uses (`@citadel/sample-commands`) — one definition, two front-ends.
+demo uses (`@citadel_cli/sample-commands`) — one definition, two front-ends.
 (Run from the repo root — the root scripts delegate to this workspace. Or add
-`-w @citadel/cli` to run from anywhere.)
+`-w @citadel_cli/cli` to run from anywhere.)
 
 In the TUI, type the shortest unambiguous prefix and it expands as you go:
 
@@ -43,17 +43,17 @@ back to the newest).
 Install the engine and the terminal front-end (both published to npm):
 
 ```bash
-npm install @citadel/cli @citadel/core
+npm install @citadel_cli/cli @citadel_cli/core
 ```
 
-`@citadel/cli` brings `ink` and `react` with it. It ships ESM only (`"type":
+`@citadel_cli/cli` brings `ink` and `react` with it. It ships ESM only (`"type":
 "module"`) with a self-contained `dist/index.d.ts`, so it resolves cleanly under
 `NodeNext`/`Node16` as well as bundler resolution. Author your commands with the
-`@citadel/core` DSL and hand the registry to `runCli`:
+`@citadel_cli/core` DSL and hand the registry to `runCli`:
 
 ```ts
-import { command, createCommandRegistry, text } from '@citadel/core';
-import { runCli } from '@citadel/cli';
+import { command, createCommandRegistry, text } from '@citadel_cli/core';
+import { runCli } from '@citadel_cli/cli';
 
 runCli(
   createCommandRegistry([

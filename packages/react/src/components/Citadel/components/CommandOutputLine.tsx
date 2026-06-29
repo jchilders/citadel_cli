@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Spinner } from './Spinner';
-import { CommandStatus } from '@citadel/core';
+import { CommandStatus } from '@citadel_cli/core';
 import { resolveTypography } from '../utils/typography';
 
 interface CommandOutputLineProps {

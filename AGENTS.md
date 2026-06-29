@@ -5,7 +5,7 @@ This file provides guidance to AI coding agents working in this repository.
 
 ## What This Is
 
-`citadel_cli` is a React component library published to npm. It provides a keyboard-driven command console (like a dev-tools terminal overlay) that can be embedded in web apps. Users trigger it with a configurable key (default: `.`), type hierarchical commands with auto-expansion, and see results rendered inline.
+`@citadel_cli/react` is a React component library published to npm. It provides a keyboard-driven command console (like a dev-tools terminal overlay) that can be embedded in web apps. Users trigger it with a configurable key (default: `.`), type hierarchical commands with auto-expansion, and see results rendered inline.
 
 ## Monorepo Layout
 
@@ -15,15 +15,15 @@ the full extraction history.
 
 ```
 packages/
-  core/   @citadel/core  — framework-agnostic command engine (registry, DSL,
+  core/   @citadel_cli/core  — framework-agnostic command engine (registry, DSL,
           results, parse, completion, controller). No React/DOM. Source of
           truth lives here; the React lib bundles it into its dist.
-  react/  citadel_cli    — the published React library (components, hooks,
-          config, Citadel.tsx, the demo app, e2e tests). Depends on @citadel/core.
-  cli/    @citadel/cli   — terminal front-end (Ink TUI) driving the same
-          @citadel/core engine. Run `npm run cli:coffee-bar` or `npm run cli:game-master`.
-  sample-commands/  @citadel/sample-commands — framework-agnostic sample command
-          registries (pure @citadel/core) shared by BOTH the web demo and the
+  react/  @citadel_cli/react    — the published React library (components, hooks,
+          config, Citadel.tsx, the demo app, e2e tests). Depends on @citadel_cli/core.
+  cli/    @citadel_cli/cli   — terminal front-end (Ink TUI) driving the same
+          @citadel_cli/core engine. Run `npm run cli:coffee-bar` or `npm run cli:game-master`.
+  sample-commands/  @citadel_cli/sample-commands — framework-agnostic sample command
+          registries (pure @citadel_cli/core) shared by BOTH the web demo and the
           CLI, so one definition file drives both: createBasicCommandRegistry
           (web "Basic" tab + `npm run cli:basic`) and createDevOpsCommandRegistry
           (web "DevOps" tab + `npm run cli:devops`). Registries that touch the
@@ -76,18 +76,18 @@ There is no pre-commit hook — plain commits are instant.
 Releases are tag-driven via GitHub Actions — no manual `npm publish`. **Three**
 packages publish in lockstep at the same version:
 
-- `@citadel/core` — the framework-agnostic engine (built to `dist/`)
-- `@citadel/cli` — the terminal/Ink front-end (built to `dist/`; depends on
-  `@citadel/core` via a `^` range, so a matching minor/patch bump resolves)
-- `citadel_cli` (`packages/react`) — the React component library (bundles
-  `@citadel/core` into its own `dist/`, so it has no runtime dep on it)
+- `@citadel_cli/core` — the framework-agnostic engine (built to `dist/`)
+- `@citadel_cli/cli` — the terminal/Ink front-end (built to `dist/`; depends on
+  `@citadel_cli/core` via a `^` range, so a matching minor/patch bump resolves)
+- `@citadel_cli/react` (`packages/react`) — the React component library (bundles
+  `@citadel_cli/core` into its own `dist/`, so it has no runtime dep on it)
 
 The repo root is a private orchestrator and is never published;
-`@citadel/sample-commands` is private (demo registries) and is never published.
+`@citadel_cli/sample-commands` is private (demo registries) and is never published.
 
 Bump every published package to the same version, then tag and push:
 ```bash
-npm version <patch|minor|major> -w @citadel/core -w @citadel/cli -w citadel_cli
+npm version <patch|minor|major> -w @citadel_cli/core -w @citadel_cli/cli -w @citadel_cli/react
 git tag v<x.y.z> && git push && git push --tags    # triggers CI publish to npm
 ```
 (`npm version -w` bumps the workspace package.json files but does **not** create
@@ -96,8 +96,8 @@ the git tag, so tag manually. The tag must match all three versions.)
 The Release workflow (`auto-publish.yml`) reuses `test.yml` as its test job, so
 a red Tests workflow blocks publishing. It runs `npm run build` (which builds
 core → cli → react in order), verifies the tag against all three
-`package.json` versions, then publishes `@citadel/core`, `@citadel/cli`, and
-`citadel_cli` (in that order — core is a dependency of cli). If a release run
+`package.json` versions, then publishes `@citadel_cli/core`, `@citadel_cli/cli`, and
+`@citadel_cli/react` (in that order — core is a dependency of cli). If a release run
 fails, fix the cause on `main`, then re-point the tag
 (`git tag -f v<x.y.z> <commit>` + force-push the tag) to re-trigger it.
 
@@ -107,10 +107,10 @@ Each published package's `package.json` points `main`/`module`/`types` at its
 built `dist/`. To keep the dev loop build-free, source is resolved instead via:
 the root `tsconfig.json` `paths` (so `tsx` demos load `src/`), the
 `vitest.workspace.ts` aliases (so tests run against `src/`), and the React
-library's own vite alias (so its build bundles `@citadel/core` from source).
-`@citadel/cli`'s `tsconfig.build.json` clears those `paths` so its emitted
-`.d.ts` keeps `@citadel/core` as an external bare import. Both `@citadel/core`
-and `@citadel/cli` roll their declarations into a single `dist/index.d.ts`
+library's own vite alias (so its build bundles `@citadel_cli/core` from source).
+`@citadel_cli/cli`'s `tsconfig.build.json` clears those `paths` so its emitted
+`.d.ts` keeps `@citadel_cli/core` as an external bare import. Both `@citadel_cli/core`
+and `@citadel_cli/cli` roll their declarations into a single `dist/index.d.ts`
 (`vite-plugin-dts` `rollupTypes`) so the published types resolve cleanly under
 NodeNext/Node16. See `CORE_EXTRACTION_DESIGN.md`.
 

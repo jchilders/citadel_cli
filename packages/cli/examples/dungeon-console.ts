@@ -1,5 +1,5 @@
 /**
- * Example CLI: a tabletop game-master console, built on @citadel/core.
+ * Example CLI: a tabletop game-master console, built on @citadel_cli/core.
  *
  * The whole app is a command registry (the DSL) handed to `runCli`. The same
  * engine powers the web `<Citadel>` component — here it runs in the terminal.
@@ -16,7 +16,7 @@
  *   `c a Aragorn ⏎`   → crew.add
  *   `c r ⏎`           → crew.roster
  */
-import { bool, command, createCommandRegistry, json, text, CommandRegistry } from '@citadel/core';
+import { bool, command, createCommandRegistry, json, text, CommandRegistry } from '@citadel_cli/core';
 import { runCli } from '../src/run';
 
 function buildConsole(): CommandRegistry {

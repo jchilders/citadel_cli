@@ -17,7 +17,7 @@ import {
   type Effect,
   type InputState,
   type ParserState,
-} from '@citadel/core';
+} from '@citadel_cli/core';
 
 /**
  * One entry in the output pane. Mirrors the web's OutputItem lifecycle: created
@@ -62,7 +62,7 @@ export type CompletionView =
   | { kind: 'none' };
 
 /**
- * Terminal adapter that drives the framework-agnostic @citadel/core engine — the
+ * Terminal adapter that drives the framework-agnostic @citadel_cli/core engine — the
  * CLI counterpart of the React useCommandParser + useCitadelState hooks. It owns
  * a segment stack, the parser state, and the output history; feeds keystrokes
  * through the same reduceKey / reduceInputChange reducers the web uses; and runs

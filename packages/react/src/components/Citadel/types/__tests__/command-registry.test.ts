@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { CommandRegistry, NoopHandler, CommandHandler, ArgumentSegment, WordSegment, cloneCommandSegments } from '@citadel/core';
-import { TextCommandResult } from '@citadel/core';
+import { CommandRegistry, NoopHandler, CommandHandler, ArgumentSegment, WordSegment, cloneCommandSegments } from '@citadel_cli/core';
+import { TextCommandResult } from '@citadel_cli/core';
 
 describe('CommandRegistry', () => {
   let cmdRegistry: CommandRegistry;
