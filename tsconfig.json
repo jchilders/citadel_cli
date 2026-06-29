@@ -16,6 +16,11 @@
     "noFallthroughCasesInSwitch": true,
     "allowImportingTsExtensions": true,
     "baseUrl": ".",
+    "paths": {
+      "@citadel/core": ["./packages/core/src/index.ts"],
+      "@citadel/cli": ["./packages/cli/src/index.ts"],
+      "@citadel/sample-commands": ["./packages/sample-commands/src/index.ts"]
+    },
     "types": [
       "vitest",
       "vitest/globals"

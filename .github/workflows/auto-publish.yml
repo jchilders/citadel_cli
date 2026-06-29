@@ -37,21 +37,32 @@ jobs:
       - name: Verify npm package artifacts
         run: npm run verify:pack
       
-      - name: Verify tag matches package.json version
+      - name: Verify tag matches package versions
         id: version
         run: |
           set -euo pipefail
-          PACKAGE_VERSION=$(node -p "require('./packages/react/package.json').version")
           TAG_VERSION="${GITHUB_REF#refs/tags/v}"
-          
-          if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
-            echo "package.json version ($PACKAGE_VERSION) does not match tag version ($TAG_VERSION)"
-            exit 1
-          fi
-          
-          echo "version=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
-      
+
+          # All three published packages release in lockstep; every version must
+          # equal the tag (@citadel/cli's dep on @citadel/core uses a caret range,
+          # so a matching minor/patch bump always resolves).
+          for pkg in packages/core packages/cli packages/react; do
+            PACKAGE_VERSION=$(node -p "require('./$pkg/package.json').version")
+            if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
+              echo "$pkg version ($PACKAGE_VERSION) does not match tag version ($TAG_VERSION)"
+              exit 1
+            fi
+          done
+
+          echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Publish to npm
-        # Root is a private workspace orchestrator; publish the citadel_cli
-        # workspace (packages/react), which bundles @citadel/core into its dist.
-        run: npm publish --access public -w citadel_cli
+        # Root is a private workspace orchestrator. Publish @citadel/core first
+        # (a dependency of @citadel/cli), then @citadel/cli, then citadel_cli
+        # (packages/react, which bundles @citadel/core into its own dist).
+        # @citadel/sample-commands stays private and is not published.
+        run: |
+          set -euo pipefail
+          npm publish --access public -w @citadel/core
+          npm publish --access public -w @citadel/cli
+          npm publish --access public -w citadel_cli

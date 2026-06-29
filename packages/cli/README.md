@@ -40,7 +40,16 @@ back to the newest).
 
 ## Build your own
 
-A CLI is just a command registry handed to `runCli`:
+Install the engine and the terminal front-end (both published to npm):
+
+```bash
+npm install @citadel/cli @citadel/core
+```
+
+`@citadel/cli` brings `ink` and `react` with it. It ships ESM only (`"type":
+"module"`) with a self-contained `dist/index.d.ts`, so it resolves cleanly under
+`NodeNext`/`Node16` as well as bundler resolution. Author your commands with the
+`@citadel/core` DSL and hand the registry to `runCli`:
 
 ```ts
 import { command, createCommandRegistry, text } from '@citadel/core';

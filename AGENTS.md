@@ -73,23 +73,46 @@ There is no pre-commit hook — plain commits are instant.
 
 ## Releasing
 
-Releases are tag-driven via GitHub Actions — no manual `npm publish`. The
-published package is the `citadel_cli` workspace (`packages/react`); the repo
-root is a private orchestrator and is never published. Bump the version in
-`packages/react/package.json`, then tag and push:
+Releases are tag-driven via GitHub Actions — no manual `npm publish`. **Three**
+packages publish in lockstep at the same version:
+
+- `@citadel/core` — the framework-agnostic engine (built to `dist/`)
+- `@citadel/cli` — the terminal/Ink front-end (built to `dist/`; depends on
+  `@citadel/core` via a `^` range, so a matching minor/patch bump resolves)
+- `citadel_cli` (`packages/react`) — the React component library (bundles
+  `@citadel/core` into its own `dist/`, so it has no runtime dep on it)
+
+The repo root is a private orchestrator and is never published;
+`@citadel/sample-commands` is private (demo registries) and is never published.
+
+Bump every published package to the same version, then tag and push:
 ```bash
-npm version <patch|minor|major> -w citadel_cli   # bumps packages/react/package.json
+npm version <patch|minor|major> -w @citadel/core -w @citadel/cli -w citadel_cli
 git tag v<x.y.z> && git push && git push --tags    # triggers CI publish to npm
 ```
-(`npm version -w` bumps the workspace package but does **not** create the git
-tag, so tag manually to match `packages/react/package.json`.)
+(`npm version -w` bumps the workspace package.json files but does **not** create
+the git tag, so tag manually. The tag must match all three versions.)
 
 The Release workflow (`auto-publish.yml`) reuses `test.yml` as its test job, so
-a red Tests workflow blocks publishing. It checks the tag against
-`packages/react/package.json` and publishes with `npm publish -w citadel_cli`
-(root scripts delegate `build`/`verify:pack` to that workspace). If a release
-run fails, fix the cause on `main`, then re-point the tag
+a red Tests workflow blocks publishing. It runs `npm run build` (which builds
+core → cli → react in order), verifies the tag against all three
+`package.json` versions, then publishes `@citadel/core`, `@citadel/cli`, and
+`citadel_cli` (in that order — core is a dependency of cli). If a release run
+fails, fix the cause on `main`, then re-point the tag
 (`git tag -f v<x.y.z> <commit>` + force-push the tag) to re-trigger it.
+
+### How the packages resolve in dev vs. when published
+
+Each published package's `package.json` points `main`/`module`/`types` at its
+built `dist/`. To keep the dev loop build-free, source is resolved instead via:
+the root `tsconfig.json` `paths` (so `tsx` demos load `src/`), the
+`vitest.workspace.ts` aliases (so tests run against `src/`), and the React
+library's own vite alias (so its build bundles `@citadel/core` from source).
+`@citadel/cli`'s `tsconfig.build.json` clears those `paths` so its emitted
+`.d.ts` keeps `@citadel/core` as an external bare import. Both `@citadel/core`
+and `@citadel/cli` roll their declarations into a single `dist/index.d.ts`
+(`vite-plugin-dts` `rollupTypes`) so the published types resolve cleanly under
+NodeNext/Node16. See `CORE_EXTRACTION_DESIGN.md`.
 
 ## Architecture
 

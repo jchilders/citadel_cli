@@ -348,6 +348,38 @@ so Ink re-renders.
       satisfies the automatic-runtime tsc too)
 - [x] `tsc`, `npm test` (262, 31 files), `lint` (0 errors) green
 
+### Step 6 — Publish `@citadel/core` + `@citadel/cli` as first-class packages
+
+Goal: let a new, external CLI tool depend on the shared engine. Previously only
+`citadel_cli` (the React lib) published, and it merely *bundled* core; `@citadel/core`
+and `@citadel/cli` were workspace-internal source with `main` → `src/*.ts`.
+
+- [x] `@citadel/core`: Vite library build (single ESM `dist/index.js`,
+      dependency-free so everything bundles) + `vite-plugin-dts` `rollupTypes`
+      → single `dist/index.d.ts`. `package.json` `main`/`module`/`types` → `dist`,
+      `files: ["dist"]`, `build` script.
+- [x] `@citadel/cli`: Vite library build keeping `@citadel/core`/`ink`/`react`
+      **external** (real runtime deps), classic JSX transform (matches `tui.tsx`),
+      `rollupTypes` → single `dist/index.d.ts`. `main`/`types` → `dist`,
+      `files: ["dist"]`. Moved `@citadel/sample-commands` to devDependencies
+      (only the examples use it); core dep is `^` so lockstep bumps resolve.
+      Dropped the demo `bin` (the package is a library for building CLIs).
+- [x] `tsconfig.build.json` for cli clears the root `paths` so the emitted
+      `.d.ts` keeps `@citadel/core` as a bare external import (not inlined).
+- [x] Dev stays build-free: root `tsconfig.json` `paths` + `vitest.workspace.ts`
+      aliases resolve the `@citadel/*` specifiers to `src/`, even though
+      `package.json` now points at `dist/`. (`publishConfig` field overrides were
+      rejected — npm 11 does not apply them; verified empirically.)
+- [x] `rollupTypes` (single `dist/index.d.ts`, no extensionless relative
+      re-exports) is required for NodeNext/Node16 consumers — verified an external
+      project resolves both runtime and types from the packed tarballs.
+- [x] Root `build` runs core → cli → react in order. `auto-publish.yml` verifies
+      the tag against all three `package.json` versions and publishes core, cli,
+      then `citadel_cli`. `@citadel/sample-commands` stays private.
+- [x] Full gate green: `npm run build` (3 pkgs), `npm test` (267), `lint`
+      (0 errors), `verify:pack`, plus a packed-tarball consumer smoke test
+      (runtime + `tsc --moduleResolution NodeNext`).
+
 ## Risks / open questions
 
 - **e2e coverage is the safety net for Step 3.** Confirm the Playwright suite

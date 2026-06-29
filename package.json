@@ -20,7 +20,9 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "npm run build -w citadel_cli",
+    "build": "npm run build:core && npm run build:cli && npm run build -w citadel_cli",
+    "build:core": "npm run build -w @citadel/core",
+    "build:cli": "npm run build -w @citadel/cli",
     "verify:pack": "npm run verify:pack -w citadel_cli",
     "dev": "npm run dev -w citadel_cli",
     "preview": "npm run preview -w citadel_cli",
