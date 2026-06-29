@@ -26,6 +26,7 @@ const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
 const green = (s: string) => `\x1b[32m${s}\x1b[0m`;
 const red = (s: string) => `\x1b[31m${s}\x1b[0m`;
 const yellow = (s: string) => `\x1b[33m${s}\x1b[0m`;
+const cyan = (s: string) => `\x1b[36m${s}\x1b[0m`;
 
 /** Map an Ink keypress to the engine's framework-agnostic AbstractKey. */
 function toAbstractKey(input: string, key: Key): AbstractKey | null {
@@ -64,10 +65,13 @@ function outputToLines(outputs: readonly CliOutputItem[], spinner: string): stri
     const mark =
       item.status === CommandStatus.Pending
         ? yellow(spinner)
-        : item.status === CommandStatus.Success
-          ? green('●')
-          : red('●');
+        : item.status === CommandStatus.Streaming
+          ? cyan('◉')
+          : item.status === CommandStatus.Success
+            ? green('●')
+            : red('●');
     lines.push(`${dim('>')} ${item.commandLine} ${dim(`· ${time}`)} ${mark}`);
+    // Render the body for terminal statuses and live streams (not bare pending).
     if (item.status !== CommandStatus.Pending) {
       for (const line of renderResult(item.result).split('\n')) lines.push(line);
     }
@@ -140,6 +144,9 @@ export function App({
 
   useInput((input, key) => {
     if (key.ctrl && (input === 'c' || input === 'd')) {
+      // Ctrl+C stops any live stream first (tail -f muscle memory); it only
+      // quits the app when nothing is streaming.
+      if (session.cancelStreams()) return;
       exit();
       return;
     }
@@ -171,8 +178,10 @@ export function App({
   const start = Math.max(0, end - viewport);
   const visible = lines.slice(start, end);
 
-  const scrollHint =
-    offset > 0
+  const hasStreaming = session.outputs.some((item) => item.status === CommandStatus.Streaming);
+  const scrollHint = hasStreaming
+    ? '◉ streaming · ^C to stop'
+    : offset > 0
       ? `↑ scrolled · ⇧↓ / PgDn → newest`
       : maxOffset.current > 0
         ? `⇧↑ ⇧↓ or PgUp/PgDn to scroll`
@@ -215,6 +224,9 @@ export function runTui(registry: CommandRegistry, options: CliOptions = {}): voi
 
   const app = render(
     <App registry={registry} commandTimeoutMs={options.commandTimeoutMs} welcome={options.welcome} />,
+    // We handle Ctrl+C ourselves (stop a live stream first, else exit), so Ink
+    // must not exit on it by default.
+    { exitOnCtrlC: false },
   );
   app.waitUntilExit().then(restore, restore);
   process.on('exit', restore);

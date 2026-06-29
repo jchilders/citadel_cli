@@ -9,6 +9,7 @@ import {
   CommandStatus,
   ErrorCommandResult,
   PendingCommandResult,
+  StreamCommandResult,
   getNextExpectedSegment,
   getCommandPrefixLengths,
   reduceInputChange,
@@ -333,6 +334,23 @@ export class CliSession {
             'Commands must return a CommandResult (e.g. text(), json(), bool()).',
         );
       }
+
+      if (value instanceof StreamCommandResult) {
+        // A live stream (tail -f): show its body immediately and re-render on
+        // every push/end, mirroring its status onto the output item. Not subject
+        // to the command timeout — it ends on close/fail/cancel.
+        item.result = value;
+        value.subscribe(() => {
+          item.status = value.status;
+          this.notify();
+        });
+        value.start();
+        item.status = value.status;
+        this.notify();
+        this.onExecute?.(item);
+        return;
+      }
+
       value.markSuccess();
       item.result = value;
       item.status = CommandStatus.Success;
@@ -343,6 +361,24 @@ export class CliSession {
 
     this.notify();
     this.onExecute?.(item);
+  }
+
+  /**
+   * Cancel every output still streaming (Ctrl+C in the TUI). Returns true if any
+   * stream was live — the caller uses this to decide whether Ctrl+C stops a
+   * stream or exits the app.
+   */
+  cancelStreams(): boolean {
+    let cancelled = false;
+    for (const item of this.outputs) {
+      if (item.result instanceof StreamCommandResult && !item.result.ended) {
+        item.result.cancel();
+        item.status = item.result.status;
+        cancelled = true;
+      }
+    }
+    if (cancelled) this.notify();
+    return cancelled;
   }
 
   private navigate(dir: 'up' | 'down'): void {

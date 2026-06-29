@@ -1,12 +1,14 @@
 import React from 'react';
 import {
   CommandResult,
+  CommandStatus,
   JsonCommandResult,
   TextCommandResult,
   BooleanCommandResult,
   ErrorCommandResult,
   PendingCommandResult,
   ImageCommandResult,
+  StreamCommandResult,
 } from '@citadel_cli/core';
 
 /**
@@ -39,6 +41,27 @@ export function renderResult(result: CommandResult): React.ReactNode {
 
   if (result instanceof ErrorCommandResult) {
     return <div className="citadel-result-error">{result.error}</div>;
+  }
+
+  if (result instanceof StreamCommandResult) {
+    const streaming = result.status === CommandStatus.Streaming;
+    return (
+      <div className="citadel-result-stream-wrap">
+        {result.droppedCount > 0 && (
+          <div className="citadel-result-stream-dropped">
+            … {result.droppedCount} earlier line(s) hidden
+          </div>
+        )}
+        <pre className="citadel-result-stream">{result.lines.join('\n')}</pre>
+        {streaming ? (
+          <button type="button" className="citadel-stream-stop" onClick={result.cancel}>
+            ⏹ Stop
+          </button>
+        ) : (
+          <div className="citadel-result-stream-ended">— stream ended —</div>
+        )}
+      </div>
+    );
   }
 
   if (result instanceof PendingCommandResult) {

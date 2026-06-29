@@ -1,6 +1,6 @@
 /* c8 ignore start */
 import { CommandRegistry } from '@citadel_cli/core'
-import { bool, command, createCommandRegistry, image, json, text } from '@citadel_cli/core'
+import { bool, command, createCommandRegistry, image, json, stream, text } from '@citadel_cli/core'
 
 /**
  * Build a fresh registry populated with the basic sample commands.
@@ -113,6 +113,33 @@ export function createBasicCommandRegistry(): CommandRegistry {
         const data = await response.json()
         return image(data[0].url)
       }),
+
+    command('tail')
+      .describe('Stream a live activity log (tail -f). Stop with Ctrl+C (CLI) or ⏹ Stop (web).')
+      .handle(() =>
+        stream((s) => {
+          const events = [
+            '✅ GET /api/coffee 200 — oat-milk latte brewed in 1.2s',
+            '🛰️  telemetry: orbit nominal, caffeine levels rising',
+            '⚠️  cache miss for user:42 — refilling the beans',
+            '🐹 worker hamster #3 resumed running',
+            '🚀 cron "stardust" finished in 42ms',
+            '🔌 websocket reconnected (clients: 7)',
+            '🧹 gc swept 128 stale sessions',
+            '💾 snapshot saved — 3.1MB to the cloud',
+            '🔥 latency spike smoothed over by the gremlins',
+            '📦 deploy: shipped to the moon 🌙',
+          ]
+          let n = 0
+          const id = setInterval(() => {
+            const event = events[Math.floor(Math.random() * events.length)]
+            const time = new Date().toLocaleTimeString()
+            s.push(`${time}  #${++n}  ${event}`)
+          }, 700)
+          // Cleanup runs on Ctrl+C / Stop / unmount.
+          return () => clearInterval(id)
+        }),
+      ),
 
     command('cowsay')
       .describe('Make a cow say something')

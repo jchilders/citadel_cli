@@ -44,6 +44,12 @@ export const CommandOutputLine: React.FC<CommandOutputLineProps> = ({
       <span className="citadel-output-separator">·</span>
       <span className="citadel-output-timestamp">{timestamp}</span>
       {status === CommandStatus.Pending && <Spinner />}
+      {status === CommandStatus.Streaming && (
+        <div
+          data-testid="streaming-indicator"
+          className="citadel-status-dot citadel-status-dot-streaming"
+        />
+      )}
       {status === CommandStatus.Success && (
         <div 
           data-testid="success-indicator"

@@ -6,6 +6,7 @@ import {
   ErrorCommandResult,
   ImageCommandResult,
   PendingCommandResult,
+  StreamCommandResult,
 } from '@citadel_cli/core';
 
 /**
@@ -22,6 +23,13 @@ export function renderResult(result: CommandResult): string {
   if (result instanceof ErrorCommandResult) return `Error: ${result.error}`;
   if (result instanceof ImageCommandResult) {
     return `[image: ${result.imageUrl}${result.altText ? ` — ${result.altText}` : ''}]`;
+  }
+  if (result instanceof StreamCommandResult) {
+    const body = result.lines.join('\n');
+    if (result.droppedCount > 0) {
+      return `\x1b[2m… ${result.droppedCount} earlier line(s) hidden\x1b[0m\n${body}`;
+    }
+    return body;
   }
   if (result instanceof PendingCommandResult) return '…';
 

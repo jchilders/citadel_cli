@@ -71,6 +71,27 @@ results).
 auto-expand shortcuts), matching the web. Pass `{ includeHelpCommand: false }`
 to suppress it, or define your own `help` command to override it.
 
+### Streaming output (`tail -f`)
+
+A handler can return a live, append-only stream instead of a single result. The
+`stream` helper hands your producer a handle to `push` lines over time, and you
+return an optional cleanup function:
+
+```ts
+import { command, stream } from '@citadel_cli/core';
+
+command('logs.tail').describe('Stream logs').handle(() =>
+  stream((s) => {
+    const id = setInterval(() => s.push(nextLogLine()), 600);
+    return () => clearInterval(id); // runs on Ctrl+C / close
+  }, { maxLines: 500 }) // optional scrollback cap (default 500)
+);
+```
+
+The output pane renders lines as they arrive with a live `◉` marker. **Ctrl+C**
+stops the active stream(s); it only quits the app when nothing is streaming. The
+same definition drives the web component, where a **⏹ Stop** button ends it.
+
 ## Scripted mode (demos / CI)
 
 `runCli` also takes a non-interactive `--script` where characters are typed and

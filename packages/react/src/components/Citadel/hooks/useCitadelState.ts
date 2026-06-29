@@ -1,8 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { CitadelState, CitadelActions, OutputItem } from '../types/state';
 import { ArgumentSegment } from '@citadel_cli/core';
 import { useCitadelConfig, useCitadelCommands, useCitadelStorage, useSegmentStack } from '../config/hooks';
-import { CommandResult, ErrorCommandResult } from '@citadel_cli/core';
+import { CommandResult, ErrorCommandResult, StreamCommandResult } from '@citadel_cli/core';
 import { useCommandHistory } from './useCommandHistory';
 import { initializeHistoryService } from '../services/HistoryService';
 import { Logger } from '@citadel_cli/core';
@@ -24,6 +24,17 @@ export const useCitadelState = () => {
       storage
     }
   });
+
+  // Live streams (tail -f) still running. Cancelled on unmount so their
+  // producers (intervals, sockets) don't leak.
+  const activeStreams = useRef<Set<StreamCommandResult>>(new Set());
+  useEffect(() => {
+    const streams = activeStreams.current;
+    return () => {
+      streams.forEach((s) => s.cancel());
+      streams.clear();
+    };
+  }, []);
 
   useEffect(() => {
     if (!storage) return;
@@ -106,11 +117,27 @@ export const useCitadelState = () => {
               `Check the definition of the ${path.join('.')} command and update the return type for its handler.`
           );
         }
+
+        if (result instanceof StreamCommandResult) {
+          // A live stream (tail -f): attach it, re-render on every push/end, and
+          // leave it running until it closes or is cancelled (not timed out).
+          // A fresh output array each bump lets CommandOutput auto-scroll.
+          outputItem.result = result;
+          activeStreams.current.add(result);
+          result.subscribe(() => {
+            setState(prev => ({ ...prev, output: [...prev.output] }));
+            if (result.ended) activeStreams.current.delete(result);
+          });
+          result.start();
+          setState(prev => ({ ...prev, output: [...prev.output] }));
+          return;
+        }
+
         result.markSuccess();
-        
+
         setState(prev => ({
           ...prev,
-          output: prev.output.map(item => 
+          output: prev.output.map(item =>
             item.id === outputItem.id ? { ...item, result } : item
           )
         }));

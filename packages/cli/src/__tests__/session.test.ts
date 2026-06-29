@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { command, createCommandRegistry, json, text } from '@citadel_cli/core';
+import {
+  command,
+  createCommandRegistry,
+  json,
+  stream,
+  text,
+  CommandStatus,
+  type StreamHandle,
+} from '@citadel_cli/core';
 import { CliSession } from '../session';
 import { renderResult } from '../render-result';
 
@@ -80,6 +88,33 @@ describe('CliSession (core reuse in the terminal)', () => {
     await type(session, 'boom');
     await session.press({ name: 'Enter' });
     expect(renderResult(session.outputs[0].result)).toBe('Error: kaboom');
+  });
+
+  it('runs a streaming command: Streaming status, live appends, cancelStreams ends it', async () => {
+    let handle: StreamHandle | undefined;
+    const registry = createCommandRegistry([
+      command('tail').describe('stream').handle(() =>
+        stream((h) => {
+          handle = h;
+        }),
+      ),
+    ]);
+    const session = new CliSession(registry);
+
+    await type(session, 't'); // unambiguous → tail
+    await session.press({ name: 'Enter' });
+
+    expect(session.outputs).toHaveLength(1);
+    expect(session.outputs[0].status).toBe(CommandStatus.Streaming);
+
+    handle!.push('line 1');
+    handle!.push('line 2');
+    expect(renderResult(session.outputs[0].result)).toBe('line 1\nline 2');
+
+    expect(session.cancelStreams()).toBe(true);
+    expect(session.outputs[0].status).toBe(CommandStatus.Success);
+    // Nothing live anymore — Ctrl+C should fall through to exit.
+    expect(session.cancelStreams()).toBe(false);
   });
 
   it('recalls the previous command via ArrowUp', async () => {

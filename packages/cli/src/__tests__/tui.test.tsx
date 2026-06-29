@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render } from 'ink-testing-library';
 import { App } from '../tui';
-import { command, createCommandRegistry, text } from '@citadel_cli/core';
+import { command, createCommandRegistry, stream, text } from '@citadel_cli/core';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -38,6 +38,39 @@ describe('Ink TUI', () => {
     await delay(20);
     stdin.write('\r'); // Enter → execute
     await delay(60);
+    expect(lastFrame() ?? '').toContain('pong');
+  });
+
+  it('streams output live and Ctrl+C stops the stream without exiting', async () => {
+    const reg = createCommandRegistry([
+      command('tail').describe('stream').handle(() =>
+        stream((h) => {
+          h.push('LIVE-LINE');
+          const id = setInterval(() => h.push('tick'), 1000);
+          return () => clearInterval(id);
+        }),
+      ),
+      command('ping').describe('Ping').handle(async () => text('pong')),
+    ]);
+    const { lastFrame, stdin } = render(<App registry={reg} commandTimeoutMs={0} />);
+    await delay(60);
+    stdin.write('t'); // → tail
+    await delay(20);
+    stdin.write('\r'); // execute → streaming
+    await delay(40);
+    expect(lastFrame() ?? '').toContain('LIVE-LINE');
+    expect(lastFrame() ?? '').toContain('streaming'); // live hint
+
+    stdin.write('\x03'); // Ctrl+C → stop the stream (not exit)
+    await delay(40);
+    expect(lastFrame() ?? '').toContain('LIVE-LINE'); // output retained
+    expect(lastFrame() ?? '').not.toContain('streaming'); // hint gone — ended
+
+    // The app is still alive — run another command.
+    stdin.write('p'); // → ping
+    await delay(20);
+    stdin.write('\r');
+    await delay(40);
     expect(lastFrame() ?? '').toContain('pong');
   });
 

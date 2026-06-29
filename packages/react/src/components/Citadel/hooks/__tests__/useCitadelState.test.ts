@@ -9,7 +9,8 @@ import {
   createMockCommandHistoryActions,
   setupCitadelStateHook
 } from '../../../../__test-utils__/factories';
-import { TextCommandResult, ErrorCommandResult } from '@citadel_cli/core';
+import { TextCommandResult, ErrorCommandResult, CommandStatus, stream, StreamCommandResult } from '@citadel_cli/core';
+import type { StreamHandle } from '@citadel_cli/core';
 import { ArgumentSegment, CommandNode, WordSegment } from '@citadel_cli/core';
 import { useCommandHistory } from '../useCommandHistory';
 
@@ -197,6 +198,42 @@ describe('useCitadelState', () => {
       const output = hook.result.current.state.output[0];
       expect(output.result).toBeInstanceOf(ErrorCommandResult);
       expect((output.result as ErrorCommandResult).error).toContain('invalid result type');
+    });
+
+    it('runs a streaming command live and cancels it', async () => {
+      const { hook } = setupCitadelStateHook();
+      let handle: StreamHandle | undefined;
+      const streamResult = stream((h) => {
+        handle = h;
+      });
+
+      vi.mocked(mockCommands.getCommand).mockReturnValue(
+        createMockCommand('tail', { handler: async () => streamResult })
+      );
+
+      await act(async () => {
+        await hook.result.current.actions.executeCommand();
+      });
+
+      const item = hook.result.current.state.output[0];
+      expect(item.result).toBe(streamResult);
+      expect(item.result.status).toBe(CommandStatus.Streaming);
+
+      // Lines pushed over time appear in the output.
+      act(() => {
+        handle!.push('hello');
+        handle!.push('world');
+      });
+      expect((hook.result.current.state.output[0].result as StreamCommandResult).lines).toEqual([
+        'hello',
+        'world',
+      ]);
+
+      // Cancelling (the web Stop button) ends the stream as Success.
+      act(() => {
+        (hook.result.current.state.output[0].result as StreamCommandResult).cancel();
+      });
+      expect(hook.result.current.state.output[0].result.status).toBe(CommandStatus.Success);
     });
 
     it('should handle clearHistory action', async () => {

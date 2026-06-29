@@ -5,7 +5,10 @@ import {
   ErrorCommandResult,
   ImageCommandResult,
   JsonCommandResult,
+  StreamCommandResult,
   TextCommandResult,
+  type StreamOptions,
+  type StreamProducer,
 } from './results';
 
 export interface CommandExecutionContext<ArgName extends string = string> {
@@ -243,4 +246,22 @@ export function image(url: string, altText = ''): ImageCommandResult {
 
 export function error(value: string): ErrorCommandResult {
   return new ErrorCommandResult(value);
+}
+
+/**
+ * A live, append-only text stream (`tail -f`). The producer receives a handle to
+ * `push` lines over time and `close`/`fail` when done, and may return a cleanup
+ * function (e.g. `clearInterval`) run when the stream is cancelled or closed:
+ *
+ * ```ts
+ * command('logs.tail').describe('Stream logs').handle(() =>
+ *   stream((s) => {
+ *     const id = setInterval(() => s.push(nextLogLine()), 600);
+ *     return () => clearInterval(id);
+ *   })
+ * )
+ * ```
+ */
+export function stream(producer: StreamProducer, options?: StreamOptions): StreamCommandResult {
+  return new StreamCommandResult(producer, options);
 }
